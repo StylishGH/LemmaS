@@ -70,20 +70,19 @@ def e_questao_discursiva(questao: dict) -> bool:
     tipo = str(questao.get("tipo", "")).strip().lower()
     if tipo == "discursiva":
         return True
-    if tipo == "objetiva":
-        return False
 
     enunciado_raw = questao.get("enunciado", "")
     _, alternativas = extrair_enunciado_e_alternativas(enunciado_raw)
-    if alternativas:
-        return False  # Tem alternativas → objetiva
+    if len(alternativas) >= 2:
+        return False  # Tem alternativas reais no texto → objetiva
 
     gabarito = str(questao.get("gabarito", "")).strip().upper()
-    # Se o gabarito é uma única letra A-E, provavelmente é objetiva sem alternativas marcadas
-    if gabarito in ("A", "B", "C", "D", "E"):
+    # Se foi marcado como objetiva e o gabarito é estritamente uma única letra A-E:
+    if tipo == "objetiva" and gabarito in ("A", "B", "C", "D", "E"):
         return False
 
-    return True  # Sem alternativas e gabarito não é letra → discursiva
+    # Se não tem alternativas no enunciado e o gabarito não é uma única letra A-E, é discursiva!
+    return True
 
 
 latex_commands_after_n = {
