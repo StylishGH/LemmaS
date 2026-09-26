@@ -31,3 +31,13 @@
 - **Bloqueios Intransponíveis**: O Cloudflare Turnstile (usado em sites da Marinha/SSPM e PCI Concursos) é intransponível para robôs headless e subagentes nativos.
 - **Prevenção de Alucinação**: Se um subagente for instruído a baixar arquivos desses sites, ele poderá **alucinar o sucesso**. Ele pode baixar a página HTML de bloqueio (403) e salvá-la como .pdf, ou simplesmente listar nomes de arquivos fictícios dizendo que o download terminou.
 - **Protocolo**: NUNCA utilize subagentes para tentar burlar o Cloudflare e SEMPRE audite o tamanho/conteúdo dos arquivos baixados por scripts antes de considerar uma tarefa de extração concluída. Aceite a limitação técnica e direcione o usuário para o download manual.
+
+## 6. Automação e Interação com Formulários (Gupy)
+- **Seleção de Habilidades e Campos Autocomplete:**
+  - Em campos do tipo busca/seleção (ex: aba "Habilidades" e "Experiências" do Gupy), **nunca** apenas digite o texto no campo de entrada.
+  - O fluxo obrigatório de interação é:
+    1. Digitar o termo no campo de entrada.
+    2. Aguardar a exibição do dropdown de sugestões e **clicar explicitamente na opção correspondente**.
+    3. Clicar no botão **"Adicionar"** para incluir a tag na lista.
+    4. Repetir o processo para cada item e, ao concluir, clicar no botão **"Salvar"**.
+  - A omissão de qualquer uma dessas etapas impede o registro do dado na plataforma.

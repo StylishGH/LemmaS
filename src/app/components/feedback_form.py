@@ -9,7 +9,7 @@ import base64
 from pathlib import Path
 import streamlit as st
 from src.database.attempts import registrar_tentativa, salvar_diagnostico_ia, registrar_dica_socratica
-from src.app.utils import extrair_enunciado_e_alternativas, e_questao_discursiva, formatar_transcricao_latex
+from src.app.utils import extrair_enunciado_e_alternativas, e_questao_discursiva, formatar_transcricao_latex, corrigir_latex
 
 
 def _renderizar_anexo(bytes_conteudo: bytes, mime_type: str = "image/png", nome_arquivo: str = ""):
@@ -318,20 +318,18 @@ def render_resolution_form(questao: dict, on_success_callback=None):
 
         if is_discursiva:
             st.success(f"📋 **Resolução enviada com sucesso!** • Tempo gasto: **{tempo_formatado}**")
-            gabarito_exibicao = questao.get("gabarito") or "Ver estratégias esperadas abaixo"
+            gabarito_exibicao = corrigir_latex(questao.get("gabarito") or "Ver estratégias esperadas abaixo")
             st.markdown(
                 f"""
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 18px; margin: 12px 0;">
-                    <div style="color: #10b981; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin: 12px 0 8px 0;">
+                    <div style="color: #10b981; font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">
                         🎯 Gabarito Oficial / Resposta Esperada
-                    </div>
-                    <div style="font-size: 1.1rem; font-weight: 700; color: {'#ffffff' if is_dark else '#0f172a'};">
-                        {gabarito_exibicao}
                     </div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+            st.markdown(gabarito_exibicao)
         else:
             if acertou:
                 st.success(f"🎉 **Parabéns, você acertou!** (Gabarito: **{gabarito_oficial}**) • Tempo: **{tempo_formatado}**")

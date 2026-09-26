@@ -10,7 +10,7 @@ import random
 import streamlit as st
 from src.database.db import listar_questoes
 from src.app.components.question_view import render_question
-from src.app.utils import extrair_enunciado_e_alternativas
+from src.app.utils import extrair_enunciado_e_alternativas, corrigir_latex
 
 
 def show():
@@ -496,7 +496,17 @@ def show():
                     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
                     revelar_disc = st.checkbox("👁️ Revelar gabarito / resposta esperada", key=f"rev_disc_{q_id}")
                     if revelar_disc:
-                        st.markdown(f"**Gabarito Oficial / Resposta:** `{q.get('gabarito', '')}`")
+                        gab_texto = corrigir_latex(q.get('gabarito', '') or "")
+                        st.markdown(f"""
+                        <div style="background: {'rgba(245, 158, 11, 0.08)' if is_dark else 'rgba(245, 158, 11, 0.05)'};
+                                    border: 1.5px solid {'rgba(245, 158, 11, 0.35)' if is_dark else '#fcd34d'};
+                                    border-radius: 10px; padding: 12px 16px; margin: 10px 0 8px 0;">
+                            <span style="color: {'#fbbf24' if is_dark else '#b45309'}; font-weight: 700; font-size: 0.92rem;">
+                                🎯 Gabarito Oficial / Resposta Esperada:
+                            </span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown(gab_texto)
 
 
                 st.markdown("<br>", unsafe_allow_html=True)
