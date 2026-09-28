@@ -1,6 +1,14 @@
 <div align="center">
   <h1>MathAI 🧠📐</h1>
   <p>Uma IA que aprende como você aprende Matemática para ajudar você a aprender melhor.</p>
+
+  <p>
+    <a href="https://mathia.streamlit.app" target="_blank">
+      <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit" />
+    </a>
+  </p>
+
+  <p>🚀 <strong>Acesse a aplicação em produção:</strong> <a href="https://mathia.streamlit.app"><strong>mathia.streamlit.app</strong></a></p>
 </div>
 
 O **MathAI** é um projeto pessoal que combina Matemática, Ciência de Dados, Machine Learning e Inteligência Artificial para construir uma plataforma de aprendizagem matemática personalizada.
@@ -40,7 +48,7 @@ Uma decisão importante do projeto foi separar tarefas determinísticas de taref
 - **Normalização Matemática:** IA atuando cirurgicamente apenas para consertar encodings e traduzir fórmulas para LaTeX impecável.
 - **Banco de Dados Híbrido:** Sincronização entre SQLite local (ambiente de extração) e banco Turso na nuvem (ambiente de produção).
 - **Separação Epistemológica:** Diferenciação arquitetural entre "dados observados" (fatos brutos do aluno) e "dados derivados" (diagnósticos gerados pela IA).
-- **Integração Front-Back:** Plataforma em Streamlit com testes, feedbacks formativos e sistema de login/consentimento de privacidade.
+- **Integração Front-Back:** Plataforma interativa em Streamlit com testes, feedbacks formativos e sistema de autenticação (disponível em produção em [mathia.streamlit.app](https://mathia.streamlit.app)).
 
 ## 📖 Documentação
 
