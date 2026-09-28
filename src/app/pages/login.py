@@ -5,6 +5,8 @@ Dados cadastrais completos (CPF, CEP, Endereço via ViaCEP)
 e Verificação em Duas Etapas (2FA / OTP de 6 dígitos).
 """
 
+import html
+import os
 import uuid
 import streamlit as st
 from src.auth.google_auth import (
@@ -275,7 +277,7 @@ def show():
         if code:
             g_cid, g_csec = obter_credenciais_google()
             if g_cid and g_csec:
-                red_uri = "https://mathia.streamlit.app"
+                red_uri = os.environ.get("MATHAI_BASE_URL", "https://mathia.streamlit.app")
                 with st.spinner("Autenticando com o Google..."):
                     u_google = trocar_codigo_por_usuario_google(code, g_cid, g_csec, red_uri)
                 st.query_params.clear()
@@ -300,12 +302,13 @@ def show():
             g_nome = g_user.get("nome", "")
             g_email = g_user.get("email", "")
             g_pic = g_user.get("picture", "")
+            nome_seguro = html.escape(g_nome.split()[0])
 
             st.markdown(f"""
             <div class="auth-card">
                 <div style="text-align: center; margin-bottom: 20px;">
                     {'<img src="' + g_pic + '" style="width: 64px; height: 64px; border-radius: 50%; margin-bottom: 8px; border: 2px solid #7c3aed;">' if g_pic else '<div style="font-size: 2.2rem; margin-bottom: 4px;">🎓</div>'}
-                    <h3 style="margin: 0; color: {text_main}; font-weight: 700;">Quase lá, {g_nome.split()[0]}!</h3>
+                    <h3 style="margin: 0; color: {text_main}; font-weight: 700;">Quase lá, {nome_seguro}!</h3>
                     <p style="font-size: 0.86rem; color: {text_muted}; margin-top: 4px;">
                         Sua conta Google foi verificada. Complete seus dados de estudante para personalizarmos seus treinos.
                     </p>
@@ -481,6 +484,7 @@ def show():
         if st.session_state.get("verificando_email"):
             email_verif = st.session_state.verificando_email
             codigo_teste = st.session_state.get("codigo_teste_otp", "")
+            email_seguro = html.escape(email_verif)
 
             st.markdown(f"""
             <div class="auth-card">
@@ -489,7 +493,7 @@ def show():
                     <h3 style="margin: 0; color: {text_main}; font-weight: 700;">Verificação em Duas Etapas</h3>
                     <p style="font-size: 0.86rem; color: {text_muted}; margin-top: 4px;">
                         Enviamos um código de 6 dígitos para:<br>
-                        <b style="color: {'#c7d2fe' if is_dark else '#4f46e5'};">{email_verif}</b>
+                        <b style="color: {'#c7d2fe' if is_dark else '#4f46e5'};">{email_seguro}</b>
                     </p>
                 </div>
             """, unsafe_allow_html=True)
@@ -590,7 +594,8 @@ def show():
         with aba[0]:
             g_cid, g_csec = obter_credenciais_google()
             if g_cid:
-                auth_url = gerar_url_auth_google(g_cid, "https://mathia.streamlit.app")
+                base_url = os.environ.get("MATHAI_BASE_URL", "https://mathia.streamlit.app")
+                auth_url = gerar_url_auth_google(g_cid, base_url)
                 bg_btn = "#161329" if is_dark else "#ffffff"
                 border_btn = "rgba(124, 58, 237, 0.55)" if is_dark else "#cbd5e1"
                 text_btn = "#ffffff" if is_dark else "#1e293b"
@@ -863,7 +868,7 @@ def show():
             st.markdown("##### 🔒 Senha de Acesso")
             col_s1, col_s2 = st.columns(2)
             with col_s1:
-                c_senha = st.text_input("Senha (mínimo 6 caracteres) *", type="password", key="cad_senha")
+                c_senha = st.text_input("Senha (mínimo 8 caracteres, letras e números) *", type="password", key="cad_senha")
             with col_s2:
                 c_senha2 = st.text_input("Confirmar Senha *", type="password", key="cad_senha2")
 
@@ -884,7 +889,12 @@ def show():
                 elif not validar_cpf(c_cpf):  erros.append("CPF inválido. Verifique os dígitos.")
                 if not c_senha:               erros.append("Senha é obrigatória.")
                 if c_senha != c_senha2:       erros.append("As senhas não coincidem.")
-                if len(c_senha) < 6:          erros.append("Senha deve ter pelo menos 6 caracteres.")
+                if len(c_senha) < 8:
+                    erros.append("Senha deve ter pelo menos 8 caracteres.")
+                elif not any(c.isdigit() for c in c_senha):
+                    erros.append("Senha deve conter pelo menos 1 número.")
+                elif not any(c.isalpha() for c in c_senha):
+                    erros.append("Senha deve conter pelo menos 1 letra.")
                 if not motivos_selecionados:  erros.append("Selecione pelo menos 1 objetivo de estudo.")
                 if eh_ensino_superior and not (c_curso and c_curso.strip()):
                     erros.append("Informe o seu curso de graduação.")

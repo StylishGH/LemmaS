@@ -65,6 +65,7 @@ scratch_*.py
 temp_*
 *.tmp
 *.log
+ver_usuarios.py
 
 # ------------------------------------------------------------------------------
 # IDEs, Editores de Código e Sistema Operacional

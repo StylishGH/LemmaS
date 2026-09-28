@@ -17,6 +17,10 @@ def show():
     st.caption("Visão analítica de domínio matemático, repertório de estratégias e diagnóstico de erros.")
 
     aluno_id = st.session_state.get("aluno_id")
+    if not aluno_id:
+        st.warning("Você precisa estar logado para acessar esta página.")
+        return
+
     metricas = obter_metricas_estudante(aluno_id=aluno_id)
     total_resolvidas = metricas["total_resolvidas"]
 
@@ -171,35 +175,20 @@ def show():
         st.markdown("### ⏰ Próximas Revisões (SM-2)")
         con = pegar_conexao()
         cur = con.cursor()
-        if aluno_id:
-            cur.execute("""
-                SELECT 
-                    r.item_id as questao_id,
-                    q.materia,
-                    q.topico,
-                    r.intervalo_dias,
-                    r.repeticoes,
-                    r.proxima_revisao
-                FROM revisao_espacada r
-                JOIN questoes q ON r.item_id = q.id
-                WHERE r.aluno_id = ?
-                ORDER BY r.proxima_revisao ASC
-                LIMIT 5
-            """, (aluno_id,))
-        else:
-            cur.execute("""
-                SELECT 
-                    r.item_id as questao_id,
-                    q.materia,
-                    q.topico,
-                    r.intervalo_dias,
-                    r.repeticoes,
-                    r.proxima_revisao
-                FROM revisao_espacada r
-                JOIN questoes q ON r.item_id = q.id
-                ORDER BY r.proxima_revisao ASC
-                LIMIT 5
-            """)
+        cur.execute("""
+            SELECT 
+                r.item_id as questao_id,
+                q.materia,
+                q.topico,
+                r.intervalo_dias,
+                r.repeticoes,
+                r.proxima_revisao
+            FROM revisao_espacada r
+            JOIN questoes q ON r.item_id = q.id
+            WHERE r.aluno_id = ?
+            ORDER BY r.proxima_revisao ASC
+            LIMIT 5
+        """, (aluno_id,))
         revisoes = cur.fetchall()
         con.close()
 
@@ -226,7 +215,7 @@ def show():
 
     # 5. Histórico Recente de Resoluções
     st.markdown("### 📜 Histórico Recente de Resoluções")
-    historico = obter_historico_tentativas(limite=20, aluno_id=aluno_id)
+    historico = obter_historico_tentativas(aluno_id=aluno_id, limite=20)
     if historico:
         itens_hist = []
         for h in historico:

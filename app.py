@@ -4,6 +4,7 @@ Fase 1 (V1) - Plataforma Cognitiva de Resolução, Metacognição e Perfil do Es
 Layout: Header com Logo e Conta no Topo, Navegação em 3 Colunas Largas, Modo Dark/Light, Dourado Realçado.
 """
 
+import html
 import sys
 from pathlib import Path
 

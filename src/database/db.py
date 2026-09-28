@@ -27,17 +27,10 @@ def _obter_credenciais_turso():
     token = os.environ.get("TURSO_AUTH_TOKEN")
 
     if not url or not token:
-        env_file = BASE_DIR / ".env"
-        if env_file.exists():
-            for line in env_file.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if "=" in line and not line.startswith("#"):
-                    k, v = line.split("=", 1)
-                    k, v = k.strip(), v.strip().strip("\"'")
-                    if k in ("TURSO_DATABASE_URL", "DATABASE_URL"):
-                        url = v
-                    elif k in ("TURSO_AUTH_TOKEN", "AUTH_TOKEN"):
-                        token = v
+        from dotenv import load_dotenv
+        load_dotenv(BASE_DIR / ".env")
+        url = url or os.environ.get("TURSO_DATABASE_URL") or os.environ.get("DATABASE_URL")
+        token = token or os.environ.get("TURSO_AUTH_TOKEN") or os.environ.get("AUTH_TOKEN")
 
     if not url or not token:
         try:

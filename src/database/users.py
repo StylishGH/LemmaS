@@ -10,13 +10,24 @@ import random
 import os
 import re
 import secrets
+import bcrypt
 from datetime import datetime, timedelta
 import requests
 from src.database.db import pegar_conexao
 
 
 def _hash_senha(senha: str) -> str:
-    return hashlib.sha256(senha.encode("utf-8")).hexdigest()
+    """Gera hash seguro com bcrypt (salt automático, resistente a brute force)."""
+    return bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def _verificar_senha(senha: str, hash_armazenado: str) -> bool:
+    """Verifica senha contra hash bcrypt. Suporta fallback SHA-256 para migração gradual."""
+    try:
+        return bcrypt.checkpw(senha.encode("utf-8"), hash_armazenado.encode("utf-8"))
+    except (ValueError, TypeError):
+        # Fallback: hash antigo SHA-256 (migração gradual — será rehashado no login)
+        return hashlib.sha256(senha.encode("utf-8")).hexdigest() == hash_armazenado
 
 
 def _garantir_tabelas_e_migracao():
@@ -311,10 +322,11 @@ def reenviar_codigo_otp(email: str, nome: str = "Aluno") -> dict:
     """Gera um novo código e tenta enviar por e-mail."""
     codigo = gerar_codigo_verificacao(email)
     enviado = enviar_email_codigo(email, codigo, nome)
+    em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
     return {
         "ok": True,
         "enviado_email": enviado,
-        "codigo_teste": codigo
+        "codigo_teste": "" if em_producao else codigo
     }
 
 
@@ -404,13 +416,14 @@ def cadastrar_usuario(
         # Gera código OTP de verificação
         codigo_otp = gerar_codigo_verificacao(email)
         enviado_email = enviar_email_codigo(email, codigo_otp, nome)
+        em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
 
         return {
             "ok": True,
             "pendente_verificacao": True,
             "email": email.strip().lower(),
             "enviado_email": enviado_email,
-            "codigo_teste": codigo_otp,
+            "codigo_teste": "" if em_producao else codigo_otp,
             "usuario": {
                 "id": usuario_id,
                 "nome": nome.strip(),
@@ -457,36 +470,82 @@ def fazer_login(email: str, senha: str) -> dict:
     retorna pendente_verificacao=True para exibir a tela de 6 dígitos.
     """
     _garantir_tabelas_lazy()
+
+    # Rate limiting: bloqueia após 5 tentativas falhadas em 5 minutos
+    try:
+        import streamlit as st
+        chave_tentativas = f"login_tentativas_{email.strip().lower()}"
+        chave_bloqueio = f"login_bloqueio_{email.strip().lower()}"
+        bloqueio_ate = st.session_state.get(chave_bloqueio)
+        if bloqueio_ate and datetime.now() < bloqueio_ate:
+            seg = int((bloqueio_ate - datetime.now()).total_seconds())
+            return {"ok": False, "erro": f"Muitas tentativas. Tente novamente em {seg} segundos."}
+    except Exception:
+        chave_tentativas = chave_bloqueio = None
+
     con = pegar_conexao()
     cur = con.cursor()
     try:
         cur.execute("""
             SELECT id, nome, email, cpf, idade, celular, cep, logradouro, numero, bairro, cidade, estado,
-                   escolaridade, faculdade, curso, motivos, concursos_foco, verificado
-            FROM usuarios WHERE email = ? AND senha_hash = ?
-        """, (email.strip().lower(), _hash_senha(senha)))
+                   escolaridade, faculdade, curso, motivos, concursos_foco, verificado, senha_hash
+            FROM usuarios WHERE email = ?
+        """, (email.strip().lower(),))
         row = cur.fetchone()
-        if row:
-            u = dict(row)
-            u["motivos"] = json.loads(u.get("motivos") or "[]")
-            u["concursos_foco"] = json.loads(u.get("concursos_foco") or "[]")
+        if not row:
+            # Incrementa tentativas falhadas
+            if chave_tentativas:
+                t = st.session_state.get(chave_tentativas, 0) + 1
+                st.session_state[chave_tentativas] = t
+                if t >= 5:
+                    st.session_state[chave_bloqueio] = datetime.now() + timedelta(minutes=5)
+                    st.session_state[chave_tentativas] = 0
+                    return {"ok": False, "erro": "Conta temporariamente bloqueada por excesso de tentativas. Aguarde 5 minutos."}
+            return {"ok": False, "erro": "E-mail ou senha incorretos."}
 
-            # Verifica se conta foi verificada (2FA / ativação)
-            if u.get("verificado") == 0:
-                codigo_ativo = obter_ou_gerar_codigo_verificacao(u["email"])
-                enviado_email = enviar_email_codigo(u["email"], codigo_ativo, u["nome"])
-                return {
-                    "ok": False,
-                    "pendente_verificacao": True,
-                    "email": u["email"],
-                    "nome": u["nome"],
-                    "codigo_teste": codigo_ativo,
-                    "enviado_email": enviado_email,
-                    "erro": "Sua conta ainda não foi verificada. Digite o código de 6 dígitos para ativar."
-                }
+        u = dict(row)
+        senha_hash_db = u.pop("senha_hash")
 
-            return {"ok": True, "usuario": u}
-        return {"ok": False, "erro": "E-mail ou senha incorretos."}
+        if not _verificar_senha(senha, senha_hash_db):
+            if chave_tentativas:
+                t = st.session_state.get(chave_tentativas, 0) + 1
+                st.session_state[chave_tentativas] = t
+                if t >= 5:
+                    st.session_state[chave_bloqueio] = datetime.now() + timedelta(minutes=5)
+                    st.session_state[chave_tentativas] = 0
+                    return {"ok": False, "erro": "Conta temporariamente bloqueada por excesso de tentativas. Aguarde 5 minutos."}
+            return {"ok": False, "erro": "E-mail ou senha incorretos."}
+
+        # Migração automática: rehash SHA-256 antigo → bcrypt
+        if not senha_hash_db.startswith("$2b$"):
+            novo_hash = _hash_senha(senha)
+            cur.execute("UPDATE usuarios SET senha_hash = ? WHERE id = ?", (novo_hash, u["id"]))
+            con.commit()
+
+        # Login OK — resetar rate limit
+        if chave_tentativas:
+            st.session_state.pop(chave_tentativas, None)
+            st.session_state.pop(chave_bloqueio, None)
+
+        u["motivos"] = json.loads(u.get("motivos") or "[]")
+        u["concursos_foco"] = json.loads(u.get("concursos_foco") or "[]")
+
+        # Verifica se conta foi verificada (2FA / ativação)
+        if u.get("verificado") == 0:
+            em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
+            codigo_ativo = obter_ou_gerar_codigo_verificacao(u["email"])
+            enviado_email = enviar_email_codigo(u["email"], codigo_ativo, u["nome"])
+            return {
+                "ok": False,
+                "pendente_verificacao": True,
+                "email": u["email"],
+                "nome": u["nome"],
+                "codigo_teste": "" if em_producao else codigo_ativo,
+                "enviado_email": enviado_email,
+                "erro": "Sua conta ainda não foi verificada. Digite o código de 6 dígitos para ativar."
+            }
+
+        return {"ok": True, "usuario": u}
     except Exception as e:
         return {"ok": False, "erro": str(e)}
     finally:

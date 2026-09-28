@@ -114,39 +114,27 @@ def registrar_tentativa(
     return tentativa_id
 
 
-def obter_historico_tentativas(limite: int = 50, aluno_id: int | None = None):
+def obter_historico_tentativas(aluno_id: int, limite: int = 50):
     """Retorna as últimas tentativas com informações da questão associada."""
     con = pegar_conexao()
     cur = con.cursor()
-    if aluno_id:
-        cur.execute("""
-            SELECT 
-                t.id, t.data_hora, t.tempo_segundos, t.acertou, t.estrategia_usada, 
-                t.tipo_erro, t.confianca_aluno, t.anotacoes, t.imagem_resolucao_path,
-                q.materia, q.topico, q.banca, q.ano, q.enunciado, q.gabarito
-            FROM tentativas t
-            JOIN questoes q ON t.questao_id = q.id
-            WHERE t.aluno_id = ?
-            ORDER BY t.data_hora DESC
-            LIMIT ?
-        """, (aluno_id, limite))
-    else:
-        cur.execute("""
-            SELECT 
-                t.id, t.data_hora, t.tempo_segundos, t.acertou, t.estrategia_usada, 
-                t.tipo_erro, t.confianca_aluno, t.anotacoes, t.imagem_resolucao_path,
-                q.materia, q.topico, q.banca, q.ano, q.enunciado, q.gabarito
-            FROM tentativas t
-            JOIN questoes q ON t.questao_id = q.id
-            ORDER BY t.data_hora DESC
-            LIMIT ?
-        """, (limite,))
+    cur.execute("""
+        SELECT 
+            t.id, t.data_hora, t.tempo_segundos, t.acertou, t.estrategia_usada, 
+            t.tipo_erro, t.confianca_aluno, t.anotacoes, t.imagem_resolucao_path,
+            q.materia, q.topico, q.banca, q.ano, q.enunciado, q.gabarito
+        FROM tentativas t
+        JOIN questoes q ON t.questao_id = q.id
+        WHERE t.aluno_id = ?
+        ORDER BY t.data_hora DESC
+        LIMIT ?
+    """, (aluno_id, limite))
     historico = cur.fetchall()
     con.close()
     return historico
 
 
-def obter_metricas_estudante(aluno_id: int | None = None):
+def obter_metricas_estudante(aluno_id: int):
     """
     Agrega dados de tentativas para alimentar o Dashboard do Estudante:
     - Métricas gerais (total, acertos, taxa, tempo médio)
@@ -158,23 +146,14 @@ def obter_metricas_estudante(aluno_id: int | None = None):
     cur = con.cursor()
 
     # 1. Totais Gerais
-    if aluno_id:
-        cur.execute("""
-            SELECT 
-                COUNT(*) as total_resolvidas,
-                COALESCE(SUM(acertou), 0) as total_acertos,
-                COALESCE(AVG(tempo_segundos), 0) as tempo_medio
-            FROM tentativas
-            WHERE aluno_id = ?
-        """, (aluno_id,))
-    else:
-        cur.execute("""
-            SELECT 
-                COUNT(*) as total_resolvidas,
-                COALESCE(SUM(acertou), 0) as total_acertos,
-                COALESCE(AVG(tempo_segundos), 0) as tempo_medio
-            FROM tentativas
-        """)
+    cur.execute("""
+        SELECT 
+            COUNT(*) as total_resolvidas,
+            COALESCE(SUM(acertou), 0) as total_acertos,
+            COALESCE(AVG(tempo_segundos), 0) as tempo_medio
+        FROM tentativas
+        WHERE aluno_id = ?
+    """, (aluno_id,))
     geral = cur.fetchone()
 
     total_resolvidas = geral["total_resolvidas"] if geral else 0
@@ -183,79 +162,43 @@ def obter_metricas_estudante(aluno_id: int | None = None):
     taxa_acerto = round((total_acertos / total_resolvidas * 100), 1) if total_resolvidas > 0 else 0.0
 
     # 2. Desempenho por Matéria
-    if aluno_id:
-        cur.execute("""
-            SELECT 
-                q.materia,
-                COUNT(t.id) as tentativas,
-                SUM(t.acertou) as acertos,
-                ROUND(AVG(t.acertou) * 100, 1) as taxa_acerto,
-                ROUND(AVG(t.tempo_segundos), 1) as tempo_medio
-            FROM tentativas t
-            JOIN questoes q ON t.questao_id = q.id
-            WHERE t.aluno_id = ?
-            GROUP BY q.materia
-        """, (aluno_id,))
-    else:
-        cur.execute("""
-            SELECT 
-                q.materia,
-                COUNT(t.id) as tentativas,
-                SUM(t.acertou) as acertos,
-                ROUND(AVG(t.acertou) * 100, 1) as taxa_acerto,
-                ROUND(AVG(t.tempo_segundos), 1) as tempo_medio
-            FROM tentativas t
-            JOIN questoes q ON t.questao_id = q.id
-            GROUP BY q.materia
-        """)
+    cur.execute("""
+        SELECT 
+            q.materia,
+            COUNT(t.id) as tentativas,
+            SUM(t.acertou) as acertos,
+            ROUND(AVG(t.acertou) * 100, 1) as taxa_acerto,
+            ROUND(AVG(t.tempo_segundos), 1) as tempo_medio
+        FROM tentativas t
+        JOIN questoes q ON t.questao_id = q.id
+        WHERE t.aluno_id = ?
+        GROUP BY q.materia
+    """, (aluno_id,))
     materias = cur.fetchall()
 
     # 3. Distribuição de Estratégias
-    if aluno_id:
-        cur.execute("""
-            SELECT 
-                estrategia_usada,
-                COUNT(*) as quantidade,
-                SUM(acertou) as acertos
-            FROM tentativas
-            WHERE aluno_id = ? AND estrategia_usada IS NOT NULL AND estrategia_usada != ''
-            GROUP BY estrategia_usada
-            ORDER BY quantidade DESC
-        """, (aluno_id,))
-    else:
-        cur.execute("""
-            SELECT 
-                estrategia_usada,
-                COUNT(*) as quantidade,
-                SUM(acertou) as acertos
-            FROM tentativas
-            WHERE estrategia_usada IS NOT NULL AND estrategia_usada != ''
-            GROUP BY estrategia_usada
-            ORDER BY quantidade DESC
-        """)
+    cur.execute("""
+        SELECT 
+            estrategia_usada,
+            COUNT(*) as quantidade,
+            SUM(acertou) as acertos
+        FROM tentativas
+        WHERE aluno_id = ? AND estrategia_usada IS NOT NULL AND estrategia_usada != ''
+        GROUP BY estrategia_usada
+        ORDER BY quantidade DESC
+    """, (aluno_id,))
     estrategias = cur.fetchall()
 
     # 4. Distribuição de Erros (quando errou)
-    if aluno_id:
-        cur.execute("""
-            SELECT 
-                tipo_erro,
-                COUNT(*) as quantidade
-            FROM tentativas
-            WHERE aluno_id = ? AND acertou = 0 AND tipo_erro != 'nenhum'
-            GROUP BY tipo_erro
-            ORDER BY quantidade DESC
-        """, (aluno_id,))
-    else:
-        cur.execute("""
-            SELECT 
-                tipo_erro,
-                COUNT(*) as quantidade
-            FROM tentativas
-            WHERE acertou = 0 AND tipo_erro != 'nenhum'
-            GROUP BY tipo_erro
-            ORDER BY quantidade DESC
-        """)
+    cur.execute("""
+        SELECT 
+            tipo_erro,
+            COUNT(*) as quantidade
+        FROM tentativas
+        WHERE aluno_id = ? AND acertou = 0 AND tipo_erro != 'nenhum'
+        GROUP BY tipo_erro
+        ORDER BY quantidade DESC
+    """, (aluno_id,))
     erros = cur.fetchall()
 
     con.close()

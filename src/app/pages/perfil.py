@@ -4,6 +4,7 @@ Visualização e edição completa de perfil, dados acadêmicos,
 faculdade, curso, objetivos e concursos/vestibulares foco.
 """
 
+import html
 import streamlit as st
 from src.database.users import (
     buscar_usuario_por_id,
@@ -139,6 +140,11 @@ def show():
     else:
         tag_subtitulo = "Estudante MathAI"
 
+    nome_seguro = html.escape(nome_completo)
+    email_seguro = html.escape(email_usuario)
+    tag_subtitulo_seguro = html.escape(tag_subtitulo)
+    iniciais_seguro = html.escape(iniciais)
+
     st.markdown(f"""
     <div style="background: {bg_card}; border: 1.5px solid {border_card}; border-radius: 18px;
                 padding: 22px 26px; box-shadow: {shadow_card}; margin-bottom: 24px;
@@ -149,18 +155,18 @@ def show():
                         border: 2.5px solid {gold_border}; color: white; font-weight: 800;
                         display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
                         box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);">
-                {iniciais}
+                {iniciais_seguro}
             </div>
             <div>
                 <h2 style="margin: 0; font-size: 1.45rem; font-weight: 800; color: {text_main};">
-                    {nome_completo}
+                    {nome_seguro}
                 </h2>
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap;">
-                    <span style="font-size: 0.85rem; color: {text_muted};">{email_usuario}</span>
+                    <span style="font-size: 0.85rem; color: {text_muted};">{email_seguro}</span>
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 9999px;
                                  background: {'rgba(245, 158, 11, 0.15)' if is_dark else 'rgba(217, 119, 6, 0.12)'};
                                  color: {gold_accent}; border: 1px solid {gold_border};">
-                        {tag_subtitulo}
+                        {tag_subtitulo_seguro}
                     </span>
                     <span style="font-size: 0.72rem; color: {text_muted};">ID #{user_id}</span>
                 </div>

@@ -33,14 +33,11 @@ def obter_chave_api() -> str | None:
         return chave_env
 
     # 3. Verifica em arquivo .env na raiz do projeto
-    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line.startswith("GEMINI_API_KEY="):
-                val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                if val:
-                    return val
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
+    chave_dotenv = os.environ.get("GEMINI_API_KEY", "").strip()
+    if chave_dotenv:
+        return chave_dotenv
 
     # 4. Fallback: Banco de Dados Turso (configurações globais centrais)
     try:

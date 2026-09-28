@@ -1,4 +1,4 @@
-﻿import json
+import json
 import io
 import streamlit as st
 from src.database.db import pegar_conexao
@@ -98,24 +98,18 @@ def _para_json_treino(rows):
     return resultado
 
 
-def _listar_alunos():
-    con = pegar_conexao()
-    cur = con.cursor()
-    try:
-        cur.execute('SELECT DISTINCT aluno_id FROM diagnosticos_ia ORDER BY aluno_id')
-        return [r['aluno_id'] for r in cur.fetchall()]
-    except Exception:
-        return []
-    finally:
-        con.close()
-
-
 def show():
     st.markdown('## 🧠 Dataset & Treino da IA')
     st.caption(
         'Cada análise do Gemini + resposta do aluno = 1 exemplo de treino para o futuro modelo próprio. '
         'Exporte os dados para fine-tuning quando tiver amostras suficientes.'
     )
+
+    # Segurança: restringe ao aluno logado (impede acesso a dados de outros)
+    aluno_id_sessao = st.session_state.get("aluno_id")
+    if not aluno_id_sessao:
+        st.warning("Você precisa estar logado para acessar esta página.")
+        return
 
     con = pegar_conexao()
     cur = con.cursor()
@@ -141,12 +135,7 @@ def show():
 
     st.markdown('---')
 
-    aluno_filtro = st.selectbox(
-        'Filtrar por aluno:',
-        options=['Todos'] + _listar_alunos(),
-        key='dataset_filtro_aluno'
-    )
-    aluno_sel = None if aluno_filtro == 'Todos' else aluno_filtro
+    aluno_sel = aluno_id_sessao
 
     st.markdown('### 📊 Diagnósticos Coletados (Análises do Gemini)')
     rows = _carregar_dados_dataset(aluno_sel)
