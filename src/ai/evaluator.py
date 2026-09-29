@@ -9,6 +9,7 @@ import time
 import base64
 from google.genai import types
 from src.ai.client import criar_cliente_gemini, tem_chave_configurada
+from src.ai.prompts import PROMPT_AVALIADOR_COGNITIVO, PROMPT_TUTOR_SOCRATICO
 from src.app.utils import formatar_transcricao_latex
 
 
@@ -375,7 +376,8 @@ Use exatamente esta estrutura:
   "diagnostico": "...",
   "metodo_alternativo": "...",
   "linha_do_erro": "... ou null",
-  "dica_proximo_passo": "..."
+  "dica_proximo_passo": "...",
+  "confianca_diagnostico": "alta | media | baixa"
 }
 
 Regras adicionais para o JSON:
@@ -385,7 +387,11 @@ Regras adicionais para o JSON:
 - não inclua vírgulas finais;
 - `linha_do_erro` deve ser JSON null quando não houver erro;
 - todos os demais campos devem possuir uma string válida;
-- não invente informações ausentes.
+- não invente informações ausentes;
+- `confianca_diagnostico` deve ser:
+  - "alta": imagem nítida ou justificativa completa, resolução integralmente verificável;
+  - "media": imagem legível com partes ambíguas, ou justificativa parcial;
+  - "baixa": imagem ilegível, justificativa ausente ou resolução muito incompleta.
 
 ==================================================
 15. PRINCÍPIO FINAL
@@ -411,10 +417,14 @@ def selecionar_modelos_candidatos(questao: dict | None = None) -> tuple[list[str
     """
     Roteamento inteligente de modelos conforme a dificuldade da questão:
     - Dificuldade nula (is None), alta (>= 3) ou bancas de elite (IME, ITA, ESPCEX):
-      Prioriza gemini-3.5-flash-lite e gemini-flash-lite-latest com fallback para gemini-3-flash-preview e gemini-3.6-flash.
+      Prioriza gemini-3.5-flash-lite e gemini-flash-lite-latest com fallback para gemini-3-flash-preview.
     - Dificuldade básica (1 ou 2):
       Prioriza gemini-flash-lite-latest para máxima velocidade, economia e estabilidade.
     Retorna (lista_de_modelos_em_ordem_de_prioridade, rotulo_amigavel).
+
+    MODELOS PROIBIDOS (ver AGENTS.md):
+    - gemini-3.6-flash, gemini-3.7-flash, gemini-3.8-flash: retornam 503 UNAVAILABLE frequentemente.
+    - gemini-1.5-*, gemini-2.5-*: descontinuados, retornam 404 NOT_FOUND.
     """
     if not isinstance(questao, dict):
         questao = {}
@@ -423,20 +433,18 @@ def selecionar_modelos_candidatos(questao: dict | None = None) -> tuple[list[str
     banca = str(questao.get("banca", "")).upper()
 
     if dif is None or dif >= 3 or banca in ("IME", "ITA", "ESPCEX"):
-        # Modo Pro: modelos de alta capacidade com raciocínio e síntese detalhada
+        # Modo Pro: questões difíceis ou bancas de elite
         return [
             "gemini-3.5-flash-lite",
             "gemini-flash-lite-latest",
             "gemini-3-flash-preview",
-            "gemini-3.6-flash",
         ], "🧠 Modo Pro / Raciocínio Profundo"
     else:
-        # Modo Flash: velocidade máxima e estabilidade no plano gratuito
+        # Modo Flash: questões básicas — máxima velocidade e estabilidade no Free Tier
         return [
             "gemini-flash-lite-latest",
             "gemini-3.5-flash-lite",
             "gemini-3-flash-preview",
-            "gemini-3.6-flash",
         ], "⚡ Modo Flash / Alta Velocidade"
 
 
@@ -508,7 +516,7 @@ INSTRUÇÕES DE EXECUÇÃO:
     modelos_candidatos, rotulo_modo = selecionar_modelos_candidatos(questao)
 
     config = types.GenerateContentConfig(
-        system_instruction=PROMPT_SISTEMA_AVALIADOR,
+        system_instruction=PROMPT_AVALIADOR_COGNITIVO,
         response_mime_type="application/json",
         temperature=0.2  # Baixa temperatura para máximo rigor matemático
     )
@@ -681,7 +689,10 @@ REGRAS POR NÍVEL:
 Responda em tom amigável, direto, com notação matemática em LaTeX ($...$)."""
 
     modelos_candidatos, _ = selecionar_modelos_candidatos(questao)
-    config = types.GenerateContentConfig(temperature=0.3)
+    config = types.GenerateContentConfig(
+        system_instruction=PROMPT_TUTOR_SOCRATICO,
+        temperature=0.3
+    )
 
     for mod in modelos_candidatos:
         try:
@@ -699,23 +710,33 @@ Responda em tom amigável, direto, com notação matemática em LaTeX ($...$).""
 
 
 def _gerar_diagnostico_simulado(questao: dict, justificativa_texto: str | None) -> dict:
-    """Gera um diagnóstico preliminar quando a chave de API não estiver ativa."""
+    """
+    Gera um diagnóstico SIMULADO quando a chave de API não estiver ativa.
+    IMPORTANTE: Não afirma que a resolução está correta — registra como 'incompleto'
+    para não enganar o aluno sobre seu desempenho real.
+    """
     topico = questao.get("topico", "Matemática")
-    just = justificativa_texto.strip() if justificativa_texto and justificativa_texto.strip() else "Resolução registrada no sistema."
-    # Protege asteriscos matemáticos (como 4*1 + 6*2) para não virarem itálico no markdown
-    just_segura = just.replace("*", "&#42;")
+    just = justificativa_texto.strip() if justificativa_texto and justificativa_texto.strip() else ""
+    just_segura = just.replace("*", "&#42;") if just else ""
 
     return {
-        "transcricao_latex": r"\text{Identificado no rascunho: } \text{Aplicação de propriedades de } " + topico,
+        "transcricao_latex": r"\text{Análise indisponível — chave de API não configurada.}",
         "passos": [
-            "Passo 1: Leitura e isolamento das grandezas fornecidas no enunciado",
-            "Passo 2: Montagem da relação fundamental de " + topico,
-            "Passo 3: Desenvolvimento algébrico em busca da alternativa correta"
+            "⚠️ O motor de avaliação cognitiva (IA) não está ativo.",
+            "Configure a chave GEMINI_API_KEY para obter diagnósticos reais.",
+            "Sua resposta foi registrada e poderá ser avaliada quando a IA estiver disponível."
         ],
-        "estrategia_identificada": "Análise Conceitual e Algébrica",
-        "status_resolucao": "correto",
-        "diagnostico": f"Sua justificativa ('{just_segura}') demonstra compreensão do conceito de {topico}. O raciocínio e o desenvolvimento matemático foram processados com sucesso pelo MathAI.",
-        "metodo_alternativo": "Não há necessidade de um método alternativo; a estratégia utilizada é adequada. A principal intervenção deve ser consolidar a precisão e a formalização das etapas.",
+        "estrategia_identificada": "Não avaliado (sem IA)",
+        # Honesto: não sabemos se está correto sem a IA avaliar
+        "status_resolucao": "incompleto",
+        "diagnostico": (
+            f"⚠️ **Motor de IA não configurado**: O diagnóstico cognitivo real requer a chave GEMINI_API_KEY. "
+            f"{'Sua justificativa foi registrada: *' + just_segura[:120] + ('...' if len(just_segura) > 120 else '') + '*' if just_segura else 'Nenhuma justificativa foi fornecida.'} "
+            f"Configure a chave de API para obter análise completa de {topico}."
+        ),
+        "metodo_alternativo": "Não disponível sem o motor de IA ativo.",
         "linha_do_erro": None,
-        "dica_proximo_passo": "Excelente! Continue treinando para consolidar a velocidade e a precisão das contas."
+        "dica_proximo_passo": "Configure a chave GEMINI_API_KEY nas configurações da plataforma para obter dicas personalizadas.",
+        "confianca_diagnostico": "nenhuma",  # sem IA = sem confiança real
+        "modelo_utilizado": "Modo Simulado (sem API)"
     }

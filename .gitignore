@@ -82,3 +82,5 @@ desktop.ini
 # Additions for Github Private Repo
 *.sqlite3
 data/*.db
+.agents/
+
