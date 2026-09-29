@@ -1,3 +1,7 @@
+<p align="right">
+  <b>🇧🇷 Versão em Português</b> &nbsp;|&nbsp; <a href="./README.en.md">🇺🇸 English Version</a>
+</p>
+
 <div align="center">
   <h1>MathAI 🧠📐</h1>
   <p>Uma IA que aprende como você aprende Matemática para ajudar você a aprender melhor.</p>
