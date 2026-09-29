@@ -8,6 +8,7 @@ import json
 import hashlib
 from google.genai import types
 from src.ai.client import criar_cliente_gemini, tem_chave_configurada
+from src.ai.prompts import PROMPT_CURADOR_QUESTOES
 
 
 PROMPT_SISTEMA_TRADUTOR = """Você é um Tradutor e Curador Especialista em Matemática Olímpica e Acadêmica do MathAI.
@@ -97,18 +98,16 @@ Retorne no formato JSON:
     conteudos.append(prompt_usuario)
 
     config = types.GenerateContentConfig(
-        system_instruction=PROMPT_SISTEMA_TRADUTOR,
+        system_instruction=PROMPT_CURADOR_QUESTOES,
         response_mime_type="application/json",
         temperature=0.2  # Baixa temperatura para manter a fidelidade matemática
     )
 
-    # Modelos recomendados em ordem de preferência (ativos na API)
+    # Modelos em ordem de preferência — conforme AGENTS.md (banidos: 3.6/3.7/3.8-flash, 1.5-*, 2.5-*)
     modelos = [
-        "models/gemini-3.6-flash",
-        "models/gemini-3.7-flash",
-        "models/gemini-3.8-flash",
-        "models/gemini-3.5-flash",
-        "models/gemini-3.1-flash-lite"
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3-flash-preview",
     ]
 
     resposta = None
