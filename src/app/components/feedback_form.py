@@ -166,18 +166,21 @@ def render_resolution_form(questao: dict, on_success_callback=None):
                         )
             
             if f"dica_conteudo_{q_id}" in st.session_state:
+                dica_formatada = formatar_transcricao_latex(st.session_state[f"dica_conteudo_{q_id}"])
+                nivel_mostrado = st.session_state.get(f'dica_nivel_mostrado_{q_id}', 1)
                 st.markdown(
                     f"""
-                    <div style="background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; border-radius: 8px; padding: 12px 16px; margin-top: 12px;">
-                        <div style="font-weight: 700; color: #a78bfa; font-size: 0.9rem; margin-bottom: 6px;">
-                            💡 Dica Socrática (Nível {st.session_state.get(f'dica_nivel_mostrado_{q_id}', 1)} de 5):
+                    <div style="background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; border-radius: 8px; padding: 12px 16px; margin-top: 12px; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: #a78bfa; font-size: 0.9rem;">
+                            💡 Dica Socrática (Nível {nivel_mostrado} de 5):
                         </div>
-                        <div style="font-size: 0.95rem; line-height: 1.6;">
+                    </div>
                     """,
                     unsafe_allow_html=True
                 )
-                st.markdown(st.session_state[f"dica_conteudo_{q_id}"])
-                st.markdown("</div></div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown(dica_formatada)
+
 
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
 

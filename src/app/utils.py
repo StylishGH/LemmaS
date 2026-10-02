@@ -126,6 +126,8 @@ def fix_latex_row_breaks(latex_str: str) -> str:
     dentro de ambientes LaTeX como cases, pmatrix, matrix, aligned, etc.
     Isso previne que linhas de sistemas ou matrizes fiquem coladas em uma só linha
     quando o JSON da IA decodifica '\\' como '\'.
+    Além disso, unifica as linhas internas do ambiente para evitar que o markdown
+    interprete quebras com barra dupla como quebras de linha HTML (<br>), que quebram o KaTeX.
     """
     env_pattern = r'(\\begin\{(?:cases|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|aligned|align\*?|array)\})([\s\S]*?)(\\end\{(?:cases|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|aligned|align\*?|array)\})'
 
@@ -135,9 +137,14 @@ def fix_latex_row_breaks(latex_str: str) -> str:
         end = match.group(3)
         # Substitui barra invertida isolada seguida de espaço, quebra de linha ou número
         body = re.sub(r'(?<!\\)\\(?:\s+|\n|(?=[0-9]))', r'\\\\ ', body)
-        return f"{start}{body}{end}"
+        # Unifica linhas do ambiente com \\ limpo sem quebras markdown
+        linhas = [l.strip() for l in body.splitlines() if l.strip()]
+        linhas_limpas = [re.sub(r'\\\\+\s*$', '', l).strip() for l in linhas if l.strip()]
+        body_unificado = ' \\\\ '.join(linhas_limpas)
+        return f"{start} {body_unificado} {end}"
 
     return re.sub(env_pattern, repl_env, latex_str)
+
 
 
 def has_natural_language(text: str) -> bool:

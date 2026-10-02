@@ -8,7 +8,12 @@ import json
 import time
 import base64
 from google.genai import types
-from src.ai.client import criar_cliente_gemini, tem_chave_configurada
+from src.ai.client import (
+    criar_cliente_gemini,
+    tem_chave_configurada,
+    tem_chave_nvidia_configurada,
+    chamar_nvidia_chat
+)
 from src.ai.prompts import PROMPT_AVALIADOR_COGNITIVO, PROMPT_TUTOR_SOCRATICO
 from src.app.utils import formatar_transcricao_latex
 
@@ -472,10 +477,67 @@ def analisar_resolucao(
     if not questao.get("enunciado") and enunciado_final:
         questao["enunciado"] = enunciado_final
 
-    # 1. Se não houver chave de API configurada, retorna um diagnóstico simulado elegante
-    if not tem_chave_configurada():
+    # 1. Se não houver nenhuma chave configurada, retorna diagnóstico simulado elegante
+    if not tem_chave_configurada() and not tem_chave_nvidia_configurada():
         return _gerar_diagnostico_simulado(questao, justificativa_final)
 
+    # -------------------------------------------------------------
+    # ROTA HÍBRIDA 1: Se for resolução puramente em texto, tenta a NVIDIA primeiro
+    # (Ultra-rápido ~0.9s e preserva 100% da cota do Gemini)
+    # -------------------------------------------------------------
+    if not imagem_final and tem_chave_nvidia_configurada():
+        prompt_conteudo_nv = f"""Analise a seguinte resolução para a questão:
+
+MATÉRIA: {questao.get('materia', '')}
+TÓPICO: {questao.get('topico', '')} ({questao.get('subtopico', '')})
+BANCA/ANO: {questao.get('banca', '')} {questao.get('ano', '')}
+DIFICULDADE: {questao.get('dificuldade', 'Não informada')}
+GABARITO OFICIAL: {questao.get('gabarito', '')}
+ESTRATÉGIAS ESPERADAS: {questao.get('estrategias_esperadas', '[]')}
+
+ENUNCIADO DA QUESTÃO:
+{enunciado_final}
+
+DADOS FORNECIDOS PELO ESTUDANTE:
+- Justificativa escrita: {justificativa_final if justificativa_final else 'Nenhuma justificativa em texto fornecida.'}
+- Arquivo anexado: Nenhum.
+
+INSTRUÇÕES DE EXECUÇÃO:
+1. Obtenha internamente a resolução matemática correta e independente para o ENUNCIADO antes de avaliar o estudante.
+2. Identifique os passos reais presentes na justificativa escrita.
+3. Se a resolução for por um método válido diferente do gabarito oficial, valide-a.
+4. Preencha o JSON estritamente conforme o protocolo de evidência e rigor pedagógico.
+"""
+        messages_nv = [
+            {"role": "system", "content": PROMPT_AVALIADOR_COGNITIVO},
+            {"role": "user", "content": prompt_conteudo_nv}
+        ]
+        for mod_nv in ["nvidia/nemotron-3.5-lightning-30b-a3b", "deepseek-ai/deepseek-v4.1-flash"]:
+            dados_nv = chamar_nvidia_chat(
+                messages=messages_nv,
+                model=mod_nv,
+                temperature=0.2,
+                max_tokens=1536,
+                timeout=14.0,
+                response_format={"type": "json_object"}
+            )
+            if dados_nv:
+                try:
+                    conteudo = dados_nv["choices"][0]["message"]["content"]
+                    resultado = json.loads(conteudo)
+                    nome_rotulo = "NVIDIA Nemotron 3.5" if "nemotron" in mod_nv else "NVIDIA DeepSeek v4.1"
+                    resultado["modelo_utilizado"] = f"🟢 {nome_rotulo} (NVIDIA NIM)"
+                    if "transcricao_latex" in resultado and resultado["transcricao_latex"]:
+                        resultado["transcricao_latex"] = formatar_transcricao_latex(resultado["transcricao_latex"])
+                    if "metodo_alternativo" in resultado and resultado["metodo_alternativo"]:
+                        resultado["metodo_alternativo"] = formatar_transcricao_latex(resultado["metodo_alternativo"])
+                    return resultado
+                except Exception:
+                    continue  # Se falhar o JSON, tenta o próximo modelo da NVIDIA ou cai no Gemini
+
+    # -------------------------------------------------------------
+    # ROTA 2: Imagens / OCR ou Fallback de Texto -> Google Gemini
+    # -------------------------------------------------------------
     client = criar_cliente_gemini()
     if not client:
         return _gerar_diagnostico_simulado(questao, justificativa_final)
@@ -655,8 +717,8 @@ def obter_dica_socratica(questao: dict, nivel: int) -> str:
     """
     nivel = max(1, min(5, nivel))
 
-    # Se não houver chave, retorna dicas didáticas simuladas
-    if not tem_chave_configurada():
+    # Se não houver chave de nenhum provedor, retorna dicas didáticas simuladas
+    if not tem_chave_configurada() and not tem_chave_nvidia_configurada():
         dicas_mock = {
             1: f"💡 **Nível 1 (Dados)**: Observe atentamente o que a questão pede em relação a **{questao.get('topico', '')}**. Quais valores numéricos foram explicitamente fornecidos?",
             2: f"💡 **Nível 2 (Conceito)**: Pense em qual teorema ou definição padrão se aplica a este caso. Uma das estratégias catalogadas para esta questão é: **{questao.get('estrategias_esperadas', '')}**.",
@@ -665,10 +727,6 @@ def obter_dica_socratica(questao: dict, nivel: int) -> str:
             5: f"💡 **Nível 5 (Resolução Completa)**: O gabarito oficial é **({questao.get('gabarito', '')})**. Para resolver, aplique as propriedades de {questao.get('topico', '')} desenvolvendo as equações até obter o resultado final."
         }
         return dicas_mock.get(nivel, "Dica indisponível.")
-
-    client = criar_cliente_gemini()
-    if not client:
-        return "Configure a sua chave do Gemini para obter dicas socráticas em tempo real geradas por IA."
 
     prompt_dica = f"""Gere uma DICA SOCRÁTICA DE NÍVEL {nivel} DE 5 para um estudante tentando resolver a seguinte questão de matemática:
 
@@ -688,22 +746,52 @@ REGRAS POR NÍVEL:
 
 Responda em tom amigável, direto, com notação matemática em LaTeX ($...$)."""
 
-    modelos_candidatos, _ = selecionar_modelos_candidatos(questao)
-    config = types.GenerateContentConfig(
-        system_instruction=PROMPT_TUTOR_SOCRATICO,
-        temperature=0.3
-    )
-
-    for mod in modelos_candidatos:
-        try:
-            resposta = client.models.generate_content(
-                model=mod,
-                contents=prompt_dica,
-                config=config
+    # -------------------------------------------------------------
+    # 1. Rota Primária: NVIDIA NIM (Nemotron 3.5 Lightning / DeepSeek v4.1 Flash)
+    # (Ultra-rápido ~0.9s e economiza 100% da cota diária do Gemini)
+    # -------------------------------------------------------------
+    if tem_chave_nvidia_configurada():
+        messages = [
+            {"role": "system", "content": PROMPT_TUTOR_SOCRATICO},
+            {"role": "user", "content": prompt_dica}
+        ]
+        for mod_nv in ["nvidia/nemotron-3.5-lightning-30b-a3b", "deepseek-ai/deepseek-v4.1-flash"]:
+            dados_nv = chamar_nvidia_chat(
+                messages=messages,
+                model=mod_nv,
+                temperature=0.3,
+                max_tokens=1536,
+                timeout=12.0
             )
-            return resposta.text.strip()
-        except Exception:
-            continue
+            if dados_nv:
+                try:
+                    conteudo = dados_nv["choices"][0]["message"]["content"].strip()
+                    if conteudo:
+                        return formatar_transcricao_latex(conteudo)
+                except Exception:
+                    continue  # Fallback para o próximo modelo da NVIDIA ou Gemini
+
+    # -------------------------------------------------------------
+    # 2. Fallback Secundário: Google Gemini
+    # -------------------------------------------------------------
+    client = criar_cliente_gemini()
+    if client:
+        modelos_candidatos, _ = selecionar_modelos_candidatos(questao)
+        config = types.GenerateContentConfig(
+            system_instruction=PROMPT_TUTOR_SOCRATICO,
+            temperature=0.3
+        )
+
+        for mod in modelos_candidatos:
+            try:
+                resposta = client.models.generate_content(
+                    model=mod,
+                    contents=prompt_dica,
+                    config=config
+                )
+                return formatar_transcricao_latex(resposta.text.strip())
+            except Exception:
+                continue
 
     return "Não foi possível gerar a dica no momento. Verifique sua chave de API e tente novamente."
 
