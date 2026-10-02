@@ -204,6 +204,13 @@ Não fazia sentido depender só de `MathAI → Gemini`. Evoluiu para:
 
 ---
 
+### 📖 Documentação Completa da Arquitetura de IA
+
+A implementação detalhada do roteador, circuit breakers, throttle, telemetria, validação de saída, versionamento de prompts e benchmarks está em:
+[**docs/ai-router.md**](docs/ai-router.md)
+
+---
+
 ### O Banco Ficou Sério: Rastreabilidade
 
 Para evoluir para pesquisa/ML, preciso comparar `Modelo A vs Modelo B` — não "a IA falou isso".
