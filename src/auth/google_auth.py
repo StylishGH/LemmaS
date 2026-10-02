@@ -35,8 +35,8 @@ def obter_credenciais_google():
     return client_id, client_secret
 
 
-def gerar_url_auth_google(client_id: str, redirect_uri: str) -> str:
-    """Gera o link de autorização do Google OAuth2."""
+def gerar_url_auth_google(client_id: str, redirect_uri: str, state: str | None = None) -> str:
+    """Gera o link de autorização do Google OAuth2 (com `state` anti-CSRF)."""
     params = {
         "client_id": client_id,
         "redirect_uri": redirect_uri,
@@ -45,6 +45,8 @@ def gerar_url_auth_google(client_id: str, redirect_uri: str) -> str:
         "access_type": "online",
         "prompt": "select_account"
     }
+    if state:
+        params["state"] = state
     return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
 
 
@@ -64,7 +66,13 @@ def trocar_codigo_por_usuario_google(code: str, client_id: str, client_secret: s
     try:
         resp = requests.post(token_url, data=payload, timeout=10)
         if resp.status_code != 200:
-            print(f"Erro ao trocar código Google: {resp.status_code} - {resp.text}")
+            # Não loga o corpo inteiro da resposta (pode ecoar dados da requisição)
+            detalhe = ""
+            try:
+                detalhe = str(resp.json().get("error", ""))
+            except Exception:
+                pass
+            print(f"[MathAI] Falha ao trocar o codigo Google: HTTP {resp.status_code} error={detalhe}")
             return None
 
         tokens = resp.json()
@@ -84,8 +92,9 @@ def trocar_codigo_por_usuario_google(code: str, client_id: str, client_secret: s
             "email": (info.get("email") or "").lower().strip(),
             "nome": info.get("name") or info.get("given_name") or "Estudante",
             "picture": info.get("picture"),
-            "verified_email": info.get("verified_email", True)
+            # None = o Google não informou; o login só bloqueia se for False explícito
+            "verified_email": info.get("verified_email", None)
         }
     except Exception as e:
-        print(f"Exceção ao autenticar com Google: {e}")
+        print(f"[MathAI] Excecao ao autenticar com Google: {type(e).__name__}")
         return None

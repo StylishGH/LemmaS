@@ -24,7 +24,9 @@ from src.database.users import (
     formatar_cpf,
     validar_cpf,
     criar_sessao_lembrada,
-    encerrar_sessao_por_token
+    encerrar_sessao_por_token,
+    criar_oauth_state,
+    consumir_oauth_state
 )
 from src.app.pages.perfil import (
     ESCOLARIDADE_OPCOES,
@@ -42,6 +44,34 @@ MOTIVOS_OPCOES = {
     "uso_profissional":   "💼 Uso profissional / área técnica",
     "curiosidade":        "🔍 Curiosidade / aprendizado geral",
 }
+
+
+def _obter_ip_cliente() -> str | None:
+    """
+    IP do cliente para o rate limit por IP. No Streamlit Cloud o IP real vem no
+    cabeçalho X-Forwarded-For (o primeiro valor da lista é o cliente original).
+    """
+    try:
+        headers = st.context.headers or {}
+        encaminhado = headers.get("X-Forwarded-For") or headers.get("x-forwarded-for")
+        if encaminhado:
+            return str(encaminhado).split(",")[0].strip() or None
+        return str(headers.get("X-Real-Ip") or "").strip() or None
+    except Exception:
+        return None
+
+
+def _oauth_state_sessao() -> str:
+    """
+    State OAuth da sessão atual (uma linha por sessão, não por render).
+    Fica no banco para poder ser validado no callback, que acontece em outra
+    sessão — por isso o botão do Google abre em nova aba sem quebrar a validação.
+    """
+    estado = st.session_state.get("oauth_state")
+    if not estado or not isinstance(estado, str):
+        estado = criar_oauth_state()
+        st.session_state["oauth_state"] = estado
+    return estado
 
 
 def show():
@@ -213,24 +243,6 @@ def show():
         text-align: center;
         margin-bottom: 20px;
     }}
-
-    /* Caixa de Código OTP */
-    .otp-display-box {{
-        background: rgba(245, 158, 11, 0.1);
-        border: 2px dashed #f59e0b;
-        border-radius: 14px;
-        padding: 16px;
-        text-align: center;
-        margin: 16px 0;
-    }}
-
-    .otp-code-text {{
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: 10px;
-        color: #fbbf24;
-        font-family: monospace;
-    }}
     </style>
     <script>
         try {{
@@ -274,14 +286,26 @@ def show():
 
         # ── 0. INTERCEPTOR GOOGLE OAUTH ──────────────────────────────────────
         code = st.query_params.get("code")
+        state_recebido = st.query_params.get("state")
         if code:
+            # Anti login CSRF: o `state` precisa existir, ser o mesmo que geramos
+            # e nunca ter sido usado antes (single-use).
+            if not consumir_oauth_state(state_recebido):
+                st.query_params.clear()
+                st.session_state.pop("oauth_state", None)
+                st.error("Sessão de login do Google expirada ou inválida. Clique em 'Continuar com o Google' novamente.")
+                return
             g_cid, g_csec = obter_credenciais_google()
             if g_cid and g_csec:
                 red_uri = os.environ.get("MATHAI_BASE_URL", "https://mathia.streamlit.app")
                 with st.spinner("Autenticando com o Google..."):
                     u_google = trocar_codigo_por_usuario_google(code, g_cid, g_csec, red_uri)
                 st.query_params.clear()
-                if u_google:
+                if u_google and u_google.get("email"):
+                    if u_google.get("verified_email") is False:
+                        st.session_state.pop("oauth_state", None)
+                        st.error("O e-mail da sua conta Google não está verificado. Verifique-o no Google e tente novamente.")
+                        return
                     u_db = buscar_usuario_por_email(u_google["email"])
                     if u_db:
                         st.session_state.usuario_logado = u_db
@@ -303,11 +327,13 @@ def show():
             g_email = g_user.get("email", "")
             g_pic = g_user.get("picture", "")
             nome_seguro = html.escape(g_nome.split()[0])
+            # Escape também na URL da foto: é o único valor interpolado direto em HTML
+            pic_seguro = html.escape(str(g_pic), quote=True)
 
             st.markdown(f"""
             <div class="auth-card">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    {'<img src="' + g_pic + '" style="width: 64px; height: 64px; border-radius: 50%; margin-bottom: 8px; border: 2px solid #7c3aed;">' if g_pic else '<div style="font-size: 2.2rem; margin-bottom: 4px;">🎓</div>'}
+                    {'<img src="' + pic_seguro + '" style="width: 64px; height: 64px; border-radius: 50%; margin-bottom: 8px; border: 2px solid #7c3aed;">' if pic_seguro else '<div style="font-size: 2.2rem; margin-bottom: 4px;">🎓</div>'}
                     <h3 style="margin: 0; color: {text_main}; font-weight: 700;">Quase lá, {nome_seguro}!</h3>
                     <p style="font-size: 0.86rem; color: {text_muted}; margin-top: 4px;">
                         Sua conta Google foi verificada. Complete seus dados de estudante para personalizarmos seus treinos.
@@ -483,7 +509,6 @@ def show():
         # ── FLUXO DE VERIFICAÇÃO EM 2 ETAPAS (2FA / OTP) ──────────────────────
         if st.session_state.get("verificando_email"):
             email_verif = st.session_state.verificando_email
-            codigo_teste = st.session_state.get("codigo_teste_otp", "")
             email_seguro = html.escape(email_verif)
 
             st.markdown(f"""
@@ -509,18 +534,14 @@ def show():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            elif codigo_teste:
-                st.markdown(f"""
-                <div class="otp-display-box">
-                    <div style="font-size: 0.75rem; color: #f59e0b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">
-                        🔑 Código de Verificação (Modo de Teste / Dev)
-                    </div>
-                    <div class="otp-code-text">{codigo_teste}</div>
-                    <div style="font-size: 0.75rem; color: {text_muted}; margin-top: 4px;">
-                        Para enviar para a caixa de e-mail real, configure as credenciais SMTP no Streamlit Cloud
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+            else:
+                # O código NUNCA é exibido na tela. Antes, quando o envio de e-mail
+                # falhava, o app mostrava o código — o que anulava a verificação
+                # de e-mail e permitia criar contas sem provar posse do endereço.
+                st.warning(
+                    "Não conseguimos enviar o e-mail com o código agora. "
+                    "Aguarde alguns instantes e clique em **🔄 Reenviar Código**."
+                )
 
             with st.form("form_otp", clear_on_submit=False):
                 codigo_digitado = st.text_input(
@@ -557,12 +578,12 @@ def show():
             with col_btn_reenviar:
                 if st.button("🔄 Reenviar Código", use_container_width=True, key="btn_reenviar_otp"):
                     res_reenvio = reenviar_codigo_otp(email_verif)
-                    st.session_state.email_enviado_real = res_reenvio.get("enviado_email", False)
-                    if not res_reenvio.get("enviado_email"):
-                        st.session_state.codigo_teste_otp = res_reenvio.get("codigo_teste", "")
+                    enviado = res_reenvio.get("enviado_email", False)
+                    st.session_state.email_enviado_real = enviado
+                    if enviado:
+                        st.info("Novo código enviado! Confira sua caixa de entrada e o spam.")
                     else:
-                        st.session_state.codigo_teste_otp = ""
-                    st.info("Novo código gerado!")
+                        st.warning("Novo código gerado, mas o envio do e-mail falhou. Tente novamente em alguns instantes.")
                     st.rerun()
 
             with col_btn_voltar:
@@ -595,7 +616,7 @@ def show():
             g_cid, g_csec = obter_credenciais_google()
             if g_cid:
                 base_url = os.environ.get("MATHAI_BASE_URL", "https://mathia.streamlit.app")
-                auth_url = gerar_url_auth_google(g_cid, base_url)
+                auth_url = gerar_url_auth_google(g_cid, base_url, _oauth_state_sessao())
                 bg_btn = "#161329" if is_dark else "#ffffff"
                 border_btn = "rgba(124, 58, 237, 0.55)" if is_dark else "#cbd5e1"
                 text_btn = "#ffffff" if is_dark else "#1e293b"
@@ -636,7 +657,7 @@ def show():
                     if not email_login or not senha_login:
                         st.warning("Preencha e-mail e senha.")
                     else:
-                        resultado = fazer_login(email_login, senha_login)
+                        resultado = fazer_login(email_login, senha_login, ip=_obter_ip_cliente())
                         if resultado["ok"]:
                             st.session_state.usuario_logado = resultado["usuario"]
                             if lembrar_login:
@@ -648,7 +669,6 @@ def show():
                             st.rerun()
                         elif resultado.get("pendente_verificacao"):
                             st.session_state.verificando_email = resultado["email"]
-                            st.session_state.codigo_teste_otp = resultado.get("codigo_teste", "")
                             st.warning(resultado["erro"])
                             st.rerun()
                         else:
@@ -658,7 +678,9 @@ def show():
         with aba[1]:
             g_cid, g_csec = obter_credenciais_google()
             if g_cid:
-                auth_url = gerar_url_auth_google(g_cid, "https://mathia.streamlit.app")
+                # Mesmo redirect_uri do callback (o Google exige correspondência exata)
+                base_url = os.environ.get("MATHAI_BASE_URL", "https://mathia.streamlit.app")
+                auth_url = gerar_url_auth_google(g_cid, base_url, _oauth_state_sessao())
                 bg_btn = "#161329" if is_dark else "#ffffff"
                 border_btn = "rgba(124, 58, 237, 0.55)" if is_dark else "#cbd5e1"
                 text_btn = "#ffffff" if is_dark else "#1e293b"
@@ -938,11 +960,7 @@ def show():
                     if resultado["ok"]:
                         st.session_state.verificando_email = resultado["email"]
                         st.session_state.email_enviado_real = resultado.get("enviado_email", False)
-                        if not resultado.get("enviado_email"):
-                            st.session_state.codigo_teste_otp = resultado.get("codigo_teste", "")
-                        else:
-                            st.session_state.codigo_teste_otp = ""
-                        st.toast("Conta criada! Código de verificação gerado.", icon="🔑")
+                        st.toast("Conta criada! Confira seu e-mail para ativar a conta.", icon="🔑")
                         st.rerun()
                     else:
                         st.error(resultado["erro"])

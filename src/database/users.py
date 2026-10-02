@@ -5,8 +5,8 @@ e Verificação em Duas Etapas (2FA / OTP).
 """
 
 import hashlib
+import hmac
 import json
-import random
 import os
 import re
 import secrets
@@ -15,19 +15,54 @@ from datetime import datetime, timedelta
 import requests
 from src.database.db import pegar_conexao
 
+# ---- Constantes de segurança -------------------------------------------------
+MAX_TENTATIVAS_LOGIN = 5          # falhas antes de bloquear
+JANELA_BLOQUEIO_MINUTOS = 15      # tempo de bloqueio e janela de contagem
+MAX_TENTATIVAS_OTP = 5            # erros de código antes de invalidar o OTP
+BCRYPT_MAX_BYTES = 72             # limite nativo do bcrypt
+
+
+def _ambiente_debug_otp() -> bool:
+    """
+    True SOMENTE quando o modo de desenvolvimento é ligado explicitamente
+    (MATHAI_ENV=development|dev|local). Qualquer outro valor — inclusive a
+    variável ausente — é tratado como produção, de modo que o código OTP
+    nunca é devolvido ao cliente por padrão.
+    """
+    return os.environ.get("MATHAI_ENV", "").strip().lower() in ("development", "dev", "local")
+
 
 def _hash_senha(senha: str) -> str:
     """Gera hash seguro com bcrypt (salt automático, resistente a brute force)."""
     return bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def _verificar_senha(senha: str, hash_armazenado: str) -> bool:
-    """Verifica senha contra hash bcrypt. Suporta fallback SHA-256 para migração gradual."""
-    try:
-        return bcrypt.checkpw(senha.encode("utf-8"), hash_armazenado.encode("utf-8"))
-    except (ValueError, TypeError):
-        # Fallback: hash antigo SHA-256 (migração gradual — será rehashado no login)
-        return hashlib.sha256(senha.encode("utf-8")).hexdigest() == hash_armazenado
+def _verificar_senha(senha: str, hash_armazenado: str | None) -> bool:
+    """
+    Verifica a senha contra o hash armazenado.
+
+    - Hashes bcrypt ($2a$/$2b$/$2y$): verificação normal.
+    - Hashes legados SHA-256: comparação em tempo constante (hmac.compare_digest),
+      e o login rehasha para bcrypt na primeira autenticação bem-sucedida.
+    - Hash ausente ou corrompido: retorna False (nunca levanta exceção).
+    """
+    if not senha or not isinstance(hash_armazenado, str) or not hash_armazenado:
+        return False
+
+    if hash_armazenado.startswith(("$2a$", "$2b$", "$2y$")):
+        try:
+            return bcrypt.checkpw(senha.encode("utf-8"), hash_armazenado.encode("utf-8"))
+        except (ValueError, TypeError):
+            return False
+
+    # Fallback legado SHA-256 — tempo constante para não vazar o hash por timing
+    esperado = hashlib.sha256(senha.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(esperado, hash_armazenado)
+
+
+def _hash_token_sessao(token: str) -> str:
+    """Hash determinístico do token de sessão — o banco nunca guarda o token em claro."""
+    return hashlib.sha256(str(token).strip().encode("utf-8")).hexdigest()
 
 
 def _garantir_tabelas_e_migracao():
@@ -84,7 +119,33 @@ def _garantir_tabelas_e_migracao():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_codigos_email_codigo ON codigos_verificacao (email, codigo)")
 
-    # 3. Tabela de sessões autenticadas seguras (por token de cliente no navegador)
+    # Migração: contador de erros do OTP (anti brute-force do código de 6 dígitos)
+    try:
+        cur.execute("ALTER TABLE codigos_verificacao ADD COLUMN tentativas INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass  # Coluna já existe
+
+    # 3. Controle server-side de tentativas de login (rate limit por e-mail e IP)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS tentativas_login (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            ip TEXT,
+            sucesso INTEGER NOT NULL DEFAULT 0,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_tentativas_login ON tentativas_login (email, criado_em)")
+
+    # 4. States single-use do OAuth Google (proteção contra login CSRF)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS oauth_states (
+            state TEXT PRIMARY KEY,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # 5. Tabela de sessões autenticadas seguras (por token de cliente no navegador)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS sessoes_lembradas (
             token TEXT PRIMARY KEY,
@@ -191,7 +252,8 @@ def gerar_codigo_verificacao(email: str) -> str:
     Invalida códigos anteriores não usados deste e-mail.
     """
     _garantir_tabelas_lazy()
-    codigo = f"{random.randint(100000, 999999)}"
+    # Código com gerador criptograficamente seguro (secrets, não random)
+    codigo = f"{secrets.randbelow(900000) + 100000}"
     expira_em = (datetime.now() + timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
 
     con = pegar_conexao()
@@ -265,7 +327,10 @@ def enviar_email_codigo(email: str, codigo: str, nome: str = "Aluno") -> bool:
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, email, msg.as_string())
         return True
-    except Exception:
+    except Exception as e:
+        # Log no servidor (sem expor o código) — antes a falha era silenciosa,
+        # o que mascarava um SMTP mal configurado.
+        print(f"[MathAI] Falha ao enviar e-mail de verificacao para {email}: {type(e).__name__}: {e}")
         return False
 
 
@@ -275,6 +340,8 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
     Se válido: marca como usado, ativa o usuário (verificado=1) e retorna os dados do usuário.
     """
     _garantir_tabelas_lazy()
+    email = (email or "").lower().strip()
+    codigo = (codigo or "").strip()
     con = pegar_conexao()
     cur = con.cursor()
     agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -283,10 +350,30 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
         SELECT id FROM codigos_verificacao
         WHERE email = ? AND codigo = ? AND usado = 0 AND expira_em >= ?
         ORDER BY id DESC LIMIT 1
-    """, (email.lower().strip(), codigo.strip(), agora))
+    """, (email, codigo, agora))
     registro = cur.fetchone()
 
     if not registro:
+        # Anti brute-force: cada erro consome uma tentativa do código ativo e,
+        # ao atingir o limite, o código é invalidado (precisa pedir outro).
+        try:
+            cur.execute("""
+                SELECT id, tentativas FROM codigos_verificacao
+                WHERE email = ? AND usado = 0 AND expira_em >= ?
+                ORDER BY id DESC LIMIT 1
+            """, (email, agora))
+            ativo = cur.fetchone()
+            if ativo:
+                tentativas = int(ativo["tentativas"] or 0) + 1
+                if tentativas >= MAX_TENTATIVAS_OTP:
+                    cur.execute("UPDATE codigos_verificacao SET tentativas = ?, usado = 1 WHERE id = ?",
+                                (tentativas, ativo["id"]))
+                else:
+                    cur.execute("UPDATE codigos_verificacao SET tentativas = ? WHERE id = ?",
+                                (tentativas, ativo["id"]))
+                con.commit()
+        except Exception:
+            pass
         con.close()
         return {
             "ok": False,
@@ -297,7 +384,7 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
     cur.execute("UPDATE codigos_verificacao SET usado = 1 WHERE id = ?", (registro["id"],))
 
     # Ativa usuário
-    cur.execute("UPDATE usuarios SET verificado = 1 WHERE email = ?", (email.lower().strip(),))
+    cur.execute("UPDATE usuarios SET verificado = 1 WHERE email = ?", (email,))
     con.commit()
 
     # Busca usuário ativado
@@ -305,7 +392,7 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
         SELECT id, nome, email, cpf, idade, celular, cep, logradouro, numero, bairro, cidade, estado,
                escolaridade, faculdade, curso, motivos, concursos_foco, verificado
         FROM usuarios WHERE email = ?
-    """, (email.lower().strip(),))
+    """, (email,))
     row = cur.fetchone()
     con.close()
 
@@ -322,11 +409,11 @@ def reenviar_codigo_otp(email: str, nome: str = "Aluno") -> dict:
     """Gera um novo código e tenta enviar por e-mail."""
     codigo = gerar_codigo_verificacao(email)
     enviado = enviar_email_codigo(email, codigo, nome)
-    em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
+    debug_otp = _ambiente_debug_otp()
     return {
         "ok": True,
         "enviado_email": enviado,
-        "codigo_teste": "" if em_producao else codigo
+        "codigo_teste": codigo if debug_otp else ""
     }
 
 
@@ -416,14 +503,14 @@ def cadastrar_usuario(
         # Gera código OTP de verificação
         codigo_otp = gerar_codigo_verificacao(email)
         enviado_email = enviar_email_codigo(email, codigo_otp, nome)
-        em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
+        debug_otp = _ambiente_debug_otp()
 
         return {
             "ok": True,
             "pendente_verificacao": True,
             "email": email.strip().lower(),
             "enviado_email": enviado_email,
-            "codigo_teste": "" if em_producao else codigo_otp,
+            "codigo_teste": codigo_otp if debug_otp else "",
             "usuario": {
                 "id": usuario_id,
                 "nome": nome.strip(),
@@ -444,7 +531,8 @@ def cadastrar_usuario(
         con.close()
         if "UNIQUE" in str(e):
             return {"ok": False, "erro": "Este e-mail já está cadastrado. Faça login ou recupere sua conta."}
-        return {"ok": False, "erro": str(e)}
+        print(f"[MathAI] Erro ao cadastrar usuario: {type(e).__name__}: {e}")
+        return {"ok": False, "erro": "Não foi possível concluir o cadastro agora. Tente novamente em instantes."}
 
 
 def obter_ou_gerar_codigo_verificacao(email: str) -> str:
@@ -464,75 +552,117 @@ def obter_ou_gerar_codigo_verificacao(email: str) -> str:
     return gerar_codigo_verificacao(email)
 
 
-def fazer_login(email: str, senha: str) -> dict:
+def _segundos_de_bloqueio(cur, email: str, ip: str | None) -> int:
     """
-    Autentica o usuário. Se o usuário existir mas não tiver sido verificado (verificado=0),
-    retorna pendente_verificacao=True para exibir a tela de 6 dígitos.
+    Segundos restantes de bloqueio por excesso de falhas (0 = liberado).
+
+    Conta falhas por e-mail OU por IP dentro da janela. Como o estado vive no
+    banco, o bloqueio sobrevive a recarregar a página, apagar cookies e abrir
+    aba anônima — que era exatamente a brecha do contador em st.session_state.
+    """
+    try:
+        limite = (datetime.now() - timedelta(minutes=JANELA_BLOQUEIO_MINUTOS)).strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("""
+            SELECT COUNT(*) AS total, MIN(criado_em) AS primeira
+            FROM tentativas_login
+            WHERE (email = ? OR (? IS NOT NULL AND ip = ?))
+              AND sucesso = 0 AND criado_em >= ?
+        """, (email, ip, ip, limite))
+        row = cur.fetchone()
+        total = int((row["total"] if row else 0) or 0)
+        if total < MAX_TENTATIVAS_LOGIN:
+            return 0
+        primeira = datetime.strptime(str(row["primeira"])[:19], "%Y-%m-%d %H:%M:%S")
+        restante = int((primeira + timedelta(minutes=JANELA_BLOQUEIO_MINUTOS) - datetime.now()).total_seconds())
+        return max(restante, 1)
+    except Exception:
+        # Falha no controle de tentativas nunca deve derrubar o login
+        return 0
+
+
+def _registrar_tentativa_login(cur, email: str, ip: str | None, sucesso: bool) -> None:
+    """Registra a tentativa no banco. Um login válido limpa o histórico de falhas."""
+    try:
+        if sucesso:
+            cur.execute("DELETE FROM tentativas_login WHERE email = ?", (email,))
+        # criado_em explícito: o DEFAULT CURRENT_TIMESTAMP do SQLite é UTC, e as
+        # comparações de janela usam datetime.now() local — misturar os dois
+        # faria o bloqueio durar horas a mais (ex.: host em UTC-3).
+        cur.execute(
+            "INSERT INTO tentativas_login (email, ip, sucesso, criado_em) VALUES (?, ?, ?, ?)",
+            (email, ip, 1 if sucesso else 0, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        )
+    except Exception as e:
+        print(f"[MathAI] Aviso: nao foi possivel registrar tentativa de login: {type(e).__name__}: {e}")
+
+
+def fazer_login(email: str, senha: str, ip: str | None = None) -> dict:
+    """
+    Autentica o usuário com rate limit SERVER-SIDE.
+
+    O contador de falhas fica na tabela `tentativas_login` (por e-mail e por IP),
+    não mais no st.session_state. Se o usuário existir mas não estiver verificado
+    (verificado=0), retorna pendente_verificacao=True para exibir a tela do código.
     """
     _garantir_tabelas_lazy()
+    email = (email or "").strip().lower()
+    ip = (ip or "").strip() or None
 
-    # Rate limiting: bloqueia após 5 tentativas falhadas em 5 minutos
-    try:
-        import streamlit as st
-        chave_tentativas = f"login_tentativas_{email.strip().lower()}"
-        chave_bloqueio = f"login_bloqueio_{email.strip().lower()}"
-        bloqueio_ate = st.session_state.get(chave_bloqueio)
-        if bloqueio_ate and datetime.now() < bloqueio_ate:
-            seg = int((bloqueio_ate - datetime.now()).total_seconds())
-            return {"ok": False, "erro": f"Muitas tentativas. Tente novamente em {seg} segundos."}
-    except Exception:
-        chave_tentativas = chave_bloqueio = None
+    def _bloqueado() -> dict | None:
+        seg = _segundos_de_bloqueio(cur, email, ip)
+        if seg <= 0:
+            return None
+        return {"ok": False, "erro": f"Muitas tentativas. Tente novamente em {seg} segundos."}
 
     con = pegar_conexao()
     cur = con.cursor()
     try:
+        bloqueio = _bloqueado()
+        if bloqueio:
+            return bloqueio
+
         cur.execute("""
             SELECT id, nome, email, cpf, idade, celular, cep, logradouro, numero, bairro, cidade, estado,
                    escolaridade, faculdade, curso, motivos, concursos_foco, verificado, senha_hash
             FROM usuarios WHERE email = ?
-        """, (email.strip().lower(),))
+        """, (email,))
         row = cur.fetchone()
+
         if not row:
-            # Incrementa tentativas falhadas
-            if chave_tentativas:
-                t = st.session_state.get(chave_tentativas, 0) + 1
-                st.session_state[chave_tentativas] = t
-                if t >= 5:
-                    st.session_state[chave_bloqueio] = datetime.now() + timedelta(minutes=5)
-                    st.session_state[chave_tentativas] = 0
-                    return {"ok": False, "erro": "Conta temporariamente bloqueada por excesso de tentativas. Aguarde 5 minutos."}
+            # Conta inexistente também conta para o rate limit (evita enumeração)
+            _registrar_tentativa_login(cur, email, ip, False)
+            con.commit()
+            bloqueio = _bloqueado()
+            if bloqueio:
+                return {"ok": False, "erro": f"Conta temporariamente bloqueada por excesso de tentativas. Aguarde {JANELA_BLOQUEIO_MINUTOS} minutos."}
             return {"ok": False, "erro": "E-mail ou senha incorretos."}
 
         u = dict(row)
         senha_hash_db = u.pop("senha_hash")
 
         if not _verificar_senha(senha, senha_hash_db):
-            if chave_tentativas:
-                t = st.session_state.get(chave_tentativas, 0) + 1
-                st.session_state[chave_tentativas] = t
-                if t >= 5:
-                    st.session_state[chave_bloqueio] = datetime.now() + timedelta(minutes=5)
-                    st.session_state[chave_tentativas] = 0
-                    return {"ok": False, "erro": "Conta temporariamente bloqueada por excesso de tentativas. Aguarde 5 minutos."}
+            _registrar_tentativa_login(cur, email, ip, False)
+            con.commit()
+            bloqueio = _bloqueado()
+            if bloqueio:
+                return {"ok": False, "erro": f"Conta temporariamente bloqueada por excesso de tentativas. Aguarde {JANELA_BLOQUEIO_MINUTOS} minutos."}
             return {"ok": False, "erro": "E-mail ou senha incorretos."}
 
         # Migração automática: rehash SHA-256 antigo → bcrypt
         if not senha_hash_db.startswith("$2b$"):
             novo_hash = _hash_senha(senha)
             cur.execute("UPDATE usuarios SET senha_hash = ? WHERE id = ?", (novo_hash, u["id"]))
-            con.commit()
 
-        # Login OK — resetar rate limit
-        if chave_tentativas:
-            st.session_state.pop(chave_tentativas, None)
-            st.session_state.pop(chave_bloqueio, None)
+        # Senha correta: zera o histórico de falhas deste e-mail
+        _registrar_tentativa_login(cur, email, ip, True)
+        con.commit()
 
         u["motivos"] = json.loads(u.get("motivos") or "[]")
         u["concursos_foco"] = json.loads(u.get("concursos_foco") or "[]")
 
         # Verifica se conta foi verificada (2FA / ativação)
         if u.get("verificado") == 0:
-            em_producao = os.environ.get("MATHAI_ENV", "").lower() == "production"
+            debug_otp = _ambiente_debug_otp()
             codigo_ativo = obter_ou_gerar_codigo_verificacao(u["email"])
             enviado_email = enviar_email_codigo(u["email"], codigo_ativo, u["nome"])
             return {
@@ -540,14 +670,16 @@ def fazer_login(email: str, senha: str) -> dict:
                 "pendente_verificacao": True,
                 "email": u["email"],
                 "nome": u["nome"],
-                "codigo_teste": "" if em_producao else codigo_ativo,
+                "codigo_teste": codigo_ativo if debug_otp else "",
                 "enviado_email": enviado_email,
                 "erro": "Sua conta ainda não foi verificada. Digite o código de 6 dígitos para ativar."
             }
 
         return {"ok": True, "usuario": u}
     except Exception as e:
-        return {"ok": False, "erro": str(e)}
+        # Detalhe só no log do servidor — nunca na tela do usuário
+        print(f"[MathAI] Erro ao autenticar: {type(e).__name__}: {e}")
+        return {"ok": False, "erro": "Não foi possível concluir o login agora. Tente novamente em instantes."}
     finally:
         con.close()
 
@@ -659,7 +791,8 @@ def atualizar_perfil_usuario(
         con.commit()
         return {"ok": True}
     except Exception as e:
-        return {"ok": False, "erro": str(e)}
+        print(f"[MathAI] Erro ao atualizar perfil: {type(e).__name__}: {e}")
+        return {"ok": False, "erro": "Não foi possível salvar suas alterações agora. Tente novamente em instantes."}
     finally:
         con.close()
 
@@ -672,10 +805,12 @@ def criar_sessao_lembrada(usuario_id: int) -> str:
         cur = con.cursor()
         token = secrets.token_urlsafe(32)
         expira_em = datetime.now() + timedelta(days=30)
+        # O banco guarda apenas o HASH do token: um vazamento da base não permite
+        # reutilizar as sessões dos alunos. O token em claro só existe no cliente.
         cur.execute("""
             INSERT INTO sessoes_lembradas (token, usuario_id, expira_em)
             VALUES (?, ?, ?)
-        """, (token, usuario_id, expira_em))
+        """, (_hash_token_sessao(token), usuario_id, expira_em))
         con.commit()
         return token
     finally:
@@ -701,7 +836,7 @@ def verificar_token_sessao(token: str) -> dict | None:
             FROM sessoes_lembradas s
             JOIN usuarios u ON u.id = s.usuario_id
             WHERE s.token = ? AND u.verificado = 1
-        """, (token.strip(),))
+        """, (_hash_token_sessao(token),))
         row = cur.fetchone()
         if row:
             u = dict(row)
@@ -723,10 +858,51 @@ def encerrar_sessao_por_token(token: str):
     con = pegar_conexao()
     try:
         cur = con.cursor()
-        cur.execute("DELETE FROM sessoes_lembradas WHERE token = ?", (token.strip(),))
+        cur.execute("DELETE FROM sessoes_lembradas WHERE token = ?", (_hash_token_sessao(token),))
         con.commit()
     except Exception:
         pass
+    finally:
+        con.close()
+
+
+def criar_oauth_state() -> str:
+    """
+    Gera e persiste um `state` single-use para o fluxo OAuth do Google.
+    Protege contra login CSRF (forçar a vítima a autenticar com a conta do atacante).
+    """
+    _garantir_tabelas_lazy()
+    state = secrets.token_urlsafe(24)
+    con = pegar_conexao()
+    try:
+        cur = con.cursor()
+        # Limpeza de states antigos não usados
+        validade = (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("DELETE FROM oauth_states WHERE criado_em < ?", (validade,))
+        cur.execute("INSERT INTO oauth_states (state) VALUES (?)", (state,))
+        con.commit()
+        return state
+    finally:
+        con.close()
+
+
+def consumir_oauth_state(state: str | None) -> bool:
+    """Valida e invalida (single-use) um state OAuth. False = fluxo rejeitado."""
+    if not state or not isinstance(state, str):
+        return False
+    _garantir_tabelas_lazy()
+    con = pegar_conexao()
+    try:
+        cur = con.cursor()
+        cur.execute("SELECT state FROM oauth_states WHERE state = ?", (state.strip(),))
+        if not cur.fetchone():
+            return False
+        cur.execute("DELETE FROM oauth_states WHERE state = ?", (state.strip(),))
+        con.commit()
+        return True
+    except Exception as e:
+        print(f"[MathAI] Erro ao validar oauth state: {type(e).__name__}: {e}")
+        return False
     finally:
         con.close()
 
