@@ -29,9 +29,13 @@ DIRETRIZES CRÍTICAS:
 
 
 def gerar_hash_texto(texto: str) -> str:
-    """Gera um hash MD5 único a partir do texto limpo para evitar duplicatas no banco."""
+    """Gera um hash MD5 único a partir do texto limpo para evitar duplicatas no banco.
+
+    MD5 aqui é só chave de deduplicação (não é uso de segurança) — o parâmetro
+    usedforsecurity=False deixa isso explícito para o linter/bandit.
+    """
     texto_limpo = " ".join(texto.strip().lower().split())
-    return hashlib.md5(texto_limpo.encode("utf-8")).hexdigest()
+    return hashlib.md5(texto_limpo.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 def traduzir_questao_matematica(

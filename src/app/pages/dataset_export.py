@@ -30,7 +30,9 @@ def _carregar_dados_dataset(aluno_id=None):
         cur.execute(sql, params)
         return [dict(r) for r in cur.fetchall()]
     except Exception as e:
-        st.error(f'Erro ao carregar dataset: {e}')
+        # Detalhe só no log do servidor
+        print(f"[MathAI] Erro ao carregar dataset: {type(e).__name__}: {e}")
+        st.error('Não foi possível carregar o dataset agora. Tente novamente em instantes.')
         return []
     finally:
         con.close()
@@ -114,24 +116,19 @@ def show():
     con = pegar_conexao()
     cur = con.cursor()
     try:
-        cur.execute('SELECT COUNT(*) as n FROM diagnosticos_ia')
+        # Contadores restritos ao aluno logado — nada de métricas globais da base
+        cur.execute('SELECT COUNT(*) as n FROM diagnosticos_ia WHERE aluno_id = ?', (aluno_id_sessao,))
         total_diag = cur.fetchone()['n']
-        cur.execute('SELECT COUNT(*) as n FROM log_dicas_socraticas')
+        cur.execute('SELECT COUNT(*) as n FROM log_dicas_socraticas WHERE aluno_id = ?', (aluno_id_sessao,))
         total_dicas = cur.fetchone()['n']
-        cur.execute('SELECT COUNT(DISTINCT aluno_id) as n FROM diagnosticos_ia')
-        total_alunos = cur.fetchone()['n']
-        cur.execute('SELECT COUNT(DISTINCT aluno_id) as n FROM tentativas')
-        total_alunos_tent = cur.fetchone()['n']
     except Exception:
-        total_diag = total_dicas = total_alunos = total_alunos_tent = 0
+        total_diag = total_dicas = 0
     finally:
         con.close()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric('📦 Análises IA Coletadas', total_diag, help='Exemplos de treino prontos')
-    col2.metric('💡 Pedidos de Dica', total_dicas, help='Dados de comportamento de estudo')
-    col3.metric('👤 Alunos (Diagnósticos)', total_alunos)
-    col4.metric('👥 Alunos (Tentativas)', total_alunos_tent)
+    col1, col2 = st.columns(2)
+    col1.metric('📦 Suas Análises IA', total_diag, help='Exemplos de treino prontos')
+    col2.metric('💡 Seus Pedidos de Dica', total_dicas, help='Dados de comportamento de estudo')
 
     st.markdown('---')
 

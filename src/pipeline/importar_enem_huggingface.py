@@ -29,7 +29,8 @@ from datasets import load_dataset
 def importar_enem_2024(con=None) -> int:
     """Importa as 45 questões de Matemática do ENEM 2024 com figuras."""
     print("\n📦 Carregando ENEM 2024 do dataset 'maritaca-ai/enem'...")
-    ds = load_dataset("maritaca-ai/enem")
+    # Pinned revision: garante que o conteúdo baixado é o mesmo que foi revisado
+    ds = load_dataset("maritaca-ai/enem", revision="b2a7257356b0f56b740d57f23f8a575542ff6c0c")
     
     pasta_uploads = BASE_DIR / "data" / "uploads"
     pasta_uploads.mkdir(parents=True, exist_ok=True)
@@ -72,9 +73,15 @@ def importar_enem_2024(con=None) -> int:
             nome_arq = f"enem_2024_q{num}.png"
             caminho_local = pasta_uploads / nome_arq
             try:
-                if not caminho_local.exists():
+                # Só aceita http(s): bloqueia file:// e esquemas exóticos vindos do dataset
+                if not str(fig_url).lower().startswith(("http://", "https://")):
+                    print(f"⚠️ Figura de q{num} ignorada: URL com esquema não permitido ({fig_url[:60]}...)")
+                elif not caminho_local.exists():
+                    # nosec B310 — o esquema da URL é validado no if acima (só http/https)
                     urllib.request.urlretrieve(fig_url, caminho_local)
-                figura_path = f"data/uploads/{nome_arq}"
+                    figura_path = f"data/uploads/{nome_arq}"
+                else:
+                    figura_path = f"data/uploads/{nome_arq}"
             except Exception as e:
                 print(f"⚠️ Não foi possível baixar a figura de q{num}: {e}")
 
@@ -102,7 +109,7 @@ def importar_enem_2024(con=None) -> int:
 def importar_enem_historico(con=None, max_questoes: int = 300) -> int:
     """Importa questões de Matemática do ENEM (2009 a 2023) do 'nicholasKluge/enem_challenge'."""
     print("\n📦 Carregando histórico do ENEM (2009 a 2023) do 'nicholasKluge/enem_challenge'...")
-    ds = load_dataset("nicholasKluge/enem_challenge")
+    ds = load_dataset("nicholasKluge/enem_challenge", revision="0b3f9c1f490410df0f08e89450311e4eaf344c70")
 
     fechar_con = False
     if con is None:
