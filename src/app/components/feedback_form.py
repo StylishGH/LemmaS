@@ -11,6 +11,10 @@ import streamlit as st
 from src.database.attempts import registrar_tentativa, salvar_diagnostico_ia, registrar_dica_socratica
 from src.app.utils import extrair_enunciado_e_alternativas, e_questao_discursiva, formatar_transcricao_latex, corrigir_latex
 
+# Limites de upload: evita encher o disco (os anexos vão para data/uploads/resolucoes/)
+MAX_UPLOAD_IMG_MB = 8
+MAX_UPLOAD_PDF_MB = 15
+
 
 def _renderizar_anexo(bytes_conteudo: bytes, mime_type: str = "image/png", nome_arquivo: str = ""):
     """Renderiza uma imagem ou um documento PDF na interface do Streamlit."""
@@ -225,12 +229,22 @@ def render_resolution_form(questao: dict, on_success_callback=None):
             if uploaded_file is not None:
                 conteudo = uploaded_file.getvalue()
                 nome = uploaded_file.name
-                is_pdf = nome.lower().endswith(".pdf") or conteudo.startswith(b"%PDF")
-                mime = "application/pdf" if is_pdf else "image/png"
-                st.session_state[f"imagem_resolucao_{q_id}"] = conteudo
-                st.session_state[f"mime_resolucao_{q_id}"] = mime
-                st.session_state[f"nome_resolucao_{q_id}"] = nome
-                _renderizar_anexo(conteudo, mime, nome)
+                # Guarda de tamanho: o Streamlit aceita até 200 MB por padrão
+                limite_mb = MAX_UPLOAD_PDF_MB if nome.lower().endswith(".pdf") else MAX_UPLOAD_IMG_MB
+                if len(conteudo) > limite_mb * 1024 * 1024:
+                    for chave in (f"imagem_resolucao_{q_id}", f"mime_resolucao_{q_id}", f"nome_resolucao_{q_id}"):
+                        st.session_state.pop(chave, None)
+                    st.error(
+                        f"Arquivo muito grande ({len(conteudo) / 1048576:.1f} MB). "
+                        f"O limite para este formato é {limite_mb} MB — envie uma versão mais leve."
+                    )
+                else:
+                    is_pdf = nome.lower().endswith(".pdf") or conteudo.startswith(b"%PDF")
+                    mime = "application/pdf" if is_pdf else "image/png"
+                    st.session_state[f"imagem_resolucao_{q_id}"] = conteudo
+                    st.session_state[f"mime_resolucao_{q_id}"] = mime
+                    st.session_state[f"nome_resolucao_{q_id}"] = nome
+                    _renderizar_anexo(conteudo, mime, nome)
             elif f"imagem_resolucao_{q_id}" in st.session_state and st.session_state[f"imagem_resolucao_{q_id}"]:
                 _renderizar_anexo(
                     st.session_state[f"imagem_resolucao_{q_id}"],
@@ -503,14 +517,18 @@ def render_resolution_form(questao: dict, on_success_callback=None):
                 # Salva anexo da resolução (imagem ou PDF) em disco se houver
                 caminho_imagem_salva = None
                 if imagem_salva:
-                    pasta_resolucoes = Path("data/uploads/resolucoes")
-                    pasta_resolucoes.mkdir(parents=True, exist_ok=True)
-                    is_pdf_salvo = (st.session_state.get(f"mime_resolucao_{q_id}") == "application/pdf")
-                    extensao = "pdf" if is_pdf_salvo else "png"
-                    arquivo_nome = f"tentativa_q{q_id}_{int(time.time())}.{extensao}"
-                    arquivo_path = pasta_resolucoes / arquivo_nome
-                    arquivo_path.write_bytes(imagem_salva)
-                    caminho_imagem_salva = str(arquivo_path).replace("\\", "/")
+                    # Defesa em profundidade: nunca grava anexo acima do limite
+                    if len(imagem_salva) > MAX_UPLOAD_PDF_MB * 1024 * 1024:
+                        st.error("Anexo acima do limite permitido — não foi salvo.")
+                    else:
+                        pasta_resolucoes = Path("data/uploads/resolucoes")
+                        pasta_resolucoes.mkdir(parents=True, exist_ok=True)
+                        is_pdf_salvo = (st.session_state.get(f"mime_resolucao_{q_id}") == "application/pdf")
+                        extensao = "pdf" if is_pdf_salvo else "png"
+                        arquivo_nome = f"tentativa_q{q_id}_{int(time.time())}.{extensao}"
+                        arquivo_path = pasta_resolucoes / arquivo_nome
+                        arquivo_path.write_bytes(imagem_salva)
+                        caminho_imagem_salva = str(arquivo_path).replace("\\", "/")
 
                 tentativa_id = registrar_tentativa(
                     questao_id=q_id,

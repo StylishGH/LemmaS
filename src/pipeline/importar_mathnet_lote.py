@@ -36,7 +36,7 @@ def importar_lote_mathnet(qtd=5, apenas_com_figura=True):
 
     print(f"📥 Carregando dataset MathNet da Hugging Face...")
     # Carrega split de treino
-    ds = load_dataset("ShadenA/MathNet", split="train")
+    ds = load_dataset("ShadenA/MathNet", split="train", revision="33e6b3bc254e6f0f0c1479b4252f5e9dd551d56c")
 
     con = pegar_conexao()
     cur = con.cursor()

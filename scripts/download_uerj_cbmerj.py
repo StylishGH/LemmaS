@@ -25,7 +25,7 @@ def download_file(url, target_path):
         return f"ALREADY_EXISTS: {target_path}"
     
     try:
-        r = requests.get(url, headers=HEADERS, timeout=30, stream=True, verify=False)
+        r = requests.get(url, headers=HEADERS, timeout=30, stream=True)
         if r.status_code == 200:
             first_chunk = next(r.iter_content(chunk_size=1024), b'')
             if b'<!DOCTYPE html' in first_chunk or b'<html' in first_chunk:
@@ -62,7 +62,7 @@ def run_cbmerj_harvest():
     
     for p in pages:
         try:
-            r = requests.get(p, headers=HEADERS, verify=False, timeout=15)
+            r = requests.get(p, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(r.text, 'html.parser')
             for a in soup.find_all('a', href=True):
                 href = a['href']
