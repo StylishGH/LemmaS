@@ -204,6 +204,13 @@ Depending solely on `MathAI → Gemini` made no sense. Evolved to:
 
 ---
 
+### 📖 Complete AI Architecture Documentation
+
+The detailed implementation of the router, circuit breakers, throttle, telemetry, output validation, prompt versioning, and benchmarks is in:
+[**docs/ai-router.md**](docs/ai-router.md)
+
+---
+
 ### The Database Got Serious: Traceability
 
 To evolve toward research/ML, I need to compare `Model A vs Model B` — not "the AI said this".
