@@ -2,6 +2,10 @@
   <h1>MathAI 🧠📐</h1>
   <p>An intelligent mathematics learning platform that evolves an individual cognitive model for each student.</p>
 
+  <p align="right">
+    <b>🇧🇷 Versão em Português</b> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English Version</a>
+  </p>
+
   <p>
       <a href="https://mathia.streamlit.app" target="_blank">
         <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit" />
