@@ -6,6 +6,7 @@ e Verificação em Duas Etapas (2FA / OTP de 6 dígitos).
 """
 
 import html
+import hashlib
 import os
 import uuid
 import streamlit as st
@@ -50,6 +51,13 @@ def _obter_ip_cliente() -> str | None:
     """
     IP do cliente para o rate limit por IP. No Streamlit Cloud o IP real vem no
     cabeçalho X-Forwarded-For (o primeiro valor da lista é o cliente original).
+
+    IMPORTANTE: X-Forwarded-For e X-Real-Ip são cabeçalhos controláveis pelo
+    cliente. Se o deploy estiver atrás de um proxy confiável (ex.: Streamlit
+    Cloud, Cloudflare, Nginx com configuração correta), o proxy sobrescreve
+    esses cabeçalhos e o valor é confiável. Se NÃO houver proxy confiável,
+    NÃO use este IP para decisões de segurança — o rate limit por e-mail
+    continua funcionando independentemente.
     """
     try:
         headers = st.context.headers or {}
@@ -61,6 +69,21 @@ def _obter_ip_cliente() -> str | None:
         return None
 
 
+def _sessao_id_hash() -> str:
+    """
+    Hash estável da sessão atual do navegador (token da query param ou session_state).
+    Serve para amarrar o OAuth state a ESTA sessão, sem expor o token em claro.
+    """
+    token = st.query_params.get("session") or st.session_state.get("sessao_token")
+    if not token:
+        # Fallback para IP + user-agent (melhor que nada, mas não substitui o token)
+        ua = st.context.headers.get("User-Agent", "") if hasattr(st, "context") else ""
+        base = f"{_obter_ip_cliente()}:{ua}"
+    else:
+        base = token
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()[:32]
+
+
 def _oauth_state_sessao() -> str:
     """
     State OAuth da sessão atual (uma linha por sessão, não por render).
@@ -69,7 +92,7 @@ def _oauth_state_sessao() -> str:
     """
     estado = st.session_state.get("oauth_state")
     if not estado or not isinstance(estado, str):
-        estado = criar_oauth_state()
+        estado = criar_oauth_state(_sessao_id_hash())
         st.session_state["oauth_state"] = estado
     return estado
 
@@ -289,8 +312,8 @@ def show():
         state_recebido = st.query_params.get("state")
         if code:
             # Anti login CSRF: o `state` precisa existir, ser o mesmo que geramos
-            # e nunca ter sido usado antes (single-use).
-            if not consumir_oauth_state(state_recebido):
+            # e nunca ter sido usado antes (single-use), e estar amarrado a ESTA sessão.
+            if not consumir_oauth_state(state_recebido, _sessao_id_hash()):
                 st.query_params.clear()
                 st.session_state.pop("oauth_state", None)
                 st.error("Sessão de login do Google expirada ou inválida. Clique em 'Continuar com o Google' novamente.")
@@ -669,6 +692,7 @@ def show():
                             st.rerun()
                         elif resultado.get("pendente_verificacao"):
                             st.session_state.verificando_email = resultado["email"]
+                            st.session_state.email_enviado_real = resultado.get("enviado_email", False)
                             st.warning(resultado["erro"])
                             st.rerun()
                         else:

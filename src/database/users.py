@@ -356,6 +356,7 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
     if not registro:
         # Anti brute-force: cada erro consome uma tentativa do código ativo e,
         # ao atingir o limite, o código é invalidado (precisa pedir outro).
+        # Fail-closed: se a contagem falhar, invalida o código imediatamente.
         try:
             cur.execute("""
                 SELECT id, tentativas FROM codigos_verificacao
@@ -372,8 +373,14 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
                     cur.execute("UPDATE codigos_verificacao SET tentativas = ? WHERE id = ?",
                                 (tentativas, ativo["id"]))
                 con.commit()
-        except Exception:
-            pass
+        except Exception as e:
+            # Fail-closed: infraestrutura indisponível → invalida o código
+            print(f"[MathAI] ERRO na contagem de OTP (fail-closed): {type(e).__name__}: {e}")
+            try:
+                cur.execute("UPDATE codigos_verificacao SET usado = 1 WHERE email = ? AND usado = 0 AND expira_em >= ?", (email, agora))
+                con.commit()
+            except Exception:
+                pass
         con.close()
         return {
             "ok": False,
@@ -406,7 +413,57 @@ def verificar_codigo_otp(email: str, codigo: str) -> dict:
 
 
 def reenviar_codigo_otp(email: str, nome: str = "Aluno") -> dict:
-    """Gera um novo código e tenta enviar por e-mail."""
+    """Gera um novo código e tenta enviar por e-mail.
+
+    Rate limit no reenvio: máximo 3 reenvios por e-mail em 15 minutos
+    (tabela `reenvios_codigo`).
+    """
+    _garantir_tabelas_lazy()
+    email = (email or "").lower().strip()
+
+    # Cria tabela de controle de reenvio se não existir
+    con = pegar_conexao()
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS reenvios_codigo (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_reenvios_email ON reenvios_codigo (email, criado_em)")
+        con.commit()
+
+        # Conta reenvios recentes
+        limite = (datetime.now() - timedelta(minutes=JANELA_BLOQUEIO_MINUTOS)).strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("SELECT COUNT(*) AS total FROM reenvios_codigo WHERE email = ? AND criado_em >= ?", (email, limite))
+        row = cur.fetchone()
+        total = int((row["total"] if row else 0) or 0)
+        if total >= 3:
+            con.close()
+            return {
+                "ok": False,
+                "enviado_email": False,
+                "erro": "Muitos reenvios recentes. Aguarde alguns minutos antes de tentar novamente."
+            }
+
+        # Registra o reenvio
+        cur.execute("INSERT INTO reenvios_codigo (email) VALUES (?)", (email,))
+        con.commit()
+    except Exception as e:
+        print(f"[MathAI] ERRO no rate limit de reenvio OTP: {type(e).__name__}: {e}")
+        # Fail-closed no rate limit de reenvio
+        con.close()
+        return {
+            "ok": False,
+            "enviado_email": False,
+            "erro": "Não foi possível processar o reenvio agora. Tente novamente em instantes."
+        }
+    finally:
+        if con:
+            con.close()
+
     codigo = gerar_codigo_verificacao(email)
     enviado = enviar_email_codigo(email, codigo, nome)
     debug_otp = _ambiente_debug_otp()
@@ -866,38 +923,47 @@ def encerrar_sessao_por_token(token: str):
         con.close()
 
 
-def criar_oauth_state() -> str:
+def criar_oauth_state(sessao_id: str) -> str:
     """
-    Gera e persiste um `state` single-use para o fluxo OAuth do Google.
+    Gera e persiste um `state` single-use para o fluxo OAuth do Google,
+    vinculado à sessão atual do navegador.
+
     Protege contra login CSRF (forçar a vítima a autenticar com a conta do atacante).
+    O `state` fica amarrado a `sessao_id` (hash do cookie/token da sessão do app),
+    de modo que apenas a MESMA sessão que iniciou o fluxo pode completá-lo.
     """
     _garantir_tabelas_lazy()
     state = secrets.token_urlsafe(24)
+    state_hash = hashlib.sha256(state.encode("utf-8")).hexdigest()
     con = pegar_conexao()
     try:
         cur = con.cursor()
-        # Limpeza de states antigos não usados
+        # Limpeza de states antigos não usados (30 min)
         validade = (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
         cur.execute("DELETE FROM oauth_states WHERE criado_em < ?", (validade,))
-        cur.execute("INSERT INTO oauth_states (state) VALUES (?)", (state,))
+        cur.execute(
+            "INSERT INTO oauth_states (state_hash, sessao_id) VALUES (?, ?)",
+            (state_hash, sessao_id),
+        )
         con.commit()
         return state
     finally:
         con.close()
 
 
-def consumir_oauth_state(state: str | None) -> bool:
-    """Valida e invalida (single-use) um state OAuth. False = fluxo rejeitado."""
+def consumir_oauth_state(state: str | None, sessao_id: str) -> bool:
+    """Valida e invalida (single-use) um state OAuth vinculado à sessão. False = fluxo rejeitado."""
     if not state or not isinstance(state, str):
         return False
+    state_hash = hashlib.sha256(state.strip().encode("utf-8")).hexdigest()
     _garantir_tabelas_lazy()
     con = pegar_conexao()
     try:
         cur = con.cursor()
-        cur.execute("SELECT state FROM oauth_states WHERE state = ?", (state.strip(),))
+        cur.execute("SELECT state_hash FROM oauth_states WHERE state_hash = ? AND sessao_id = ?", (state_hash, sessao_id))
         if not cur.fetchone():
             return False
-        cur.execute("DELETE FROM oauth_states WHERE state = ?", (state.strip(),))
+        cur.execute("DELETE FROM oauth_states WHERE state_hash = ?", (state_hash,))
         con.commit()
         return True
     except Exception as e:

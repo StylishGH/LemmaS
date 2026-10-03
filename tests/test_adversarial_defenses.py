@@ -116,7 +116,8 @@ def criar_banco_teste(db_path: str):
     """)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS oauth_states (
-            state TEXT PRIMARY KEY,
+            state_hash TEXT PRIMARY KEY,
+            sessao_id TEXT NOT NULL,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -692,23 +693,31 @@ class TestSessionTokenHashing(_BaseUsuariosComBanco):
 class TestOAuthState(_BaseUsuariosComBanco):
     """`state` do OAuth precisa ser single-use (anti login CSRF)."""
 
+    def _sid(self) -> str:
+        return "sessao-teste-fixa"
+
     def test_01_state_e_single_use(self):
-        state = criar_oauth_state()
-        self.assertTrue(consumir_oauth_state(state))
+        state = criar_oauth_state(self._sid())
+        self.assertTrue(consumir_oauth_state(state, self._sid()))
         # Reutilizar o mesmo state tem de ser recusado
-        self.assertFalse(consumir_oauth_state(state))
+        self.assertFalse(consumir_oauth_state(state, self._sid()))
 
     def test_02_states_invalidos_recusados(self):
-        self.assertFalse(consumir_oauth_state("state-que-nao-existe"))
-        self.assertFalse(consumir_oauth_state(None))
-        self.assertFalse(consumir_oauth_state(""))
+        self.assertFalse(consumir_oauth_state("state-que-nao-existe", self._sid()))
+        self.assertFalse(consumir_oauth_state(None, self._sid()))
+        self.assertFalse(consumir_oauth_state("", self._sid()))
 
     def test_03_states_distintos_sao_independentes(self):
-        s1 = criar_oauth_state()
-        s2 = criar_oauth_state()
+        s1 = criar_oauth_state(self._sid())
+        s2 = criar_oauth_state(self._sid())
         self.assertNotEqual(s1, s2)
-        self.assertTrue(consumir_oauth_state(s2))
-        self.assertTrue(consumir_oauth_state(s1))
+        self.assertTrue(consumir_oauth_state(s2, self._sid()))
+        self.assertTrue(consumir_oauth_state(s1, self._sid()))
+
+    def test_04_state_nao_valido_em_sessao_diferente(self):
+        """Um state gerado para sessão A não pode ser consumido na sessão B."""
+        state = criar_oauth_state("sessao-A")
+        self.assertFalse(consumir_oauth_state(state, "sessao-B"))
 
 
 class TestOtpNaoVazaParaOTerminal(_BaseUsuariosComBanco):
