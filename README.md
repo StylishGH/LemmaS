@@ -3,17 +3,20 @@
   <p>Uma plataforma inteligente de aprendizagem matemática que evolui um modelo cognitivo individual de cada estudante.</p>
 
   <p>
-    <a href="https://mathia.streamlit.app" target="_blank">
-      <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit" />
-    </a>
-    <a href="https://github.com/StylishGH/MathAI/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
-    </a>
-    <img src="https://img.shields.io/badge/Python-3.11-blue.svg" alt="Python" />
-    <img src="https://img.shields.io/badge/Streamlit-1.38-FF4B4B.svg" alt="Streamlit" />
-    <img src="https://img.shields.io/badge/SQLite-3.45-003B57.svg" alt="SQLite" />
-    <img src="https://img.shields.io/badge/Turso-Cloud%20DB-3A86FF.svg" alt="Turso" />
-  </p>
+      <a href="https://mathia.streamlit.app" target="_blank">
+        <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit" />
+      </a>
+      <a href="https://github.com/StylishGH/MathAI/actions/workflows/ci.yml">
+        <img src="https://github.com/StylishGH/MathAI/actions/workflows/ci.yml/badge.svg" alt="CI" />
+      </a>
+      <a href="https://github.com/StylishGH/MathAI/blob/main/LICENSE">
+        <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
+      </a>
+      <img src="https://img.shields.io/badge/Python-3.11-blue.svg" alt="Python" />
+      <img src="https://img.shields.io/badge/Streamlit-1.38-FF4B4B.svg" alt="Streamlit" />
+      <img src="https://img.shields.io/badge/SQLite-3.45-003B57.svg" alt="SQLite" />
+      <img src="https://img.shields.io/badge/Turso-Cloud%20DB-3A86FF.svg" alt="Turso" />
+    </p>
 
   <p>🚀 <strong>Aplicação em produção:</strong> <a href="https://mathia.streamlit.app"><strong>mathia.streamlit.app</strong></a></p>
 </div>
