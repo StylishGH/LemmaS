@@ -84,3 +84,10 @@ desktop.ini
 data/*.db
 .agents/
 
+# Web App Next.js dependencies & builds
+web/node_modules/
+web/.next/
+web/out/
+web/.vercel/
+
+
