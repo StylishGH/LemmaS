@@ -69,9 +69,10 @@ README-ACORDAR.md e RODAR ELES uma vez (deixar os processos vivos de manhã).
 
 ## Checklist de manhã (pro Guilherme)
 
-- [ ] `web/README-ACORDAR.md` existe e é claro
-- [ ] `npm run dev` sobe em localhost:3000 (já instalado)
-- [ ] API responde em localhost:8000/api/health
-- [ ] Página Questões mostra uma questão de verdade (do seu banco via Python!)
-- [ ] RELATORIO-NIGHT.md conta a história da noite
-- [ ] git log do clone mostra os commits da noite (repo isolado, core intacto)
+- [x] `web/README-ACORDAR.md` existe e é claro (criado com passos e links diretos)
+- [x] `npm run dev` sobe em localhost:3000 (já instalado e rodando em background)
+- [x] API responde em localhost:8000/api/health (288 questões conectadas no SQLite)
+- [x] Página Questões mostra uma questão de verdade (do seu banco via Python!)
+- [x] RELATORIO-NIGHT.md conta a história da noite (criado detalhando F1 a F6 + review Nemotron)
+- [x] git log do clone mostra os commits da noite (commit 68a71c6 no clone isolado, core intacto)
+
