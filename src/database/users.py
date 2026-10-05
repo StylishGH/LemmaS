@@ -971,7 +971,7 @@ def consumir_oauth_state(state: str | None, sessao_id: str) -> bool:
     con = pegar_conexao()
     try:
         cur = con.cursor()
-        cur.execute("SELECT state_hash FROM oauth_states WHERE state_hash = ? AND sessao_id = ?", (state_hash, sessao_id))
+        cur.execute("SELECT state_hash FROM oauth_states WHERE state_hash = ?", (state_hash,))
         if not cur.fetchone():
             return False
         cur.execute("DELETE FROM oauth_states WHERE state_hash = ?", (state_hash,))
