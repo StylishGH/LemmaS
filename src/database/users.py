@@ -138,9 +138,20 @@ def _garantir_tabelas_e_migracao():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_tentativas_login ON tentativas_login (email, criado_em)")
 
     # 4. States single-use do OAuth Google (proteção contra login CSRF)
+    # Tenta criar a tabela com o schema novo. Se falhar, dropamos e recriamos (dados efêmeros).
+    try:
+        cur.execute("SELECT state_hash, sessao_id FROM oauth_states LIMIT 1")
+    except Exception:
+        try:
+            cur.execute("DROP TABLE IF EXISTS oauth_states")
+            con.commit()
+        except Exception:
+            pass
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS oauth_states (
-            state TEXT PRIMARY KEY,
+            state_hash TEXT PRIMARY KEY,
+            sessao_id TEXT NOT NULL,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
