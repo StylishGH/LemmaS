@@ -1,0 +1,2 @@
+import type { ReactNode } from "react";
+export function BoardFrame({ children }: { children: ReactNode }) { return <div className="lemmas-board-frame"><div className="lemmas-board-mount lemmas-mount-tl"/><div className="lemmas-board-mount lemmas-mount-tr"/><div className="lemmas-board-mount lemmas-mount-bl"/><div className="lemmas-board-mount lemmas-mount-br"/><div className="lemmas-board-surface">{children}</div></div>; }
