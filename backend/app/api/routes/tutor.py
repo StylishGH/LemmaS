@@ -2,15 +2,17 @@
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.api.routes.auth import get_current_student
 from app.api.routes.exercises import _EXERCISES_STORE
 from app.schemas.ai_evaluation import AiEvaluationRequest, AiEvaluationResponse
 from app.services.mathai.evaluator import cognitive_evaluator
 from app.services.mathai.recommender import cognitive_recommender
 from app.services.mathai.tutor import socratic_tutor
 from app.services.mathai.vision import vision_processor
+from app.models.student import Student
 
 router = APIRouter(prefix="/tutor", tags=["MathAI Engine (Tutor & Avaliador)"])
 
@@ -41,7 +43,11 @@ class SocraticHintResponse(BaseModel):
 class VisionOcrRequest(BaseModel):
     """Payload de imagem para OCR de caderno ou tablet."""
 
-    image_base64: str = Field(..., description="Imagem codificada em base64")
+    image_base64: str = Field(
+        ...,
+        max_length=7_000_000,
+        description="Imagem codificada em base64 (limite de segurança ~5MB binário)",
+    )
     mime_type: str = Field(default="image/png", description="MIME type (image/png, image/jpeg)")
 
 
@@ -59,14 +65,16 @@ class VisionOcrResponse(BaseModel):
 class ReviewScheduleRequest(BaseModel):
     """Requisição de cálculo de repetição espaçada SM-2."""
 
-    student_id: str
     exercise_id: str
     quality: int = Field(..., ge=0, le=5, description="Nota de 0 a 5 do desempenho")
     current_sm2_state: Optional[Dict[str, Any]] = None
 
 
 @router.post("/hint", response_model=SocraticHintResponse)
-def get_socratic_hint(payload: SocraticHintRequest):
+def get_socratic_hint(
+    payload: SocraticHintRequest,
+    current_student: Student = Depends(get_current_student)
+):
     """Gera dica socrática em 5 níveis (dados -> lema -> primeiro passo -> cálculo -> resolução)."""
     exercise_dict: Dict[str, Any] = {}
 
@@ -103,7 +111,10 @@ def get_socratic_hint(payload: SocraticHintRequest):
 
 
 @router.post("/evaluate", response_model=AiEvaluationResponse)
-def evaluate_resolution(payload: AiEvaluationRequest):
+def evaluate_resolution(
+    payload: AiEvaluationRequest,
+    current_student: Student = Depends(get_current_student)
+):
     """
     Avalia a resolução do estudante a partir de evidências reais (texto e/ou imagem OCR).
     Garante o princípio de 'Evidência antes de Inferência', identificando erros e estratégias.
@@ -176,7 +187,10 @@ def evaluate_resolution(payload: AiEvaluationRequest):
 
 
 @router.post("/ocr", response_model=VisionOcrResponse)
-def transcribe_notebook_image(payload: VisionOcrRequest):
+def transcribe_notebook_image(
+    payload: VisionOcrRequest,
+    current_student: Student = Depends(get_current_student)
+):
     """Executa o OCR multimodal especializado em caligrafia de cadernos e tablets."""
     ocr_res = vision_processor.process_image(
         image_data=payload.image_base64,
@@ -194,10 +208,13 @@ def transcribe_notebook_image(payload: VisionOcrRequest):
 
 
 @router.post("/review-schedule")
-def calculate_next_review(payload: ReviewScheduleRequest):
+def calculate_next_review(
+    payload: ReviewScheduleRequest,
+    current_student: Student = Depends(get_current_student)
+):
     """Calcula o ciclo de repetição espaçada SM-2 e sugere lemas de reforço."""
     sm2_res = cognitive_recommender.process_review_cycle(
-        student_id=payload.student_id,
+        student_id=current_student.id,
         exercise_id=payload.exercise_id,
         quality=payload.quality,
         current_sm2_state=payload.current_sm2_state,
@@ -211,7 +228,7 @@ def calculate_next_review(payload: ReviewScheduleRequest):
         )
 
     return {
-        "student_id": payload.student_id,
+        "student_id": current_student.id,
         "exercise_id": payload.exercise_id,
         "sm2_updated": sm2_res["sm2_updated"],
         "suggested_lemmas": suggested_lemmas,
