@@ -1,17 +1,26 @@
 """Gateway e Roteador Multi-Modelo da MathAI Engine.
 
-Roteia chamadas de inferência inteligente com as seguintes prioridades:
-1. 9Router Local / Gateway Central (:20128/v1)
-2. NVIDIA NIM direta (Nemotron 3.5 Lightning / Nemotron 3 Ultra 550B)
-3. Google Gemini (em cascata estrita: gemini-flash-lite-latest -> gemini-3.5-flash-lite -> gemini-3-flash-preview)
-4. Contingência autônoma em caso de erro 402 (prepayment), 429 (quota) ou 503 (servidor Google indisponível).
+Arquitetura:
+O MathAI Gateway abstrai provedores de inteligência artificial e suporta
+tanto Provedores Diretos (Google Gemini, NVIDIA NIM, DeepSeek) quanto
+infraestruturas de roteamento (como 9Router local ou em cluster).
 
-Calcula latência em milissegundos e hash SHA-256 de todas as entradas para auditoria e imutabilidade.
+Decisão Cognitiva:
+1. O MathAI Gateway decide QUAL modelo e estratégia usar com base na demanda didática:
+   - Rigor Axiomático e Demonstrações: NVIDIA Nemotron / DeepSeek Reasoner
+   - Intuição, Dicas Socráticas e OCR: Google Gemini Flash-Lite
+2. Execução resiliente:
+   - Se 9Router estiver explicitamente configurado (`settings.has_9router`): utiliza como proxy de pooling.
+   - Padrão de Produção: Comunica-se DIRETAMENTE com as APIs oficiais (NVIDIA, DeepSeek, Google).
+   - Contingência autônoma: Resposta didática determinística se todas as redes externas falharem.
+
+Auditoria:
+Calcula latência em milissegundos e hash SHA-256 de todas as entradas para garantia de proveniência.
 """
 
 import json
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import requests
 
 from app.core.config import settings
@@ -33,11 +42,12 @@ NVIDIA_NIM_MODELS = [
 
 
 class MathAiGateway:
-    """Roteador resiliente multi-modelo com telemetria de latência e hash."""
+    """Roteador resiliente multi-modelo com abstração de Provedores Diretos e 9Router."""
 
     def __init__(self) -> None:
-        self.ninerouter_url = f"{settings.NINEROUTER_URL}/chat/completions"
+        self.ninerouter_url = f"{settings.NINEROUTER_URL}/chat/completions" if settings.NINEROUTER_URL else ""
         self.nvidia_api_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        self.deepseek_api_url = f"{settings.DEEPSEEK_API_URL}/chat/completions"
 
     def execute_completion(
         self,
@@ -47,20 +57,21 @@ class MathAiGateway:
         max_tokens: int = 1536,
         json_output: bool = True,
         preferred_model: Optional[str] = None,
+        task_type: str = "general",  # "axiomatic_reasoning" | "socratic_hint" | "ocr" | "general"
     ) -> Dict[str, Any]:
         """
-        Executa a geração de completude textual/raciocínio através da cascata de provedores.
+        Executa a inferência através da melhor estratégia de acesso.
         Retorna dicionário contendo content, latency_ms, input_hash, model_used e provider.
         """
         start_time = time.perf_counter()
 
-        # Monta payload padronizado e calcula hash de entrada
         full_input_payload = {
             "system_prompt": system_prompt or "",
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "json_output": json_output,
+            "task_type": task_type,
         }
         input_hash = compute_sha256(json.dumps(full_input_payload, sort_keys=True))
 
@@ -69,24 +80,81 @@ class MathAiGateway:
             all_messages.append({"role": "system", "content": system_prompt})
         all_messages.extend(messages)
 
-        # ------------------------------------------------------------------
-        # 1. Rota 1: 9Router (Gateway local rápido / fallback multiplexado)
-        # ------------------------------------------------------------------
-        result = self._try_ninerouter(
-            messages=all_messages,
-            model=preferred_model or "nvidia-fallback",
-            temperature=temperature,
-            max_tokens=max_tokens,
-            json_output=json_output,
-        )
-        if result:
-            latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-            result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-            return result
+        # ----------------------------------------------------------------------
+        # Estratégia A: 9Router (Apenas se explicitamente configurado no ambiente)
+        # ----------------------------------------------------------------------
+        if settings.has_9router:
+            result = self._try_ninerouter(
+                messages=all_messages,
+                model=preferred_model or "nvidia-fallback",
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
 
-        # ------------------------------------------------------------------
-        # 2. Rota 2: NVIDIA NIM Direta (Nemotron 3.5 Lightning)
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # Estratégia B: Provedores Diretos (Padrão de Produção na Nuvem)
+        # ----------------------------------------------------------------------
+
+        # 1. Se a tarefa exige raciocínio axiomático formal: tenta NVIDIA NIM ou DeepSeek
+        if task_type in ("axiomatic_reasoning", "formal_proof"):
+            if settings.has_nvidia:
+                result = self._try_nvidia_nim(
+                    messages=all_messages,
+                    model="nvidia/nemotron-3.5-lightning-30b-a3b",
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    json_output=json_output,
+                )
+                if result:
+                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                    result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                    return result
+
+            if settings.has_deepseek:
+                result = self._try_deepseek_direct(
+                    messages=all_messages,
+                    model="deepseek-reasoner",
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    json_output=json_output,
+                )
+                if result:
+                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                    result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                    return result
+
+        # 2. Google Gemini Direto (Cascata canônica: flash-lite -> 3.5-flash-lite)
+        if settings.has_gemini:
+            result = self._try_gemini_cascade(
+                messages=messages,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
+
+        # 3. Fallback para DeepSeek ou NVIDIA se o Gemini não tiver chave ou sofrer 429
+        if settings.has_deepseek:
+            result = self._try_deepseek_direct(
+                messages=all_messages,
+                model="deepseek-chat",
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
+
         if settings.has_nvidia:
             result = self._try_nvidia_nim(
                 messages=all_messages,
@@ -100,24 +168,9 @@ class MathAiGateway:
                 result.update({"latency_ms": latency_ms, "input_hash": input_hash})
                 return result
 
-        # ------------------------------------------------------------------
-        # 3. Rota 3: Google Gemini (com fallback entre modelos da regra AGENTS.md)
-        # ------------------------------------------------------------------
-        if settings.has_gemini:
-            result = self._try_gemini_cascade(
-                messages=messages,
-                system_prompt=system_prompt,
-                temperature=temperature,
-                json_output=json_output,
-            )
-            if result:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                return result
-
-        # ------------------------------------------------------------------
-        # 4. Rota 4: Modo Autônomo de Contingência (quando sem conexão externa)
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # Estratégia C: Modo Autônomo de Contingência (Sem conexão com o mundo exterior)
+        # ----------------------------------------------------------------------
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
         fallback_content = self._generate_autonomous_fallback(messages, json_output)
         return {
@@ -137,7 +190,10 @@ class MathAiGateway:
         max_tokens: int,
         json_output: bool,
     ) -> Optional[Dict[str, Any]]:
-        """Tenta inferência através do 9Router."""
+        """Tenta inferência através de infraestrutura 9Router (se configurada)."""
+        if not self.ninerouter_url:
+            return None
+
         headers = {"Content-Type": "application/json"}
         if settings.NINEROUTER_API_KEY:
             headers["Authorization"] = f"Bearer {settings.NINEROUTER_API_KEY}"
@@ -156,7 +212,7 @@ class MathAiGateway:
                 self.ninerouter_url,
                 headers=headers,
                 json=payload,
-                timeout=(0.8, 3.5),  # Fail fast se o 9Router não estiver ativo
+                timeout=(0.8, 3.5),
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -165,6 +221,49 @@ class MathAiGateway:
                     "content": content,
                     "model_used": data.get("model", model),
                     "provider": "9router",
+                    "status": "completed",
+                    "raw_response": data,
+                }
+        except Exception:
+            pass
+        return None
+
+    def _try_deepseek_direct(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        json_output: bool,
+    ) -> Optional[Dict[str, Any]]:
+        """Tenta inferência direta na API da DeepSeek."""
+        headers = {
+            "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if json_output:
+            payload["response_format"] = {"type": "json_object"}
+
+        try:
+            resp = requests.post(
+                self.deepseek_api_url,
+                headers=headers,
+                json=payload,
+                timeout=(2.0, 10.0),
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                return {
+                    "content": content,
+                    "model_used": model,
+                    "provider": "deepseek",
                     "status": "completed",
                     "raw_response": data,
                 }
@@ -255,10 +354,8 @@ class MathAiGateway:
                         }
                 except Exception as err:
                     err_str = str(err)
-                    # Se 402 ou 429 ou 503, continua a cascata para o próximo modelo lite
                     if "402" in err_str or "429" in err_str or "503" in err_str:
                         continue
-                    # Se 404 (modelo descontinuado), pula de imediato
                     if "404" in err_str:
                         continue
                     break
