@@ -27,6 +27,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { extrairEnunciadoEAlternativas, corrigirLatex } from "@/lib/math-parser";
+import { useUserProfile } from "@/lib/use-user";
 
 interface Question {
   id: number;
@@ -75,6 +76,7 @@ interface DiagnosticoIaResult {
 function ResolverContent() {
   const searchParams = useSearchParams();
   const queryId = searchParams.get("id");
+  const { profile } = useUserProfile();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -184,6 +186,7 @@ function ResolverContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resposta: userAns,
+          aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
           tempo_segundos: 45 * 60 - timeLeft,
           confianca: confianca[currentIndex] || 4,
           estrategia_usada: estrategias[currentIndex] || null,
@@ -314,7 +317,7 @@ function ResolverContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           questao_id: qId,
-          aluno_id: 1,
+          aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
           tipo,
           util: fb.util,
           concorda_diagnostico: fb.concorda,

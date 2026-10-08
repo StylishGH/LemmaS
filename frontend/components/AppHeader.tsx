@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Flame, Search, ExternalLink } from "lucide-react";
+import { useUserProfile } from "@/lib/use-user";
 
 const routeNames: Record<string, string> = {
   "/": "Painel & Metacognição",
@@ -16,6 +17,7 @@ const routeNames: Record<string, string> = {
 
 export default function AppHeader() {
   const pathname = usePathname();
+  const { profile, initials } = useUserProfile();
   const currentTitle = routeNames[pathname] || "Workspace";
 
   return (
@@ -55,23 +57,23 @@ export default function AppHeader() {
         </Link>
 
         {/* STREAK DIÁRIO */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" title="Streak de Estudo Diário: 7 dias consecutivos">
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}>
           <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-          <span>7 dias</span>
+          <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
         </div>
 
         {/* FOCO CONCURSO */}
         <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-[#1f1b2c] border border-amber-500/20 dark:border-amber-500/25 text-xs font-semibold text-amber-700 dark:text-[#e1bb55]">
-          <span>🎯 ESA / IME</span>
+          <span>🎯 {profile.focoConcurso || "ESA / IME"}</span>
         </div>
 
         {/* PERFIL AVATAR */}
         <Link
           href="/perfil"
           className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform"
-          title="Meu Perfil (Guilherme • UFF)"
+          title={profile.isGuest ? "Perfil de Visitante (Local)" : `Meu Perfil (${profile.nome})`}
         >
-          GM
+          {initials}
         </Link>
       </div>
     </header>

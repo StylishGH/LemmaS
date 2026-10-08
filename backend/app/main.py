@@ -20,7 +20,9 @@ from app.core.config import settings
 
 # Fail-fast: SECRET_KEY obrigatória em produção
 if not settings.SECRET_KEY:
-    raise RuntimeError("SECRET_KEY não configurada — recusando iniciar")
+    if settings.ENVIRONMENT == "production":
+        raise RuntimeError("SECRET_KEY não configurada — recusando iniciar em produção")
+    settings.SECRET_KEY = "dev-secret-key-testing-only-change-in-production-2026"
 
 # Rate limiting (slowapi)
 from slowapi import Limiter
