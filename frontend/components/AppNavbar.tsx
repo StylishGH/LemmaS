@@ -17,9 +17,11 @@ import {
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Logo } from "@/app/(public)/landing/components/Logo";
+import { useUserProfile } from "@/lib/use-user";
 
 export default function AppNavbar() {
   const pathname = usePathname();
+  const { profile, initials } = useUserProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [questionsCount, setQuestionsCount] = useState<number>(288);
@@ -122,15 +124,15 @@ export default function AppNavbar() {
           {/* STREAK DIÁRIO */}
           <div 
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" 
-            title="Streak de Estudo Diário: 7 dias consecutivos"
+            title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}
           >
             <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            <span>7 dias</span>
+            <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
           </div>
 
           {/* FOCO CONCURSO */}
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-700 dark:text-[#dedbd0]">
-            <span>🎯 ESA / IME</span>
+            <span>🎯 {profile.focoConcurso || "ESA / EsPCEx"}</span>
           </div>
 
           {/* BOTÃO TOGGLE DE TEMA (COMPACTO) */}
@@ -140,9 +142,9 @@ export default function AppNavbar() {
           <Link
             href="/perfil"
             className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform"
-            title="Meu Perfil (Guilherme • UFF)"
+            title={profile.isGuest ? "Perfil de Visitante (Local)" : `Meu Perfil (${profile.nome})`}
           >
-            GM
+            {initials}
           </Link>
 
           {/* BOTÃO HAMBURGER MOBILE */}
@@ -185,7 +187,7 @@ export default function AppNavbar() {
               className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-1.5"
             >
               <User className="w-3.5 h-3.5" />
-              <span>Ver Meu Perfil (UFF)</span>
+              <span>Ver Perfil ({profile.isGuest ? "Visitante" : profile.nome})</span>
             </Link>
           </div>
         </div>

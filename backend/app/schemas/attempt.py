@@ -15,7 +15,8 @@ class AttemptCreate(BaseModel):
     )
     raw_input: str = Field(
         ...,
-        description="Conteúdo bruto enviado: texto da justificativa ou imagem em base64",
+        max_length=7_000_000,
+        description="Conteúdo bruto enviado: texto da justificativa ou imagem em base64 (máx 7MB)",
     )
     input_type: Literal["text", "image", "multimodal"] = Field(
         default="text",

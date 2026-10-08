@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Permanent+Marker&family=Caveat:wght@500;600&display=swap');
 
+html {
+  scroll-behavior: smooth;
+}
+
 .lemmas-page {
   position: relative;
   min-height: 100vh;

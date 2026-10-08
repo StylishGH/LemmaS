@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { 
   GraduationCap, 
   Target, 
@@ -9,8 +10,14 @@ import {
   Cpu, 
   CheckCircle2, 
   Flame, 
-  Check
+  Check,
+  User,
+  LogIn,
+  LogOut,
+  Info,
+  Sparkles
 } from "lucide-react";
+import { useUserProfile, getInitials } from "@/lib/use-user";
 
 const ESCOLARIDADE_OPCOES = [
   "Ensino Médio (em andamento / concluído)",
@@ -56,28 +63,32 @@ const MOTIVACOES = [
 ];
 
 export default function PerfilPage() {
+  const { profile, loading, saveProfile, logout } = useUserProfile();
   const [activeTab, setActiveTab] = useState<"academico" | "concursos" | "engine">("academico");
-  const [nome, setNome] = useState("Guilherme Henrique");
-  const [email, setEmail] = useState("guilherme@uff.br");
-  const [escolaridade, setEscolaridade] = useState("Ensino Superior (Graduação em Matemática)");
-  const [faculdade, setFaculdade] = useState(FACULDADES_BRASIL[0]);
-  const [semestre, setSemestre] = useState("5º Semestre");
-  const [metaQuestoesDia, setMetaQuestoesDia] = useState(20);
   
-  const [concursosSelecionados, setConcursosSelecionados] = useState<string[]>([
-    "ESA (Sargentos do Exército)",
-    "EsPCEx / AMAN (Oficiais do Exército)",
-    "IME (Engenharia Militar)"
-  ]);
-
-  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>([
-    "concurso_militar",
-    "data_science",
-    "rigor"
-  ]);
-
-  const [modeloPreferido, setModeloPreferido] = useState<"nemotron" | "deepseek" | "hibrido">("nemotron");
+  const [nome, setNome] = useState(profile.nome);
+  const [email, setEmail] = useState(profile.email);
+  const [escolaridade, setEscolaridade] = useState(profile.escolaridade);
+  const [faculdade, setFaculdade] = useState(profile.faculdade);
+  const [semestre, setSemestre] = useState(profile.semestre);
+  const [metaQuestoesDia, setMetaQuestoesDia] = useState(profile.metaQuestoesDia);
+  const [concursosSelecionados, setConcursosSelecionados] = useState<string[]>(profile.concursosSelecionados);
+  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>(profile.motivacoesSelecionadas);
+  
   const [salvo, setSalvo] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setNome(profile.nome);
+      setEmail(profile.email);
+      setEscolaridade(profile.escolaridade);
+      setFaculdade(profile.faculdade);
+      setSemestre(profile.semestre);
+      setMetaQuestoesDia(profile.metaQuestoesDia);
+      setConcursosSelecionados(profile.concursosSelecionados);
+      setMotivacoesSelecionadas(profile.motivacoesSelecionadas);
+    }
+  }, [loading, profile]);
 
   const toggleConcurso = (item: string) => {
     if (concursosSelecionados.includes(item)) {
@@ -95,39 +106,79 @@ export default function PerfilPage() {
     }
   };
 
-  const handleSalvar = (e: React.FormEvent) => {
+  const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault();
+    await saveProfile({
+      nome,
+      email,
+      escolaridade,
+      faculdade,
+      semestre,
+      metaQuestoesDia,
+      concursosSelecionados,
+      motivacoesSelecionadas,
+      focoConcurso: concursosSelecionados.length > 0 ? concursosSelecionados.slice(0, 2).join(" / ") : "Matemática Geral",
+    });
     setSalvo(true);
     setTimeout(() => setSalvo(false), 3000);
   };
 
+  const userInitials = getInitials(nome);
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+      {/* BANNER AVISO SE FOR VISITANTE LOCAL */}
+      {profile.isGuest && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-amber-900 dark:text-[#f5f0df]">
+            <Info className="w-4 h-4 text-amber-600 dark:text-[#d9b452] shrink-0" />
+            <span>
+              <strong>Sessão de Visitante:</strong> Suas metas e perfil estão salvos neste navegador. Faça login ou crie sua conta para sincronizar suas resoluções em nuvem.
+            </span>
+          </div>
+          <Link
+            href="/login"
+            className="shrink-0 lemmas-gold-cta inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-sm hover:scale-105 transition"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Entrar / Cadastrar</span>
+          </Link>
+        </div>
+      )}
+
       {/* 1. HEADER DO PERFIL ESTILO EDITORIAL LEMMAS */}
       <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-amber-500/20 bg-white dark:bg-[#141222] p-6 md:p-8 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-700 p-0.5 shadow-md">
               <div className="w-full h-full rounded-[14px] bg-[#0e0d16] flex items-center justify-center text-[#d9b452] font-black text-2xl tracking-wider font-serif-math">
-                GH
+                {userInitials}
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
-                  {nome}
+                  {nome || "Estudante Convidado"}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Verificado
-                </span>
+                {profile.isGuest ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] text-[11px] font-bold">
+                    <User className="w-3.5 h-3.5" /> Visitante Local
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Verificado
+                  </span>
+                )}
               </div>
               <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 font-medium">
-                Licenciatura em Matemática • Universidade Federal Fluminense (UFF)
+                {escolaridade} • {faculdade}
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-zinc-500">
-                <span>{email}</span>
+                <span>{email || "Sem e-mail cadastrado"}</span>
                 <span>•</span>
-                <span className="font-mono text-amber-600 dark:text-[#d9b452] font-semibold">ID #UFF-2026</span>
+                <span className="font-mono text-amber-600 dark:text-[#d9b452] font-semibold">
+                  ID #{profile.isGuest ? "VISITANTE" : (profile.id || "LEMMAS-STUDENT")}
+                </span>
               </div>
             </div>
           </div>
@@ -136,11 +187,11 @@ export default function PerfilPage() {
           <div className="flex sm:flex-col gap-2">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]">
               <Flame className="w-4 h-4 fill-amber-500" />
-              <span>7 dias consecutivos</span>
+              <span>{profile.streakDias} {profile.streakDias === 1 ? "dia consecutivo" : "dias consecutivos"}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-[#1b172e] border border-amber-500/20 text-xs font-bold text-amber-700 dark:text-[#dedbd0]">
               <Target className="w-4 h-4 text-amber-500" />
-              <span>Foco: ESA / EsPCEx</span>
+              <span>Foco: {profile.focoConcurso || "ESA / EsPCEx"}</span>
             </div>
           </div>
         </div>
@@ -205,6 +256,7 @@ export default function PerfilPage() {
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
+                  placeholder="Seu nome"
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
                 />
               </div>
@@ -217,6 +269,7 @@ export default function PerfilPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu.email@exemplo.com"
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
                 />
               </div>
@@ -376,52 +429,66 @@ export default function PerfilPage() {
         {activeTab === "engine" && (
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
-              <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">LEMMAS Core & MathAI Engine</h2>
+              <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">Motor Cognitivo MathAI & LEMMAS Core</h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Parâmetros cognitivos e preferências de inteligência artificial pedagógica.
+                Orquestração de inteligência artificial pedagógica e repetição espaçada adaptativa.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div
-                onClick={() => setModeloPreferido("nemotron")}
-                className={`p-4 rounded-xl border cursor-pointer transition-all space-y-2 ${
-                  modeloPreferido === "nemotron"
-                    ? "bg-amber-500/10 border-amber-500 dark:border-[#d9b452] text-amber-950 dark:text-[#f5f0df]"
-                    : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs">NVIDIA Nemotron-3 Ultra (550B)</span>
-                  <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-[#d9b452] px-2 py-0.5 rounded font-mono font-semibold">Recomendado</span>
+            {/* ROTEAMENTO AUTÔNOMO MULTI-MODELO (SEM SELETOR MANUAL PELO ALUNO) */}
+            <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
+                  <span className="text-xs font-bold text-slate-900 dark:text-[#f5f0df]">
+                    Roteamento Cognitivo Inteligente (MathAI Gateway)
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-                  Foco em provas formais, demonstrações axiomáticas completas e invariantes geométricos sem saltos conceituais.
-                </p>
+                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">
+                  <CheckCircle2 className="w-3 h-3" /> Orquestração Autônoma Ativa
+                </span>
               </div>
-
-              <div
-                onClick={() => setModeloPreferido("deepseek")}
-                className={`p-4 rounded-xl border cursor-pointer transition-all space-y-2 ${
-                  modeloPreferido === "deepseek"
-                    ? "bg-amber-500/10 border-amber-500 dark:border-[#d9b452] text-amber-950 dark:text-[#f5f0df]"
-                    : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs">DeepSeek R1 / Reasoning</span>
-                  <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-[#d9b452] px-2 py-0.5 rounded font-mono font-semibold">Heurístico</span>
+              <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                Você não precisa se preocupar em selecionar qual modelo de IA utilizar. A <strong>MathAI Engine</strong> analisa a complexidade e a taxonomia da questão em tempo real e orquestra a combinação perfeita:
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3 rounded-xl bg-white dark:bg-[#18152a] border border-slate-200/80 dark:border-amber-500/15 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#f5f0df]">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>NVIDIA Nemotron</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-normal">
+                    Acionado para demonstrações axiomáticas formais e rigor analítico.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-                  Foco em atalhos socráticos, intuição de concurso, eliminação de opções e simplificação algébrica rápida.
-                </p>
+
+                <div className="p-3 rounded-xl bg-white dark:bg-[#18152a] border border-slate-200/80 dark:border-amber-500/15 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#f5f0df]">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>DeepSeek R1</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-normal">
+                    Acionado para intuição socrática, atalhos de concurso e heurísticas.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white dark:bg-[#18152a] border border-slate-200/80 dark:border-amber-500/15 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#f5f0df]">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Gemini Multimodal</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-normal">
+                    Acionado para OCR de fotos de caderno e transcrição de rascunhos em KaTeX.
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* SUPERMEMO-2 CONFIG */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 space-y-2">
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 dark:text-[#f5f0df]">Motor de Repetição Espaçada (SM-2)</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-[#f5f0df]">Motor de Repetição Espaçada (SM-2 / FSRS)</span>
                 <span className="text-xs font-mono text-amber-600 dark:text-[#d9b452] font-semibold">Ativo • LEMMAS Core</span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
@@ -431,26 +498,41 @@ export default function PerfilPage() {
           </div>
         )}
 
-        {/* BOTÃO DE SALVAR COM FEEDBACK */}
-        <div className="flex items-center justify-between pt-2">
-          {salvo ? (
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Configurações salvas com sucesso no LEMMAS Core!</span>
-            </div>
-          ) : (
-            <span className="text-xs text-slate-400 dark:text-zinc-500">
-              Última sincronização: hoje às 14:35
-            </span>
-          )}
+        {/* BOTÃO DE SALVAR COM FEEDBACK E OPÇÃO DE LOGOUT SE AUTENTICADO */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2">
+          <div>
+            {salvo ? (
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Perfil e preferências salvos com sucesso!</span>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 dark:text-zinc-500">
+                {profile.isGuest ? "Salvo localmente no dispositivo" : "Sincronizado na nuvem (Supabase)"}
+              </span>
+            )}
+          </div>
 
-          <button
-            type="submit"
-            className="lemmas-gold-cta flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02]"
-          >
-            <Save className="w-4 h-4" />
-            <span>Salvar Alterações</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {!profile.isGuest && (
+              <button
+                type="button"
+                onClick={logout}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-500/10 transition"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sair da Conta</span>
+              </button>
+            )}
+
+            <button
+              type="submit"
+              className="lemmas-gold-cta flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02]"
+            >
+              <Save className="w-4 h-4" />
+              <span>Salvar Alterações</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
