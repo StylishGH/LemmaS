@@ -250,27 +250,24 @@ Avaliação crítica
 modelo mais forte
 ```
 
-Depois da escolha, o **9Router** pode cuidar do roteamento e dos mecanismos de fallback.
+Depois da escolha, o **MathAI Gateway** cuida da estratégia de acesso: ele abstrai provedores de modelos e suporta tanto provedores diretos quanto infraestruturas de roteamento como o 9Router.
+
+> *The MathAI Gateway abstracts model providers and supports direct providers or routed infrastructure such as 9Router.*
 
 ```text
-MathAI Gateway
-      │
-      ▼
-   9Router
-      │
-      ▼
-  Modelo A
-      │
-   falhou?
-      │
-      ▼
-  Modelo B
-      │
-   falhou?
-      │
-      ▼
-  Modelo C
+                    MATHAI GATEWAY
+                          │
+       ┌──────────────────┴──────────────────┐
+       ▼                                     ▼
+ DIRECT PROVIDERS (Nuvem)              9ROUTER (Opcional)
+ ├── Google Gemini (Flash-Lite)         └── Proxy & Pooling Local
+ ├── NVIDIA NIM (Nemotron 3.5)
+ └── DeepSeek API (Reasoner/V3)
 ```
+
+Essa separação garante que:
+- O **MathAI Gateway** decide *o que a tarefa matemática exige* (rigor axiomático vs. intuição vs. OCR).
+- A camada de execução (provedor direto ou roteador de infraestrutura) cuida da disponibilidade e redundância.
 
 A infraestrutura de modelos pode mudar sem que o restante da aplicação precise ser reescrito.
 
@@ -812,20 +809,21 @@ lemmas/
 ---
 
 # ☁️ Infraestrutura
-
+ 
 ```text
 GitHub
    │
-   ├──────────────► Vercel
-   │                  └── Frontend
+   ├──────────────► Vercel (Frontend Next.js)
+   │                  │ (chamadas diretas)
+   │                  ▼
+   │             Google Gemini API
    │
-   └──────────────► Render
-                      └── Backend
-                            │
-                    ┌───────┴───────┐
-                    ▼               ▼
-                Supabase          9Router
-                PostgreSQL
+   └──────────────► Render (Backend FastAPI)
+                      │
+              ┌───────┴───────┬──────────────────────┐
+              ▼               ▼                      ▼
+          Supabase      Direct Providers       9Router (Opcional)
+         PostgreSQL     (NVIDIA / DeepSeek)   (Dev Local ou VPS)
 ```
 
 A arquitetura foi pensada para começar simples e permitir evolução conforme o projeto ganhar usuários e volume de dados.

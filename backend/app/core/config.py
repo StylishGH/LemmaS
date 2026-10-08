@@ -50,15 +50,17 @@ class Settings:
         self.SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip()
         self.SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()
 
-        # Google Gemini API
+        # Provedores Diretos de IA (Produção & Nuvem)
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
-
-        # 9Router & NVIDIA NIM
-        self.NINEROUTER_URL: str = os.getenv(
-            "NINEROUTER_URL", "http://localhost:20128/v1"
-        ).rstrip("/")
-        self.NINEROUTER_API_KEY: str = os.getenv("NINEROUTER_API_KEY", "").strip()
         self.NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "").strip()
+        self.DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        self.DEEPSEEK_API_URL: str = os.getenv(
+            "DEEPSEEK_API_URL", "https://api.deepseek.com/v1"
+        ).rstrip("/")
+
+        # Infraestrutura Opcional de Roteamento (9Router local ou cluster)
+        self.NINEROUTER_URL: str = os.getenv("NINEROUTER_URL", "").rstrip("/")
+        self.NINEROUTER_API_KEY: str = os.getenv("NINEROUTER_API_KEY", "").strip()
 
     @property
     def has_supabase(self) -> bool:
@@ -71,14 +73,19 @@ class Settings:
         return bool(self.GEMINI_API_KEY)
 
     @property
-    def has_9router(self) -> bool:
-        """Verifica se o endpoint do 9Router está configurado."""
-        return bool(self.NINEROUTER_URL)
-
-    @property
     def has_nvidia(self) -> bool:
         """Verifica se a chave direta da NVIDIA NIM está configurada."""
         return bool(self.NVIDIA_API_KEY)
+
+    @property
+    def has_deepseek(self) -> bool:
+        """Verifica se a chave direta da DeepSeek API está configurada."""
+        return bool(self.DEEPSEEK_API_KEY)
+
+    @property
+    def has_9router(self) -> bool:
+        """Verifica se o endpoint do 9Router está explicitamente configurado."""
+        return bool(self.NINEROUTER_URL)
 
 
 settings = Settings()
