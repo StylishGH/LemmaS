@@ -84,11 +84,8 @@ desktop.ini
 data/*.db
 .agents/
 
-# Web App & Frontend Next.js dependencies & builds
-web/node_modules/
-web/.next/
-web/out/
-web/.vercel/
+# Legacy web directory (superseded by frontend/)
+web/
 frontend/node_modules/
 frontend/.next/
 frontend/out/

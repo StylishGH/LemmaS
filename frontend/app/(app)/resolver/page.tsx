@@ -506,7 +506,21 @@ function ResolverContent() {
   }
 
   // TELA DE RESOLUÇÃO ATIVA
-  const { corpo, alternativas } = currentQ ? extrairEnunciadoEAlternativas(currentQ.enunciado) : { corpo: "", alternativas: {} };
+  if (!currentQ || questions.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+        <p className="text-slate-600 dark:text-zinc-400 text-sm">Nenhuma questão encontrada ou carregada no momento.</p>
+        <button
+          onClick={() => setSessionMode("standby")}
+          className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-semibold"
+        >
+          Voltar ao Hub de Treino
+        </button>
+      </div>
+    );
+  }
+
+  const { corpo, alternativas } = extrairEnunciadoEAlternativas(currentQ.enunciado);
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">

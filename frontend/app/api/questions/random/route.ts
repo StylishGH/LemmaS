@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { extrairEnunciadoEAlternativas, corrigirLatex } from "@/lib/math-parser";
 
 export async function GET() {
   try {
@@ -18,8 +19,13 @@ export async function GET() {
 
     const randomIndex = Math.floor(Math.random() * data.length);
     const q = data[randomIndex];
+    const parsed = extrairEnunciadoEAlternativas(q.enunciado);
 
-    return NextResponse.json(q, {
+    return NextResponse.json({
+      ...q,
+      enunciado_limpo: corrigirLatex(parsed.corpo),
+      alternativas: parsed.alternativas,
+    }, {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate",
       },
