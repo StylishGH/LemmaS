@@ -1,7 +1,7 @@
 # Regras do Projeto LEMMAS (Powered by MathAI Engine)
 
 ## 0. Identidade do Ecossistema: LEMMAS vs MathAI Engine
-- **Plataforma LEMMAS & LEMMAS Core**: É o produto final e ecossistema web voltado ao estudante (Next.js, Tailwind v4, estética editorial lousa/quadro), gerenciador de autenticação/sessão, perfil cognitivo e motor determinístico de repetição espaçada SM-2 (agnóstico a disciplinas).
+- **Plataforma LEMMAS & LEMMAS Core**: É o produto final e ecossistema web voltado ao estudante (Next.js 16, Turbopack, Tailwind CSS v4, KaTeX, estética editorial lousa/quadro), gerenciador de autenticação/sessão, perfil cognitivo e motor determinístico de repetição espaçada SM-2 e FSRS-v4 (agnóstico a disciplinas).
 - **MathAI Engine**: É o núcleo/motor cognitivo especializado em Matemática — avaliação passo a passo, OCR multimodal de rascunhos em caderno/tablet, roteamento multi-modelo (NVIDIA Nemotron para rigor axiomático e DeepSeek para intuição) e banco de lemas.
 - **Diretriz de Nomenclatura**: Toda IA e documentação deve referenciar o produto como **LEMMAS** (ou **LemmaS**) impulsionado pela **MathAI Engine**.
 
@@ -21,28 +21,45 @@
 - **Diferenciação de Códigos de Erro**:
   - `402 RESOURCE_EXHAUSTED` (`prepayment credits are depleted`): Ocorre quando a chave pertence a um projeto configurado em modo Pay-As-You-Go, mas o saldo pré-pago está zerado ($0.00). O sistema deve alertar o usuário para recarregar créditos no Google Cloud Billing ou alternar para um projeto puramente Free Tier no Google AI Studio.
   - `429 RESOURCE_EXHAUSTED`: Limite de requisições por minuto (RPM) ou diário (RPD) atingido. Recomenda-se aguardar ou alternar a chave.
-  - `503 UNAVAILABLE`: Servidores Google temporariamente sobrecarregados. O cliente da aplicação (`src/ai/evaluator.py`) deve realizar fallback automático para os modelos `flash-lite`.
+  - `503 UNAVAILABLE`: Servidores Google temporariamente sobrecarregados. O cliente da aplicação (`backend/app/services/mathai/gateway.py`) deve realizar fallback automático para os modelos `flash-lite`.
 - **Processamento em Lote (Batch Scripts)**:
   - Scripts pesados de ingestão de banco de questões (`ingest_cg.py`, etc.) NÃO devem ser executados no Free Tier sem aviso prévio, pois consomem rapidamente o limite diário.
 
 ## 3. Web Scraping e Cloudflare
 - Sites como o SSPM (Marinha Oficial) e PCI Concursos utilizam Cloudflare Turnstile, resultando em erros constantes de `403 Forbidden` ao tentar aplicar automação via scripts Python puros (`requests`/`BeautifulSoup`). Priorizar outras fontes de raspagem sem proteções anti-bot agressivas.
 
-## 4. UI e Estilização (Streamlit/Frontend)
-- **Modos Dark e Light**: Sempre preste atenção ao contraste e esquema de cores ao adicionar novos elementos na UI. Garanta que textos, fundos e itens selecionados não fiquem ilegíveis (ex: texto claro em fundo claro ou texto escuro em fundo escuro) dependendo do tema ativo pelo usuário. Utilize variáveis de tema responsivas ou cores neutras de bom contraste.
+## 4. UI e Estilização (Frontend Next.js)
+- **Modos Dark e Light**: Sempre preste atenção ao contraste e esquema de cores ao adicionar novos elementos na UI. Garanta que textos, fundos e itens selecionados não fiquem ilegíveis dependendo do tema ativo pelo usuário. Utilize variáveis de tema responsivas ou cores neutras de bom contraste com `@custom-variant dark (&:where(.dark, .dark *));` no Tailwind v4.
 - **Responsividade e Modo Tablet**: Em telas médias e tablets, garanta que barras de navegação superior, numeração de questões e botões de ação não fiquem sobrepostos ou agrupados de forma truncada.
 
-## 5. Alucinação de Subagentes em Tarefas Bloqueadas (Cloudflare)
-- **Bloqueios Intransponíveis**: O Cloudflare Turnstile (usado em sites da Marinha/SSPM e PCI Concursos) é intransponível para robôs headless e subagentes nativos.
-- **Prevenção de Alucinação**: Se um subagente for instruído a baixar arquivos desses sites, ele poderá **alucinar o sucesso**. Ele pode baixar a página HTML de bloqueio (403) e salvá-la como .pdf, ou simplesmente listar nomes de arquivos fictícios dizendo que o download terminou.
-- **Protocolo**: NUNCA utilize subagentes para tentar burlar o Cloudflare e SEMPRE audite o tamanho/conteúdo dos arquivos baixados por scripts antes de considerar uma tarefa de extração concluída. Aceite a limitação técnica e direcione o usuário para o download manual.
+## 5. Arquitetura Monorepo LEMMAS
+```
+lemmas/
+├── frontend/             # Next.js 16 (App Router, Turbopack, Tailwind CSS v4, KaTeX)
+│   ├── app/              # /dashboard, /questoes, /resolver, /opinioes, /landing, /login, /perfil, /sobre
+│   ├── components/       # UI, exercicios, math
+│   └── lib/              # supabase, sm2, math-parser
+├── backend/              # FastAPI modular (Python 3.12)
+│   ├── app/core/         # config.py, security.py (SHA-256)
+│   ├── app/models/       # Attempt imutável, AIEvaluation, Student, Exercise, Flashcard
+│   ├── app/schemas/      # Pydantic DTOs
+│   ├── app/services/     # MathAI Gateway (Nemotron/DeepSeek/Gemini), Tutor Socrático, FSRS-v4
+│   └── app/api/routes/   # attempts, exercises, tutor, feedback, flashcards
+├── data/
+│   ├── repertorio/       # lemas_fundamentais.json (8 lemas)
+│   └── schemas/          # 01_core_tables.sql, 02_provenance_and_consent.sql, 03_flashcards_and_fsrs.sql
+├── docs/                 # architecture/, database/, ai/
+└── tests/                # 17 testes unitários (backend, lemmas_core, flashcards)
+```
 
-## 6. Automação e Interação com Formulários (Gupy)
-- **Seleção de Habilidades e Campos Autocomplete:**
-  - Em campos do tipo busca/seleção (ex: aba "Habilidades" e "Experiências" do Gupy), **nunca** apenas digite o texto no campo de entrada.
-  - O fluxo obrigatório de interação é:
-    1. Digitar o termo no campo de entrada.
-    2. Aguardar a exibição do dropdown de sugestões e **clicar explicitamente na opção correspondente**.
-    3. Clicar no botão **"Adicionar"** para incluir a tag na lista.
-    4. Repetir o processo para cada item e, ao concluir, clicar no botão **"Salvar"**.
-  - A omissão de qualquer uma dessas etapas impede o registro do dado na plataforma.
+## 6. Mandamento Epistêmico Fundamental
+$$\mathbf{RAW\ DATA\ (OBSERVED)} \neq \mathbf{AI\ INTERPRETATION} \neq \mathbf{VALIDATED\ LABEL}$$
+- **RAW DATA**: Imutável, auditável com hash SHA-256 determinístico.
+- **AI INTERPRETATION**: Hipótese versionada com modelo, prompt e confiança (nunca sobrescreve o dado original).
+- **VALIDATED LABEL**: Ground truth validado por especialista/aluno para treino e active learning.
+
+## 7. Deploy & Nuvem
+- **Frontend**: Vercel (Root Directory: `frontend`)
+- **Backend**: Render / Railway (Root Directory: `backend`, command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`)
+- **Database**: Supabase Postgres (RLS ativo, 20 tabelas, 288 questões, 13 usuários, 8 lemas)
+- **Repo**: https://github.com/StylishGH/MathAI.git
