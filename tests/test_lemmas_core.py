@@ -1,12 +1,21 @@
 import pytest
 from datetime import datetime
-from src.lemmas_core.sm2 import calcular_proximo_intervalo_sm2
-from src.lemmas_core.cognitive_profile import (
-    atualizar_metricas_topico,
-    calcular_taxa_dominio,
-    classificar_distribuicao_erros,
-)
-from src.lemmas_core.models import TipoErro
+try:
+    from app.services.lemmas_core.sm2 import calcular_proximo_intervalo_sm2
+    from app.services.lemmas_core.cognitive_profile import (
+        atualizar_metricas_topico,
+        calcular_taxa_dominio,
+        classificar_distribuicao_erros,
+    )
+    from app.services.lemmas_core.models import TipoErro
+except ImportError:
+    from backend.app.services.lemmas_core.sm2 import calcular_proximo_intervalo_sm2
+    from backend.app.services.lemmas_core.cognitive_profile import (
+        atualizar_metricas_topico,
+        calcular_taxa_dominio,
+        classificar_distribuicao_erros,
+    )
+    from backend.app.services.lemmas_core.models import TipoErro
 
 
 def test_sm2_primeiro_acerto():

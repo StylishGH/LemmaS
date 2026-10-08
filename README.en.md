@@ -1,431 +1,890 @@
 <div align="center">
-  <h1>MathAI 🧠📐</h1>
-  <p>An intelligent mathematics learning platform that evolves an individual cognitive model for each student.</p>
+  <h1>Lemmas 🧠📐</h1>
+  <p>An adaptive mathematics learning platform combining Mathematics, Artificial Intelligence, Data Science, and spaced repetition.</p>
 
   <p align="right">
     <b>🇧🇷 Versão em Português</b> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English Version</a>
   </p>
 
   <p>
-      <a href="https://mathia.streamlit.app" target="_blank">
-        <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit" />
-      </a>
-      <a href="https://github.com/StylishGH/MathAI/actions/workflows/ci.yml">
-        <img src="https://github.com/StylishGH/MathAI/actions/workflows/ci.yml/badge.svg" alt="CI" />
-      </a>
-      <a href="https://github.com/StylishGH/MathAI/blob/main/LICENSE">
-        <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
-      </a>
-      <img src="https://img.shields.io/badge/Python-3.11-blue.svg" alt="Python" />
-      <img src="https://img.shields.io/badge/Streamlit-1.38-FF4B4B.svg" alt="Streamlit" />
-      <img src="https://img.shields.io/badge/SQLite-3.45-003B57.svg" alt="SQLite" />
-      <img src="https://img.shields.io/badge/Turso-Cloud%20DB-3A86FF.svg" alt="Turso" />
-    </p>
+    <img src="https://img.shields.io/badge/Next.js-15-black.svg?style=flat-square" alt="Next.js" />
+    <img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?style=flat-square" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/PostgreSQL-16-336791.svg?style=flat-square" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4.svg?style=flat-square" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/Python-3.11-blue.svg?style=flat-square" alt="Python" />
+  </p>
 
-  <p>🚀 <strong>Live in production:</strong> <a href="https://mathia.streamlit.app"><strong>mathia.streamlit.app</strong></a></p>
+  <p><strong>Powered by the <a href="#-mathai">MathAI Engine</a></strong></p>
 </div>
 
 ---
 
-## 📖 The Real Story: From "AI Side Project" to Data Engineering + ML Laboratory
+## 🪦 Before Lemmas, there was MathAI
 
-### The Beginning: Not "Just Another Math ChatGPT"
+**Lemmas** was born from a project called **MathAI**.
 
-The seed of MathAI came from a simple idea: **I wanted to get back to doing real mathematics** and realized an AI could track *how* a person learns math, not just answer questions.
+The original idea was relatively simple: create a study tool that could learn from the student's own answers, identify errors, recommend exercises, and help during Mathematics study.
 
-The fundamental difference appeared early:
+Over time, the project grew.
 
+MathAI ceased to be just a study application and started to involve:
+
+* language models;
+* analysis of student resolutions;
+* exercise recommendation;
+* spaced repetition;
+* computer vision;
+* data collection and structuring;
+* personalized learning models.
+
+At this point, a problem emerged:
+
+> **MathAI no longer described the product.**
+
+So **MathAI was "retired" as the platform name**.
+
+And **Lemmas** was born.
+
+The name MathAI, however, did not completely die.
+
+It was transformed into the original idea that gave birth to the project: **a future AI specialized in mathematical learning**, responsible for acting as the intelligent brain behind Lemmas.
+
+```text
+                    MATHAI
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+       old product          future IA
+             │                   │
+             ▼                   ▼
+          LEMMAS              MathAI
+        platform            system brain
 ```
-Typical app:        Student → Question → AI → Answer
 
-MathAI (vision):    Student → Question → Attempt → Time → Correct/Incorrect
-                                              → Student's explanation
-                                              → Strategy used
-                                              → Error type
-                                              → History
-                                              → Student profile
-                                              → Next question
-```
+Thus, Lemmas is the platform.
 
-The phrase that captures this:
-
-> **"An AI that learns how you learn Mathematics to help you learn better."**
-
-But **personalization ≠ reinforcing dependency**. If a student uses Ceva's Theorem in geometry, the system shouldn't just serve Ceva problems — it should ask: "Could they solve this via similarity? Coordinates? Areas?" The system must know the student without getting stuck in their current pattern.
+MathAI will be, in the future, its intelligence.
 
 ---
 
-### The First Big Vision: A Data System
+# 🧠 What is Lemmas?
 
-When I thought about what needed to be stored, I realized you can't build this on top of LLM conversations alone. I started imagining tables:
+Lemmas is an adaptive mathematics learning platform that combines **Mathematics, Artificial Intelligence, Data Science, and spaced repetition** to build a personalized study experience.
 
-| Table | Purpose |
-|-------|---------|
-| `users` | Students + explicit consent |
-| `questoes` | Statements, LaTeX, SVG, subject, topic, difficulty, strategies |
-| `tentativas` | History: time, correct/incorrect, strategy, confidence (1-5), justification, photo of resolution |
-| `revisao_espacada` | **SM-2** (SuperMemo-2) algorithm for scheduling |
-| `perfil_aluno_topico` | Real-time analytical aggregation per topic |
-| `diagnosticos_ia` | AI interpretations (separated from facts!) |
-| `dicas_socraticas` | Progressive hints history |
+The goal is not simply to answer questions.
 
-**The leap:** MathAI stopped being "an AI that answers math" and became **a data system about mathematical learning**.
+Lemmas seeks to understand:
 
----
+* how the student solves problems;
+* where they tend to err;
+* which concepts they master;
+* which difficulties persist;
+* how their memory evolves;
+* which exercises are most suitable;
+* and which study strategies work best for them.
 
-### The Most Important Architectural Decision: Observed Data ≠ AI Interpretation
-
-Imagine:
-- **Observable:** Student took 84s, got it wrong, declared confidence 4/5
-- **Interpretation:** "They don't master similarity", "Conceptual error"
-
-The AI **can be wrong**. If I store interpretation as truth → train model on assumption → error cycle.
-
-**The rule:**
-```
-OBSERVED DATA (raw facts) ≠ AI DIAGNOSIS (inference)
-```
-- Observation → stored pristine (ground truth for future ML)
-- Interpretation → stored **separately**, with metadata: which model, when, input, validated
-
-This prevents the cycle: *AI says → DB stores as truth → model learns own assumption*.
+The central idea is to transform every interaction with the platform into a learning opportunity — both for the student and for the system.
 
 ---
 
-### The Massive Problem: The Data (Where the Project Became Engineering)
+# 📖 The idea behind the project
 
-"OK, I have a cool AI. But where do questions come from?"
+Lemmas starts from a simple premise:
 
-Enter **MathNet** — 100k+ questions from math competitions. Seemed simple: `MathNet → DataFrame → Database`.
+> **Two people can get the same question wrong for completely different reasons.**
 
-**LOL. Not even close.**
+One may not know the concept.
 
-Real dataset problems:
-- Mixed languages (PT/EN/ES/others)
-- Broken LaTeX mixed with text
-- Inconsistent metadata: competition, edition, year, format
-- Different names for same exam: `EFOMM`, `Escola de Formação`, `EFOMM-MARINHA`
-- Empty fields, incomplete solutions
-- **Trap:** `26th Balkan Mathematical Olympiad` → `26` is **edition**, not year. Don't invent correspondence.
+Another may know the concept but make an algebraic error.
 
-#### The Language Problem → Pipeline Philosophy
+Another may solve correctly but struggle to recognize when that concept should be applied.
 
-Matured strategy:
-```
-language provided by dataset
-         ↓
-if missing → detect from text (strip LaTeX first!)
-         ↓
-if still ambiguous → AI
+Therefore, the system must not merely record:
+
+```text
+Student → got it right
+Student → got it wrong
 ```
 
-> **"LLM doesn't need to do what Python can do deterministically."**
+It must seek to understand:
 
-This became the pipeline philosophy.
-
-#### A Silly Bug That Teaches: Stripping LaTeX ≠ Stripping Spaces
-
-```python
-# Wrong: removes ALL spaces
-re.sub(r"\s", "", text)  # "Determine the value of x" → "Determinethevalueofx"
-
-# Correct: normalize spaces
-re.sub(r"\s+", " ", text).strip()
+```text
+What did the student do?
+Why did they probably do that?
+What happened before?
+How did they respond to feedback?
+Did that error return?
+Which intervention helped?
 ```
 
-Silly detail? In real pipelines, broken preprocessing kills seemingly unrelated stages. **Rule:** test transformations in isolation before running on full dataset.
+This information forms the basis of the Lemmas learning model.
 
 ---
 
-### The Fundamental Shift: AI as Fallback, Not Manual Labor
+# 🏗️ Architecture
 
-**Before:**
-```
-Dataset → AI → AI → AI → AI → AI
-```
-
-**After (Python does 95%):**
-```
-Dataset → Python (cleaning, classification, regex, dedup, structural validation)
-         ↓
-    AI only where semantic ambiguity exists
-         ↓
-    Python validates AI output (JSON/LaTeX)
-         ↓
-    Database
-```
-
-AI enters **only where semantic ambiguity exists** — e.g., "what does this Greek statement mean in Portuguese?"
-
----
-
-### Multi-Provider AI Layer: Intelligent Routing
-
-Depending solely on `MathAI → Gemini` made no sense. Evolved to:
-
-```
-                         MATHAI
-                           │
-           ┌───────────────┴───────────────┐
-           │                               │
-      DATA LAYER                      AI LAYER
-           │                               │
-    MathNet / Exams                   AI Router
-    Attempts                              │
-    Performance                      ┌──────┼──────┐
-    Metadata                         │      │      │
-           │                       Gemini  NVIDIA  Others
-           │
-      ETL / Quality
-           │
-        SQLite/Turso
-           │
-      Student History
-           │
-    ┌──────┼────────┐
-    │      │        │
-  Profile  Review  Diagnosis
-    │
-    ▼
- Recommendation
-    │
-    ▼
- Practice
-    │
-    ▼
- New Attempt
-    │
-    └──────────→ Data (cycle closes)
-```
-
-#### The Router in Action
-
-| Task | Primary | Fallback | Why |
-|------|---------|----------|-----|
-| **Socratic Hints** | NVIDIA Nemotron 3.5 Lightning (~0.9s) | DeepSeek v4.1 → Gemini | Speed, unlimited quota, native socratic tone |
-| **Text Evaluation** | NVIDIA Nemotron / DeepSeek | Gemini | Heavy reasoning, structured JSON |
-| **Handwritten OCR** | **Google Gemini Flash-Lite** | NVIDIA (if supported) | Best multimodal on market — reads handwriting, smudges, crumpled paper → direct LaTeX |
-| **Batch Ingestion (MathNet)** | Pure Python (95%) → NVIDIA queue 38 req/min (5%) → Gemini audit (<1%) | — | Zero cost mostly, anti-429 throttle, quality gate |
-
-> **Key discovery:** NVIDIA NIM unlocked unlimited requests (SMS verification) → free H100 GPUs with SOTA open-weights. Zero vendor lock-in.
-
----
-
-### 📖 Complete AI Architecture Documentation
-
-The detailed implementation of the router, circuit breakers, throttle, telemetry, output validation, prompt versioning, and benchmarks is in:
-[**docs/ai-router.md**](docs/ai-router.md)
-
----
-
-### The Database Got Serious: Traceability
-
-To evolve toward research/ML, I need to compare `Model A vs Model B` — not "the AI said this".
-
-Table `processamento_ia` records:
-- `model_used` (e.g., `nvidia/nemotron-3.5-lightning`)
-- `task` (`socratic_hint`, `text_evaluation`, `handwritten_ocr`, `latex_translation`)
-- `input_hash`, `output_json`, `latency_ms`, `tokens`, `success`, `fallback_used`
-- `validated_by` (human or script), `prompt_version`
-
----
-
-### The Scope Problem (And How I Solved It)
-
-**My tendency:** see V5 while building V1.
-
-```
-V1: import questions
-Head: OCR + Knowledge Tracing + Recommender + Own AI + Product
-```
-
-**Solution:** Pick **one demonstrable vertical slice** — MathNet → cleaning → language → selective translation → database — and leave advanced OCR, BKT, recommender, own models for later.
-
-> **Mindset shift:** "I need to finish MathAI" → "I need to finish a part that proves the architecture works."
-
-Real software isn't born complete. It needs: hypothesis → implementation → test → validation → evolution.
-
----
-
-### Documentation as Engineering History
-
-Code alone wasn't enough. Started documenting decisions:
-
-| File | Question It Answers |
-|------|---------------------|
-| `README.md` | What is this project? |
-| `docs/architecture.md` | How did I think the system? |
-| `docs/data-pipeline.md` | How does data enter and transform? |
-| `docs/engineering-challenges.md` | What broke and how did I fix it? |
-| `docs/ai-router.md` | How does multi-provider routing work? |
-| `docs/roadmap.md` | Where is this going (honest: done vs planned)? |
-
-This turns GitHub into **engineering history**, not a code dump.
-
----
-
-### What Actually Works (✅) vs. What's Planned (📋)
-
-#### ✅ Implemented & In Production
-- **Offline-first pipeline:** PDF/Markdown → Python/Regex → DataFrames → surgical AI (LaTeX) → SQLite/Turso
-- **MathNet ingestion:** 100k+ questions, exam unification, language detection, selective translation, dedup
-- **Relational DB:** `questoes`, `tentativas`, `revisao_espacada` (SM-2), `perfil_aluno_topico`, FKs, constraints
-- **Streamlit App (V1):** Trainer (LaTeX + SVG, clickable alternatives, metacognition, timer), Dashboard (KPIs, Radar/Bars, strategy repertoire, error causes, SM-2 reviews, sketch gallery), Question Bank (dynamic filters)
-- **AI Layer:** NVIDIA router (text/reasoning) + Gemini (vision/fallback), auto-fallback, 38 req/min throttle
-- **Sync worker:** SQLite local ↔ Turso cloud, anomaly cleanup
-- **Management notebooks:** `gerenciador_questoes.ipynb`, `gerenciador_usuarios.ipynb`, `questoes_banca.csv` dataset
-
-#### 📋 Honest Roadmap (Next Steps)
-| Phase | Goal | Status |
-|-------|------|--------|
-| **V2** | Multimodal OCR: handwritten resolution analysis (photo/notebook) | 🚀 Next |
-| **V3** | IRT (Item Response Theory) + BKT (Bayesian Knowledge Tracing) | Planned |
-| **V4** | Adaptive recommender (Contextual Multi-Armed Bandits) | Planned |
-| **V5** | Video lessons ecosystem + Freemium (own studio) | Planned |
-| **V6** | Own PyTorch models (proprietary annotated resolutions dataset) | Long-term vision |
-
-> **No vaporware:** ❌ Full knowledge tracing ❌ Full recommender ❌ Robust OCR ❌ Complete LLM tutor ❌ Large-scale own model. In roadmap, not in product.
-
----
-
-## 🛠️ Tech Stack (By Layer)
-
-| Layer | Technologies | Decision |
-|-------|--------------|----------|
-| **Backend / Orchestration** | Python 3.11, Streamlit 1.38 | Productivity + native deploy |
-| **Data / Persistence** | SQLite 3.45 (local) + Turso (cloud sync), Pandas 2.2, NumPy | Offline-first, ACID, edge replication |
-| **AI — Text & Reasoning** | NVIDIA NIM (Nemotron 3.5, DeepSeek v4.1), Gemini 3.5 Flash-Lite | Speed, unlimited quota, robust fallback |
-| **AI — Multimodal Vision** | Google Gemini Flash-Lite | Best handwritten math OCR |
-| **Frontend / Math Rendering** | Streamlit, KaTeX / LaTeX, SVG (Data URI) | Crisp formulas & diagrams |
-| **CI/CD** | GitHub Actions → Streamlit Cloud | Continuous deploy, managed secrets |
-| **Versioning / Docs** | Git/GitHub, LaTeX | Traceability, reproducibility |
-
----
-
-## 📁 Repository Structure
-
-```
-MathAI/
-├── ROADMAP.md                      # Strategic planning V0–V6
-├── README.md                       # This file (PT-BR)
-├── README.en.md                    # English version
-├── mockup.html                     # Conceptual prototype
-├── app.py                          # Streamlit entry point
-├── requirements.txt
-├── data/
-│   ├── mathai.db                   # Relational SQLite (local production)
-│   ├── extraidas/                  # Extraction logs (reproducibility)
-│   └── uploads/
-│       ├── *.svg                   # Vector diagrams (ESA 2026)
-│       └── resolucoes/             # Student sketches/photos
-├── notebooks/
-│   ├── gerenciador_questoes.ipynb  # Question management & rendering
-│   ├── gerenciador_usuarios.ipynb  # User/profile management
-│   └── questoes_banca.csv          # Raw MathNET + exams dataset
-├── docs/
-│   ├── architecture.md             # Data model, flows, decisions
-│   ├── data-pipeline.md            # Complete pipeline: PDF → structured question
-│   ├── engineering-challenges.md   # 6 real incidents + solutions
-│   ├── ai-router.md                # Implemented multimodal router
-│   └── roadmap.md                  # Expanded roadmap
-└── src/
-    ├── ai/
-    │   ├── client.py               # NVIDIA NIM + Gemini REST client
-    │   ├── evaluator.py            # Orchestration: hints + evaluation + OCR
-    │   └── router.py               # Routing logic + fallback
-    ├── app/
-    │   ├── utils.py                # Statement/alternative parsing
-    │   ├── components/
-    │   │   ├── question_view.py    # LaTeX + native SVG renderer
-    │   │   └── feedback_form.py    # Alternatives, justification, metacognition
-    │   └── pages/
-    │       ├── resolver.py         # Interactive trainer
-    │       ├── dashboard.py        # Analytics, radar, gallery
-    │       └── banco.py            # Question bank explorer
-    └── database/
-        ├── __init__.py
-        ├── schema.sql              # Complete relational schema
-        ├── db.py                   # SQLite connection + CRUD
-        └── attempts.py             # Attempts, metrics, SM-2
+```text
+                                    ┌──────────────────────┐
+                                    │        STUDENT       │
+                                    │                      │
+                                    │ questions            │
+                                    │ answers              │
+                                    │ images               │
+                                    │ feedback             │
+                                    └──────────┬───────────┘
+                                               │
+                                               ▼
+                              ┌─────────────────────────────┐
+                              │          FRONTEND           │
+                              │                             │
+                              │         Next.js             │
+                              │         React               │
+                              └──────────────┬──────────────┘
+                                             │
+                                             ▼
+                              ┌─────────────────────────────┐
+                              │           BACKEND           │
+                              │                             │
+                              │           FastAPI           │
+                              └──────────────┬──────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    ▼                        ▼                        ▼
+             ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
+             │  DATABASE   │         │    MATHAI   │         │    VISION   │
+             │             │         │   Gateway   │         │             │
+             │ PostgreSQL  │         │             │         │ OCR / Image │
+             │ / Supabase  │         └──────┬──────┘         └──────┬──────┘
+             └──────┬──────┘                │                       │
+                    │                       ▼                       │
+                    │                ┌─────────────┐                │
+                    │                │   ROUTING   │◄───────────────┘
+                    │                └──────┬──────┘
+                    │                       │
+                    │                       ▼
+                    │                    9Router
+                    │                       │
+                    │             ┌─────────┼─────────┐
+                    │             ▼         ▼         ▼
+                    │          Model A   Model B   Model C
+                    │          primary  fallback  fallback
+                    │
+                    ▼
+             ┌────────────────────┐
+             │   AI_EVALUATION   │
+             │                    │
+             │ model              │
+             │ provider           │
+             │ version            │
+             │ prompt             │
+             │ timestamp          │
+             │ confidence         │
+             └──────────┬─────────┘
+                        │
+                        ▼
+                 STUDENT FEEDBACK
+                        │
+                        ▼
+                  DATA PIPELINE
+                        │
+             ┌──────────┴──────────┐
+             ▼                     ▼
+      TRUSTED DATA           AMBIGUOUS DATA
+             │                     │
+             ▼                     ▼
+          ML / IA              review
+             │
+             ▼
+          MATHAI
 ```
 
 ---
 
-## ⚡ Run Locally
+# 🤖 MathAI
+
+**MathAI** is the future specialized intelligence layer of Lemmas.
+
+It does not need to be a single model.
+
+The architecture was designed so that MathAI can use different models and components depending on the task.
+
+### Possible capabilities
+
+* Mathematical tutoring;
+* resolution correction;
+* error identification;
+* concept explanation;
+* question generation;
+* exercise recommendation;
+* review card generation;
+* student history analysis;
+* understanding of images and handwritten resolutions;
+* learning profile construction;
+* intelligent routing between different models.
+
+The MathAI Gateway acts as the intermediate layer between Lemmas and the models used by the system.
+
+---
+
+# 🔀 Model Routing
+
+The Gateway determines **what the task requires**.
+
+Example:
+
+```text
+Simple question
+      ↓
+fast model
+
+Complex math question
+      ↓
+mathematical reasoning model
+
+Handwritten resolution
+      ↓
+multimodal model
+
+Critical evaluation
+      ↓
+strongest model
+```
+
+After selection, **9Router** can handle routing and fallback mechanisms.
+
+```text
+MathAI Gateway
+      │
+      ▼
+   9Router
+      │
+      ▼
+  Model A
+      │
+  failed?
+      │
+      ▼
+  Model B
+      │
+  failed?
+      │
+      ▼
+  Model C
+```
+
+Model infrastructure can change without the rest of the application needing to be rewritten.
+
+---
+
+# 🗃️ Data: preserving what the student actually did
+
+One of Lemmas' core architectural decisions is to separate:
+
+```text
+OBSERVED DATA
+       ≠
+AI INTERPRETATION
+       ≠
+VALIDATED DATA
+```
+
+## Observed Data
+
+Represents what actually happened.
+
+```text
+original answer
+original image
+question
+time spent
+previous attempts
+hints used
+student feedback
+```
+
+## AI Interpretation
+
+Represents what MathAI inferred.
+
+```text
+probable error
+related concept
+estimated difficulty
+mastery level
+recommendation
+confidence
+```
+
+## Validated Data
+
+Represents information that has undergone some validation process.
+
+```text
+confirmed error
+confirmed concept
+revised label
+validated evaluation
+```
+
+### Fundamental Rule
+
+> **The student's original data must never be overwritten by AI interpretation.**
+
+This way, the same original data can be re-evaluated by different models in the future.
+
+---
+
+# 🔬 Evaluation provenance
+
+Every evaluation produced by MathAI can record:
+
+```text
+attempt_id
+model_provider
+model_name
+model_version
+prompt_version
+evaluator_version
+fallback_level
+timestamp
+input_hash
+output
+confidence
+```
+
+This allows tracing exactly where a given interpretation came from.
+
+For example:
+
+```text
+Attempt #92817
+
+Model:
+DeepSeek X
+
+Version:
+3.2
+
+Prompt:
+evaluator_v7
+
+Fallback:
+0
+
+Result:
+sign_error
+
+Confidence:
+0.91
+```
+
+If we later discover that a certain model version has issues with geometry, we can identify exactly which evaluations were produced by it.
+
+---
+
+# 📚 Adaptive learning
+
+The future goal is to build a **Student Model** capable of representing each student's learning state.
+
+```text
+                       STUDENT
+                          │
+          ┌───────────────┼────────────────┐
+          ▼               ▼                ▼
+      concepts       difficulties      history
+          │               │                │
+          └───────────────┼────────────────┘
+                          ▼
+                    STUDENT MODEL
+                          │
+                 ┌────────┼────────┐
+                 ▼        ▼        ▼
+              mastery   memory   errors
+                          │
+                          ▼
+                    recommendation
+```
+
+The model may use information such as:
+
+* performance by concept;
+* error frequency;
+* resolution time;
+* attempts;
+* reviews;
+* retention;
+* feedback;
+* exercise difficulty.
+
+---
+
+# 🔁 Spaced repetition
+
+Lemmas has its own review card system.
+
+Cards can be:
+
+### Generated by MathAI
+
+```text
+recurring error
+      ↓
+MathAI identifies pattern
+      ↓
+suggests card
+      ↓
+student edits / accepts / rejects
+```
+
+### Created by the student
+
+The student can also create their own cards.
+
+### Possible types
+
+```text
+Formula
+Concept
+Recognition
+Application
+Personal error
+Image / diagram
+```
+
+Each review's history is stored so the system can estimate retention and improve future reviews.
+
+Anki integration is treated as **export**, while the complete learning history remains with Lemmas.
+
+---
+
+# 📈 Forgetting curve and memory
+
+The review system does not need to assume a single universal forgetting curve.
+
+The project may study and compare different models and approaches, including:
+
+```text
+Ebbinghaus
+Exponential
+Power law
+Hyperbolic models
+Half-Life Regression
+FSRS
+```
+
+Long term, Lemmas' own collected data may allow investigating how different retention patterns appear in different students and concepts.
+
+```text
+                    REVISION DATA
+                          │
+                          ▼
+                  RETENTION MODEL
+                          │
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+      Exponential      Power            FSRS
+          │               │               │
+          └───────────────┼───────────────┘
+                          ▼
+                    better prediction
+                          │
+                          ▼
+                   better scheduler
+```
+
+---
+
+# 🧠 From student to data
+
+Each interaction can generate a chain of information:
+
+```text
+Question
+   ↓
+Attempt
+   ↓
+Error / success
+   ↓
+MathAI Analysis
+   ↓
+Feedback
+   ↓
+Review
+   ↓
+Retention
+   ↓
+New recommendation
+```
+
+With platform growth, this chain can transform into data for research and Machine Learning.
+
+---
+
+# 📊 Data Pipeline
+
+```text
+                  STUDENT DATA
+                         │
+                         ▼
+                      RAW DATA
+                         │
+                         ▼
+                 DATA VALIDATION
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+        quality      consent      deduplication
+             │           │           │
+             └───────────┼───────────┘
+                         ▼
+                  LABEL GENERATION
+                         │
+             ┌───────────┼───────────┐
+             ▼                       ▼
+       AI-generated             Human validated
+             │                       │
+             └───────────┼───────────┘
+                         ▼
+                       DATASET
+                         │
+                         ▼
+                    ML / STATS
+```
+
+Ambiguous data should not be automatically used for training.
+
+The idea is to preserve quality and provenance of examples before using them in future models.
+
+---
+
+# 🔬 Research and Machine Learning
+
+With sufficient data, Lemmas may investigate questions like:
+
+* Which error types appear most frequently?
+* Which interventions help each student type?
+* Which cards show highest retention?
+* Which review interval works best for a given concept?
+* Which AI model is most accurate for a given problem type?
+* Which models offer the best cost-benefit?
+* Can we predict when a given concept will likely be forgotten?
+* Can we predict which exercise will benefit a given student most?
+
+The goal is not merely to accumulate data.
+
+It is to transform learning data into **knowledge about learning**.
+
+---
+
+# ⚡ Quick Start
+
+## Prerequisites
+
+Before starting, install:
+
+* [Git](https://git-scm.com/)
+* [Node.js](https://nodejs.org/)
+* [Python](https://www.python.org/)
+* PostgreSQL or a Supabase instance
+
+## 1. Clone the repository
 
 ```bash
-git clone https://github.com/StylishGH/MathAI.git
-cd MathAI
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scriptsctivate
-pip install -r requirements.txt
-streamlit run app.py
+git clone https://github.com/seu-usuario/lemmas.git
+cd lemmas
 ```
 
-> **Environment variables** (`.env` or Streamlit Cloud Secrets):
-> - `NVIDIA_API_KEY` — NIM (Nemotron/DeepSeek) for text/reasoning
-> - `GEMINI_API_KEY` — Gemini Flash-Lite (vision + fallback)
-> - `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` — cloud sync (optional locally)
+## 2. Configure the backend
+
+```bash
+cd backend
+
+python -m venv .venv
+```
+
+### Linux / macOS
+
+```bash
+source .venv/bin/activate
+```
+
+### Windows
+
+```powershell
+.venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the necessary variables in `.env`, including database and AI service credentials.
+
+Start the API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The backend will be available locally at:
+
+```text
+http://localhost:8000
+```
+
+API documentation can be accessed at:
+
+```text
+http://localhost:8000/docs
+```
+
+## 3. Configure the frontend
+
+In another terminal:
+
+```bash
+cd frontend
+npm install
+```
+
+Create the environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Configure the API URL:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:3000
+```
+
+## 4. Local environment
+
+With both services running:
+
+```text
+Browser
+   │
+   ▼
+localhost:3000
+   │
+   ▼
+Next.js
+   │
+   │ API
+   ▼
+localhost:8000
+   │
+   ▼
+FastAPI
+   │
+   ├── PostgreSQL / Supabase
+   │
+   └── MathAI Gateway
+            │
+            ▼
+         9Router
+```
+
+> **Note:** environment variable names and scripts may change per current project implementation. The `.env.example` should be kept as the reference source for local configuration.
 
 ---
 
-## 📈 Current Metrics
+# 🧪 Planned Evolution
 
-| Metric | Value |
-|--------|-------|
-| Questions processed (EFOMM, ESA, CEDERJ) | 500+ (MathNET 100k+ queued) |
-| Socratic hint latency (NVIDIA) | <1s |
-| Text evaluation latency | ~1.2s |
-| Handwritten OCR latency (Gemini) | ~2.5s |
-| Deploy | Continuous (GitHub Actions → Streamlit Cloud) |
-| Architecture | Offline-first (local SQLite → Turso sync) |
+```text
+PHASE 1
+────────────────────────────
+MVP
+│
+├── exercises
+├── attempts
+├── tutor
+├── database
+└── initial MathAI
+
+
+PHASE 2
+────────────────────────────
+Real data
+│
+├── users
+├── feedback
+├── AI evaluations
+├── spaced repetition
+└── initial Student Model
+
+
+PHASE 3
+────────────────────────────
+Adaptive intelligence
+│
+├── recommendation
+├── model routing
+├── error analysis
+└── computer vision
+
+
+PHASE 4
+────────────────────────────
+Machine Learning
+│
+├── retention models
+├── recommendation
+├── model evaluation
+└── personalization
+
+
+PHASE 5
+────────────────────────────
+Specialized MathAI
+│
+├── curated datasets
+├── fine-tuning
+├── specialized models
+└── continuous improvement
+```
 
 ---
 
-## 🎓 What This Teaches for a Career
+# 🏗️ Project Structure
 
-MathAI became a **technical laboratory** where I practice:
-
-| Want to Learn | Used In Project |
-|---------------|-----------------|
-| Advanced SQL | Schema, queries, SM-2, analytics |
-| Power BI | Learning data dashboards |
-| ML | IRT, BKT, recommender, own models |
-| LLMs | Diagnosis, tutor, socratic hints |
-| Data Engineering | ETL, quality, MathNET ingestion |
-| Architecture | AI Router, multi-provider, fallback |
-| Product/UX | Streamlit, metacognition, feedback |
-
-> **Most valuable evolution:** moved from "how do I implement this?" to "what's the source of truth?", "how do I validate?", "observed vs inferred?", "when is AI worth it?", "how to recover from failure?", "how to prove it works?"
-
-Libraries are learned in weeks. This way of thinking takes much longer. MathAI is where I practice it.
+```text
+lemmas/
+│
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── public/
+│   └── package.json
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   │   ├── mathai/
+│   │   │   │   ├── gateway.py
+│   │   │   │   ├── tutor.py
+│   │   │   │   ├── evaluator.py
+│   │   │   │   ├── vision.py
+│   │   │   │   └── recommender.py
+│   │   │   ├── vision/
+│   │   │   ├── recommendation/
+│   │   │   └── analytics/
+│   │   └── main.py
+│   │
+│   ├── tests/
+│   └── requirements.txt
+│
+├── data/
+├── docs/
+├── .env.example
+├── .gitignore
+├── README.md
+└── LICENSE
+```
 
 ---
 
-## 📚 Detailed Technical Documentation
+# ☁️ Infrastructure
 
-- [System Architecture](docs/architecture.md)
-- [Data Pipeline](docs/data-pipeline.md) — complete cycle: PDF → structured question
-- [Engineering Challenges](docs/engineering-challenges.md) — 6 real incidents (429, JSON/LaTeX, schema, sync, historical OCR, ground truth)
-- [AI Router & Fallbacks](docs/ai-router.md) — task-based routing implementation
-- [Roadmap](docs/roadmap.md) — V0→V6 with deliverables per phase
+```text
+GitHub
+   │
+   ├──────────────► Vercel
+   │                  └── Frontend
+   │
+   └──────────────► Render
+                      └── Backend
+                            │
+                    ┌───────┴───────┐
+                    ▼               ▼
+                Supabase          9Router
+                PostgreSQL
+```
+
+Architecture designed to start simple and allow evolution as the project gains users and data volume.
 
 ---
 
-## 🤝 Contributing
+# 🎯 Vision
 
-Issues and PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) (to be created).
+Lemmas does not aim to simply put an AI inside an exercise platform.
+
+The proposal is to build a system where **every learning step generates useful information to personalize the next**.
+
+```text
+             LEARN
+                 │
+                 ▼
+             PRACTICE
+                 │
+                 ▼
+                ERR
+                 │
+                 ▼
+              ANALYZE
+                 │
+                 ▼
+               REVIEW
+                 │
+                 ▼
+                MEASURE
+                 ▼
+            PERSONALIZE
+                 │
+                 └──────────────► LEARN AGAIN
+```
+
+> **Lemmas is the platform.**
+>
+> **MathAI is the brain we want to build.**
 
 ---
 
-## 📄 License
+# 🚧 Status
 
-MIT License — see [LICENSE](LICENSE).
+Project in development.
+
+Lemmas is being developed as a project uniting **Mathematics, Artificial Intelligence, Data Science, and adaptive learning**.
+
+MathAI, originally the name of the entire project, now represents the future specialized intelligence to be built from this platform and responsibly collected learning data.
 
 ---
 
-## 👨‍💻 Author
+# 📜 License
+
+To be defined.
+
+---
+
+# 👨‍💻 Author
 
 **Guilherme Henrique Mendes**  
-Mathematics (UFF/CEDERJ) • Data Science & ML • Python • SQL • Applied AI  
+Bachelor's in Mathematics (UFF/CEDERJ) • Data Science & ML • Python • SQL • Applied AI  
 [LinkedIn](https://linkedin.com/in/ghmendes02) • [GitHub](https://github.com/StylishGH) • [Email](mailto:ghmendes@id.uff.br)

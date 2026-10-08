@@ -47,8 +47,13 @@ class Settings:
         ]
 
         # Supabase
-        self.SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip()
-        self.SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()
+        self.SUPABASE_URL: str = os.getenv(
+            "SUPABASE_URL", "https://gzlzwqknwfgrsnyvgpnv.supabase.co"
+        ).strip()
+        self.SUPABASE_KEY: str = os.getenv(
+            "SUPABASE_KEY",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHp3cWtud2ZncnNueXZncG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTgzNzcsImV4cCI6MjEwNjk5NDM3N30.L2G9NrtgQM0MzvVJ50tG3S_4eso99INrsl9g2b7sVHI",
+        ).strip()
 
         # Provedores Diretos de IA (Produção & Nuvem)
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()

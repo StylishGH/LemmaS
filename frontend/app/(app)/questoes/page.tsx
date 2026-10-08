@@ -39,8 +39,8 @@ export default function BancoQuestoesPage() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const bancas = ["Todas", "ESA", "EsPCEx", "IME", "ITA", "ENEM", "CEDERJ"];
-  const topicos = ["Todos", "Álgebra", "Geometria Plana", "Geometria Espacial", "Trigonometria", "Funções", "Análise Combinatória"];
+  const bancas = ["Todas", "EFOMM", "CEDERJ", "ESA"];
+  const topicos = ["Todos", "Cálculo", "Álgebra Linear", "Álgebra", "Funções", "Geometria Espacial", "Trigonometria", "Matemática Básica"];
 
   useEffect(() => {
     let ignore = false;
@@ -58,14 +58,24 @@ export default function BancoQuestoesPage() {
     fetch(`/api/questions?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!ignore && data.questoes) {
-          setQuestoes(data.questoes);
-          setTotal(data.total);
-          setTotalPages(data.total_pages);
+        if (!ignore) {
+          if (data && data.questoes) {
+            setQuestoes(data.questoes);
+            setTotal(data.total || 0);
+            setTotalPages(data.total_pages || 1);
+          } else {
+            setQuestoes([]);
+            setTotal(0);
+            setTotalPages(1);
+          }
         }
       })
       .catch((err) => {
         console.error("Erro ao carregar questões:", err);
+        if (!ignore) {
+          setQuestoes([]);
+          setTotal(0);
+        }
       })
       .finally(() => {
         if (!ignore) setLoading(false);
@@ -208,8 +218,20 @@ export default function BancoQuestoesPage() {
             <span className="text-sm">Carregando questões do Supabase...</span>
           </div>
         ) : questoes.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-slate-500">
-            Nenhuma questão encontrada para os filtros selecionados.
+          <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-slate-500 space-y-3">
+            <p className="text-sm">Nenhuma questão encontrada para os filtros selecionados.</p>
+            <button
+              onClick={() => {
+                setBancaFiltro("Todas");
+                setTopicoFiltro("Todos");
+                setBusca("");
+                setPage(1);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-[#d9b452] text-xs font-semibold hover:bg-amber-500/20 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Ver todas as 288 questões</span>
+            </button>
           </div>
         ) : (
           questoes.map((q) => {

@@ -17,13 +17,13 @@ export async function GET(req: NextRequest) {
       .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, gabarito, tipo", { count: "exact" });
 
     if (banca && banca !== "Todas") {
-      query = query.eq("banca", banca);
+      query = query.ilike("banca", `%${banca}%`);
     }
     if (materia && materia !== "Todas") {
-      query = query.eq("materia", materia);
+      query = query.ilike("materia", `%${materia}%`);
     }
     if (topico && topico !== "Todos") {
-      query = query.eq("topico", topico);
+      query = query.or(`topico.ilike.%${topico}%,materia.ilike.%${topico}%,subtopico.ilike.%${topico}%`);
     }
     if (search && search.trim() !== "") {
       query = query.ilike("enunciado", `%${search.trim()}%`);

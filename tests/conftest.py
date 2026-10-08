@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-# Adiciona a raiz do projeto e a pasta backend ao sys.path
+# Adiciona caminhos canonicos ao sys.path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = ROOT_DIR / "backend"
 
