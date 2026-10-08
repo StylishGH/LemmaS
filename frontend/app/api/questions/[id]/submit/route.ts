@@ -10,7 +10,11 @@ export async function POST(
     const { id } = await params;
     const qId = parseInt(id, 10);
     const body = await req.json();
-    const { resposta, tempo_segundos = 0, confianca = 4, aluno_id = 1 } = body;
+    const { resposta, tempo_segundos = 0, confianca = 4, aluno_id } = body;
+    // Se o usuário não estiver autenticado, atribui ao usuário neutro Convidado (ID 9999), protegendo o perfil pessoal
+    const validAlunoId = aluno_id && !isNaN(parseInt(String(aluno_id), 10)) && Number(aluno_id) !== 1
+      ? parseInt(String(aluno_id), 10)
+      : (aluno_id === 1 ? 1 : 9999);
 
     if (!resposta) {
       return NextResponse.json({ error: "Resposta não informada" }, { status: 400 });
@@ -34,7 +38,7 @@ export async function POST(
     // Registra tentativa no Supabase
     await supabase.from("tentativas").insert({
       questao_id: qId,
-      aluno_id,
+      aluno_id: validAlunoId,
       tempo_segundos: Math.max(0, parseInt(String(tempo_segundos), 10) || 0),
       acertou: acertou ? 1 : 0,
       estrategia_usada: body.estrategia_usada || null,
@@ -47,7 +51,7 @@ export async function POST(
     const { data: sm2Atual } = await supabase
       .from("revisao_espacada")
       .select("*")
-      .eq("aluno_id", aluno_id)
+      .eq("aluno_id", validAlunoId)
       .eq("item_tipo", "questao")
       .eq("item_id", qId)
       .maybeSingle();
@@ -67,7 +71,7 @@ export async function POST(
     // Upsert no Supabase
     await supabase.from("revisao_espacada").upsert(
       {
-        aluno_id,
+        aluno_id: validAlunoId,
         item_tipo: "questao",
         item_id: qId,
         repeticoes: novoSm2.repeticoes,

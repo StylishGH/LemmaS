@@ -103,7 +103,10 @@ class MultimodalVisionProcessor:
             from google.genai import types
             import json
 
-            client = genai.Client(api_key=self.gemini_key)
+            client = genai.Client(
+                api_key=self.gemini_key,
+                http_options=types.HttpOptions(timeout=30.0),
+            )
             config = types.GenerateContentConfig(
                 system_instruction=PROMPT_SISTEMA_OCR_MATEMATICO,
                 response_mime_type="application/json",

@@ -326,7 +326,10 @@ class MathAiGateway:
             from google import genai
             from google.genai import types
 
-            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            client = genai.Client(
+                api_key=settings.GEMINI_API_KEY,
+                http_options=types.HttpOptions(timeout=30.0),
+            )
             config = types.GenerateContentConfig(
                 system_instruction=system_prompt if system_prompt else None,
                 temperature=temperature,
