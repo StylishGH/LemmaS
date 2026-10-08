@@ -1,5 +1,5 @@
 CREATE TABLE questoes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     materia TEXT NOT NULL,                     -- Ex: 'Geometria Plana', 'Cálculo I', 'Álgebra Linear'
     topico TEXT NOT NULL,                      -- Ex: 'Semelhança de Triângulos', 'Derivadas', 'Espaços Vetoriais'
     subtopico TEXT,                            -- Ex: 'Teorema de Menelaus', 'Regra da Cadeia'
@@ -16,7 +16,7 @@ CREATE TABLE questoes (
 CREATE TABLE sqlite_sequence(name,seq)
 
 CREATE TABLE conceitos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     materia TEXT NOT NULL,
     topico TEXT NOT NULL,
     nome TEXT NOT NULL,                        -- Ex: 'Teorema de Ceva', 'Substituição Trigonométrica'
@@ -27,7 +27,7 @@ CREATE TABLE conceitos (
 )
 
 CREATE TABLE usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     senha_hash TEXT NOT NULL,              -- SHA-256 da senha (sem dependências externas)
@@ -38,7 +38,7 @@ CREATE TABLE usuarios (
 , cpf TEXT, cep TEXT, logradouro TEXT, numero TEXT, bairro TEXT, cidade TEXT, estado TEXT, verificado INTEGER NOT NULL DEFAULT 0, escolaridade TEXT, faculdade TEXT, curso TEXT, concursos_foco TEXT)
 
 CREATE TABLE codigos_verificacao (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             email TEXT NOT NULL,
             codigo TEXT NOT NULL,
             expira_em TIMESTAMP NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE sessoes_lembradas (
         )
 
 CREATE TABLE tentativas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -73,7 +73,7 @@ CREATE TABLE tentativas (
 )
 
 CREATE TABLE revisao_espacada (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     item_tipo TEXT NOT NULL CHECK (item_tipo IN ('questao', 'conceito')),
     item_id INTEGER NOT NULL,                  -- ID referenciando a tabela 'questoes' ou 'conceitos'
@@ -87,7 +87,7 @@ CREATE TABLE revisao_espacada (
 )
 
 CREATE TABLE perfil_aluno_topico (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     materia TEXT NOT NULL,
     topico TEXT NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE perfil_aluno_topico (
 )
 
 CREATE TABLE diagnosticos_ia (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     tentativa_id INTEGER,                      -- FK opcional para tentativas
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
@@ -122,7 +122,7 @@ CREATE TABLE diagnosticos_ia (
 )
 
 CREATE TABLE log_dicas_socraticas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     nivel_dica INTEGER NOT NULL CHECK (nivel_dica BETWEEN 1 AND 5),

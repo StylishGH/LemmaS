@@ -72,7 +72,7 @@ def criar_banco_teste(db_path: str):
     cur = con.cursor()
     cur.execute("""
         CREATE TABLE usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             nome TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             senha_hash TEXT NOT NULL,
@@ -96,7 +96,7 @@ def criar_banco_teste(db_path: str):
     """)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS codigos_verificacao (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             email TEXT NOT NULL,
             codigo TEXT NOT NULL,
             expira_em TIMESTAMP NOT NULL,
@@ -107,7 +107,7 @@ def criar_banco_teste(db_path: str):
     """)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS tentativas_login (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             email TEXT NOT NULL,
             ip TEXT,
             sucesso INTEGER NOT NULL DEFAULT 0,

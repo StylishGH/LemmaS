@@ -497,7 +497,7 @@ def reportar_questao(questao_id: int, motivo: str, descricao: str = "", aluno_id
     cur = con.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS questoes_reportadas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             questao_id INTEGER NOT NULL,
             aluno_id INTEGER,
             motivo TEXT NOT NULL,

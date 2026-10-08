@@ -1,6 +1,21 @@
-# SHARED-MEMORY — MathAI
+# SHARED-MEMORY — MathAI / LEMMAS
 
 Memória compartilhada entre agentes de IA e desenvolvedores para documentar pegadinhas, decisões arquiteturais e evitar reincidência de erros.
+
+---
+
+### [2026-10-06] — Transição Arquitetural: MathAI -> LEMMAS
+- **Regra:** O projeto como um todo se chama **LEMMAS** (Adaptive Learning Platform). O termo **MathAI** passa a se referir estritamente ao "Engine Especialista" de matemática. 
+- **Por quê:** O sistema evoluiu de um chatbot/experimento de matemática para uma plataforma modular que suporta disciplinas variadas. O core geral (LEMMAS Core: histórico, repetição espaçada, SM-2, perfil do aluno) deve ser isolado dos módulos especialistas (MathAI, BioIA, QuimIA). Nunca referenciar toda a aplicação apenas como "MathAI", especialmente na Landing Page.
+- **Quem achou:** Usuário / Antigravity (Decisão de Produto/Portfólio).
+
+---
+
+### [2026-10-07] — Diretriz Operacional: Cérebro (Antigravity+User) vs Braços (Hermes)
+- **Regra:** O Antigravity (IA principal) e o Usuário atuam como o **Cérebro** (estrategistas, arquitetos, revisores). Sempre que houver uma tarefa densa, repetitiva ou com alto consumo de tokens (como importar layouts inteiros do Higgsfield/v0, refatorar grandes blocos de código ou criar boilerplate de novas rotas), o Antigravity deve **proativamente propor delegar a tarefa para o Hermes** (`alethe_delegate` ou background task).
+- **Importante:** NÃO force/hardcode um modelo específico e pesado (ex: `nvidia/nemotron-3-ultra-550b-a55b`) no JSON da task, a menos que seja estritamente necessário. Deixe vazio para que o Hermes utilize o seu modelo configurado por padrão (o combo de `fallback` de alta velocidade hospedado no 9Router).
+- **Por quê:** Economia de tokens da janela de contexto principal e ganho gigantesco de velocidade de resposta. Modelos muito pesados têm latência alta, enquanto o combo de fallback do 9Router pula nós inativos e devolve a resposta instantaneamente.
+- **Quem achou:** Usuário / Antigravity.
 
 ---
 

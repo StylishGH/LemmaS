@@ -122,7 +122,7 @@ Tabela `processamento_ia` (SQLite/Turso):
 
 ```sql
 CREATE TABLE processamento_ia (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     task_type TEXT NOT NULL,              -- 'socratic_hint', 'text_evaluation', etc.
     provider TEXT NOT NULL,               -- 'nvidia', 'gemini'
     model TEXT NOT NULL,                  -- 'nemotron-3.5-lightning', 'gemini-3.5-flash-lite'

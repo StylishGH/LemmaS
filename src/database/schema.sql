@@ -10,7 +10,7 @@ PRAGMA foreign_keys = ON;
 -- O 'id' autoincrementado gerado aqui é o identificador único (aluno_id)
 -- referenciado como Foreign Key em todas as tabelas de atividade do estudante.
 CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     senha_hash TEXT NOT NULL,              -- SHA-256 da senha
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 -- 2. Tabela de Códigos de Verificação (2FA / OTP)
 -- Registra códigos de 6 dígitos gerados para ativação de conta ou login.
 CREATE TABLE IF NOT EXISTS codigos_verificacao (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     email TEXT NOT NULL,
     codigo TEXT NOT NULL,
     expira_em TIMESTAMP NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS sessoes_lembradas (
 -- 4. Tabela de Questões
 -- Armazena o banco de problemas com enunciados em LaTeX, figuras e metadados.
 CREATE TABLE IF NOT EXISTS questoes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     materia TEXT NOT NULL,                     -- Ex: 'Geometria Plana', 'Cálculo I', 'Álgebra Linear'
     topico TEXT NOT NULL,                      -- Ex: 'Semelhança de Triângulos', 'Derivadas', 'Espaços Vetoriais'
     subtopico TEXT,                            -- Ex: 'Teorema de Menelaus', 'Regra da Cadeia'
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS questoes (
 -- 5. Tabela de Conceitos & Gatilhos Cognitivos (Estilo Flashcards / Anki)
 -- Mapeia os "gatilhos mentais": Quando vejo X -> Aplico Y.
 CREATE TABLE IF NOT EXISTS conceitos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     materia TEXT NOT NULL,
     topico TEXT NOT NULL,
     nome TEXT NOT NULL,                        -- Ex: 'Teorema de Ceva', 'Substituição Trigonométrica'
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS conceitos (
 -- 6. Tabela de Tentativas (Histórico de Resolução)
 -- Registra cada sessão de estudo vinculada ao aluno_id: tempo, estratégia adotada, erro e metacognição.
 CREATE TABLE IF NOT EXISTS tentativas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS tentativas (
 -- 7. Tabela de Repetição Espaçada (Spaced Repetition / Algoritmo SM-2)
 -- Controla o ciclo de revisões individual por aluno.
 CREATE TABLE IF NOT EXISTS revisao_espacada (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     item_tipo TEXT NOT NULL CHECK (item_tipo IN ('questao', 'conceito')),
     item_id INTEGER NOT NULL,                  -- ID referenciando a tabela 'questoes' ou 'conceitos'
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS revisao_espacada (
 -- 8. Tabela de Perfil do Aluno por Tópico (Métricas Agregadas / Cache de Performance)
 -- Agrega a performance por estudante e por tópico para carregar instantaneamente o Dashboard.
 CREATE TABLE IF NOT EXISTS perfil_aluno_topico (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     materia TEXT NOT NULL,
     topico TEXT NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS perfil_aluno_topico (
 -- Registra as transcrições em LaTeX e avaliações pedagógicas geradas pelo Gemini.
 -- Serve como dataset de fine-tuning/treinamento para o modelo próprio em PyTorch.
 CREATE TABLE IF NOT EXISTS diagnosticos_ia (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     tentativa_id INTEGER,                      -- FK opcional para tentativas
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS diagnosticos_ia (
 -- 10. Tabela de Log de Dicas Socráticas (Dataset de Comportamento de Estudo)
 -- Registra cada vez que um aluno pediu ajuda, em qual nível e o que o Gemini respondeu.
 CREATE TABLE IF NOT EXISTS log_dicas_socraticas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER NOT NULL,                 -- FK para usuarios (id gerado no cadastro)
     nivel_dica INTEGER NOT NULL CHECK (nivel_dica BETWEEN 1 AND 5),
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS log_dicas_socraticas (
 
 -- 11. Tabela de Reportes de Questões (Curadoria e Feedback de Qualidade)
 CREATE TABLE IF NOT EXISTS questoes_reportadas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY SERIAL,
     questao_id INTEGER NOT NULL,
     aluno_id INTEGER,
     motivo TEXT NOT NULL,                     -- 'latex_quebrado', 'figura_problema', 'traducao_ruim', 'gabarito_errado', 'outro'
