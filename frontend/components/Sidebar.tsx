@@ -15,9 +15,11 @@ import {
   PenTool
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { useUserProfile } from "@/lib/use-user";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { profile, initials } = useUserProfile();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [questionsCount, setQuestionsCount] = useState<number>(0);
 
@@ -154,11 +156,15 @@ export default function Sidebar() {
           className="flex items-center gap-3 bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/15 p-2.5 rounded-xl hover:border-amber-500/40 transition-colors shadow-sm"
         >
           <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-xs shadow-sm">
-            GM
+            {initials}
           </div>
           <div className="overflow-hidden">
-            <div className="font-semibold text-xs text-slate-900 dark:text-[#f5f0df] truncate">Guilherme Mendes</div>
-            <div className="text-[10px] text-slate-500 dark:text-[#a9aaa1] truncate">UFF • Matemática</div>
+            <div className="font-semibold text-xs text-slate-900 dark:text-[#f5f0df] truncate">
+              {profile.nome}
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-[#a9aaa1] truncate">
+              {profile.isGuest ? "Modo Convidado" : `${profile.faculdade}`}
+            </div>
           </div>
         </Link>
       </div>

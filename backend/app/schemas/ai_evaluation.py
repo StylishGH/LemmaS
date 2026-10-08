@@ -27,7 +27,9 @@ class AiEvaluationRequest(BaseModel):
         None, description="Explicação ou passo a passo digitado pelo estudante"
     )
     imagem_base64: Optional[str] = Field(
-        None, description="Foto de caderno ou print de tablet codificado em Base64"
+        None,
+        max_length=7_000_000,
+        description="Foto de caderno ou print de tablet codificado em Base64 (limite de segurança ~5MB binário)",
     )
     mime_type: str = Field(default="image/png", description="MIME type da imagem (image/png, image/jpeg, application/pdf)")
 

@@ -26,16 +26,14 @@ class Settings:
         self.ENGINE_NAME: str = "MathAI Engine"
         self.API_V1_PREFIX: str = "/api"
         self.ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-        self.DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("true", "1", "t")
+        self.DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1", "t")
 
         # Segurança & Autenticação
-        self.SECRET_KEY: str = os.getenv(
-            "SECRET_KEY", "lemmas-mathai-super-secret-key-change-in-production-2026"
-        )
+        self.SECRET_KEY: str = os.getenv("SECRET_KEY", "")
         self.ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
         self.ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
-            os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7))
-        )  # 7 dias
+            os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 8))
+        )  # 8 horas (reduzido de 7 dias)
 
         # CORS
         raw_origins = os.getenv(
@@ -47,13 +45,8 @@ class Settings:
         ]
 
         # Supabase
-        self.SUPABASE_URL: str = os.getenv(
-            "SUPABASE_URL", "https://gzlzwqknwfgrsnyvgpnv.supabase.co"
-        ).strip()
-        self.SUPABASE_KEY: str = os.getenv(
-            "SUPABASE_KEY",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHp3cWtud2ZncnNueXZncG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTgzNzcsImV4cCI6MjEwNjk5NDM3N30.L2G9NrtgQM0MzvVJ50tG3S_4eso99INrsl9g2b7sVHI",
-        ).strip()
+        self.SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip()
+        self.SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()
 
         # Provedores Diretos de IA (Produção & Nuvem)
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()

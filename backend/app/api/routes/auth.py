@@ -138,21 +138,10 @@ def login_student(payload: StudentLogin):
             break
 
     if not found_student or not verify_password(payload.password, found_student.hashed_password or ""):
-        # Permite credenciais de teste para desenvolvimento se a lista estiver vazia
-        if settings.DEBUG and payload.email == "demo@lemmas.app" and payload.password == "lemmas123":
-            student_id = "student-demo-01"
-            found_student = Student(
-                id=student_id,
-                email="demo@lemmas.app",
-                full_name="Estudante Demo",
-                role="student",
-            )
-            _STUDENTS_STORE[student_id] = found_student
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="E-mail ou senha incorretos",
-            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="E-mail ou senha incorretos",
+        )
 
     token = create_access_token(
         data={

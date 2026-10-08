@@ -13,7 +13,10 @@ import {
   Compass, 
   Lightbulb, 
   ShieldCheck, 
-  Layers 
+  Layers,
+  BookOpen,
+  Play,
+  GraduationCap
 } from "lucide-react";
 import { BackgroundAnimation } from "./BackgroundAnimation";
 import { BoardFrame } from "./BoardFrame";
@@ -28,24 +31,81 @@ import "./Logo.css";
 import "./AboutTeacher.css"; 
 import "./LandingPage.css";
 
+// Amostra real e factual do banco de 288 questões do Supabase
+const AMOSTRA_QUESTOES = [
+  {
+    id: 1234,
+    banca: "ESA",
+    ano: 2026,
+    materia: "Álgebra",
+    topico: "Funções & Trajetória Parabólica",
+    enunciado: "Um robô em exercício da ESA deve caminhar da origem em linha reta até A(1,1) e depois ajustar sua trajetória sobre um arco parabólico f(x) = ax² + bx + c (para x > 1) passando por B(2,0) e C(4,4).",
+    alternativas: ["(A) 32", "(B) 34", "(C) 36", "(D) 38", "(E) 40"],
+    gabarito: "B"
+  },
+  {
+    id: 1253,
+    banca: "EFOMM",
+    ano: 2025,
+    materia: "Álgebra Linear",
+    topico: "Operadores & Matrizes Identidade",
+    enunciado: "Sejam alfa e lambda pertencentes aos reais, I a matriz identidade de ordem n e J a matriz com todas entradas iguais a 1. Qual o resultado do produto das matrizes B e x, tal que A + B = alfa * I + J com A*x = lambda*x e soma de xi = 0?",
+    alternativas: ["(A) (α + 1 - λ) x", "(B) (α + λ) x", "(C) (α - λ) x", "(D) α x", "(E) λ x"],
+    gabarito: "C"
+  },
+  {
+    id: 1526,
+    banca: "CEDERJ",
+    ano: 2021,
+    materia: "Álgebra Linear",
+    topico: "Diagonalização de Operadores",
+    enunciado: "Uma matriz A de ordem n x n é dita diagonalizável se, e somente se, admite n autovetores linearmente independentes. Analise a matriz B = [[1, 1], [0, 1]]. É correto afirmar sobre sua diagonalização:",
+    alternativas: [
+      "(A) B é diagonalizável com autovalor duplo λ = 1.",
+      "(B) B NÃO é diagonalizável: mult. algébrica 2 e mult. geométrica 1.",
+      "(C) B é diagonalizável pois det(B) = 1.",
+      "(D) B NÃO é diagonalizável pois não tem autovalores reais."
+    ],
+    gabarito: "B"
+  }
+];
+
 export function LandingPage() {
   const { isLight, toggleTheme } = useTheme();
+
+  // Função para navegação suave e animada sem "teletransporte"
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const elem = document.getElementById(targetId);
+    if (elem) {
+      elem.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <BoardFrame>
       <div className="lemmas-page">
         <BackgroundAnimation />
         
-        {/* NAVEGAÇÃO SUPERIOR */}
+        {/* NAVEGAÇÃO SUPERIOR (SEM A OPÇÃO 'SOBRE NÓS', COM SCROLL SUAVE) */}
         <nav className="lemmas-nav">
           <Logo compact />
           <div className="lemmas-nav-links">
-            <a href="#metodo">O Método</a>
-            <a href="#processo">Como Funciona</a>
-            <a href="#arquitetura">Arquitetura</a>
-            <a href="#roadmap">O Que Vem Por Aí</a>
-            <a href="#sobre">Sobre Nós</a>
-            <Link href="/questoes">Banco de Lemas</Link>
+            <a href="#metodo" onClick={(e) => scrollToSection(e, "metodo")}>
+              O Método
+            </a>
+            <a href="#processo" onClick={(e) => scrollToSection(e, "processo")}>
+              Como Funciona
+            </a>
+            <a href="#arquitetura" onClick={(e) => scrollToSection(e, "arquitetura")}>
+              Arquitetura
+            </a>
+            <a href="#questoes-amostra" onClick={(e) => scrollToSection(e, "questoes-amostra")}>
+              Banco de Lemas
+            </a>
+            <a href="#roadmap" onClick={(e) => scrollToSection(e, "roadmap")}>
+              O Que Vem Por Aí
+            </a>
           </div>
           <div className="lemmas-nav-actions">
             <Link href="/" className="lemmas-nav-auth-btn">
@@ -75,11 +135,11 @@ export function LandingPage() {
               <Link className="lemmas-cta lemmas-cta-primary" href="/">
                 Acessar a Plataforma <ArrowRight size={17} />
               </Link>
-              <a className="lemmas-cta lemmas-cta-secondary" href="#metodo">
+              <a className="lemmas-cta lemmas-cta-secondary" href="#metodo" onClick={(e) => scrollToSection(e, "metodo")}>
                 Conhecer o Método
               </a>
-              <a className="lemmas-cta lemmas-cta-secondary" href="#roadmap">
-                O Que Vem Por Aí (Roadmap)
+              <a className="lemmas-cta lemmas-cta-secondary" href="#questoes-amostra" onClick={(e) => scrollToSection(e, "questoes-amostra")}>
+                Ver Questões em Ação
               </a>
             </div>
             <div className="lemmas-hero-note">
@@ -146,10 +206,10 @@ export function LandingPage() {
                 Gerencia o ecossistema web, sessões dos estudantes, cronometragem precisa, histórico de tentativas e o motor determinístico de repetição espaçada SM-2. Agnóstica e escalável para qualquer disciplina futura.
               </p>
               <ul className="lemmas-arch-list">
-                <li>Next.js 15 (App Router) & TypeScript</li>
+                <li>Next.js 16 (App Router) & TypeScript</li>
                 <li>Design System Quanta com Estética Lousa de Prestígio</li>
                 <li>Algoritmo SuperMemo-2 (SM-2) puro</li>
-                <li>Persistência Híbrida: SQLite (Staging) & Turso LibSQL (Cloud)</li>
+                <li>Supabase Postgres com Prova de Autoria & RLS</li>
               </ul>
             </div>
 
@@ -157,11 +217,11 @@ export function LandingPage() {
               <div className="lemmas-arch-badge arch-badge-gold">⚡ CAMADA 2</div>
               <h3>MathAI Engine (Núcleo de Inteligência)</h3>
               <p>
-                O motor cognitivo especializado em Matemática superior e pré-vestibular. Conduz diagnósticos de erro em 4 quadrantes, gera dicas heurísticas e permite comparação de segunda opinião entre múltiplos modelos.
+                O motor cognitivo especializado em Matemática superior e militar. Conduz diagnósticos de erro em 4 quadrantes, gera dicas heurísticas e orquestra múltiplos modelos em tempo real.
               </p>
               <ul className="lemmas-arch-list">
                 <li>Taxonomia de Erros: Sinal, Álgebra, Interpretação e Axioma</li>
-                <li>Segunda Opinião: NVIDIA Nemotron 550B (Rigor) vs DeepSeek R1 (Heurística)</li>
+                <li>Roteamento Inteligente: NVIDIA Nemotron (Rigor) e DeepSeek (Heurística)</li>
                 <li>Processamento cirúrgico de fórmulas em KaTeX/LaTeX</li>
                 <li>Acervo indexado com 288+ lemas classificados</li>
               </ul>
@@ -205,6 +265,83 @@ export function LandingPage() {
                   <p>O radar de habilidades mapeia seus pontos fortes e fracos, e o SM-2 agenda a próxima revisão no momento ótimo da retenção.</p>
                 </div>
              </div>
+          </div>
+        </section>
+
+        {/* SEÇÃO NOVA: VITRINE DE QUESTÕES REAIS DO SUPABASE (CARREGAMENTO REAL) */}
+        <section id="questoes-amostra" className="lemmas-section">
+          <div className="lemmas-section-heading">
+            <span className="lemmas-eyebrow">ACERVO VIVO · 288 ITENS NO SUPABASE</span>
+            <h2>Amostra do Banco de Questões & Lemas</h2>
+            <p>
+              Problemas matemáticos reais de concursos de elite e graduação com fórmulas em alta definição e diagnósticos passo a passo.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+            {AMOSTRA_QUESTOES.map((q) => (
+              <div 
+                key={q.id}
+                className="bg-white/80 dark:bg-[#141222]/90 border border-slate-200/90 dark:border-amber-500/20 rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:border-amber-500/40 transition-all hover:scale-[1.01]"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] font-mono text-xs font-bold">
+                      {q.banca} {q.ano}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
+                      {q.materia}
+                    </span>
+                  </div>
+
+                  <h3 className="font-serif-math text-base font-semibold text-slate-900 dark:text-[#f5f0df]">
+                    {q.topico}
+                  </h3>
+
+                  <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans line-clamp-4">
+                    {q.enunciado}
+                  </p>
+
+                  <div className="pt-2 space-y-1">
+                    {q.alternativas.slice(0, 3).map((alt, i) => (
+                      <div key={i} className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                        {alt}
+                      </div>
+                    ))}
+                    {q.alternativas.length > 3 && (
+                      <div className="text-[10px] text-amber-600 dark:text-[#d9b452] font-semibold italic">
+                        + outras alternativas disponíveis
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-5 mt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                  <Link
+                    href={`/resolver?id=${q.id}`}
+                    className="lemmas-gold-cta inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition hover:scale-105"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Resolver no Simulador</span>
+                  </Link>
+
+                  <span className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                    ID #{q.id}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center pt-2">
+            <Link 
+              href="/questoes"
+              className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
+            >
+              <BookOpen size={17} />
+              <span>Explorar Todas as 288 Questões no Banco Completo</span>
+              <ArrowRight size={17} />
+            </Link>
           </div>
         </section>
         
@@ -311,7 +448,7 @@ export function LandingPage() {
           </div>
         </section>
         
-        {/* SEÇÃO 5: SOBRE O CRIADOR & UFF */}
+        {/* SEÇÃO 5: SOBRE O CRIADOR & UFF (RODAPÉ INFORMATIVO) */}
         <AboutTeacher />
         
         {/* RODAPÉ */}
