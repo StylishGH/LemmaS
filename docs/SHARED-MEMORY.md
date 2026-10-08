@@ -191,3 +191,28 @@ curl "https://SEU-PROJETO.supabase.co/rest/v1/tentativas?select=*" -H "apikey: A
 gitleaks git . --verbose
 # Se encontrar chaves: ROTACIONAR IMEDIATAMENTE
 ```
+
+---
+
+### [2026-10-08] — FIX BUILD FRONTEND: Tipagem CookieOptions
+**Commit:** `1a643fb` — fix(frontend): tipar CookieOptions no middleware e supabase-server para build passar
+
+#### Erro Original
+```
+lib/supabase-server.ts(15,16): error TS7006: Parameter 'cookiesToSet' implicitly has an 'any' type.
+middleware.ts(17,16): error TS7006: Parameter 'cookiesToSet' implicitly has an 'any' type.
+```
+
+#### Correção
+```typescript
+// Em ambos os arquivos:
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+
+// setAll tipado explicitamente:
+setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[])
+```
+
+#### Status
+- ✅ `npm run build` passa (Next.js 16.3.8 + Turbopack + TypeScript)
+- ⚠️ Aviso "middleware → proxy" é depreciação futura apenas; funciona normal
+- Migração futura: `npx @next/codemod@canary middleware-to-proxy .`
