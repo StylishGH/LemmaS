@@ -84,10 +84,23 @@ desktop.ini
 data/*.db
 .agents/
 
-# Web App Next.js dependencies & builds
+# Web App & Frontend Next.js dependencies & builds
 web/node_modules/
 web/.next/
 web/out/
 web/.vercel/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# SQL migration temporary dumps
+data/migrate_questoes_chunk_*.sql
+data/migrate_questoes_seq.sql
+data/migrate_usuarios.sql
+
+# CLI and local configs
+config.json
+skills-lock.json
 
 

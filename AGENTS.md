@@ -1,4 +1,9 @@
-# Regras do Projeto MathAI
+# Regras do Projeto LEMMAS (Powered by MathAI Engine)
+
+## 0. Identidade do Ecossistema: LEMMAS vs MathAI Engine
+- **Plataforma LEMMAS & LEMMAS Core**: É o produto final e ecossistema web voltado ao estudante (Next.js, Tailwind v4, estética editorial lousa/quadro), gerenciador de autenticação/sessão, perfil cognitivo e motor determinístico de repetição espaçada SM-2 (agnóstico a disciplinas).
+- **MathAI Engine**: É o núcleo/motor cognitivo especializado em Matemática — avaliação passo a passo, OCR multimodal de rascunhos em caderno/tablet, roteamento multi-modelo (NVIDIA Nemotron para rigor axiomático e DeepSeek para intuição) e banco de lemas.
+- **Diretriz de Nomenclatura**: Toda IA e documentação deve referenciar o produto como **LEMMAS** (ou **LemmaS**) impulsionado pela **MathAI Engine**.
 
 ## 1. Versões e Modelos da API do Gemini
 - **Modelos Primários Recomendados**:

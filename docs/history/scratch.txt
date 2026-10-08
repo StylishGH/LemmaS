@@ -1,0 +1,14 @@
+# SHARED-MEMORY — MathAI
+
+Memória compartilhada entre agentes de IA e desenvolvedores para documentar pegadinhas, decisões arquiteturais e evitar reincidência de erros.
+
+---
+
+### [2026-10-04] — Nomes das Funções de Usuário em `src/database/users.py`
+- **Regra:** Usar sempre `fazer_login(email, senha, ip=None)` para autenticar e `criar_sessao_lembrada(usuario_id)` para emitir o token de sessão criptografado.
+- **Por quê:** O módulo `users.py` não exporta `autenticar_usuario` nem `criar_sessao_persistente`. Funções renomeadas ou refatoradas no passado geram `ImportError` silencioso se presumidas por convenção padrão.
+- **Quem achou:** Antigravity (Missão Noturna MathAI-Web).
+
+---
+
+### [2026-10-04] — SQLite Concorrência no Windows (WAL Mode)

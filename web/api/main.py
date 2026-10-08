@@ -46,8 +46,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="MathAI Core API Shim",
-    description="Camada de API REST leve e compatível sobre o motor analítico e banco de dados do MathAI.",
+    title="LEMMAS API Shim (MathAI Engine)",
+    description="Camada de API REST da plataforma cognitiva LEMMAS com MathAI Engine.",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -1,0 +1,197 @@
+.lemmas-signup-section {
+  padding-top: 48px;
+  padding-bottom: 120px;
+}
+.lemmas-signup-heading {
+  text-align: center;
+  margin: 0 auto;
+}
+.lemmas-signup-heading p {
+  margin-inline: auto;
+}
+.lemmas-signup-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+.lemmas-signup-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgb(255 255 255 / .1);
+  background: rgb(255 255 255 / .035);
+  transition: border-color .25s ease;
+}
+.lemmas-founder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 7px 9px;
+  margin-bottom: 24px;
+  border: 1px solid rgb(224 184 77 / .28);
+  background: rgb(224 184 77 / .09);
+  color: #e4bd60;
+  font-size: .68rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.lemmas-oauth-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lemmas-oauth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgb(255 255 255 / .15);
+  background: rgb(255 255 255 / .05);
+  color: #f4efdf;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.lemmas-oauth-button:hover {
+  background: rgb(255 255 255 / .1);
+  border-color: rgb(255 255 255 / .25);
+}
+
+.lemmas-divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+  color: #9fa29a;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.lemmas-divider::before,
+.lemmas-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgb(255 255 255 / .1);
+}
+.lemmas-divider span {
+  padding: 0 16px;
+}
+
+.lemmas-signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lemmas-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lemmas-form-group label {
+  font-size: 0.9rem;
+}
+
+.lemmas-form-group input[type="text"],
+.lemmas-form-group input[type="email"] {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  background: rgb(255 255 255 / .05);
+  border: 1px solid rgb(255 255 255 / .15);
+  color: #f4efdf;
+  font-family: inherit;
+  transition: border-color .2s ease;
+}
+.lemmas-form-group input[type="text"]:focus,
+.lemmas-form-group input[type="email"]:focus {
+  outline: none;
+  border-color: rgb(224 184 77 / .55);
+}
+
+.lemmas-objectives-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.lemmas-objective-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: rgb(255 255 255 / .03);
+  border: 1px solid rgb(255 255 255 / .1);
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.lemmas-objective-checkbox:hover {
+  background: rgb(255 255 255 / .06);
+}
+.lemmas-objective-checkbox input[type="radio"] {
+  accent-color: #e4bd60;
+  width: 16px;
+  height: 16px;
+}
+.lemmas-checkbox-label {
+  color: #f4efdf;
+  font-size: 0.9rem;
+}
+
+.lemmas-signup-form .lemmas-cta {
+  margin-top: 12px;
+}
+
+html[data-theme="lemmas-light"] .lemmas-signup-card {
+  border-color: rgb(20 46 75 / .12);
+  background: rgb(255 255 255 / .62);
+  box-shadow: 0 15px 50px rgb(59 91 123 / .07);
+}
+html[data-theme="lemmas-light"] .lemmas-oauth-button {
+  border-color: rgb(39 88 142 / .2);
+  background: transparent;
+  color: #173a63;
+}
+html[data-theme="lemmas-light"] .lemmas-oauth-button:hover {
+  background: rgb(39 88 142 / .05);
+  border-color: rgb(39 88 142 / .35);
+}
+html[data-theme="lemmas-light"] .lemmas-divider::before,
+html[data-theme="lemmas-light"] .lemmas-divider::after {
+  background: rgb(20 46 75 / .12);
+}
+html[data-theme="lemmas-light"] .lemmas-divider {
+  color: #60748a;
+}
+html[data-theme="lemmas-light"] .lemmas-form-group input[type="text"],
+html[data-theme="lemmas-light"] .lemmas-form-group input[type="email"] {
+  background: rgb(255 255 255 / .8);
+  border-color: rgb(39 88 142 / .2);
+  color: #173a63;
+}
+html[data-theme="lemmas-light"] .lemmas-form-group input[type="text"]:focus,
+html[data-theme="lemmas-light"] .lemmas-form-group input[type="email"]:focus {
+  border-color: #285889;
+}
+html[data-theme="lemmas-light"] .lemmas-objective-checkbox {
+  background: rgb(255 255 255 / .8);
+  border-color: rgb(39 88 142 / .15);
+}
+html[data-theme="lemmas-light"] .lemmas-objective-checkbox:hover {
+  background: rgb(39 88 142 / .04);
+}
+html[data-theme="lemmas-light"] .lemmas-objective-checkbox input[type="radio"] {
+  accent-color: #285889;
+}
+html[data-theme="lemmas-light"] .lemmas-checkbox-label {
+  color: #173a63;
+}

@@ -73,7 +73,7 @@ def _garantir_tabelas_e_migracao():
     # 1. Tabela usuarios base
     cur.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             nome TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             senha_hash TEXT NOT NULL,
@@ -109,7 +109,7 @@ def _garantir_tabelas_e_migracao():
     # 2. Tabela de códigos 2FA / OTP
     cur.execute("""
         CREATE TABLE IF NOT EXISTS codigos_verificacao (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             email TEXT NOT NULL,
             codigo TEXT NOT NULL,
             expira_em TIMESTAMP NOT NULL,
@@ -128,7 +128,7 @@ def _garantir_tabelas_e_migracao():
     # 3. Controle server-side de tentativas de login (rate limit por e-mail e IP)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS tentativas_login (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY SERIAL,
             email TEXT NOT NULL,
             ip TEXT,
             sucesso INTEGER NOT NULL DEFAULT 0,
@@ -138,9 +138,20 @@ def _garantir_tabelas_e_migracao():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_tentativas_login ON tentativas_login (email, criado_em)")
 
     # 4. States single-use do OAuth Google (proteção contra login CSRF)
+    # Tenta criar a tabela com o schema novo. Se falhar, dropamos e recriamos (dados efêmeros).
+    try:
+        cur.execute("SELECT state_hash, sessao_id FROM oauth_states LIMIT 1")
+    except Exception:
+        try:
+            cur.execute("DROP TABLE IF EXISTS oauth_states")
+            con.commit()
+        except Exception:
+            pass
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS oauth_states (
-            state TEXT PRIMARY KEY,
+            state_hash TEXT PRIMARY KEY,
+            sessao_id TEXT NOT NULL,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -427,7 +438,7 @@ def reenviar_codigo_otp(email: str, nome: str = "Aluno") -> dict:
         cur = con.cursor()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS reenvios_codigo (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY SERIAL,
                 email TEXT NOT NULL,
                 criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -960,7 +971,7 @@ def consumir_oauth_state(state: str | None, sessao_id: str) -> bool:
     con = pegar_conexao()
     try:
         cur = con.cursor()
-        cur.execute("SELECT state_hash FROM oauth_states WHERE state_hash = ? AND sessao_id = ?", (state_hash, sessao_id))
+        cur.execute("SELECT state_hash FROM oauth_states WHERE state_hash = ?", (state_hash,))
         if not cur.fetchone():
             return False
         cur.execute("DELETE FROM oauth_states WHERE state_hash = ?", (state_hash,))

@@ -39,6 +39,8 @@ npm run dev
    - **Treino de Questões (/questoes):** Busca questões reais do seu SQLite local com cronômetro, seleção de alternativas e gabarito imediato.
    - **Segunda Opinião (/opinioes):** Painel lado a lado comparando **NVIDIA Nemotron-3 Ultra (550B)** (rigor analítico/teoremas) com **DeepSeek R1** (intuição heurística).
    - **Sobre Nós (/sobre):** Manifesto pedagógico da plataforma e arquitetura técnica.
+   - **Landing Page (/landing):** Página inicial com efeito Ken Burns em backgrounds de quadro preto e branco.
+   - **Landing Page (/landing):** Página inicial com efeito Ken Burns em backgrounds de quadro preto e branco.
 
 2. **Backend API Health:**
    👉 [http://localhost:8000/api/health](http://localhost:8000/api/health)

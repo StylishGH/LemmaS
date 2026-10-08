@@ -6,6 +6,8 @@ Fase 1 (V1) - Rastreamento Cognitivo e Métricas do Estudante.
 from datetime import datetime, timedelta
 import json
 from src.database.db import pegar_conexao
+from src.lemmas_core.sm2 import calcular_proximo_intervalo_sm2
+from src.lemmas_core.cognitive_profile import atualizar_metricas_topico
 
 
 def registrar_tentativa(
@@ -22,7 +24,7 @@ def registrar_tentativa(
     """
     Registra uma nova sessão de resolução na tabela 'tentativas'
     e atualiza as métricas agregadas do estudante (perfil_aluno_topico)
-    e o agendamento de repetição espaçada (SM-2).
+    e o agendamento de repetição espaçada (SM-2) utilizando o LEMMAS Core.
     """
     con = pegar_conexao()
     cur = con.cursor()
@@ -56,17 +58,21 @@ def registrar_tentativa(
         perfil = cur.fetchone()
 
         if perfil:
-            novo_total = perfil["total_tentativas"] + 1
-            novo_acertos = perfil["total_acertos"] + acertou_int
-            novo_tempo_medio = (
-                (perfil["tempo_medio_segundos"] * perfil["total_tentativas"]) + tempo_segundos
-            ) / novo_total
+            metricas = atualizar_metricas_topico(
+                total_tentativas_atual=perfil["total_tentativas"],
+                total_acertos_atual=perfil["total_acertos"],
+                tempo_medio_atual=perfil["tempo_medio_segundos"],
+                acertou=acertou,
+                tempo_segundos=tempo_segundos,
+                estrategia_usada=estrategia_usada,
+                estrategia_anterior=perfil.get("estrategia_favorita")
+            )
 
             cur.execute("""
                 UPDATE perfil_aluno_topico 
                 SET total_tentativas = ?, total_acertos = ?, tempo_medio_segundos = ?, atualizado_em = CURRENT_TIMESTAMP
                 WHERE id = ?
-            """, (novo_total, novo_acertos, novo_tempo_medio, perfil["id"]))
+            """, (metricas.total_tentativas, metricas.total_acertos, metricas.tempo_medio_segundos, perfil["id"]))
         else:
             cur.execute("""
                 INSERT INTO perfil_aluno_topico (
@@ -74,40 +80,37 @@ def registrar_tentativa(
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (aluno_id, materia, topico, 1, acertou_int, float(tempo_segundos), estrategia_usada))
 
-    # 3. Atualizar Repetição Espaçada (SM-2 individual por aluno)
+    # 3. Atualizar Repetição Espaçada (SM-2 puro via LEMMAS Core)
     cur.execute(
         "SELECT * FROM revisao_espacada WHERE aluno_id = ? AND item_tipo = 'questao' AND item_id = ?",
         (aluno_id, questao_id)
     )
     rev = cur.fetchone()
 
-    if acertou:
-        repeticoes = (rev["repeticoes"] + 1) if rev else 1
-        if repeticoes == 1:
-            intervalo = 1
-        elif repeticoes == 2:
-            intervalo = 3
-        else:
-            fator = rev["fator_facilidade"] if rev else 2.5
-            intervalo = int((rev["intervalo_dias"] if rev else 3) * fator)
-    else:
-        repeticoes = 0
-        intervalo = 1
+    rep_ant = rev["repeticoes"] if rev else 0
+    fator_ant = rev["fator_facilidade"] if rev and "fator_facilidade" in rev.keys() and rev["fator_facilidade"] else 2.5
+    int_ant = rev["intervalo_dias"] if rev else 1
 
-    proxima_data = (datetime.now() + timedelta(days=intervalo)).strftime("%Y-%m-%d")
+    sm2_res = calcular_proximo_intervalo_sm2(
+        repeticoes_anteriores=rep_ant,
+        fator_facilidade_anterior=fator_ant,
+        intervalo_dias_anterior=int_ant,
+        acertou=acertou,
+        confianca_ou_nota=confianca_aluno
+    )
 
     if rev:
         cur.execute("""
             UPDATE revisao_espacada
             SET intervalo_dias = ?, repeticoes = ?, proxima_revisao = ?, ultima_revisao = CURRENT_TIMESTAMP
             WHERE id = ?
-        """, (intervalo, repeticoes, proxima_data, rev["id"]))
+        """, (sm2_res.intervalo_dias, sm2_res.repeticoes, sm2_res.proxima_revisao_data, rev["id"]))
     else:
         cur.execute("""
             INSERT INTO revisao_espacada (
                 aluno_id, item_tipo, item_id, intervalo_dias, repeticoes, proxima_revisao
             ) VALUES (?, 'questao', ?, ?, ?, ?)
-        """, (aluno_id, questao_id, intervalo, repeticoes, proxima_data))
+        """, (aluno_id, questao_id, sm2_res.intervalo_dias, sm2_res.repeticoes, sm2_res.proxima_revisao_data))
 
     con.commit()
     con.close()

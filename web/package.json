@@ -12,11 +12,12 @@
     "packages/*"
   ],
   "dependencies": {
+    "@base-ui/react": "1.5.0",
     "@higgsfield/app-landing": "*",
     "@higgsfield/fnf": "*",
     "@higgsfield/fnf-react": "*",
     "@higgsfield/quanta": "*",
-    "@base-ui/react": "1.5.0",
+    "@supabase/supabase-js": "^2.117.3",
     "lucide-react": "^1.51.0",
     "next": "16.3.8",
     "react": "19.2.8",

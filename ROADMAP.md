@@ -1,14 +1,20 @@
-# 🗺️ MathAI — Master Roadmap & Arquitetura Evolutiva
+# 🗺️ LEMMAS — Master Roadmap & Arquitetura Evolutiva
 
-> **"A IA aprende como você aprende Matemática para ajudar você a aprender melhor."**
+> **"A inteligência que se adapta ao seu aprendizado."**
 
 ---
 
-## 📌 Visão Geral & Filosofia
+## 📌 Visão Geral & Arquitetura Core/Engines
 
-O **MathAI** é uma plataforma inteligente de aprendizagem matemática projetada para criar um **perfil cognitivo individual e evolutivo** de cada estudante. 
+**LEMMAS** (Adaptive Learning Platform) é uma plataforma educacional modular. O projeto começou como *MathAI* (um experimento de IA aplicado ao ensino de matemática) e evoluiu para uma plataforma multidisciplinar. 
 
-Diferente de sistemas tradicionais que apenas corrigem gabaritos de forma mecânica, o MathAI investiga:
+A arquitetura agora é dividida em:
+1. **LEMMAS Core:** Perfil do aluno, histórico, análise de erros, algoritmo de recomendação, memória de curto/longo prazo (SM-2) e feedback adaptativo.
+2. **Engines Especialistas:**
+   - **MathAI Engine:** Conhecimento, estratégias e avaliação de resolução matemática.
+   - **(Futuro) BioIA, QuimIA, PhIA:** Módulos especialistas para outras disciplinas científicas.
+
+O **LEMMAS** (com seu motor MathAI inicial) investiga:
 1. **O que o aluno sabe e o que evita;**
 2. **Quais estratégias cognitivas utiliza** (ex: Teorema de Tales vs. Retas Paralelas; Relações de Girard vs. Briot-Ruffini; Menelaus vs. Semelhança);
 3. **Padrões de erro recorrentes** (conta/sinal, manipulação algébrica, erro conceitual, interpretação);

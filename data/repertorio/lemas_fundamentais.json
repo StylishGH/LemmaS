@@ -1,0 +1,66 @@
+[
+  {
+    "nome": "Lema de Euclides",
+    "materia": "Aritmética & Álgebra",
+    "topico": "Divisibilidade e Números Primos",
+    "gatilho": "Quando um número primo divide o produto de dois inteiros p | (ab)",
+    "acao_ou_teorema": "O primo p necessariamente divide a ou p divide b",
+    "formula_latex": "$$p \\mid ab \\implies p \\mid a \\lor p \\mid b$$"
+  },
+  {
+    "nome": "Desigualdade das Médias (MA-MG)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades e Otimização",
+    "gatilho": "Quando a soma de termos positivos é constante e busca-se o produto máximo (ou vice-versa)",
+    "acao_ou_teorema": "A média aritmética é sempre maior ou igual à média geométrica para reais positivos",
+    "formula_latex": "$$\\frac{a_1 + a_2 + \\dots + a_n}{n} \\ge \\sqrt[n]{a_1 a_2 \\dots a_n}$$"
+  },
+  {
+    "nome": "Teorema de Menelaus",
+    "materia": "Geometria Plana",
+    "topico": "Pontos Colineares em Triângulos",
+    "gatilho": "Quando uma reta transversal corta os três lados (ou prolongamentos) de um triângulo",
+    "acao_ou_teorema": "O produto das razões orientadas dos segmentos é igual a 1",
+    "formula_latex": "$$\\frac{AF}{FB} \\cdot \\frac{BD}{DC} \\cdot \\frac{CE}{EA} = 1$$"
+  },
+  {
+    "nome": "Teorema de Ceva",
+    "materia": "Geometria Plana",
+    "topico": "Cevianas Concorrentes",
+    "gatilho": "Quando três cevianas concorrem em um único ponto interior ou exterior ao triângulo",
+    "acao_ou_teorema": "O produto das razões dos segmentos determinados pelas cevianas nos lados é igual a 1",
+    "formula_latex": "$$\\frac{AZ}{ZB} \\cdot \\frac{BX}{XC} \\cdot \\frac{CY}{YA} = 1$$"
+  },
+  {
+    "nome": "Princípio da Casa dos Pombos",
+    "materia": "Análise Combinatória",
+    "topico": "Pigeonhole Principle",
+    "gatilho": "Quando distribuem-se n+1 objetos em n recipientes",
+    "acao_ou_teorema": "Pelo menos um recipiente deve conter dois ou mais objetos",
+    "formula_latex": "$$\\lceil (n+1)/n \\rceil \\ge 2$$"
+  },
+  {
+    "nome": "Relações de Girard",
+    "materia": "Álgebra",
+    "topico": "Polinômios e Raízes",
+    "gatilho": "Quando precisa-se relacionar a soma, soma produto a produto ou produto das raízes com coeficientes",
+    "acao_ou_teorema": "A soma das raízes é -b/a e o produto é (-1)^n * (termo independente / a)",
+    "formula_latex": "$$x_1 + x_2 + \\dots + x_n = -\\frac{a_{n-1}}{a_n}$$"
+  },
+  {
+    "nome": "Lei dos Senos e Diâmetro Circunscrito",
+    "materia": "Trigonometria",
+    "topico": "Triângulos e Círculo Circunscrito",
+    "gatilho": "Quando há lados e ângulos opostos de um triângulo ou menção ao raio da circunferência circunscrita R",
+    "acao_ou_teorema": "A razão entre o lado e o seno do ângulo oposto é constante e igual ao dobro do raio circunscrito",
+    "formula_latex": "$$\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C} = 2R$$"
+  },
+  {
+    "nome": "Fórmula de Euler para Poliedros",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros Convexos",
+    "gatilho": "Quando o problema envolve vértices, faces e arestas de poliedros convexos",
+    "acao_ou_teorema": "A soma dos vértices com as faces excede o número de arestas em 2",
+    "formula_latex": "$$V - A + F = 2$$"
+  }
+]
