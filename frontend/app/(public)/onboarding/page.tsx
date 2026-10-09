@@ -117,11 +117,23 @@ export default function OnboardingPage() {
 
   const handleConcluir = async () => {
     setSalvando(true);
+    const escolaridadeFormatada =
+      OPCOES_ESCOLARIDADE.find((op) => op.id === escolaridade)?.label || escolaridade;
+    const focoConcursoFormatado =
+      categoriaObjetivo === "militar"
+        ? concursosSelecionados.join(", ")
+        : categoriaObjetivo === "vestibular"
+        ? focosVestibular.join(", ")
+        : categoriaObjetivo === "professor"
+        ? `${segmentoProfessor}${instituicaoProfessor ? ` - ${instituicaoProfessor}` : ""}`
+        : segmentoProfissional;
+
     const perfilData = {
-      escolaridade,
+      escolaridade: escolaridadeFormatada,
       instituicao_superior: escolaridade === "superior_cursando" ? instituicaoSuperior : null,
       curso_graduacao: escolaridade === "superior_cursando" ? cursoGraduacao : null,
       objetivo_categoria: categoriaObjetivo,
+      concursos_foco: focoConcursoFormatado,
       detalhes_objetivo: {
         concursos_militares: categoriaObjetivo === "militar" ? concursosSelecionados : null,
         vestibular:
@@ -146,21 +158,51 @@ export default function OnboardingPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        // Tenta persistir no Supabase se logado
-        await supabase
-          .from("usuarios")
-          .update({ meta_estudo: categoriaObjetivo, configuracoes: perfilData, cpf: cpf.replace(/\D/g, "") })
-          .eq("email", user.email);
-      }
-    } catch {
-      // Falhas silenciosas se tabela ou RLS ainda em migração
-    }
+      if (user?.email) {
+        const cpfLimpo = cpf.replace(/\D/g, "");
+        const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
 
-    setTimeout(() => {
+        // Verifica se o usuário já tem registro em usuarios
+        const { data: existente } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (existente) {
+          await supabase
+            .from("usuarios")
+            .update({
+              cpf: cpfLimpo,
+              escolaridade: escolaridadeFormatada,
+              faculdade: instituicaoSuperior || null,
+              curso: cursoGraduacao || null,
+              concursos_foco: focoConcursoFormatado,
+              motivos: JSON.stringify(perfilData),
+            })
+            .eq("email", user.email);
+        } else {
+          await supabase
+            .from("usuarios")
+            .insert({
+              nome: nomeUsuario,
+              email: user.email,
+              cpf: cpfLimpo,
+              escolaridade: escolaridadeFormatada,
+              faculdade: instituicaoSuperior || null,
+              curso: cursoGraduacao || null,
+              concursos_foco: focoConcursoFormatado,
+              motivos: JSON.stringify(perfilData),
+              verificado: 1,
+            });
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao persistir perfil no onboarding:", err);
+    } finally {
       setSalvando(false);
       router.push("/questoes");
-    }, 600);
+    }
   };
 
   return (

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+const DEFAULT_SUPABASE_URL = "https://gzlzwqknwfgrsnyvgpnv.supabase.co";
+const DEFAULT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHp3cWtud2ZncnNueXZncG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTgzNzcsImV4cCI6MjEwNjk5NDM3N30.L2G9NrtgQM0MzvVJ50tG3S_4eso99INrsl9g2b7sVHI";
 
 /**
  * Handler de Callback OAuth (PKCE) do Supabase para Next.js App Router.
@@ -12,21 +16,41 @@ export async function GET(request: Request) {
 
   if (code) {
     try {
-      const supabase = await createClient();
+      const cookieStore = await cookies();
+      const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+      const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY).replace(/[\r\n\s]+/g, "");
+
+      const cookiesToSetList: { name: string; value: string; options: any }[] = [];
+
+      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+              cookiesToSetList.push({ name, value, options });
+            });
+          },
+        },
+      });
+
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (!error) {
-        // Redireciona inteligente: Se next === "/onboarding", verifica se já tem perfil concluído
         let redirectPath = next;
+
+        // Se next === "/onboarding", verifica se o usuário já tem cadastro completo no banco (pelo EMAIL!)
         if (redirectPath === "/onboarding") {
           const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
+          if (user?.email) {
             const { data: dbUser } = await supabase
               .from("usuarios")
               .select("cpf, escolaridade")
-              .eq("id", user.id)
+              .eq("email", user.email)
               .maybeSingle();
-            
+
             if (dbUser && (dbUser.cpf || dbUser.escolaridade)) {
               redirectPath = "/questoes";
             }
@@ -37,13 +61,20 @@ export async function GET(request: Request) {
         const forwardedHost = request.headers.get("x-forwarded-host");
         const isLocalEnv = process.env.NODE_ENV === "development";
 
-        if (isLocalEnv) {
-          return NextResponse.redirect(`${origin}${redirectPath}`);
-        } else if (forwardedHost) {
-          return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`);
-        } else {
-          return NextResponse.redirect(`${origin}${redirectPath}`);
-        }
+        const finalUrl = isLocalEnv
+          ? `${origin}${redirectPath}`
+          : forwardedHost
+          ? `https://${forwardedHost}${redirectPath}`
+          : `${origin}${redirectPath}`;
+
+        const response = NextResponse.redirect(finalUrl);
+
+        // Propaga todos os cookies de sessão para o cabeçalho Set-Cookie do redirect
+        cookiesToSetList.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+
+        return response;
       } else {
         console.error("Erro ao trocar código por sessão no Supabase:", error);
       }

@@ -49,10 +49,14 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_GUEST_PROFILE);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (providedUser?: any) => {
     try {
       // 1. Tenta checar sessão no Supabase Auth
-      const { data: { user } } = await supabase.auth.getUser();
+      let user = providedUser;
+      if (!user) {
+        const { data } = await supabase.auth.getUser();
+        user = data?.user;
+      }
 
       if (user && user.email) {
         // Usuário autenticado
@@ -103,9 +107,12 @@ export function useUserProfile() {
   useEffect(() => {
     fetchProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        fetchProfile();
+        // Evita deadlock assíncrono postergando para o próximo ciclo de eventos
+        setTimeout(() => {
+          fetchProfile(session?.user);
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         setProfile(DEFAULT_GUEST_PROFILE);
       }
