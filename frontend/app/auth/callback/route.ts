@@ -35,6 +35,31 @@ export async function GET(request: Request) {
     }
   }
 
-  // Se falhar ou não houver código, retorna para /login com aviso
-  return NextResponse.redirect(`${origin}/login?error=oauth_exchange_failed`);
+  // Se NÃO houver code (por exemplo, Implicit Flow onde tokens vêm via fragment hash '#access_token=...'):
+  // Retorna uma página HTML leve para o navegador repassar os tokens ou detectar erro sem poluir a URL
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LEMMAS · Autenticando...</title>
+</head>
+<body style="background:#141222;color:#f5f0df;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="text-align:center;">
+    <p style="font-size:16px;color:#d9b452;font-weight:600;">Autenticando na Plataforma LEMMAS...</p>
+    <p style="font-size:13px;color:#a8a29e;">Concluindo credenciais seguras...</p>
+  </div>
+  <script>
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      // Se há access_token no fragment hash, repassa para o login/onboarding processar via Supabase JS
+      window.location.replace('${origin}/login' + window.location.hash);
+    } else {
+      window.location.replace('${origin}/login?error=oauth_exchange_failed');
+    }
+  </script>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
 }
