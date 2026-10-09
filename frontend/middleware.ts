@@ -49,7 +49,14 @@ export async function middleware(request: NextRequest) {
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    
+    // É obrigatório copiar os cookies atualizados caso haja refresh de token
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    
+    return redirectResponse;
   }
 
   return supabaseResponse;
