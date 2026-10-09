@@ -19,7 +19,7 @@ import {
   RotateCcw,
   ShieldCheck,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { validarRequisitosSenha } from "@/lib/validation";
 import { LegalConsentCheckbox } from "@/components/LegalConsentCheckbox";
 import "./Signup.css";
@@ -638,3 +638,4 @@ export function AuthCard() {
     </div>
   );
 }
+

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { BoardFrame } from "../landing/components/BoardFrame";
 import { Logo } from "../landing/components/Logo";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase";
 import "../landing/components/BoardFrame.css";
 import "../landing/components/Logo.css";
 import "../landing/components/LandingPage.css";
@@ -609,3 +609,4 @@ export default function OnboardingPage() {
     </BoardFrame>
   );
 }
+
