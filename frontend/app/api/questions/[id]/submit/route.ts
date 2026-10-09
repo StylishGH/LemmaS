@@ -12,10 +12,28 @@ export async function POST(
     const qId = parseInt(id, 10);
     const body = await req.json();
     const { resposta, tempo_segundos = 0, confianca = 4, aluno_id } = body;
-    // Se o usuário não estiver autenticado, atribui ao usuário neutro Convidado (ID 9999), protegendo o perfil pessoal
-    const validAlunoId = aluno_id && !isNaN(parseInt(String(aluno_id), 10)) && Number(aluno_id) !== 1
-      ? parseInt(String(aluno_id), 10)
-      : (aluno_id === 1 ? 1 : 9999);
+    // 1. Resolve o ID real do aluno a partir da sessão Supabase (cookies)
+    let validAlunoId = 9999;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        const { data: dbUser } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (dbUser?.id) {
+          validAlunoId = dbUser.id;
+        }
+      } else if (aluno_id && !isNaN(parseInt(String(aluno_id), 10))) {
+        validAlunoId = parseInt(String(aluno_id), 10);
+      }
+    } catch {
+      if (aluno_id && !isNaN(parseInt(String(aluno_id), 10))) {
+        validAlunoId = parseInt(String(aluno_id), 10);
+      }
+    }
 
     if (!resposta) {
       return NextResponse.json({ error: "Resposta não informada" }, { status: 400 });

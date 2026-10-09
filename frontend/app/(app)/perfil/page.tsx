@@ -16,7 +16,8 @@ import {
   LogOut,
   Info,
   Sparkles,
-  CreditCard
+  CreditCard,
+  Loader2
 } from "lucide-react";
 import { useUserProfile, getInitials } from "@/lib/use-user";
 
@@ -125,6 +126,19 @@ export default function PerfilPage() {
   };
 
   const userInitials = getInitials(nome);
+
+  if (loading) {
+    return (
+      <div className="max-w-xl mx-auto py-24 text-center space-y-4 animate-pulse text-slate-800 dark:text-[#f5f0df]">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center mx-auto shadow-sm">
+          <Loader2 className="w-6 h-6 animate-spin text-amber-600 dark:text-[#d9b452]" />
+        </div>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 font-sans">
+          Sincronizando perfil com a nuvem...
+        </p>
+      </div>
+    );
+  }
 
   if (profile.isGuest) {
     return (

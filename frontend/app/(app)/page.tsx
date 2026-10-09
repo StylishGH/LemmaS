@@ -43,7 +43,7 @@ interface RevisaoItem {
 }
 
 export default function DashboardPage() {
-  const { profile, isAuthenticated } = useUserProfile();
+  const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
   const [totalQuestions, setTotalQuestions] = useState<number>(288);
   const [metricas, setMetricas] = useState({
     total_resolvidas: 0,
@@ -169,7 +169,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
       {/* BANNER INFORMATIVO PARA VISITANTES (DESLOGADOS) */}
-      {!isAuthenticated && (
+      {!isAuthenticated && !userLoading && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-[#d9b452] flex items-center justify-center shrink-0">
