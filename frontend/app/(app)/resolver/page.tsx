@@ -214,7 +214,7 @@ function ResolverContent() {
   const sessionQuery = searchParams.get("session"); // "simulado" ou "treino"
   const modeQuery = searchParams.get("mode"); // "treino"
 
-  const { profile, isAuthenticated } = useUserProfile();
+  const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
@@ -384,7 +384,7 @@ function ResolverContent() {
 
   // Iniciar Simulado Rápido do Standby
   const startWorkoutSimulado = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !userLoading) {
       setShowAuthModal(true);
       return;
     }
@@ -402,7 +402,7 @@ function ResolverContent() {
 
   // Iniciar Treino Livre do Standby
   const startWorkoutTreino = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !userLoading) {
       setShowAuthModal(true);
       return;
     }
@@ -419,7 +419,7 @@ function ResolverContent() {
   };
 
   const handleSelectOption = (key: string) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !userLoading) {
       setShowAuthModal(true);
       return;
     }
@@ -1320,7 +1320,7 @@ function ResolverContent() {
         )}
 
         {/* AVISO DE AUTENTICAÇÃO PARA RESPONDER */}
-        {!isAuthenticated && (
+        {!isAuthenticated && !userLoading && (
           <div className="p-3.5 rounded-xl border border-amber-500/35 bg-amber-500/10 text-amber-950 dark:text-[#f5f0df] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2.5">
               <Lock className="w-4 h-4 text-amber-600 dark:text-[#d9b452] shrink-0" />

@@ -47,15 +47,31 @@ export async function GET(req: NextRequest) {
         ultima_revisao
       `);
 
-    if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
-      const alunoId = parseInt(alunoIdParam, 10);
-      queryTentativas = queryTentativas.eq("aluno_id", alunoId);
-      queryRevisoes = queryRevisoes.eq("aluno_id", alunoId);
-    } else {
-      // Por padrão em desenvolvimento/visitante, busca tentativas do usuário neutro 9999 se existirem
-      queryTentativas = queryTentativas.eq("aluno_id", 9999);
-      queryRevisoes = queryRevisoes.eq("aluno_id", 9999);
+    // Tenta identificar o usuário autenticado na sessão de cookies
+    let targetAlunoId = 9999;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        const { data: dbUser } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (dbUser?.id) {
+          targetAlunoId = dbUser.id;
+        }
+      } else if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
+        targetAlunoId = parseInt(alunoIdParam, 10);
+      }
+    } catch {
+      if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
+        targetAlunoId = parseInt(alunoIdParam, 10);
+      }
     }
+
+    queryTentativas = queryTentativas.eq("aluno_id", targetAlunoId);
+    queryRevisoes = queryRevisoes.eq("aluno_id", targetAlunoId);
 
     const [{ data: tentativasRaw }, { data: revisoesRaw }] = await Promise.all([
       queryTentativas.limit(50),
