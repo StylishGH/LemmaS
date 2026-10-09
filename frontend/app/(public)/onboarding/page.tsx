@@ -71,6 +71,7 @@ const SEGMENTOS_PROFISSIONAL = [
 ];
 
 export default function OnboardingPage() {
+  const supabase = createClient();
   const router = useRouter();
   const [light, setLight] = useState(false);
   const [etapa, setEtapa] = useState<1 | 2>(1);
@@ -609,4 +610,5 @@ export default function OnboardingPage() {
     </BoardFrame>
   );
 }
+
 

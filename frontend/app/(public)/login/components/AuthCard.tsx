@@ -25,6 +25,7 @@ import { LegalConsentCheckbox } from "@/components/LegalConsentCheckbox";
 import "./Signup.css";
 
 export function AuthCard() {
+  const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -638,4 +639,5 @@ export function AuthCard() {
     </div>
   );
 }
+
 
