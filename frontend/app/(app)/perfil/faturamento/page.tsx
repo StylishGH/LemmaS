@@ -25,9 +25,10 @@ import {
   formatarDataNascimento,
   ESTADOS_BRASIL,
 } from "@/lib/validation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase";
 
 export default function FaturamentoPage() {
+  const supabase = createClient();
   // Identificação Civil e Fiscal
   const [cpf, setCpf] = useState("");
   const [cpfValido, setCpfValido] = useState<boolean | null>(null);
@@ -535,3 +536,4 @@ export default function FaturamentoPage() {
     </div>
   );
 }
+
