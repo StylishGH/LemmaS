@@ -15,7 +15,8 @@ import {
   LogIn,
   LogOut,
   Info,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from "lucide-react";
 import { useUserProfile, getInitials } from "@/lib/use-user";
 
@@ -124,6 +125,39 @@ export default function PerfilPage() {
   };
 
   const userInitials = getInitials(nome);
+
+  if (profile.isGuest) {
+    return (
+      <div className="max-w-xl mx-auto py-12 px-4 animate-fadeIn text-center space-y-6 text-slate-800 dark:text-[#f5f0df]">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+          <User className="w-8 h-8" />
+        </div>
+        <div className="space-y-3">
+          <h1 className="font-serif-math text-3xl font-bold tracking-tight">
+            Perfil de Estudante
+          </h1>
+          <p className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-sans max-w-md mx-auto">
+            Você não está conectado a nenhuma conta. Para personalizar suas metas diárias, configurar seu foco de concurso e sincronizar seu histórico na nuvem, entre na sua conta ou crie uma gratuitamente.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link
+            href="/login?tab=signup"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl lemmas-gold-cta font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:scale-[1.02] transition-transform"
+          >
+            <span>Criar Conta Gratuita</span>
+          </Link>
+          <Link
+            href="/login"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-amber-500/40 hover:bg-amber-500/10 text-slate-800 dark:text-[#f5f0df] font-semibold text-xs flex items-center justify-center gap-2 transition"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Já tenho conta (Entrar)</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
@@ -234,6 +268,14 @@ export default function PerfilPage() {
           <Cpu className="w-4 h-4" />
           <span>LEMMAS Core & MathAI</span>
         </button>
+
+        <Link
+          href="/perfil/faturamento"
+          className="pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 text-slate-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-[#d9b452] ml-auto sm:ml-0"
+        >
+          <CreditCard className="w-4 h-4 text-amber-500" />
+          <span>Dados Fiscais & Faturamento</span>
+        </Link>
       </div>
 
       {/* 3. CONTEÚDO DAS ABAS */}
