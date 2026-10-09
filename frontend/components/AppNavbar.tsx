@@ -13,7 +13,8 @@ import {
   PenTool, 
   Scale, 
   Info, 
-  User 
+  User,
+  LogIn
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Logo } from "@/app/(public)/landing/components/Logo";
@@ -21,10 +22,15 @@ import { useUserProfile } from "@/lib/use-user";
 
 export default function AppNavbar() {
   const pathname = usePathname();
-  const { profile, initials } = useUserProfile();
+  const { profile, initials, isAuthenticated } = useUserProfile();
+  const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [questionsCount, setQuestionsCount] = useState<number>(288);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let controller = new AbortController();
@@ -121,31 +127,46 @@ export default function AppNavbar() {
             <span className={`w-1.5 h-1.5 rounded-full ${apiOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
           </div>
 
-          {/* STREAK DIÁRIO */}
-          <div 
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" 
-            title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}
-          >
-            <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
-          </div>
+          {/* STREAK E FOCO (APENAS PARA USUÁRIOS AUTENTICADOS) */}
+          {mounted && isAuthenticated && (
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" 
+              title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}
+            >
+              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
+            </div>
+          )}
 
-          {/* FOCO CONCURSO */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-700 dark:text-[#dedbd0]">
-            <span>🎯 {profile.focoConcurso || "ESA / EsPCEx"}</span>
-          </div>
+          {mounted && isAuthenticated && profile.focoConcurso && (
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-700 dark:text-[#dedbd0]">
+              <span>🎯 {profile.focoConcurso}</span>
+            </div>
+          )}
 
           {/* BOTÃO TOGGLE DE TEMA (COMPACTO) */}
           <ThemeToggle compact />
 
-          {/* AVATAR DO USUÁRIO */}
-          <Link
-            href="/perfil"
-            className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform"
-            title={profile.isGuest ? "Perfil de Visitante (Local)" : `Meu Perfil (${profile.nome})`}
-          >
-            {initials}
-          </Link>
+          {/* AUTENTICAÇÃO: AVATAR SE LOGADO OU BOTÃO ENTRAR SE VISITANTE */}
+          {!mounted ? (
+            <div className="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse" />
+          ) : isAuthenticated ? (
+            <Link
+              href="/perfil"
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform"
+              title={`Meu Perfil (${profile.nome || "Aluno"})`}
+            >
+              {initials || "AL"}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="lemmas-gold-cta px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Entrar</span>
+            </Link>
+          )}
 
           {/* BOTÃO HAMBURGER MOBILE */}
           <button
@@ -181,14 +202,27 @@ export default function AppNavbar() {
             );
           })}
           <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/60 flex items-center justify-between text-xs px-2">
-            <Link
-              href="/perfil"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-1.5"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Ver Perfil ({profile.isGuest ? "Visitante" : profile.nome})</span>
-            </Link>
+            {!mounted ? (
+              <div className="h-8 w-full rounded-xl bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse" />
+            ) : isAuthenticated ? (
+              <Link
+                href="/perfil"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-1.5"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Ver Perfil ({profile.nome || "Aluno"})</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 w-full"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Entrar ou Criar Conta</span>
+              </Link>
+            )}
           </div>
         </div>
       )}

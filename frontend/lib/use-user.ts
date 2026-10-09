@@ -19,24 +19,21 @@ export interface UserProfile {
 }
 
 export const DEFAULT_GUEST_PROFILE: UserProfile = {
-  nome: "Estudante Convidado",
+  nome: "Visitante",
   email: "",
-  escolaridade: "Ensino Superior (Graduação em Matemática)",
-  faculdade: "UFF - Universidade Federal Fluminense",
-  semestre: "1º Semestre",
-  concursosSelecionados: [
-    "ESA (Sargentos do Exército)",
-    "EsPCEx / AMAN (Oficiais do Exército)"
-  ],
-  motivacoesSelecionadas: ["concurso_militar", "data_science"],
-  metaQuestoesDia: 15,
-  streakDias: 1,
-  focoConcurso: "ESA / EsPCEx",
+  escolaridade: "",
+  faculdade: "",
+  semestre: "",
+  concursosSelecionados: [],
+  motivacoesSelecionadas: [],
+  metaQuestoesDia: 0,
+  streakDias: 0,
+  focoConcurso: "",
   isGuest: true,
 };
 
 export function getInitials(name?: string): string {
-  if (!name || !name.trim()) return "AL";
+  if (!name || !name.trim()) return "";
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
@@ -93,21 +90,7 @@ export function useUserProfile() {
         return;
       }
 
-      // 2. Se não autenticado, carrega do localStorage (perfil de visitante local)
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            setProfile({ ...DEFAULT_GUEST_PROFILE, ...parsed, isGuest: true });
-            setLoading(false);
-            return;
-          } catch {
-            // Se JSON inválido, segue com default
-          }
-        }
-      }
-
+      // 2. Se não autenticado, permanece como não autenticado (isGuest: true, sem conta falsa)
       setProfile(DEFAULT_GUEST_PROFILE);
     } catch {
       setProfile(DEFAULT_GUEST_PROFILE);
@@ -178,6 +161,7 @@ export function useUserProfile() {
 
   return {
     profile,
+    isAuthenticated: !profile.isGuest && Boolean(profile.email),
     loading,
     initials: getInitials(profile.nome),
     saveProfile,

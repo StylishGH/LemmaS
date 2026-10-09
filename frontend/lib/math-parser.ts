@@ -21,7 +21,22 @@ export function extrairEnunciadoEAlternativas(texto: string): ParsedQuestion {
 
     for (const match of matches) {
       const letra = match[1];
-      const conteudo = match[2].trim();
+      let conteudo = match[2].trim();
+
+      // Enhanced LaTeX detection and wrapping
+      // Only wrap if it looks like LaTeX and doesn't already have $ delimiters
+      if (!conteudo.includes("$")) {
+        // Check for common LaTeX patterns (\command, {}, ^, _, \(, \))
+        const hasLatexPatterns = /\\[a-zA-Z]+|[{}^_]|\\[()]/.test(conteudo);
+        
+        // Also check for mathematical expressions that should be in math mode
+        const hasMathExpr = /[0-9]+\s*[/+*=-]\s*[0-9]+|\^\s*[0-9]+|_\s*[0-9]+|\\frac|\\sqrt|\\sum|\\int/.test(conteudo);
+        
+        if (hasLatexPatterns || hasMathExpr) {
+          conteudo = `$${conteudo}$`;
+        }
+      }
+
       alternativas[letra] = conteudo;
     }
 
