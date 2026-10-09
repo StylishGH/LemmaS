@@ -134,7 +134,39 @@ export function AuthCard() {
     }
   };
 
+  // Escuta ativa de eventos de autenticação (OAuth, Magic Link, etc.)
   useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+        setErro(null);
+        setMensagemSucesso("Autenticação concluída! Acessando a plataforma...");
+        setTimeout(() => {
+          router.push("/onboarding");
+        }, 500);
+      }
+    });
+
+    // Se já houver sessão ativa salva nos cookies/storage
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setErro(null);
+        router.push("/onboarding");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  useEffect(() => {
+    // Se a URL contém access_token no fragmento de hash, o Supabase está processando a sessão; não exibe erro
+    if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+      return;
+    }
+
     const errorParam = searchParams.get("error");
     if (errorParam === "oauth_exchange_failed") {
       setErro("Falha ao concluir autenticação com Google. Verifique se o Google Provider está ativado no Supabase ou use email e senha.");
