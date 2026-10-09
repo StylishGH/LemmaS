@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "../globals.css";
 import AppNavbar from "@/components/AppNavbar";
 import { BackgroundAnimation } from "../(public)/landing/components/BackgroundAnimation";
+import { BoardFrame } from "../(public)/landing/components/BoardFrame";
+import "../(public)/landing/components/BoardFrame.css";
 
 export const metadata: Metadata = {
   title: "LEMMAS — Plataforma Cognitiva de Aprendizagem | MathAI Engine",
@@ -17,20 +19,22 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="lemmas-app-frame min-h-screen flex flex-col text-slate-900 dark:text-[#f5f0df] relative overflow-x-hidden selection:bg-amber-500/30">
-      {/* TEXTURA E GRÃO DE LOUSA / QUADRO */}
-      <div className="lemmas-grain-overlay" aria-hidden="true" />
+    <BoardFrame>
+      <div className="lemmas-app-frame min-h-[calc(100vh-48px)] flex flex-col text-slate-900 dark:text-[#f5f0df] relative selection:bg-amber-500/30">
+        {/* TEXTURA E GRÃO DE LOUSA / QUADRO */}
+        <div className="lemmas-grain-overlay" aria-hidden="true" />
 
-      {/* ONDAS HARMÔNICAS SUTIS EM SEGUNDO PLANO */}
-      <BackgroundAnimation />
+        {/* ONDAS HARMÔNICAS SUTIS EM SEGUNDO PLANO */}
+        <BackgroundAnimation />
 
-      {/* BARRA DE NAVEGAÇÃO SUPERIOR UNIFICADA (TOP NAVIGATION ROOM) */}
-      <AppNavbar />
+        {/* BARRA DE NAVEGAÇÃO SUPERIOR UNIFICADA (TOP NAVIGATION ROOM) */}
+        <AppNavbar />
 
-      {/* CONTEÚDO PRINCIPAL CENTRALIZADO */}
-      <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        {children}
-      </main>
-    </div>
+        {/* CONTEÚDO PRINCIPAL CENTRALIZADO */}
+        <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          {children}
+        </main>
+      </div>
+    </BoardFrame>
   );
 }

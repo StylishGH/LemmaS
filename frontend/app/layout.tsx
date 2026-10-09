@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -17,14 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("lemmas-theme")||"lemmas-dark";document.documentElement.dataset.theme=t;if(t==="lemmas-light"){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}else{document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`,
-          }}
-        />
-      </head>
+      <head />
       <body className="min-h-full">
+        <Script id="lemmas-theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem("lemmas-theme")||"lemmas-dark";document.documentElement.dataset.theme=t;if(t==="lemmas-light"){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}else{document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`}
+        </Script>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

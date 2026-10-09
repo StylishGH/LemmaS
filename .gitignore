@@ -10,6 +10,8 @@
 *.env
 !.env.example
 .streamlit/secrets.toml
+cookies.txt
+nul
 
 # ------------------------------------------------------------------------------
 # Ambientes Virtuais Python
@@ -86,6 +88,7 @@ data/*.db
 
 # Legacy web directory (superseded by frontend/)
 web/
+node_modules/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
@@ -99,5 +102,11 @@ data/migrate_usuarios.sql
 # CLI and local configs
 config.json
 skills-lock.json
+
+# Scripts temporary dumps
+scripts/*.txt
+scripts/chatgpt_dump.json
+scripts/chunk_*.sql
+scripts/*.json
 
 
