@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createClient } from "@/lib/supabase";
 
 export interface UserProfile {
   id?: number | string;
@@ -45,6 +45,7 @@ const STORAGE_KEY = "lemmas_user_profile";
 const PROFILE_EVENT = "lemmas_profile_updated";
 
 export function useUserProfile() {
+  const supabase = useMemo(() => createClient(), []);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_GUEST_PROFILE);
   const [loading, setLoading] = useState(true);
 
@@ -97,10 +98,18 @@ export function useUserProfile() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     fetchProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        fetchProfile();
+      } else if (event === 'SIGNED_OUT') {
+        setProfile(DEFAULT_GUEST_PROFILE);
+      }
+    });
 
     const handleCustomEvent = () => {
       fetchProfile();
@@ -112,12 +121,13 @@ export function useUserProfile() {
     }
 
     return () => {
+      subscription.unsubscribe();
       if (typeof window !== "undefined") {
         window.removeEventListener(PROFILE_EVENT, handleCustomEvent);
         window.removeEventListener("storage", handleCustomEvent);
       }
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, supabase]);
 
   const saveProfile = async (updated: Partial<UserProfile>) => {
     const next = { ...profile, ...updated };
