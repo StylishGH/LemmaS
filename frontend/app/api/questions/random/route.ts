@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { extrairEnunciadoEAlternativas, corrigirLatex } from "@/lib/math-parser";
 
 export async function GET() {
+  const supabase = await createClient();
   try {
     // Busca uma questão aleatória do Supabase
     const { data, error } = await supabase

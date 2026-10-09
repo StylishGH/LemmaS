@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 interface CanonicalCategory {
   name: string;
@@ -136,6 +136,7 @@ const splitValues = (raw: unknown): string[] => {
 const esc = (v: string) => v.replace(/,/g, "\\,").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 
 export async function GET(req: NextRequest) {
+  const supabase = await createClient();
   try {
     const searchParams = req.nextUrl.searchParams;
     const banca = searchParams.get("banca");
@@ -458,6 +459,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
   try {
     const body = await req.json();
     const { ids, filters, limit = 100 } = body || {};
