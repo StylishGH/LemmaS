@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, Cpu, Lightbulb, CheckCheck, RefreshCw, Send } from "lucide-react";
+import { MathText } from "@/components/math/MathDisplay";
 
 interface AIModelOpinion {
   name: string;
@@ -128,7 +129,7 @@ export default function OpinioesPage() {
           </div>
 
           <div className="text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
-            {modelA.content}
+            <MathText text={modelA.content} />
           </div>
 
           <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
@@ -155,7 +156,7 @@ export default function OpinioesPage() {
           </div>
 
           <div className="text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
-            {modelB.content}
+            <MathText text={modelB.content} />
           </div>
 
           <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
@@ -170,9 +171,9 @@ export default function OpinioesPage() {
         <h4 className="font-serif-math font-semibold text-sm text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
           <span>🧠</span> Síntese Pedagógica para o Licenciando em Matemática
         </h4>
-        <p className="text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-          O confronto entre as duas resoluções evidencia que o primeiro modelo ancorou a resposta na geometria analítica/algébrica dos invariantes do círculo inscrito ($r = (a + b - c) / 2$), enquanto o segundo mobilizou a relação global de área ($S = p \cdot r$) e o conceito de semelhança/homotetia. Dominar ambas as linguagens é o segredo tanto para concursos de alto rendimento quanto para a prática docente em sala de aula.
-        </p>
+        <div className="text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+          <MathText text="O confronto entre as duas resoluções evidencia que o primeiro modelo ancorou a resposta na geometria analítica/algébrica dos invariantes do círculo inscrito ($r = \frac{a + b - c}{2}$), enquanto o segundo mobilizou a relação global de área ($S = p \cdot r$) e o conceito de semelhança/homotetia. Dominar ambas as linguagens é o segredo tanto para concursos de alto rendimento quanto para a prática docente em sala de aula." />
+        </div>
       </div>
     </div>
   );
