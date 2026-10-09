@@ -22,6 +22,7 @@ import {
 import { BoardFrame } from "../landing/components/BoardFrame";
 import { Logo } from "../landing/components/Logo";
 import { createClient } from "@/lib/supabase";
+import { validarCPF, formatarCPF } from "@/lib/validation";
 import "../landing/components/BoardFrame.css";
 import "../landing/components/Logo.css";
 import "../landing/components/LandingPage.css";
@@ -78,6 +79,8 @@ export default function OnboardingPage() {
   const [salvando, setSalvando] = useState(false);
 
   // Etapa 1: Escolaridade
+  const [cpf, setCpf] = useState("");
+  const [erroCpf, setErroCpf] = useState("");
   const [escolaridade, setEscolaridade] = useState("superior_cursando");
   const [instituicaoSuperior, setInstituicaoSuperior] = useState("");
   const [cursoGraduacao, setCursoGraduacao] = useState("");
@@ -147,10 +150,7 @@ export default function OnboardingPage() {
         // Tenta persistir no Supabase se logado
         await supabase
           .from("usuarios")
-          .update({
-            meta_estudo: categoriaObjetivo,
-            configuracoes: perfilData,
-          })
+          .update({ meta_estudo: categoriaObjetivo, configuracoes: perfilData, cpf: cpf.replace(/\D/g, "") })
           .eq("email", user.email);
       }
     } catch {
@@ -213,11 +213,30 @@ export default function OnboardingPage() {
                   <GraduationCap size={14} /> Passo 1 de 2
                 </div>
                 <h1 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
-                  Qual é o seu nível de <em className="italic text-amber-600 dark:text-[#d9b452]">escolaridade?</em>
+                  Informações <em className="italic text-amber-600 dark:text-[#d9b452]">Pessoais & Escolaridade</em>
                 </h1>
                 <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
-                  Personalizamos as explicações dos lemas e a profundidade axiomática de acordo com a sua formação.
+                  Precisamos de alguns dados essenciais para evitar contas duplicadas e personalizar sua experiência no LEMMAS.
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                  CPF (Apenas para verificação de unicidade)
+                </label>
+                <input
+                  type="text"
+                  value={cpf}
+                  onChange={(e) => {
+                    const formatted = formatarCPF(e.target.value);
+                    setCpf(formatted);
+                    if (erroCpf) setErroCpf("");
+                  }}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={`w-full px-3.5 py-3 rounded-xl border ${erroCpf ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-zinc-800 focus:ring-amber-500'} bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 text-xs sm:text-sm focus:outline-none focus:ring-1 font-medium`}
+                />
+                {erroCpf && <p className="text-[10px] text-red-500 mt-1 font-semibold">{erroCpf}</p>}
               </div>
 
               <div className="space-y-2">
@@ -277,7 +296,7 @@ export default function OnboardingPage() {
               <div className="pt-4 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setEtapa(2)}
+                  onClick={() => { if (!validarCPF(cpf)) { setErroCpf("CPF inválido ou incompleto."); return; } setErroCpf(""); setEtapa(2); }}
                   className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all hover:scale-[1.01]"
                 >
                   Avançar para Objetivos <ArrowRight size={16} />
@@ -610,5 +629,10 @@ export default function OnboardingPage() {
     </BoardFrame>
   );
 }
+
+
+
+
+
 
 
