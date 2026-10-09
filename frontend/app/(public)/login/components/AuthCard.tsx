@@ -137,10 +137,16 @@ export function AuthCard() {
 
   const redirecionarPosLogin = async (session: any) => {
     try {
+      const email = session?.user?.email;
+      if (!email) {
+        router.push("/questoes");
+        return;
+      }
+
       const { data: dbUser } = await supabase
         .from("usuarios")
         .select("cpf, escolaridade")
-        .eq("id", session.user.id)
+        .eq("email", email)
         .maybeSingle();
         
       if (dbUser && (dbUser.cpf || dbUser.escolaridade)) {
@@ -161,7 +167,10 @@ export function AuthCard() {
       if (event === "SIGNED_IN" && session) {
         setErro(null);
         setMensagemSucesso("Autenticação concluída! Acessando a plataforma...");
-        redirecionarPosLogin(session);
+        // Evita deadlock assíncrono dentro do callback síncrono do Supabase
+        setTimeout(() => {
+          redirecionarPosLogin(session);
+        }, 0);
       }
     });
 
