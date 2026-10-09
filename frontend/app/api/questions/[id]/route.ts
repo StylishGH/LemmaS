@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { extrairEnunciadoEAlternativas, corrigirLatex } from "@/lib/math-parser";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const supabase = await createClient();
   try {
     const { id } = await params;
     const qId = parseInt(id, 10);
