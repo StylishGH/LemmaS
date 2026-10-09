@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 
 export interface UserProfile {
@@ -44,14 +44,50 @@ export function getInitials(name?: string): string {
 const STORAGE_KEY = "lemmas_user_profile";
 const PROFILE_EVENT = "lemmas_profile_updated";
 
-export function useUserProfile() {
+function getCachedProfile(): UserProfile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && parsed.email && !parsed.isGuest) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Falha silenciosa de JSON
+  }
+  return null;
+}
+
+export interface UserContextType {
+  profile: UserProfile;
+  isAuthenticated: boolean;
+  loading: boolean;
+  initials: string;
+  saveProfile: (updated: Partial<UserProfile>) => Promise<void>;
+  logout: () => Promise<void>;
+  refresh: (providedUser?: any) => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType | null>(null);
+
+export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_GUEST_PROFILE);
-  const [loading, setLoading] = useState(true);
+
+  // Hidratação síncrona do cache do localStorage: zero delay e zero flicker de visitante
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    const cached = getCachedProfile();
+    return cached || DEFAULT_GUEST_PROFILE;
+  });
+
+  const [loading, setLoading] = useState<boolean>(() => {
+    const cached = getCachedProfile();
+    return cached ? false : true;
+  });
 
   const fetchProfile = useCallback(async (providedUser?: any) => {
     try {
-      // 1. Tenta checar sessão no Supabase Auth
       let user = providedUser;
       if (!user) {
         const { data } = await supabase.auth.getUser();
@@ -59,7 +95,6 @@ export function useUserProfile() {
       }
 
       if (user && user.email) {
-        // Usuário autenticado
         let loadedProfile: UserProfile = {
           ...DEFAULT_GUEST_PROFILE,
           id: user.id,
@@ -68,7 +103,6 @@ export function useUserProfile() {
           isGuest: false,
         };
 
-        // Tenta buscar metadados na tabela usuarios
         try {
           const { data: dbUser } = await supabase
             .from("usuarios")
@@ -87,18 +121,27 @@ export function useUserProfile() {
             };
           }
         } catch {
-          // Fallback silencioso para user_metadata
+          // Mantém loadedProfile de user_metadata
         }
 
         setProfile(loadedProfile);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedProfile));
+        }
         setLoading(false);
         return;
       }
 
-      // 2. Se não autenticado, permanece como não autenticado (isGuest: true, sem conta falsa)
+      // Sessão deslogada
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       setProfile(DEFAULT_GUEST_PROFILE);
     } catch {
-      setProfile(DEFAULT_GUEST_PROFILE);
+      const cached = getCachedProfile();
+      if (!cached) {
+        setProfile(DEFAULT_GUEST_PROFILE);
+      }
     } finally {
       setLoading(false);
     }
@@ -108,12 +151,14 @@ export function useUserProfile() {
     fetchProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        // Evita deadlock assíncrono postergando para o próximo ciclo de eventos
+      if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
         setTimeout(() => {
           fetchProfile(session?.user);
         }, 0);
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === "SIGNED_OUT") {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(STORAGE_KEY);
+        }
         setProfile(DEFAULT_GUEST_PROFILE);
       }
     });
@@ -145,8 +190,7 @@ export function useUserProfile() {
       window.dispatchEvent(new Event(PROFILE_EVENT));
     }
 
-    // Se estiver autenticado, tenta salvar no Supabase também
-    if (!profile.isGuest && profile.email) {
+    if (!next.isGuest && next.email) {
       try {
         await supabase
           .from("usuarios")
@@ -156,7 +200,7 @@ export function useUserProfile() {
             faculdade: next.faculdade,
             concursos_foco: next.focoConcurso,
           })
-          .eq("email", profile.email);
+          .eq("email", next.email);
       } catch (err) {
         console.error("Erro ao sincronizar perfil no Supabase:", err);
       }
@@ -176,7 +220,7 @@ export function useUserProfile() {
     setProfile(DEFAULT_GUEST_PROFILE);
   };
 
-  return {
+  const value = {
     profile,
     isAuthenticated: !profile.isGuest && Boolean(profile.email),
     loading,
@@ -185,4 +229,22 @@ export function useUserProfile() {
     logout,
     refresh: fetchProfile,
   };
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+}
+
+export function useUserProfile() {
+  const context = useContext(UserContext);
+  if (!context) {
+    return {
+      profile: DEFAULT_GUEST_PROFILE,
+      isAuthenticated: false,
+      loading: false,
+      initials: "",
+      saveProfile: async () => {},
+      logout: async () => {},
+      refresh: async () => {},
+    };
+  }
+  return context;
 }
