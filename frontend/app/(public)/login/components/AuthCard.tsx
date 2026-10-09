@@ -135,32 +135,52 @@ export function AuthCard() {
     }
   };
 
+  const redirecionarPosLogin = async (session: any) => {
+    try {
+      const { data: dbUser } = await supabase
+        .from("usuarios")
+        .select("cpf, escolaridade")
+        .eq("id", session.user.id)
+        .maybeSingle();
+        
+      if (dbUser && (dbUser.cpf || dbUser.escolaridade)) {
+        router.push("/questoes");
+      } else {
+        router.push("/onboarding");
+      }
+    } catch {
+      router.push("/questoes");
+    }
+  };
+
   // Escuta ativa de eventos de autenticação (OAuth, Magic Link, etc.)
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+      if (event === "SIGNED_IN" && session) {
         setErro(null);
         setMensagemSucesso("Autenticação concluída! Acessando a plataforma...");
-        setTimeout(() => {
-          router.push("/onboarding");
-        }, 500);
+        redirecionarPosLogin(session);
       }
     });
 
-    // Se já houver sessão ativa salva nos cookies/storage
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setErro(null);
-        router.push("/onboarding");
+    // Se já houver sessão ativa válida e confirmada pelo servidor
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (user && !error) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            setErro(null);
+            redirecionarPosLogin(session);
+          }
+        });
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, supabase]);
 
   useEffect(() => {
     // Se a URL contém access_token no fragmento de hash, o Supabase está processando a sessão; não exibe erro
