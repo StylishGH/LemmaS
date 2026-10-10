@@ -1,889 +1,178 @@
 <div align="center">
-  <h1>Lemmas 🧠📐</h1>
-  <p>Uma plataforma de aprendizagem matemática adaptativa que combina Matemática, Inteligência Artificial, Ciência de Dados e repetição espaçada.</p>
-
-  <p align="right">
-    <a href="./README.en.md">🇺🇸 English Version</a> &nbsp;|&nbsp; <b>🇧🇷 Versão em Português</b>
-  </p>
-
+  <h1>Lemmas 📐</h1>
+  <p><strong>Adaptive learning, built around data.</strong></p>
+  <p>An adaptive mathematics learning platform exploring Data Engineering, Data Science, and Applied AI.</p>
+  <p><a href="./README.pt-BR.md">🇧🇷 Português (Brasil)</a> &nbsp;|&nbsp; <strong>🇺🇸 English</strong></p>
   <p>
-    <img src="https://img.shields.io/badge/Next.js-15-black.svg?style=flat-square" alt="Next.js" />
-    <img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?style=flat-square" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/PostgreSQL-16-336791.svg?style=flat-square" alt="PostgreSQL" />
-    <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4.svg?style=flat-square" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Python-3.11-blue.svg?style=flat-square" alt="Python" />
+    <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
+    <img src="https://img.shields.io/badge/FastAPI-REST%20API-009688?logo=fastapi" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase" alt="Supabase / PostgreSQL" />
+    <img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python" alt="Python" />
+    <img src="https://img.shields.io/badge/Status-In%20Development-yellow" alt="In development" />
   </p>
-
-  <p><strong>Impulsionado pela <a href="#-mathai">MathAI Engine</a></strong></p>
 </div>
 
 ---
 
-## 🪦 Antes do Lemmas, existia o MathAI
+## Why Lemmas?
 
-O **Lemmas** nasceu de um projeto chamado **MathAI**.
+What could a learning platform discover if it treated a student's learning process as structured data instead of recording only right and wrong answers?
 
-A ideia original era relativamente simples: criar uma ferramenta de estudos que pudesse aprender com as próprias respostas do aluno, identificar erros, recomendar exercícios e ajudar durante o estudo de Matemática.
+Two students can make the same mistake for different reasons. One may misunderstand a concept; another may understand it but make an algebraic error. An adaptive system needs to preserve the work actually submitted, distinguish it from AI-generated interpretation, and allow feedback or human review to correct that interpretation.
 
-Com o tempo, o projeto começou a crescer.
+The core principle is:
 
-O MathAI deixou de ser apenas uma aplicação de estudos e começou a envolver:
+> **Observed data ≠ AI interpretation ≠ validated data.**
 
-* modelos de linguagem;
-* análise das resoluções dos alunos;
-* recomendação de exercícios;
-* repetição espaçada;
-* visão computacional;
-* coleta e estruturação de dados;
-* modelos de aprendizagem personalizados.
+Lemmas is an evolving product and a hands-on engineering project. The codebase focuses on a modular web/API architecture and AI-assisted mathematics workflows. Reliable persistence, curated analytical datasets, and evaluated predictive models are engineering goals—not accomplishments claimed as complete.
 
-Foi nesse momento que surgiu um problema:
+## Engineering focus
 
-> **MathAI já não descrevia mais o produto.**
+- **Data Engineering:** structured API inputs, data-integrity hashes, explicit schemas, and separation of raw student work from derived assessments.
+- **Data Science:** a domain for investigating recurring errors, learning progress, retention, and exercise recommendation once suitable, consented, validated data is available.
+- **AI Engineering:** modular MathAI services for tutoring, cognitive evaluation, recommendation, and image/transcription workflows, with configurable model providers.
+- **Software Engineering:** Next.js frontend, FastAPI backend, environment-based configuration, and pytest-based architecture tests.
 
-Então o **MathAI foi "aposentado" como nome da plataforma**.
+## System architecture
 
-E nasceu o **Lemmas**.
+Student interactions flow through the Next.js frontend to a modular FastAPI backend. The backend exposes workflows for authentication, exercises, attempts, feedback, tutoring, and flashcards. MathAI services call configurable model providers, while student feedback and human validation can add context to generated assessments.
 
-O nome MathAI, porém, não morreu completamente.
+Supabase/PostgreSQL integration exists in the codebase, but not every route persists to the database yet. Some route handlers still use in-memory stores. This distinction matters for reliability and is documented below.
 
-Ele foi transformado na ideia original que deu origem ao projeto: **uma futura IA especializada em aprendizagem matemática**, responsável por atuar como o cérebro inteligente por trás do Lemmas.
+## What is implemented?
 
-```text
-                    MATHAI
-                       │
-             ┌─────────┴─────────┐
-             │                   │
-       antigo produto       futura IA
-             │                   │
-             ▼                   ▼
-          LEMMAS              MathAI
-        plataforma          cérebro do sistema
-```
+### API and data contracts
 
-Assim, o Lemmas é a plataforma.
+The FastAPI application includes modular routes for authentication, exercises, attempts, feedback, tutoring, and flashcards. Pydantic schemas define request and response contracts. The repository also includes automated tests for parts of the backend architecture.
 
-O MathAI será, no futuro, sua inteligência.
+### Data integrity and provenance
 
----
+Attempt capture computes a deterministic SHA-256 hash of the submitted raw input. Domain models and architecture tests express a separation between:
 
-# 🧠 O que é o Lemmas?
+| Layer | Meaning |
+|---|---|
+| **Observed data** | The student's submitted work and interaction metadata |
+| **AI interpretation** | A model-generated assessment, such as an error classification or suggested next step |
+| **Validated data** | Feedback or a human-reviewed correction associated with an assessment |
 
-Lemmas é uma plataforma de aprendizagem matemática adaptativa que combina **Matemática, Inteligência Artificial, Ciência de Dados e repetição espaçada** para construir uma experiência de estudo personalizada.
+The goal is to preserve evidence and support future re-evaluation without automatically treating model inference as ground truth.
 
-O objetivo não é simplesmente responder questões.
+### MathAI services
 
-O Lemmas busca compreender:
+The backend has separate services for Socratic hints, cognitive evaluation, recommendation, and vision/transcription workflows. The code is configured to work with direct providers such as Google Gemini, NVIDIA, and DeepSeek; 9Router is an optional routing path.
 
-* como o aluno resolve problemas;
-* onde ele costuma errar;
-* quais conceitos domina;
-* quais dificuldades persistem;
-* como sua memória evolui;
-* quais exercícios são mais adequados;
-* e quais estratégias de estudo funcionam melhor para ele.
+These integrations put model output inside application workflows. They do **not** mean Lemmas has trained its own foundation model or demonstrated the predictive performance of a custom ML model.
 
-A ideia central é transformar cada interação com a plataforma em uma oportunidade de aprendizagem — tanto para o aluno quanto para o sistema.
+### Learning and review
 
----
+The codebase includes student-feedback and human-validation endpoints, flashcard workflows, and Anki export. The current spaced-repetition scheduler is a **simplified FSRS-inspired prototype**; its parameters and behavior need validation before supporting production-level claims about retention prediction.
 
-# 📖 A ideia por trás do projeto
+## Data Engineering roadmap
 
-O Lemmas parte de uma premissa simples:
+The intended data flow prioritizes traceability:
 
-> **Duas pessoas podem errar a mesma questão por motivos completamente diferentes.**
+1. **Capture:** preserve the original student submission and relevant interaction metadata.
+2. **Validate:** check schemas and data quality before downstream use.
+3. **Interpret:** store AI-generated assessments separately from the original submission.
+4. **Review:** collect student feedback and, where available, expert validation.
+5. **Prepare datasets:** define consent, provenance, deduplication, and quality rules before analytics or training.
 
-Uma pode não conhecer o conceito.
+Key engineering priorities include durable persistence for relevant event types, explicit database migrations, repeatable validation, and reproducible tests. These are substantive data-platform problems, not merely API integration.
 
-Outra pode conhecer o conceito, mas cometer um erro algébrico.
+## Data Science opportunities
 
-Outra pode resolver corretamente, mas ter dificuldade para reconhecer quando aquele conceito deve ser utilizado.
+Lemmas creates a practical domain for future, testable questions:
 
-Por isso, o sistema não deve apenas registrar:
+- Can recurring error patterns be classified more reliably than a simple rules-based baseline?
+- Which exercise-recommendation strategies improve engagement or learning outcomes?
+- How well can a model estimate when a concept should be reviewed?
+- How do model providers compare on mathematical correctness, latency, and cost across task types?
 
-```text
-Aluno → acertou
-Aluno → errou
-```
+The planned process is to define measurable targets, establish baselines, build a clean dataset, prevent leakage between training and evaluation, and report task-appropriate metrics. Classification may use precision, recall, and F1; ranking-based recommendations may use Recall@K or NDCG@K.
 
-Ele deve buscar compreender:
+**No custom-trained ML model or validated predictive result is being claimed at this stage.** The focus is building a trustworthy product and data foundation from which responsible experiments can follow.
 
-```text
-O que o aluno fez?
-Por que provavelmente fez isso?
-O que já aconteceu antes?
-Como ele respondeu ao feedback?
-Esse erro voltou a acontecer?
-Qual intervenção ajudou?
-```
+## Technology stack
 
-Essa informação forma a base do modelo de aprendizagem do Lemmas.
+| Area | Technologies |
+|---|---|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Backend | Python, FastAPI, Pydantic |
+| Data integration | Supabase client / PostgreSQL |
+| AI integrations | Google Gemini, NVIDIA, DeepSeek; optional 9Router |
+| Learning workflows | Socratic tutoring, evaluation, flashcards, simplified spaced-repetition scheduler |
+| Quality | pytest-based architecture and API tests |
 
----
+## Run locally
 
-# 🏗️ Arquitetura
+### 1. Clone the repository
 
-```text
-                                    ┌──────────────────────┐
-                                    │        ALUNO         │
-                                    │                      │
-                                    │ questões             │
-                                    │ respostas            │
-                                    │ imagens              │
-                                    │ feedback             │
-                                    └──────────┬───────────┘
-                                               │
-                                               ▼
-                              ┌─────────────────────────────┐
-                              │          FRONTEND           │
-                              │                             │
-                              │         Next.js             │
-                              │         React               │
-                              └──────────────┬──────────────┘
-                                             │
-                                             ▼
-                              ┌─────────────────────────────┐
-                              │           BACKEND           │
-                              │                             │
-                              │           FastAPI           │
-                              └──────────────┬──────────────┘
-                                             │
-                    ┌────────────────────────┼────────────────────────┐
-                    ▼                        ▼                        ▼
-             ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
-             │  DATABASE   │         │    MATHAI   │         │    VISION   │
-             │             │         │   Gateway   │         │             │
-             │ PostgreSQL  │         │             │         │ OCR / Image │
-             │ / Supabase  │         └──────┬──────┘         └──────┬──────┘
-             └──────┬──────┘                │                       │
-                    │                       ▼                       │
-                    │                ┌─────────────┐                │
-                    │                │   ROUTING   │◄───────────────┘
-                    │                └──────┬──────┘
-                    │                       │
-                    │                       ▼
-                    │                    9Router
-                    │                       │
-                    │             ┌─────────┼─────────┐
-                    │             ▼         ▼         ▼
-                    │          Modelo A  Modelo B  Modelo C
-                    │          principal fallback  fallback
-                    │
-                    ▼
-             ┌────────────────────┐
-             │   AI_EVALUATION   │
-             │                    │
-             │ modelo             │
-             │ provider           │
-             │ versão             │
-             │ prompt             │
-             │ timestamp          │
-             │ confiança          │
-             └──────────┬─────────┘
-                        │
-                        ▼
-                 FEEDBACK DO ALUNO
-                        │
-                        ▼
-                  DATA PIPELINE
-                        │
-             ┌──────────┴──────────┐
-             ▼                     ▼
-      DADOS CONFIÁVEIS       DADOS AMBÍGUOS
-             │                     │
-             ▼                     ▼
-          ML / IA              revisão
-             │
-             ▼
-          MATHAI
-```
+    git clone https://github.com/StylishGH/LemmaS.git
+    cd LemmaS
+
+### 2. Set up the backend
+
+    cd backend
+    python -m venv .venv
+
+Activate the virtual environment:
+
+    # Linux / macOS
+    source .venv/bin/activate
+
+    # Windows PowerShell
+    .venv\Scripts\Activate.ps1
+
+Install dependencies:
+
+    pip install -r requirements.txt
+
+Use the repository's root-level .env.example as a reference to create a local .env file. Configure only the credentials needed for the integrations you plan to use. Never commit secrets.
+
+Start the API from the backend directory:
+
+    uvicorn app.main:app --reload
+
+The API should be available at http://localhost:8000. Interactive API documentation is enabled when the backend's DEBUG setting is on.
+
+### 3. Run the frontend
+
+In another terminal:
+
+    cd frontend
+    npm install
+    npm run dev
+
+The frontend development server normally runs at http://localhost:3000. Configure the frontend's required environment variables locally before using features that depend on external services.
+
+## Current status and limitations
+
+**Project status: in development.** The repository contains implemented API and MathAI workflows, but important data-platform capabilities still need further engineering.
+
+- **Persistence:** attempt, feedback, and flashcard routes still use in-memory stores in parts of the backend. Those records are not durable across process restarts. Supabase integration exists, but it has not replaced every in-memory store.
+- **Machine Learning:** model training, systematic offline evaluation, and production monitoring are future work. The project does not claim a custom predictive model is deployed.
+- **Spaced repetition:** the current scheduler uses simplified, illustrative logic and needs validation before supporting scientific conclusions about retention.
+- **Data governance:** any future use of student records for analysis or model development must respect consent, privacy, data minimization, and applicable data-protection requirements.
+
+These limitations are part of the engineering roadmap: establish reliable data contracts and persistence first, then build curated datasets and evaluate analytical approaches.
+
+## Roadmap
+
+- [ ] Replace prototype in-memory stores with durable persistence where required.
+- [ ] Strengthen automated tests and reproducible development workflows.
+- [ ] Define versioned schemas and data-quality checks for learning events.
+- [ ] Build exploratory analyses from consented, validated data.
+- [ ] Establish baselines and evaluate recommendation or retention models.
+- [ ] Track model quality, latency, and cost by task type.
+
+## About
+
+Lemmas is being developed by **Guilherme Henrique Mendes**, a Mathematics undergraduate interested in Data Engineering, Data Science, and Applied AI.
+
+- [GitHub](https://github.com/StylishGH)
+- [LinkedIn](https://linkedin.com/in/ghmendes02)
+- [Contact](mailto:ghmendes@id.uff.br)
 
 ---
 
-# 🤖 MathAI
-
-O **MathAI** é a futura camada de inteligência especializada do Lemmas.
-
-Ele não precisa ser um único modelo.
-
-A arquitetura foi pensada para que o MathAI possa utilizar diferentes modelos e componentes de acordo com a tarefa.
-
-### Possíveis capacidades
-
-* Tutoria matemática;
-* correção de resoluções;
-* identificação de erros;
-* explicação de conceitos;
-* geração de questões;
-* recomendação de exercícios;
-* geração de cartões de revisão;
-* análise do histórico do aluno;
-* compreensão de imagens e resoluções manuscritas;
-* construção de perfis de aprendizagem;
-* roteamento inteligente entre diferentes modelos.
-
-O MathAI Gateway funciona como a camada intermediária entre o Lemmas e os modelos utilizados pelo sistema.
-
----
-
-# 🔀 Model Routing
-
-O Gateway determina **o que a tarefa exige**.
-
-Exemplo:
-
-```text
-Questão simples
-      ↓
-modelo rápido
-
-Questão matemática complexa
-      ↓
-modelo de raciocínio matemático
-
-Resolução manuscrita
-      ↓
-modelo multimodal
-
-Avaliação crítica
-      ↓
-modelo mais forte
-```
-
-Depois da escolha, o **MathAI Gateway** cuida da estratégia de acesso: ele abstrai provedores de modelos e suporta tanto provedores diretos quanto infraestruturas de roteamento como o 9Router.
-
-> *The MathAI Gateway abstracts model providers and supports direct providers or routed infrastructure such as 9Router.*
-
-```text
-                    MATHAI GATEWAY
-                          │
-       ┌──────────────────┴──────────────────┐
-       ▼                                     ▼
- DIRECT PROVIDERS (Nuvem)              9ROUTER (Opcional)
- ├── Google Gemini (Flash-Lite)         └── Proxy & Pooling Local
- ├── NVIDIA NIM (Nemotron 3.5)
- └── DeepSeek API (Reasoner/V3)
-```
-
-Essa separação garante que:
-- O **MathAI Gateway** decide *o que a tarefa matemática exige* (rigor axiomático vs. intuição vs. OCR).
-- A camada de execução (provedor direto ou roteador de infraestrutura) cuida da disponibilidade e redundância.
-
-A infraestrutura de modelos pode mudar sem que o restante da aplicação precise ser reescrito.
-
----
-
-# 🗃️ Dados: preservar o que o aluno realmente fez
-
-Uma das principais decisões arquiteturais do Lemmas é separar:
-
-```text
-OBSERVED DATA
-       ≠
-AI INTERPRETATION
-       ≠
-VALIDATED DATA
-```
-
-## Observed Data
-
-Representa aquilo que realmente aconteceu.
-
-```text
-resposta original
-imagem original
-questão
-tempo gasto
-tentativas anteriores
-hints utilizados
-feedback do aluno
-```
-
-## AI Interpretation
-
-Representa aquilo que o MathAI inferiu.
-
-```text
-erro provável
-conceito relacionado
-dificuldade estimada
-nível de domínio
-recomendação
-confiança
-```
-
-## Validated Data
-
-Representa informações que passaram por algum processo de validação.
-
-```text
-erro confirmado
-conceito confirmado
-rótulo revisado
-avaliação validada
-```
-
-### Regra fundamental
-
-> **O dado original do aluno nunca deve ser sobrescrito pela interpretação da IA.**
-
-Dessa forma, um mesmo dado original pode ser reavaliado por diferentes modelos no futuro.
-
----
-
-# 🔬 Proveniência das avaliações
-
-Cada avaliação produzida pelo MathAI pode registrar:
-
-```text
-attempt_id
-model_provider
-model_name
-model_version
-prompt_version
-evaluator_version
-fallback_level
-timestamp
-input_hash
-output
-confidence
-```
-
-Isso permite descobrir exatamente de onde uma determinada interpretação veio.
-
-Por exemplo:
-
-```text
-Tentativa #92817
-
-Modelo:
-DeepSeek X
-
-Versão:
-3.2
-
-Prompt:
-evaluator_v7
-
-Fallback:
-0
-
-Resultado:
-erro_de_sinal
-
-Confiança:
-0.91
-```
-
-Se posteriormente descobrirmos que determinada versão de um modelo apresenta problemas em geometria, podemos identificar exatamente quais avaliações foram produzidas por ela.
-
----
-
-# 📚 Aprendizagem adaptativa
-
-O objetivo futuro é construir um **Student Model** capaz de representar o estado de aprendizagem de cada estudante.
-
-```text
-                       STUDENT
-                          │
-          ┌───────────────┼────────────────┐
-          ▼               ▼                ▼
-      conceitos       dificuldades      histórico
-          │               │                │
-          └───────────────┼────────────────┘
-                          ▼
-                    STUDENT MODEL
-                          │
-                 ┌────────┼────────┐
-                 ▼        ▼        ▼
-              domínio   memória   erros
-                          │
-                          ▼
-                    recomendação
-```
-
-O modelo poderá utilizar informações como:
-
-* desempenho por conceito;
-* frequência de erros;
-* tempo de resolução;
-* tentativas;
-* revisões;
-* retenção;
-* feedback;
-* dificuldade dos exercícios.
-
----
-
-# 🔁 Repetição espaçada
-
-O Lemmas possui seu próprio sistema de cartões de revisão.
-
-Os cartões podem ser:
-
-### Gerados pelo MathAI
-
-```text
-erro recorrente
-      ↓
-MathAI identifica padrão
-      ↓
-sugere cartão
-      ↓
-aluno edita / aceita / rejeita
-```
-
-### Criados pelo aluno
-
-O aluno também pode criar seus próprios cartões.
-
-### Possíveis tipos
-
-```text
-Fórmula
-Conceito
-Reconhecimento
-Aplicação
-Erro pessoal
-Imagem / diagrama
-```
-
-O histórico de cada revisão é armazenado para que o sistema possa estimar a retenção e melhorar as próximas revisões.
-
-A integração com o Anki é tratada como **exportação**, enquanto o histórico completo de aprendizagem continua pertencendo ao Lemmas.
-
----
-
-# 📈 Curva de esquecimento e memória
-
-O sistema de revisão não precisa assumir que existe uma única curva universal de esquecimento.
-
-O projeto poderá estudar e comparar diferentes modelos e abordagens, incluindo:
-
-```text
-Ebbinghaus
-Exponencial
-Lei de potência
-Modelos hiperbólicos
-Half-Life Regression
-FSRS
-```
-
-A longo prazo, os próprios dados coletados pelo Lemmas poderão permitir investigar como diferentes padrões de retenção aparecem em diferentes alunos e conceitos.
-
-```text
-                    REVISION DATA
-                          │
-                          ▼
-                  RETENTION MODEL
-                          │
-          ┌───────────────┼───────────────┐
-          ▼               ▼               ▼
-      Exponencial      Potência          FSRS
-          │               │               │
-          └───────────────┼───────────────┘
-                          ▼
-                    melhor predição
-                          │
-                          ▼
-                   melhor scheduler
-```
-
----
-
-# 🧠 Do aluno para os dados
-
-Cada interação pode gerar uma cadeia de informações:
-
-```text
-Questão
-   ↓
-Tentativa
-   ↓
-Erro / acerto
-   ↓
-Análise do MathAI
-   ↓
-Feedback
-   ↓
-Revisão
-   ↓
-Retenção
-   ↓
-Nova recomendação
-```
-
-Com o crescimento da plataforma, essa cadeia pode se transformar em dados para investigação e Machine Learning.
-
----
-
-# 📊 Data Pipeline
-
-```text
-                  DADOS DO ALUNO
-                         │
-                         ▼
-                      RAW DATA
-                         │
-                         ▼
-                 DATA VALIDATION
-                         │
-             ┌───────────┼───────────┐
-             ▼           ▼           ▼
-        qualidade    consentimento  deduplicação
-             │           │           │
-             └───────────┼───────────┘
-                         ▼
-                  LABEL GENERATION
-                         │
-             ┌───────────┼───────────┐
-             ▼                       ▼
-       AI-generated             Human validated
-             │                       │
-             └───────────┼───────────┘
-                         ▼
-                       DATASET
-                         │
-                         ▼
-                    ML / STATS
-```
-
-Dados ambíguos não devem ser automaticamente utilizados para treinamento.
-
-A ideia é preservar a qualidade e a proveniência dos exemplos antes de utilizá-los em modelos futuros.
-
----
-
-# 🔬 Pesquisa e Machine Learning
-
-Com dados suficientes, o Lemmas poderá investigar perguntas como:
-
-* Quais tipos de erro aparecem com maior frequência?
-* Quais intervenções ajudam cada tipo de aluno?
-* Quais cartões apresentam maior retenção?
-* Qual intervalo de revisão funciona melhor para determinado conceito?
-* Qual modelo de IA é mais preciso para determinado tipo de problema?
-* Quais modelos apresentam melhor custo-benefício?
-* É possível prever quando determinado conceito provavelmente será esquecido?
-* É possível prever qual exercício terá maior benefício para determinado aluno?
-
-O objetivo não é apenas acumular dados.
-
-É transformar dados de aprendizagem em **conhecimento sobre aprendizagem**.
-
----
-
-# ⚡ Quick Start
-
-## Pré-requisitos
-
-Antes de começar, instale:
-
-* [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/)
-* [Python](https://www.python.org/)
-* PostgreSQL ou uma instância do Supabase
-
-## 1. Clone o repositório
-
-```bash
-git clone https://github.com/seu-usuario/lemmas.git
-cd lemmas
-```
-
-## 2. Configure o backend
-
-```bash
-cd backend
-
-python -m venv .venv
-```
-
-### Linux / macOS
-
-```bash
-source .venv/bin/activate
-```
-
-### Windows
-
-```powershell
-.venv\Scripts\activate
-```
-
-Instale as dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
-Crie seu arquivo de ambiente:
-
-```bash
-cp .env.example .env
-```
-
-Preencha as variáveis necessárias no `.env`, incluindo as credenciais do banco e dos serviços de IA.
-
-Inicie a API:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-O backend ficará disponível localmente em:
-
-```text
-http://localhost:8000
-```
-
-A documentação da API pode ser acessada em:
-
-```text
-http://localhost:8000/docs
-```
-
-## 3. Configure o frontend
-
-Em outro terminal:
-
-```bash
-cd frontend
-npm install
-```
-
-Crie o arquivo de ambiente:
-
-```bash
-cp .env.example .env.local
-```
-
-Configure a URL da API:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-Inicie o frontend:
-
-```bash
-npm run dev
-```
-
-A aplicação ficará disponível em:
-
-```text
-http://localhost:3000
-```
-
-## 4. Ambiente local
-
-Com os dois serviços executando:
-
-```text
-Browser
-   │
-   ▼
-localhost:3000
-   │
-   ▼
-Next.js
-   │
-   │ API
-   ▼
-localhost:8000
-   │
-   ▼
-FastAPI
-   │
-   ├── PostgreSQL / Supabase
-   │
-   └── MathAI Gateway
-            │
-            ▼
-         9Router
-```
-
-> **Nota:** os nomes das variáveis de ambiente e scripts podem mudar conforme a implementação atual do projeto. O `.env.example` deve ser mantido como a fonte de referência para a configuração local.
-
----
-
-# 🧪 Evolução planejada
-
-```text
-FASE 1
-────────────────────────────
-MVP
-│
-├── exercícios
-├── tentativas
-├── tutor
-├── banco de dados
-└── MathAI inicial
-
-
-FASE 2
-────────────────────────────
-Dados reais
-│
-├── usuários
-├── feedback
-├── avaliações de IA
-├── revisão espaçada
-└── Student Model inicial
-
-
-FASE 3
-────────────────────────────
-Inteligência adaptativa
-│
-├── recomendação
-├── model routing
-├── análise de erros
-└── visão computacional
-
-
-FASE 4
-────────────────────────────
-Machine Learning
-│
-├── modelos de retenção
-├── recomendação
-├── avaliação de modelos
-└── personalização
-
-
-FASE 5
-────────────────────────────
-MathAI especializado
-│
-├── datasets curados
-├── fine-tuning
-├── modelos especializados
-└── melhoria contínua
-```
-
----
-
-# 🏗️ Estrutura do projeto
-
-```text
-lemmas/
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── lib/
-│   ├── public/
-│   └── package.json
-│
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── repositories/
-│   │   ├── services/
-│   │   │   ├── mathai/
-│   │   │   │   ├── gateway.py
-│   │   │   │   ├── tutor.py
-│   │   │   │   ├── evaluator.py
-│   │   │   │   ├── vision.py
-│   │   │   │   └── recommender.py
-│   │   │   ├── vision/
-│   │   │   ├── recommendation/
-│   │   │   └── analytics/
-│   │   └── main.py
-│   │
-│   ├── tests/
-│   └── requirements.txt
-│
-├── data/
-├── docs/
-├── .env.example
-├── .gitignore
-├── README.md
-└── LICENSE
-```
-
----
-
-# ☁️ Infraestrutura
- 
-```text
-GitHub
-   │
-   ├──────────────► Vercel (Frontend Next.js)
-   │                  │ (chamadas diretas)
-   │                  ▼
-   │             Google Gemini API
-   │
-   └──────────────► Render (Backend FastAPI)
-                      │
-              ┌───────┴───────┬──────────────────────┐
-              ▼               ▼                      ▼
-          Supabase      Direct Providers       9Router (Opcional)
-         PostgreSQL     (NVIDIA / DeepSeek)   (Dev Local ou VPS)
-```
-
-A arquitetura foi pensada para começar simples e permitir evolução conforme o projeto ganhar usuários e volume de dados.
-
----
-
-# 🎯 Visão
-
-O Lemmas não pretende simplesmente colocar uma IA dentro de uma plataforma de exercícios.
-
-A proposta é construir um sistema em que **cada etapa da aprendizagem gere informação útil para personalizar a próxima**.
-
-```text
-             APRENDER
-                 │
-                 ▼
-              PRATICAR
-                 │
-                 ▼
-                ERRAR
-                 │
-                 ▼
-              ANALISAR
-                 │
-                 ▼
-               REVISAR
-                 │
-                 ▼
-                MEDIR
-                 │
-                 ▼
-            PERSONALIZAR
-                 │
-                 └──────────────► APRENDER NOVAMENTE
-```
-
-> **Lemmas é a plataforma.**
->
-> **MathAI é o cérebro que queremos construir.**
-
----
-
-# 🚧 Status
-
-Projeto em desenvolvimento.
-
-O Lemmas está sendo desenvolvido como um projeto que une **Matemática, Inteligência Artificial, Ciência de Dados e aprendizagem adaptativa**.
-
-O MathAI, originalmente o nome de todo o projeto, passa a representar a futura inteligência especializada que será construída a partir dessa plataforma e dos dados de aprendizagem coletados com responsabilidade.
-
----
-
-# 📜 Licença
-
-A definir.
-
----
-
-# 👨‍💻 Autor
-
-**Guilherme Henrique Mendes**  
-Licenciatura em Matemática (UFF/CEDERJ) • Data Science & ML • Python • SQL • IA Aplicada  
-[LinkedIn](https://linkedin.com/in/ghmendes02) • [GitHub](https://github.com/StylishGH) • [Email](mailto:ghmendes@id.uff.br)
+*Lemmas is the learning platform. MathAI is the specialized intelligence layer being developed to support it.*
