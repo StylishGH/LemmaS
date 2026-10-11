@@ -22,9 +22,12 @@ import json
 import time
 from typing import Any, Dict, List, Optional
 import requests
+import logging
 
 from app.core.config import settings
 from app.core.security import compute_sha256
+
+logger = logging.getLogger(__name__)
 
 # Modelos canônicos permitidos pela diretriz de estabilidade (AGENTS.md)
 GEMINI_MODELS_CASCADE = [
@@ -104,6 +107,7 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
 
         if settings.has_nvidia:
+            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b", task_type)
             result = self._try_nvidia_nim(
                 messages=all_messages,
                 model=preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b",
@@ -115,6 +119,7 @@ class MathAiGateway:
                 latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
                 result.update({"latency_ms": latency_ms, "input_hash": input_hash})
                 return result
+            logger.warning("NVIDIA NIM did not return a completion; trying configured fallbacks.")
 
         # Fallback 1: DeepSeek (se configurado).
         if settings.has_deepseek:
@@ -274,24 +279,50 @@ class MathAiGateway:
             payload["response_format"] = {"type": "json_object"}
 
         try:
+            logger.info("NVIDIA NIM request started; model=%s; json_output=%s", model, json_output)
             resp = requests.post(
                 self.nvidia_api_url,
                 headers=headers,
                 json=payload,
-                timeout=(1.5, 5.0),
+                timeout=(3.0, 20.0),
             )
+
+            # Alguns modelos/serving configs não aceitam response_format.
+            # Se recebermos 400 nesse modo, tentamos uma vez sem esse parâmetro.
+            if resp.status_code == 400 and json_output and "response_format" in payload:
+                logger.warning(
+                    "NVIDIA NIM returned HTTP 400 with response_format; retrying without it. detail=%s",
+                    resp.text[:300],
+                )
+                retry_payload = dict(payload)
+                retry_payload.pop("response_format", None)
+                resp = requests.post(
+                    self.nvidia_api_url,
+                    headers=headers,
+                    json=retry_payload,
+                    timeout=(3.0, 20.0),
+                )
+
             if resp.status_code == 200:
                 data = resp.json()
                 content = data["choices"][0]["message"]["content"]
+                logger.info("NVIDIA NIM request succeeded; model=%s", data.get("model", model))
                 return {
                     "content": content,
-                    "model_used": model,
+                    "model_used": data.get("model", model),
                     "provider": "nvidia",
                     "status": "completed",
                     "raw_response": data,
                 }
-        except Exception:
-            pass
+
+            logger.error(
+                "NVIDIA NIM request failed; model=%s; http_status=%s; detail=%s",
+                model,
+                resp.status_code,
+                resp.text[:500],
+            )
+        except Exception as err:
+            logger.exception("NVIDIA NIM request raised %s: %s", type(err).__name__, str(err)[:300])
         return None
 
     def _try_gemini_cascade(
