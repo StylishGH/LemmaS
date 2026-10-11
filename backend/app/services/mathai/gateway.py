@@ -83,7 +83,7 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
         # Estratégia A: 9Router (Apenas se explicitamente configurado no ambiente)
         # ----------------------------------------------------------------------
-        if settings.has_9router:
+        if settings.has_9router and not settings.has_nvidia:
             result = self._try_ninerouter(
                 messages=all_messages,
                 model=preferred_model or "nvidia-fallback",
