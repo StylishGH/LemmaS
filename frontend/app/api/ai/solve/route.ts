@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const NVIDIA_TEXT_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
-const NVIDIA_VISION_MODEL = "nvidia/llama-3.1-nemotron-nano-vl-8b-v1";
+const NVIDIA_VISION_MODEL = "nvidia/nemotron-nano-12b-v2-vl";
 
 function parseJsonResponse(raw: string): Record<string, unknown> {
   const cleaned = raw.trim().replace(/^\x60{3}(?:json)?\s*/i, "").replace(/\s*\x60{3}$/, "");
