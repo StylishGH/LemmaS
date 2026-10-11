@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 import uuid
+import requests
 
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -42,19 +43,15 @@ def get_current_student(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = decode_access_token(auth.credentials)
-    if not payload or "sub" not in payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido ou expirado",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    token = auth.credentials
+    payload = decode_access_token(token)
 
-    student_id = payload["sub"]
-    student = _STUDENTS_STORE.get(student_id)
-
-    if not student:
-        # Se autenticado via JWT válido mas não em memória, recria entidade transitória
+    # Primeiro aceita o JWT nativo do backend (login legado do Lemmas).
+    if payload and "sub" in payload:
+        student_id = str(payload["sub"])
+        student = _STUDENTS_STORE.get(student_id)
+        if student:
+            return student
         return Student(
             id=student_id,
             email=payload.get("email", f"{student_id}@lemmas.app"),
@@ -62,7 +59,39 @@ def get_current_student(
             role=payload.get("role", "student"),
         )
 
-    return student
+    # O frontend atual usa Supabase Auth. Valida o token consultando o Auth
+    # oficial do Supabase; não decodifica nem confia apenas no conteúdo do JWT.
+    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        try:
+            response = requests.get(
+                f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/user",
+                headers={
+                    "apikey": settings.SUPABASE_KEY,
+                    "Authorization": f"Bearer {token}",
+                },
+                timeout=(2.0, 5.0),
+            )
+            if response.ok:
+                user = response.json()
+                user_id = user.get("id")
+                email = user.get("email")
+                if user_id and email and not user.get("banned_until"):
+                    metadata = user.get("user_metadata") or {}
+                    return Student(
+                        id=str(user_id),
+                        email=email,
+                        full_name=metadata.get("full_name") or metadata.get("name") or email.split("@")[0],
+                        role="student",
+                    )
+        except requests.RequestException:
+            # Falha de rede não deve invalidar nem aceitar token sem verificação.
+            pass
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token inválido ou expirado",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
