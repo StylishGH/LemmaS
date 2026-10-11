@@ -52,6 +52,11 @@ class Settings:
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
         self.NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "").strip()
         self.DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        self.OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "").strip()
+        self.OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openrouter/auto").strip()
+        self.OPENROUTER_API_URL: str = os.getenv(
+            "OPENROUTER_API_URL", "https://openrouter.ai/api/v1"
+        ).rstrip("/")
         self.DEEPSEEK_API_URL: str = os.getenv(
             "DEEPSEEK_API_URL", "https://api.deepseek.com/v1"
         ).rstrip("/")
@@ -79,6 +84,11 @@ class Settings:
     def has_deepseek(self) -> bool:
         """Verifica se a chave direta da DeepSeek API está configurada."""
         return bool(self.DEEPSEEK_API_KEY)
+
+    @property
+    def has_openrouter(self) -> bool:
+        """Verifica se a chave do OpenRouter está configurada."""
+        return bool(self.OPENROUTER_API_KEY)
 
     @property
     def has_9router(self) -> bool:
