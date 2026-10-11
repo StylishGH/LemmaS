@@ -83,7 +83,7 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
         # Estratégia A: 9Router (Apenas se explicitamente configurado no ambiente)
         # ----------------------------------------------------------------------
-        if settings.has_9router:
+        if settings.has_9router and not settings.has_nvidia:
             result = self._try_ninerouter(
                 messages=all_messages,
                 model=preferred_model or "nvidia-fallback",
@@ -97,70 +97,50 @@ class MathAiGateway:
                 return result
 
         # ----------------------------------------------------------------------
-        # Estratégia B: Provedores Diretos (Padrão de Produção na Nuvem)
+        # Estratégia B: NVIDIA NIM como provedor principal de produção.
+        # Para tarefas textuais, tentamos NVIDIA primeiro e mantemos fallbacks
+        # automáticos para DeepSeek e Gemini se a chamada falhar.
+        # OCR multimodal é tratado pelo módulo vision.py, separado deste gateway.
         # ----------------------------------------------------------------------
 
-        # 1. Se a tarefa exige raciocínio axiomático formal: tenta NVIDIA NIM ou DeepSeek
-        if task_type in ("axiomatic_reasoning", "formal_proof"):
-            if settings.has_nvidia:
-                result = self._try_nvidia_nim(
-                    messages=all_messages,
-                    model="nvidia/nemotron-3.5-lightning-30b-a3b",
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    json_output=json_output,
-                )
-                if result:
-                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                    result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                    return result
+        if settings.has_nvidia:
+            result = self._try_nvidia_nim(
+                messages=all_messages,
+                model=preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b",
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
 
-            if settings.has_deepseek:
-                result = self._try_deepseek_direct(
-                    messages=all_messages,
-                    model="deepseek-reasoner",
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    json_output=json_output,
-                )
-                if result:
-                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                    result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                    return result
+        # Fallback 1: DeepSeek (se configurado).
+        if settings.has_deepseek:
+            fallback_model = (
+                "deepseek-reasoner"
+                if task_type in ("axiomatic_reasoning", "formal_proof")
+                else "deepseek-chat"
+            )
+            result = self._try_deepseek_direct(
+                messages=all_messages,
+                model=fallback_model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
 
-        # 2. Google Gemini Direto (Cascata canônica: flash-lite -> 3.5-flash-lite)
+        # Fallback 2: Gemini para texto caso NVIDIA e DeepSeek falhem.
         if settings.has_gemini:
             result = self._try_gemini_cascade(
                 messages=messages,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                json_output=json_output,
-            )
-            if result:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                return result
-
-        # 3. Fallback para DeepSeek ou NVIDIA se o Gemini não tiver chave ou sofrer 429
-        if settings.has_deepseek:
-            result = self._try_deepseek_direct(
-                messages=all_messages,
-                model="deepseek-chat",
-                temperature=temperature,
-                max_tokens=max_tokens,
-                json_output=json_output,
-            )
-            if result:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                return result
-
-        if settings.has_nvidia:
-            result = self._try_nvidia_nim(
-                messages=all_messages,
-                model="nvidia/nemotron-3.5-lightning-30b-a3b",
-                temperature=temperature,
-                max_tokens=max_tokens,
                 json_output=json_output,
             )
             if result:
