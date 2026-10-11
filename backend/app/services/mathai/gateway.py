@@ -38,7 +38,6 @@ GEMINI_MODELS_CASCADE = [
 ]
 
 NVIDIA_NIM_MODELS = [
-    "nvidia/nemotron-3-nano-30b-a3b",
     "nvidia/nemotron-3.5-lightning-30b-a3b",
     "nvidia/nemotron-3-super-120b-a12b",
     "z-ai/glm-5.3",
@@ -69,6 +68,10 @@ class MathAiGateway:
         Retorna dicionário contendo content, latency_ms, input_hash, model_used e provider.
         """
         start_time = time.perf_counter()
+        logger.info(
+            "AI providers configured: nvidia=%s openrouter=%s deepseek=%s gemini=%s",
+            settings.has_nvidia, settings.has_openrouter, settings.has_deepseek, settings.has_gemini,
+        )
 
         full_input_payload = {
             "system_prompt": system_prompt or "",
@@ -109,7 +112,7 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
 
         if settings.has_nvidia:
-            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3-nano-30b-a3b", task_type)
+            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b", task_type)
             result = self._try_nvidia_nim(
                 messages=all_messages,
                 model=preferred_model or "nvidia/nemotron-3-nano-30b-a3b",
@@ -125,6 +128,7 @@ class MathAiGateway:
 
         # Fallback 1: OpenRouter, para alternar para outro modelo/provedor.
         if settings.has_openrouter:
+            logger.info("AI provider attempt: OpenRouter; model=%s; task_type=%s", settings.OPENROUTER_MODEL, task_type)
             result = self._try_openrouter(
                 messages=all_messages,
                 model=settings.OPENROUTER_MODEL,
@@ -159,6 +163,7 @@ class MathAiGateway:
 
         # Fallback 3: Gemini para texto caso NVIDIA, OpenRouter e DeepSeek falhem.
         if settings.has_gemini:
+            logger.info("AI provider attempt: Gemini cascade; task_type=%s", task_type)
             result = self._try_gemini_cascade(
                 messages=messages,
                 system_prompt=system_prompt,
