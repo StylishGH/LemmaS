@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     let mimeType = "image/png";
     let cleanImage = imagem_base64 || undefined;
     if (typeof imagem_base64 === "string" && imagem_base64.startsWith("data:")) {
-      const match = imagem_base64.match(/^data:([^;]+);base64,(.*)$/s);
+      const match = imagem_base64.match(/^data:([^;]+);base64,(.*)$/);
       if (match) { mimeType = match[1]; cleanImage = match[2]; }
     }
     const response = await fetch(BACKEND_URL + "/api/tutor/evaluate", {
