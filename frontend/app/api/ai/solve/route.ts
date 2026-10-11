@@ -1,89 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
+
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY não configurada no servidor." },
-        { status: 500 }
-      );
-    }
-
+    const authorization = req.headers.get("authorization");
+    if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "Sessão ausente. Entre novamente no Lemmas." }, { status: 401 });
     const body = await req.json();
     const { enunciado, gabarito, justificativa, imagem_base64 } = body;
+    if (!enunciado || typeof enunciado !== "string") return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
 
-    if (!enunciado) {
-      return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
+    let mimeType = "image/png";
+    let cleanImage = imagem_base64 || undefined;
+    if (typeof imagem_base64 === "string" && imagem_base64.startsWith("data:")) {
+      const match = imagem_base64.match(/^data:([^;]+);base64,(.*)$/);
+      if (match) { mimeType = match[1]; cleanImage = match[2]; }
     }
-
-    const systemPrompt = `Você é o Avaliador Cognitivo do LEMMAS (MathAI Engine), especialista em Matemática e Pedagogia Socrática.
-Sua função é analisar o raciocínio do estudante (texto ou imagem de caderno/tablet), transcrever expressões em LaTeX e diagnosticar:
-1. Status da resolução: "correto", "erro_conta_sinal", "erro_algebra", "erro_conceitual", "erro_interpretacao" ou "incompleto".
-2. Parecer pedagógico detalhado explicando o raciocínio sem dar a resposta direta de bandeja.
-3. A linha ou etapa exata do erro, se houver.
-4. Uma provocação reflexiva (dica socrática) para destravar o aluno.
-
-Retorne SEMPRE um JSON válido com o schema:
-{
-  "status_resolucao": string,
-  "transcricao_latex": string,
-  "diagnostico": string,
-  "linha_do_erro": string,
-  "dica_proximo_passo": string,
-  "estrategia_identificada": string,
-  "nivel_confianca": number
-}`;
-
-    const parts: any[] = [
-      { text: `Enunciado da questão:\n${enunciado}\nGabarito esperado: ${gabarito || "Não informado"}\n\nJustificativa/Resolução do aluno:\n${justificativa || "Análise via rascunho/imagem em anexo."}` }
-    ];
-
-    if (imagem_base64) {
-      // Remove prefix data:image/...;base64, se existir
-      const cleanBase64 = imagem_base64.replace(/^data:image\/\w+;base64,/, "");
-      parts.push({
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: cleanBase64,
-        },
-      });
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(BACKEND_URL + "/api/tutor/evaluate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.2,
-        },
-      }),
+      headers: { "Content-Type": "application/json", Authorization: authorization },
+      body: JSON.stringify({ enunciado, gabarito: gabarito || "", justificativa_texto: justificativa || "", imagem_base64: cleanImage, mime_type: mimeType }),
+      signal: AbortSignal.timeout(60000),
+      cache: "no-store",
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return NextResponse.json(
-        { error: `Erro na API do Gemini: ${errText}` },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-    const parsed = JSON.parse(rawContent);
-
-    return NextResponse.json({
-      ...parsed,
-      modelo: "Gemini Flash Lite",
-      confianca: typeof parsed.nivel_confianca === "number" ? parsed.nivel_confianca : 0.94,
-    });
+    const raw = await response.text();
+    let data: Record<string, any>;
+    try { data = JSON.parse(raw); } catch { data = { detail: raw.slice(0, 500) }; }
+    if (!response.ok) return NextResponse.json({ error: data.detail || data.error || ("Backend MathAI respondeu HTTP " + response.status) }, { status: response.status });
+    return NextResponse.json({ ...data, status_resolucao: data.status_resolucao || "incompleto", diagnostico: data.diagnostico || "Não foi possível produzir um diagnóstico detalhado.", modelo: data.model_name, provedor: data.model_provider, confianca: data.confianca_diagnostico || "media" });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Erro desconhecido" }, { status: 502 });
   }
 }
