@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { 
@@ -39,6 +39,7 @@ import {
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { useUserProfile } from "@/lib/use-user";
+import { createClient } from "@/lib/supabase";
 
 interface Question {
   id: number;
@@ -215,6 +216,7 @@ function ResolverContent() {
   const modeQuery = searchParams.get("mode"); // "treino"
 
   const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
+  const supabase = useMemo(() => createClient(), []);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
@@ -471,9 +473,11 @@ function ResolverContent() {
 
     setLoadingHint(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
       const res = await fetch("/api/ai/hint", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           enunciado: q.enunciado,
           nivel: hintLevel,
@@ -514,9 +518,11 @@ function ResolverContent() {
 
     setLoadingIa(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
       const res = await fetch("/api/ai/solve", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           enunciado: q.enunciado,
           gabarito: q.gabarito,
@@ -540,9 +546,11 @@ function ResolverContent() {
     setLoadingResolucaoIa((prev) => ({ ...prev, [q.id]: true }));
     try {
       const respostaAluno = answers[questions.findIndex((item) => item.id === q.id)] || "Não respondeu (em branco)";
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
       const res = await fetch("/api/ai/solve", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           enunciado: q.enunciado,
           gabarito: q.gabarito,
