@@ -38,6 +38,7 @@ GEMINI_MODELS_CASCADE = [
 ]
 
 NVIDIA_NIM_MODELS = [
+    "nvidia/nemotron-3-nano-30b-a3b",
     "nvidia/nemotron-3.5-lightning-30b-a3b",
     "nvidia/nemotron-3-super-120b-a12b",
     "z-ai/glm-5.3",
@@ -50,6 +51,7 @@ class MathAiGateway:
     def __init__(self) -> None:
         self.ninerouter_url = f"{settings.NINEROUTER_URL}/chat/completions" if settings.NINEROUTER_URL else ""
         self.nvidia_api_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        self.openrouter_api_url = f"{settings.OPENROUTER_API_URL}/chat/completions"
         self.deepseek_api_url = f"{settings.DEEPSEEK_API_URL}/chat/completions"
 
     def execute_completion(
@@ -107,10 +109,10 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
 
         if settings.has_nvidia:
-            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b", task_type)
+            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3-nano-30b-a3b", task_type)
             result = self._try_nvidia_nim(
                 messages=all_messages,
-                model=preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b",
+                model=preferred_model or "nvidia/nemotron-3-nano-30b-a3b",
                 temperature=temperature,
                 max_tokens=max_tokens,
                 json_output=json_output,
@@ -121,7 +123,22 @@ class MathAiGateway:
                 return result
             logger.warning("NVIDIA NIM did not return a completion; trying configured fallbacks.")
 
-        # Fallback 1: DeepSeek (se configurado).
+        # Fallback 1: OpenRouter, para alternar para outro modelo/provedor.
+        if settings.has_openrouter:
+            result = self._try_openrouter(
+                messages=all_messages,
+                model=settings.OPENROUTER_MODEL,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_output=json_output,
+            )
+            if result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                return result
+            logger.warning("OpenRouter did not return a completion; trying remaining fallbacks.")
+
+        # Fallback 2: DeepSeek (se configurado).
         if settings.has_deepseek:
             fallback_model = (
                 "deepseek-reasoner"
@@ -140,7 +157,7 @@ class MathAiGateway:
                 result.update({"latency_ms": latency_ms, "input_hash": input_hash})
                 return result
 
-        # Fallback 2: Gemini para texto caso NVIDIA e DeepSeek falhem.
+        # Fallback 3: Gemini para texto caso NVIDIA, OpenRouter e DeepSeek falhem.
         if settings.has_gemini:
             result = self._try_gemini_cascade(
                 messages=messages,
@@ -211,6 +228,75 @@ class MathAiGateway:
                 }
         except Exception:
             pass
+        return None
+
+    def _try_openrouter(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        json_output: bool,
+    ) -> Optional[Dict[str, Any]]:
+        """Tenta inferência via OpenRouter como fallback multi-provedor."""
+        headers = {
+            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://lemmas-ochre.vercel.app",
+            "X-Title": "LemmaS",
+        }
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if json_output:
+            payload["response_format"] = {"type": "json_object"}
+
+        try:
+            logger.info("OpenRouter request started; model=%s; json_output=%s", model, json_output)
+            resp = requests.post(
+                self.openrouter_api_url,
+                headers=headers,
+                json=payload,
+                timeout=(2.0, 12.0),
+            )
+            if resp.status_code == 400 and json_output and "response_format" in payload:
+                logger.warning(
+                    "OpenRouter returned HTTP 400 with response_format; retrying without it. detail=%s",
+                    resp.text[:300],
+                )
+                retry_payload = dict(payload)
+                retry_payload.pop("response_format", None)
+                resp = requests.post(
+                    self.openrouter_api_url,
+                    headers=headers,
+                    json=retry_payload,
+                    timeout=(2.0, 12.0),
+                )
+
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                actual_model = data.get("model", model)
+                logger.info("OpenRouter request succeeded; model=%s", actual_model)
+                return {
+                    "content": content,
+                    "model_used": actual_model,
+                    "provider": "openrouter",
+                    "status": "completed",
+                    "raw_response": data,
+                }
+
+            logger.error(
+                "OpenRouter request failed; model=%s; http_status=%s; detail=%s",
+                model,
+                resp.status_code,
+                resp.text[:500],
+            )
+        except Exception as err:
+            logger.exception("OpenRouter request raised %s: %s", type(err).__name__, str(err)[:300])
         return None
 
     def _try_deepseek_direct(
