@@ -33,16 +33,22 @@ CLASSIFICAÇÃO DO STATUS (status_resolucao):
 - erro_interpretacao: leitura incorreta do enunciado, gráfico ou dados fornecidos.
 - incompleto: resolução interrompida ou sem elementos suficientes para validação.
 
+REGRAS MANDATÓRIAS DE FORMATAÇÃO MATEMÁTICA E LATEX:
+- Em TODOS os campos de texto do JSON ("diagnostico", "dica_proximo_passo", "transcricao_latex", "passos", "linha_do_erro"), toda e qualquer expressão, equação, símbolo ou variável matemática DEVE estar rigorosamente delimitada por $...$ (inline) ou $$...$$ (bloco destacado).
+- NUNCA use delimitadores \( ou \[. Use SEMPRE $ e $$.
+- NUNCA deixe variáveis ou equações em texto puro sem os delimitadores $...$.
+- Em português brasileiro, use \sen para seno e \tg para tangente.
+
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
 {
-  "transcricao_latex": "equação ou desenvolvimento transcrito em LaTeX ($...$)",
+  "transcricao_latex": "equação ou desenvolvimento transcrito em LaTeX delimitado por $...$ ou $$...$$",
   "passos": ["Passo 1: ...", "Passo 2: ..."],
   "estrategia_identificada": "nome da estratégia observada",
   "status_resolucao": "correto | erro_conta_sinal | erro_algebraico | erro_conceitual | erro_interpretacao | incompleto",
-  "diagnostico": "parecer pedagógico explicando como o estudante pensou e onde ocorreu a falha",
+  "diagnostico": "parecer pedagógico explicando como o estudante pensou e onde ocorreu a falha, com equações em $...$",
   "metodo_alternativo": "método alternativo com alto valor didático ou null",
-  "linha_do_erro": "descrição exata da linha ou passagem onde surgiu o erro, ou null se correto",
-  "dica_proximo_passo": "pergunta socrática que faça o estudante pensar por conta própria",
+  "linha_do_erro": "descrição exata da linha ou passagem onde surgiu o erro com expressões em $...$, ou null se correto",
+  "dica_proximo_passo": "pergunta socrática que faça o estudante pensar por conta própria, com equações em $...$",
   "confianca_diagnostico": "alta | media | baixa"
 }
 """
