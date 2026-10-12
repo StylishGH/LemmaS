@@ -35,6 +35,18 @@ export function MathDisplay({
           "\\ZZ": "\\mathbb{Z}",
           "\\QQ": "\\mathbb{Q}",
           "\\CC": "\\mathbb{C}",
+          "\\sen": "\\operatorname{sen}",
+          "\\tg": "\\operatorname{tg}",
+          "\\cossec": "\\operatorname{cossec}",
+          "\\cosec": "\\operatorname{cosec}",
+          "\\cotg": "\\operatorname{cotg}",
+          "\\sec": "\\operatorname{sec}",
+          "\\arcsen": "\\operatorname{arcsen}",
+          "\\arctg": "\\operatorname{arctg}",
+          "\\senh": "\\operatorname{senh}",
+          "\\tgh": "\\operatorname{tgh}",
+          "\\cossech": "\\operatorname{cossech}",
+          "\\cotgh": "\\operatorname{cotgh}",
         },
       });
       setRenderError(null);
@@ -76,15 +88,28 @@ export function MathBlock({ latex, className = "" }: MathBlockProps) {
  * Renderiza texto misto (markdown simples + LaTeX inline $...$ e blocos $$...$$)
  */
 export function renderMathText(text: string) {
-  if (!text) return [];
+  if (!text || typeof text !== "string") return [];
 
   // Protege a moeda brasileira "R$" e variações para não conflitar com delimitador matemático $
   // Exemplo: "R$ 150.000,00" não deve abrir nem fechar ambiente LaTeX!
   const TOKEN_REAL = "___LEMMAS_MOEDA_BRL___";
-  const safeText = text.replace(/R\$/g, TOKEN_REAL);
-  
+  let preprocessed = text
+    .replace(/R\$/g, TOKEN_REAL)
+    // Converte blocos markdown com tags ```latex ou ```math para display math $$ ... $$
+    .replace(/```(?:latex|math)\s*([\s\S]+?)\s*```/gi, (_, math) => `$$${math.trim()}$$`)
+    // Converte display math canônico \[ ... \] ou duplo escape \\[ ... \\] para $$ ... $$
+    .replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math}$$`)
+    // Converte inline math canônico \( ... \) ou duplo escape \\( ... \\) para $ ... $
+    .replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math}$`);
+
+  // Converte ambientes matemáticos isolados (ex: \begin{aligned}...\end{aligned}) sem $$ para $$...$$
+  preprocessed = preprocessed.replace(
+    /(?<!\$|\\begin\{)(\\begin\{(?:aligned|matrix|pmatrix|bmatrix|cases|equation\*?|align\*?)\}[\s\S]+?\\end\{(?:aligned|matrix|pmatrix|bmatrix|cases|equation\*?|align\*?)\})(?!\$)/g,
+    (_, block) => `$$${block}$$`
+  );
+
   const parts: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
-  let remaining = safeText;
+  let remaining = preprocessed;
   
   // Primeiro, extrai blocos $$...$$
   const blockRegex = /\$\$([\s\S]+?)\$\$/g;
@@ -147,31 +172,49 @@ export function renderMathText(text: string) {
 
 function FormattedTextChunk({ content }: { content: string }) {
   if (!content) return null;
-  // Divide por negrito **...**
-  const boldParts = content.split(/(\*\*[\s\S]*?\*\*)/g);
+  // Divide por blocos de código inline `...`
+  const codeParts = content.split(/(`[^`]+?`)/g);
   return (
     <>
-      {boldParts.map((sub, j) => {
-        if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
+      {codeParts.map((part, i) => {
+        if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
           return (
-            <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
-              {sub.slice(2, -2)}
-            </strong>
+            <code
+              key={`c-${i}`}
+              className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
+            >
+              {part.slice(1, -1)}
+            </code>
           );
         }
-        // Divide por itálico *...* (asterisco simples)
-        const italicParts = sub.split(/(\*[^\*]+?\*)/g);
+        // Divide por negrito **...**
+        const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
         return (
-          <span key={`nb-${j}`}>
-            {italicParts.map((it, k) => {
-              if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
+          <span key={`cp-${i}`}>
+            {boldParts.map((sub, j) => {
+              if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
                 return (
-                  <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
-                    {it.slice(1, -1)}
-                  </em>
+                  <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
+                    {sub.slice(2, -2)}
+                  </strong>
                 );
               }
-              return it;
+              // Divide por itálico *...* (asterisco simples)
+              const italicParts = sub.split(/(\*[^\*]+?\*)/g);
+              return (
+                <span key={`nb-${j}`}>
+                  {italicParts.map((it, k) => {
+                    if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
+                      return (
+                        <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
+                          {it.slice(1, -1)}
+                        </em>
+                      );
+                    }
+                    return it;
+                  })}
+                </span>
+              );
             })}
           </span>
         );
@@ -192,13 +235,13 @@ export function MathText({ text, className = "" }: MathTextProps) {
   const parts = renderMathText(text);
   
   return (
-    <span className={className}>
+    <span className={`inline-block whitespace-pre-line leading-relaxed ${className}`}>
       {parts.map((part, i) => {
         switch (part.type) {
           case "block":
             return <MathBlock key={`block-${i}`} latex={part.content.trim()} className="block my-2" />;
           case "inline":
-            return <MathInline key={`inline-${i}`} latex={part.content} className="px-0.5" />;
+            return <MathInline key={`inline-${i}`} latex={part.content.trim()} className="px-0.5" />;
           case "text":
             return <FormattedTextChunk key={`text-${i}`} content={part.content} />;
         }
