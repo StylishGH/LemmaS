@@ -60,6 +60,10 @@ class Settings:
         self.DEEPSEEK_API_URL: str = os.getenv(
             "DEEPSEEK_API_URL", "https://api.deepseek.com/v1"
         ).rstrip("/")
+        # Gemini é apenas fallback de última instância; 'false' desativa por completo
+        self.GEMINI_FALLBACK_ENABLED: bool = os.getenv(
+            "GEMINI_FALLBACK_ENABLED", "true"
+        ).lower() not in ("false", "0", "no")
 
         # Infraestrutura Opcional de Roteamento (9Router local ou cluster)
         self.NINEROUTER_URL: str = os.getenv("NINEROUTER_URL", "").rstrip("/")

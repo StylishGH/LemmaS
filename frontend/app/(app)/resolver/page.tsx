@@ -247,7 +247,9 @@ function ResolverContent() {
   // Dicas Socráticas (Modo Treino)
   const [hintLevel, setHintLevel] = useState<number>(1);
   const [hints, setHints] = useState<Record<number, string>>({});
+  const [hintMeta, setHintMeta] = useState<Record<number, { modelo?: string; confianca?: number }>>({});
   const [loadingHint, setLoadingHint] = useState<boolean>(false);
+  const [hintError, setHintError] = useState<string | null>(null);
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -472,6 +474,7 @@ function ResolverContent() {
     if (!q) return;
 
     setLoadingHint(true);
+    setHintError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
@@ -485,12 +488,24 @@ function ResolverContent() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Erro ${res.status} ao conectar com MathAI Engine`);
+      }
       if (data.dica) {
         setHints((prev) => ({ ...prev, [currentIndex]: data.dica }));
+        setHintMeta((prev) => ({
+          ...prev,
+          [currentIndex]: {
+            modelo: data.modelo || (data.provedor === "nvidia" ? "NVIDIA Nemotron" : data.provedor === "openrouter" ? "OpenRouter" : "MathAI Engine"),
+            confianca: typeof data.confianca === "number" ? data.confianca : 0.95,
+          },
+        }));
         setHintLevel((prev) => Math.min(5, prev + 1));
       }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao carregar dica";
       console.error("Erro ao pedir dica:", err);
+      setHintError(msg);
     } finally {
       setLoadingHint(false);
     }
@@ -1465,6 +1480,12 @@ function ResolverContent() {
               </button>
             </div>
 
+            {hintError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300">
+                ⚠️ {hintError}
+              </div>
+            )}
+
             {hints[currentIndex] && (
               <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25 text-xs text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-3 animate-fadeIn">
                 <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-purple-500/20">
@@ -1474,13 +1495,13 @@ function ResolverContent() {
                       [INFERÊNCIA DA IA]
                     </span>
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
-                      Modelo: <strong>Gemini Flash Lite</strong>
+                      Modelo: <strong>{hintMeta[currentIndex]?.modelo || "MathAI Engine"}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
                     <span>Nível de Confiança:</span>
                     <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                      98%
+                      {Math.round((hintMeta[currentIndex]?.confianca ?? 0.95) * 100)}%
                     </span>
                   </div>
                 </div>
@@ -1567,7 +1588,7 @@ function ResolverContent() {
                           [INFERÊNCIA DA IA]
                         </span>
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
-                          Modelo: <strong>{currentDiagnostico.modelo || "Gemini Flash Lite"}</strong>
+                          Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
                         </span>
                       </div>
                     </div>
