@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from app.core.config import settings
 from app.core.security import compute_sha256
+from app.services.mathai.gateway import NVIDIA_VISION_MODELS
 
 PROMPT_SISTEMA_OCR_MATEMATICO = r"""Você é o Especialista em Visão Multimodal e OCR Matemático do MathAI.
 Sua única tarefa é ler e transcrever fielmente as resoluções e equações manuscritas na imagem para LaTeX limpo.
@@ -47,8 +48,24 @@ class MultimodalVisionProcessor:
         image_bytes, mime_type = self._normalize_image_input(image_data, mime_type)
         input_hash = compute_sha256(image_bytes)
 
-        # Se houver chave Gemini, utiliza gemini-flash-lite-latest (multimodal de alta performance)
-        if settings.has_gemini:
+        # 1. NVIDIA NIM Vision (primário)
+        if settings.has_nvidia:
+            for model in NVIDIA_VISION_MODELS:
+                ocr_result = self._call_nvidia_vision(image_bytes, mime_type, model)
+                if ocr_result:
+                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                    ocr_result.update(
+                        {
+                            "latency_ms": latency_ms,
+                            "input_hash": input_hash,
+                            "model_used": model,
+                            "provider": "nvidia",
+                        }
+                    )
+                    return ocr_result
+
+        # 2. Google Gemini (fallback de última instância)
+        if settings.has_gemini and settings.GEMINI_FALLBACK_ENABLED:
             ocr_result = self._call_gemini_vision(image_bytes, mime_type)
             if ocr_result:
                 latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
@@ -93,6 +110,60 @@ class MultimodalVisionProcessor:
 
         # String base64 pura
         return base64.b64decode(image_data), mime_type
+
+    def _call_nvidia_vision(
+        self, image_bytes: bytes, mime_type: str, model: str
+    ) -> Optional[Dict[str, Any]]:
+        """Executa a transcrição OCR via NVIDIA NIM (Llama 3.2 Vision)."""
+        try:
+            import json
+            import requests
+
+            b64 = base64.b64encode(image_bytes).decode("ascii")
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": PROMPT_SISTEMA_OCR_MATEMATICO},
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Transcreva fielmente para LaTeX toda a caligrafia e equações desta folha. Responda SOMENTE com o JSON.",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:{mime_type};base64,{b64}"},
+                            },
+                        ],
+                    },
+                ],
+                "temperature": 0.1,
+                "max_tokens": 1536,
+            }
+            resp = requests.post(
+                "https://integrate.api.nvidia.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=(3.0, 25.0),
+            )
+            if resp.status_code != 200:
+                return None
+            text = (resp.json()["choices"][0]["message"].get("content") or "").strip()
+            start, end = text.find("{"), text.rfind("}")
+            if start != -1 and end > start:
+                data = json.loads(text[start : end + 1])
+                return {
+                    "transcricao_latex": data.get("transcricao_latex", ""),
+                    "passos_detectados": data.get("passos_detectados", []),
+                    "legibilidade": data.get("legibilidade", "media"),
+                }
+        except Exception:
+            pass
+        return None
 
     def _call_gemini_vision(
         self, image_bytes: bytes, mime_type: str

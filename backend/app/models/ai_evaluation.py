@@ -21,7 +21,7 @@ class AiEvaluation(BaseModel):
         description="Identificador exato do modelo (ex: gemini-flash-lite-latest, nemotron-3.5)",
     )
     model_version: str = Field(default="1.0.0", description="Versão do modelo ou checkpoint")
-    model_provider: Literal["google", "nvidia", "9router", "mock", "fallback"] = Field(
+    model_provider: Literal["google", "nvidia", "openrouter", "deepseek", "9router", "mock", "fallback"] = Field(
         ...,
         description="Provedor de inferência que serviu a resposta",
     )
