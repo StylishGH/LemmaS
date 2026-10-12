@@ -102,36 +102,56 @@ export function renderMathText(text: string) {
     // Converte inline math canônico \( ... \) ou duplo escape \\( ... \\) para $ ... $
     .replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math}$`);
 
-  // Converte ambientes matemáticos isolados (ex: \begin{aligned}...\end{aligned}) sem $$ para $$...$$
-  preprocessed = preprocessed.replace(
-    /(?<!\$|\\begin\{)(\\begin\{(?:aligned|matrix|pmatrix|bmatrix|cases|equation\*?|align\*?)\}[\s\S]+?\\end\{(?:aligned|matrix|pmatrix|bmatrix|cases|equation\*?|align\*?)\})(?!\$)/g,
-    (_, block) => `$$${block}$$`
-  );
-
-  const parts: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
-  let remaining = preprocessed;
-  
-  // Primeiro, extrai blocos $$...$$
+  // 1. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
+  const stage1Parts: Array<{ type: "text" | "block"; content: string }> = [];
   const blockRegex = /\$\$([\s\S]+?)\$\$/g;
   let lastIndex = 0;
   let match;
   
-  while ((match = blockRegex.exec(remaining)) !== null) {
+  while ((match = blockRegex.exec(preprocessed)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ type: "text", content: remaining.slice(lastIndex, match.index) });
+      stage1Parts.push({ type: "text", content: preprocessed.slice(lastIndex, match.index) });
     }
-    parts.push({ type: "block", content: match[1] });
+    stage1Parts.push({ type: "block", content: match[1] });
     lastIndex = match.index + match[0].length;
   }
   
-  if (lastIndex < remaining.length) {
-    parts.push({ type: "text", content: remaining.slice(lastIndex) });
+  if (lastIndex < preprocessed.length) {
+    stage1Parts.push({ type: "text", content: preprocessed.slice(lastIndex) });
   }
   
-  // Agora processa inline $...$ nos trechos de texto
+  // 2. Nos trechos de texto que estão fora de $$, extrai ambientes matemáticos isolados (\begin{...}...\end{...})
+  const envRegex = /(\\begin\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\}[\s\S]+?\\end\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\})/g;
+  const stage2Parts: Array<{ type: "text" | "block"; content: string }> = [];
+
+  for (const part of stage1Parts) {
+    if (part.type === "block") {
+      stage2Parts.push(part);
+      continue;
+    }
+
+    let textRemaining = part.content;
+    let envLastIndex = 0;
+    let envMatch;
+
+    while ((envMatch = envRegex.exec(textRemaining)) !== null) {
+      if (envMatch.index > envLastIndex) {
+        stage2Parts.push({ type: "text", content: textRemaining.slice(envLastIndex, envMatch.index) });
+      }
+      stage2Parts.push({ type: "block", content: envMatch[1] });
+      envLastIndex = envMatch.index + envMatch[0].length;
+    }
+
+    if (envLastIndex < textRemaining.length) {
+      stage2Parts.push({ type: "text", content: textRemaining.slice(envLastIndex) });
+    }
+  }
+
+  // 3. Processa matemática em linha $...$ nos trechos de texto restantes
   const finalParts: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
-  
-  for (const part of parts) {
+  const inlineRegex = /\$([^\$]+)\$/g;
+
+  for (const part of stage2Parts) {
     if (part.type === "block") {
       finalParts.push({
         type: "block",
@@ -140,7 +160,6 @@ export function renderMathText(text: string) {
       continue;
     }
     
-    const inlineRegex = /\$([^\$]+)\$/g;
     let textRemaining = part.content;
     let textLastIndex = 0;
     let inlineMatch;
