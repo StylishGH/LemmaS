@@ -37,10 +37,16 @@ GEMINI_MODELS_CASCADE = [
     "gemini-3.6-flash",
 ]
 
+# Modelos validados da NVIDIA NIM (prioridade: super 120b rápido ~2s -> ultra 550b -> lightning)
 NVIDIA_NIM_MODELS = [
-    "nvidia/nemotron-3.5-lightning-30b-a3b",
     "nvidia/nemotron-3-super-120b-a12b",
-    "z-ai/glm-5.3",
+    "nvidia/nemotron-3-ultra-550b-a55b",
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
+]
+
+NVIDIA_VISION_MODELS = [
+    "meta/llama-3.2-11b-vision-instruct",
+    "meta/llama-3.2-90b-vision-instruct",
 ]
 
 
@@ -112,18 +118,20 @@ class MathAiGateway:
         # ----------------------------------------------------------------------
 
         if settings.has_nvidia:
-            logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", preferred_model or "nvidia/nemotron-3.5-lightning-30b-a3b", task_type)
-            result = self._try_nvidia_nim(
-                messages=all_messages,
-                model=preferred_model or "nvidia/nemotron-3-nano-30b-a3b",
-                temperature=temperature,
-                max_tokens=max_tokens,
-                json_output=json_output,
-            )
-            if result:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                result.update({"latency_ms": latency_ms, "input_hash": input_hash})
-                return result
+            candidate_models = [preferred_model] if preferred_model else NVIDIA_NIM_MODELS
+            for nim_model in candidate_models:
+                logger.info("AI provider attempt: NVIDIA NIM; model=%s; task_type=%s", nim_model, task_type)
+                result = self._try_nvidia_nim(
+                    messages=all_messages,
+                    model=nim_model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    json_output=json_output,
+                )
+                if result and result.get("content"):
+                    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                    result.update({"latency_ms": latency_ms, "input_hash": input_hash})
+                    return result
             logger.warning("NVIDIA NIM did not return a completion; trying configured fallbacks.")
 
         # Fallback 1: OpenRouter, para alternar para outro modelo/provedor.
@@ -161,8 +169,8 @@ class MathAiGateway:
                 result.update({"latency_ms": latency_ms, "input_hash": input_hash})
                 return result
 
-        # Fallback 3: Gemini para texto caso NVIDIA, OpenRouter e DeepSeek falhem.
-        if settings.has_gemini:
+        # Fallback 3: Gemini para texto caso NVIDIA, OpenRouter e DeepSeek falhem (e se permitido).
+        if settings.has_gemini and settings.GEMINI_FALLBACK_ENABLED:
             logger.info("AI provider attempt: Gemini cascade; task_type=%s", task_type)
             result = self._try_gemini_cascade(
                 messages=messages,
@@ -396,7 +404,10 @@ class MathAiGateway:
 
             if resp.status_code == 200:
                 data = resp.json()
-                content = data["choices"][0]["message"]["content"]
+                content = (data["choices"][0]["message"].get("content") or "").strip()
+                if not content:
+                    logger.warning("NVIDIA NIM returned empty content; model=%s", data.get("model", model))
+                    return None
                 logger.info("NVIDIA NIM request succeeded; model=%s", data.get("model", model))
                 return {
                     "content": content,
