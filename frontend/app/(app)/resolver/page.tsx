@@ -1079,12 +1079,13 @@ function ResolverContent() {
                               Status: {iaResult.status_resolucao}
                             </span>
                           </div>
-                          <p className="text-slate-800 dark:text-zinc-200 whitespace-pre-line">
-                            {iaResult.diagnostico}
-                          </p>
+                          <div className="text-slate-800 dark:text-zinc-200">
+                            <MathText text={iaResult.diagnostico} />
+                          </div>
                           {iaResult.dica_proximo_passo && (
-                            <div className="p-2 rounded-lg bg-white/70 dark:bg-[#18152a] border border-purple-500/20 text-slate-700 dark:text-zinc-300">
-                              <strong>Lema / Passo-chave:</strong> {iaResult.dica_proximo_passo}
+                            <div className="p-2.5 rounded-lg bg-white/70 dark:bg-[#18152a] border border-purple-500/20 text-slate-700 dark:text-zinc-300">
+                              <span className="font-bold text-purple-700 dark:text-purple-300 block mb-1">Lema / Passo-chave:</span>
+                              <MathText text={iaResult.dica_proximo_passo} />
                             </div>
                           )}
                         </div>
@@ -1508,7 +1509,9 @@ function ResolverContent() {
 
                 <div>
                   <strong className="text-purple-700 dark:text-purple-300 block mb-1">Dica Reflexiva Socrática:</strong>
-                  <p className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">{hints[currentIndex]}</p>
+                  <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
+                    <MathText text={hints[currentIndex]} />
+                  </div>
                 </div>
               </div>
             )}
@@ -1591,16 +1594,48 @@ function ResolverContent() {
                           Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
                         </span>
                       </div>
+                      {currentDiagnostico.confianca !== undefined && (
+                        <div className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+                          Confiança: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{typeof currentDiagnostico.confianca === "number" ? `${Math.round(currentDiagnostico.confianca * 100)}%` : currentDiagnostico.confianca}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <div className="font-bold text-amber-600 dark:text-[#d9b452] flex items-center gap-2 text-sm">
                         <span>Diagnóstico: {currentDiagnostico.status_resolucao}</span>
                       </div>
-                      <p className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
-                        {currentDiagnostico.diagnostico}
-                      </p>
+                      <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+                        <MathText text={currentDiagnostico.diagnostico} />
+                      </div>
                     </div>
+
+                    {currentDiagnostico.transcricao_latex && (
+                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-purple-500/20 space-y-1">
+                        <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
+                        <div className="text-slate-800 dark:text-zinc-200">
+                          <MathText text={currentDiagnostico.transcricao_latex} />
+                        </div>
+                      </div>
+                    )}
+
+                    {currentDiagnostico.linha_do_erro && (
+                      <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 space-y-1">
+                        <span className="font-bold text-[11px] uppercase tracking-wider block">Ponto de Desvio / Erro:</span>
+                        <div>
+                          <MathText text={currentDiagnostico.linha_do_erro} />
+                        </div>
+                      </div>
+                    )}
+
+                    {currentDiagnostico.dica_proximo_passo && (
+                      <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1c1730] border border-purple-500/20 space-y-1">
+                        <span className="font-bold text-[11px] text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Lema / Próximo Passo:</span>
+                        <div className="text-slate-800 dark:text-zinc-200">
+                          <MathText text={currentDiagnostico.dica_proximo_passo} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
