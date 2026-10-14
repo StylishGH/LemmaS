@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { MathText } from "@/components/math/MathDisplay";
+import { resolveFigureUrl } from "@/lib/image-url";
 
 interface QuestionWithFigure {
   id: number;
@@ -342,7 +343,7 @@ export default function AuditoriaFigurasPage() {
                       ) : (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
-                          src={q.figura_path}
+                          src={resolveFigureUrl(q.figura_path)}
                           alt={`Figura questão ${q.id}`}
                           className="max-h-[240px] max-w-full object-contain drop-shadow-sm transition-transform duration-200 hover:scale-105"
                           loading="lazy"
