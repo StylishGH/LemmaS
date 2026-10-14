@@ -30,6 +30,7 @@ import {
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
+import { resolveFigureUrl } from "@/lib/image-url";
 
 interface Question {
   id: number;
@@ -47,6 +48,9 @@ interface Question {
   etapa?: string;
   tipo_material?: string;
   pais?: string;
+  categoria_banca?: string;
+  tipo_prova?: string;
+  fase_nivel?: string;
 }
 
 // ============================================================
@@ -90,8 +94,8 @@ function getMateriaBadgeColor(materia?: string) {
   if (m.includes("probabilidade") || m.includes("estatística") || m.includes("combinatória")) {
     return "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25";
   }
-  if (m.includes("física")) {
-    return "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/25";
+  if (m.includes("números") || m.includes("teoria dos números")) {
+    return "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/25";
   }
   if (m.includes("polinôm") || m.includes("complex")) {
     return "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/25";
@@ -156,10 +160,39 @@ export default function BancoQuestoesPage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   // Facets dinâmicos carregados da API
-  const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number }[]>([
-    { name: VAL_TODAS, count: 86 },
-    { name: "CEDERJ", count: 74 },
+  const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number; categoria?: string }[]>([
+    { name: VAL_TODAS, count: 20764, categoria: "Todas" },
+    { name: "HMMT", count: 3221, categoria: "Olimpíadas" },
+    { name: "IMO", count: 1924, categoria: "Olimpíadas" },
+    { name: "ITA", count: 328, categoria: "Concurso Militar" },
+    { name: "ENEM", count: 263, categoria: "Vestibular & Superior" },
+    { name: "EEAR", count: 216, categoria: "Concurso Militar" },
+    { name: "CEDERJ", count: 74, categoria: "Vestibular & Superior" },
   ]);
+
+  const [categoriasBancaDisponiveis, setCategoriasBancaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
+    { id: "Todas", label: "Todas as Categorias", count: 20764 },
+    { id: "Concurso Militar", label: "Concursos Militares", count: 1603 },
+    { id: "Vestibular & Superior", label: "Vestibulares & Superior", count: 567 },
+    { id: "Olimpíadas", label: "Olimpíadas de Matemática", count: 18594 },
+  ]);
+
+  const [tiposProvaDisponiveis, setTiposProvaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
+    { id: VAL_TODOS, label: "Todos os Tipos de Prova", count: 20764 },
+    { id: "Oficial", label: "Oficial", count: 19292 },
+    { id: "Seleção e Treinamento", label: "Seleção e Treinamento", count: 1472 },
+  ]);
+
+  const [fasesDisponiveis, setFasesDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
+    { id: VAL_TODAS, label: "Todas as Fases / Níveis", count: 20764 },
+    { id: "Geral", label: "Geral", count: 18122 },
+    { id: "Final", label: "Fase Final", count: 2035 },
+    { id: "Nível Júnior", label: "Nível Júnior", count: 603 },
+  ]);
+
+  const [categoriaBancaFiltro, setCategoriaBancaFiltro] = useState<string>("Todas");
+  const [tipoProvaFiltro, setTipoProvaFiltro] = useState<string[]>([VAL_TODOS]);
+  const [faseNivelFiltro, setFaseNivelFiltro] = useState<string[]>([VAL_TODAS]);
 
   const [materiasDisponiveis, setMateriasDisponiveis] = useState<{ name: string; count: number }[]>([]);
   const [topicosDisponiveis, setTopicosDisponiveis] = useState<{ name: string; count: number }[]>([]);
@@ -206,6 +239,8 @@ export default function BancoQuestoesPage() {
 
   // Contadores derivados dos filtros
   const numBancas = numSelecionados(bancaFiltro, VAL_TODAS);
+  const numTiposProva = numSelecionados(tipoProvaFiltro, VAL_TODOS);
+  const numFases = numSelecionados(faseNivelFiltro, VAL_TODAS);
   const numMaterias = numSelecionados(materiaFiltro, VAL_TODAS);
   const numTopicos = numSelecionados(topicoFiltro, VAL_TODOS);
   const numAnos = numSelecionados(anoFiltro, VAL_TODOS);
@@ -236,6 +271,8 @@ export default function BancoQuestoesPage() {
   };
 
   const handleSelectBanca = (b: string) => toggleFiltro(setBancaFiltro, b, VAL_TODAS);
+  const handleSelectTipoProva = (tp: string) => toggleFiltro(setTipoProvaFiltro, tp, VAL_TODOS);
+  const handleSelectFaseNivel = (f: string) => toggleFiltro(setFaseNivelFiltro, f, VAL_TODAS);
   const handleSelectMateria = (m: string) => {
     toggleFiltro(setMateriaFiltro, m, VAL_TODAS);
     if (m !== VAL_TODAS) {
@@ -249,6 +286,9 @@ export default function BancoQuestoesPage() {
 
   const limparFiltros = () => {
     setBancaFiltro([VAL_TODAS]);
+    setCategoriaBancaFiltro("Todas");
+    setTipoProvaFiltro([VAL_TODOS]);
+    setFaseNivelFiltro([VAL_TODAS]);
     setMateriaFiltro([VAL_TODAS]);
     setTopicoFiltro([VAL_TODOS]);
     setAnoFiltro([VAL_TODOS]);
@@ -267,6 +307,14 @@ export default function BancoQuestoesPage() {
       page: page.toString(),
       limit: "15",
     });
+
+    if (categoriaBancaFiltro && categoriaBancaFiltro !== "Todas") {
+      params.set("categoria_banca", categoriaBancaFiltro);
+    }
+    const tipoProvaParam = paramFromFiltro(tipoProvaFiltro);
+    if (tipoProvaParam) params.set("tipo_prova", tipoProvaParam);
+    const faseNivelParam = paramFromFiltro(faseNivelFiltro);
+    if (faseNivelParam) params.set("fase_nivel", faseNivelParam);
 
     const bancaParam = paramFromFiltro(bancaFiltro);
     if (bancaParam) params.set("banca", bancaParam);
@@ -294,9 +342,17 @@ export default function BancoQuestoesPage() {
             if (data.bancas && Array.isArray(data.bancas)) {
               setBancasDisponiveis(data.bancas);
             }
+            if (data.categorias_banca && Array.isArray(data.categorias_banca)) {
+              setCategoriasBancaDisponiveis(data.categorias_banca);
+            }
+            if (data.tipos_prova && Array.isArray(data.tipos_prova)) {
+              setTiposProvaDisponiveis(data.tipos_prova);
+            }
+            if (data.fases && Array.isArray(data.fases)) {
+              setFasesDisponiveis(data.fases);
+            }
             if (data.materias && Array.isArray(data.materias)) {
               setMateriasDisponiveis(data.materias);
-              // Descarta matérias selecionadas que não existem mais nos facets
               const names = data.materias.map((m: { name: string }) => m.name);
               const validas = materiaFiltro.filter((v) => v === VAL_TODAS || names.includes(v));
               if (validas.length === 0) setMateriaFiltro([VAL_TODAS]);
@@ -307,7 +363,6 @@ export default function BancoQuestoesPage() {
             }
             if (data.topicos && Array.isArray(data.topicos)) {
               setTopicosDisponiveis(data.topicos);
-              // Descarta tópicos selecionados que não existem mais nos facets
               const names = data.topicos.map((t: { name: string }) => t.name);
               const validos = topicoFiltro.filter((v) => v === VAL_TODOS || names.includes(v));
               if (validos.length === 0) setTopicoFiltro([VAL_TODOS]);
@@ -343,7 +398,19 @@ export default function BancoQuestoesPage() {
     return () => {
       ignore = true;
     };
-  }, [bancaFiltro, materiaFiltro, topicoFiltro, anoFiltro, tipoFiltro, dificuldadeFiltro, busca, page]);
+  }, [
+    categoriaBancaFiltro,
+    tipoProvaFiltro,
+    faseNivelFiltro,
+    bancaFiltro,
+    materiaFiltro,
+    topicoFiltro,
+    anoFiltro,
+    tipoFiltro,
+    dificuldadeFiltro,
+    busca,
+    page,
+  ]);
 
   const toggleGabarito = (id: number) => {
     const next = new Set(gabaritosRevelados);
@@ -474,13 +541,13 @@ export default function BancoQuestoesPage() {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>288 Questões & Lemas no Supabase · MathAI Engine</span>
+            <span>{total > 0 ? total.toLocaleString("pt-BR") : "20.764"} Questões Auditadas no Supabase · MathAI Engine</span>
           </div>
           <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
             Banco de <em className="italic text-amber-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
           </h1>
           <p className="text-xs md:text-sm text-slate-600 dark:text-[#a9aaa1] max-w-2xl leading-relaxed">
-            Consulte o acervo de problemas militares e acadêmicos com filtros por banca, tópicos, subtópicos, ano, tipo (objetiva/discursiva) e dificuldade auditada.
+            Consulte o acervo de problemas militares, vestibulares e olimpíadas com filtros por categoria, banca, tipo de prova, tópicos e dificuldade auditada.
           </p>
         </div>
 
@@ -533,46 +600,85 @@ export default function BancoQuestoesPage() {
           )}
         </div>
 
-        {/* DIMENSÃO 1: BANCA / CONCURSO (MULTI-SELECT) */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        {/* DIMENSÃO 1: BANCA / CONCURSO COM TABS DE CATEGORIA */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-bold text-slate-600 dark:text-[#d9b452] uppercase tracking-wider flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-amber-500" />
-              Banca / Concurso Militar Alvo{numBancas > 0 ? ` (${numBancas} selecionada${numBancas > 1 ? "s" : ""})` : ""}:
+              Bancas & Instituições{numBancas > 0 ? ` (${numBancas} selecionada${numBancas > 1 ? "s" : ""})` : ""}:
             </span>
             {numBancas > 0 && (
               <button
                 onClick={() => handleSelectBanca(VAL_TODAS)}
                 className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
               >
-                Todas as bancas
+                Limpar bancas ({numBancas})
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {bancasDisponiveis.map((b) => {
-              const isSelected = bancaFiltro.includes(b.name);
+
+          {/* TABS EDITORIAL DE CATEGORIA DA BANCA */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800">
+            {categoriasBancaDisponiveis.map((cat) => {
+              const isCatActive = categoriaBancaFiltro === cat.id;
               return (
                 <button
-                  key={b.name}
-                  onClick={() => handleSelectBanca(b.name)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold shadow-sm"
-                      : "bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-[#dedbd0] hover:bg-slate-200 dark:hover:bg-zinc-800"
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setCategoriaBancaFiltro(cat.id);
+                    setPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    isCatActive
+                      ? "bg-white dark:bg-[#1e1b34] text-slate-900 dark:text-[#f5f0df] shadow-xs border border-slate-200/90 dark:border-amber-500/35 font-bold"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                   }`}
                 >
-                  <span>{b.name}</span>
+                  <span>{cat.label}</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isSelected
-                      ? "bg-slate-900/20 text-slate-950 font-bold"
-                      : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                    isCatActive
+                      ? "bg-amber-500/15 text-amber-700 dark:text-[#d9b452] font-bold"
+                      : "bg-slate-200/60 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
                   }`}>
-                    {b.count}
+                    {cat.count}
                   </span>
                 </button>
               );
             })}
+          </div>
+
+          {/* CHIPS DE BANCAS FILTRADOS PELA CATEGORIA ATIVA */}
+          <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
+            {bancasDisponiveis
+              .filter((b) => {
+                if (b.name === VAL_TODAS) return true;
+                if (categoriaBancaFiltro === "Todas") return true;
+                return b.categoria === categoriaBancaFiltro;
+              })
+              .map((b) => {
+                const isSelected = bancaFiltro.includes(b.name);
+                return (
+                  <button
+                    key={b.name}
+                    onClick={() => handleSelectBanca(b.name)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold shadow-sm"
+                        : "bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-[#dedbd0] hover:bg-slate-200 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    <span>{b.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isSelected
+                        ? "bg-slate-900/20 text-slate-950 font-bold"
+                        : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                    }`}>
+                      {b.count}
+                    </span>
+                  </button>
+                );
+              })}
           </div>
         </div>
 
@@ -1033,7 +1139,100 @@ export default function BancoQuestoesPage() {
                 </div>
               </div>
 
-              {/* LINHA 2: NÍVEL DE DIFICULDADE (DISTRIBUIÇÃO CENTRALIZADA E CORRIGIDA) */}
+              {/* LINHA 2: TIPO DE PROVA E FASE / NÍVEL DA COMPETIÇÃO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                {/* TIPO DE PROVA (OFICIAL / SELEÇÃO) */}
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                      Tipo de Prova{numTiposProva > 0 ? ` (${numTiposProva})` : ""}:
+                    </label>
+                    {numTiposProva > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTipoProva(VAL_TODOS)}
+                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                      >
+                        Todos
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tiposProvaDisponiveis.map((tp) => {
+                      const isSelected = tipoProvaFiltro.includes(tp.id);
+                      return (
+                        <button
+                          key={tp.id}
+                          type="button"
+                          onClick={() => handleSelectTipoProva(tp.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? "bg-indigo-600 text-white font-bold shadow-xs"
+                              : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                          }`}
+                        >
+                          <span>{tp.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                            isSelected
+                              ? "bg-white/20 text-white font-bold"
+                              : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                          }`}>
+                            {tp.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* FASE / NÍVEL OLÍMPICO */}
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                      Fase / Nível Olímpico{numFases > 0 ? ` (${numFases})` : ""}:
+                    </label>
+                    {numFases > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectFaseNivel(VAL_TODAS)}
+                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                      >
+                        Todas
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {fasesDisponiveis.map((f) => {
+                      const isSelected = faseNivelFiltro.includes(f.id);
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => handleSelectFaseNivel(f.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? "bg-emerald-600 text-white font-bold shadow-xs"
+                              : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                          }`}
+                        >
+                          <span>{f.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                            isSelected
+                              ? "bg-white/20 text-white font-bold"
+                              : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
+                          }`}>
+                            {f.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* LINHA 3: NÍVEL DE DIFICULDADE (DISTRIBUIÇÃO CENTRALIZADA E CORRIGIDA) */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1223,7 +1422,7 @@ export default function BancoQuestoesPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] text-xs font-semibold hover:bg-amber-500/20 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Ver todas as 288 questões</span>
+              <span>Ver todas as {total > 0 ? total.toLocaleString("pt-BR") : "20.764"} questões</span>
             </button>
           </div>
         ) : (
@@ -1262,6 +1461,33 @@ export default function BancoQuestoesPage() {
                     {q.banca && (
                       <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] text-xs font-bold">
                         {q.banca} {q.ano ? `· ${q.ano}` : ""}
+                      </span>
+                    )}
+
+                    {/* CATEGORIA DA BANCA */}
+                    {q.categoria_banca && (
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
+                        q.categoria_banca === "Concurso Militar"
+                          ? "bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border-amber-500/25"
+                          : q.categoria_banca === "Vestibular & Superior"
+                          ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
+                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
+                      }`}>
+                        {q.categoria_banca}
+                      </span>
+                    )}
+
+                    {/* TIPO DE PROVA (SELEÇÃO E TREINAMENTO) */}
+                    {q.tipo_prova && q.tipo_prova !== "Oficial" && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25 uppercase tracking-wide">
+                        {q.tipo_prova}
+                      </span>
+                    )}
+
+                    {/* FASE / NÍVEL OLÍMPICO */}
+                    {q.fase_nivel && q.fase_nivel !== "Geral" && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/25 uppercase tracking-wide">
+                        {q.fase_nivel}
                       </span>
                     )}
 
@@ -1334,9 +1560,9 @@ export default function BancoQuestoesPage() {
                   <div className="my-3 flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={q.figura_path}
+                      src={resolveFigureUrl(q.figura_path)}
                       alt={`Figura da Questão ${q.id}`}
-                      className="max-h-64 max-w-full rounded-lg object-contain shadow-xs bg-white p-2"
+                      className="max-h-64 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-stone-900 p-2 border border-slate-200 dark:border-stone-800"
                       loading="lazy"
                     />
                   </div>
