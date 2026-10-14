@@ -40,6 +40,7 @@ import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { useUserProfile } from "@/lib/use-user";
 import { createClient } from "@/lib/supabase";
+import { resolveFigureUrl } from "@/lib/image-url";
 
 interface Question {
   id: number;
@@ -1334,9 +1335,9 @@ function ResolverContent() {
           <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={currentQ.figura_path}
+              src={resolveFigureUrl(currentQ.figura_path)}
               alt={`Figura da Questão ${currentQ.id}`}
-              className="max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white p-2"
+              className="max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-stone-900 p-2 border border-slate-200 dark:border-stone-800"
               loading="lazy"
             />
             <span className="text-[11px] text-slate-400 dark:text-stone-500 mt-2 font-mono">
