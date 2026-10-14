@@ -109,4 +109,12 @@ scripts/chatgpt_dump.json
 scripts/chunk_*.sql
 scripts/*.json
 
-
+# Local directory junction for public images
+frontend/public/data/
+data/sources/
+data/imagens/
+graphify-out/
+backend/graphify-out/
+frontend/graphify-out/
+.codex/
+PROGRESS_REPORT.md

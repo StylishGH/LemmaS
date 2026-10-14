@@ -53,6 +53,12 @@ interface Question {
   banca?: string;
   ano?: number;
   tipo?: string;
+  figura_path?: string | null;
+  edicao?: string;
+  etapa?: string;
+  tipo_material?: string;
+  pais?: string;
+  solucao?: string;
 }
 
 interface SubmitResult {
@@ -1322,6 +1328,22 @@ function ResolverContent() {
         <div className="font-serif-math text-base md:text-lg font-normal text-slate-900 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
           <MathText text={corpo} />
         </div>
+
+        {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
+        {currentQ?.figura_path && (
+          <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={currentQ.figura_path}
+              alt={`Figura da Questão ${currentQ.id}`}
+              className="max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white p-2"
+              loading="lazy"
+            />
+            <span className="text-[11px] text-slate-400 dark:text-stone-500 mt-2 font-mono">
+              Figura de referência da questão
+            </span>
+          </div>
+        )}
 
         {/* CAMADA 1: DADO OBSERVADO — RESPOSTA DO ESTUDANTE */}
         {answers[currentIndex] && (

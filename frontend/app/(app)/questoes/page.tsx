@@ -42,6 +42,11 @@ interface Question {
   tipo: string;
   enunciado: string;
   gabarito: string;
+  figura_path?: string | null;
+  edicao?: string;
+  etapa?: string;
+  tipo_material?: string;
+  pais?: string;
 }
 
 // ============================================================
@@ -152,10 +157,8 @@ export default function BancoQuestoesPage() {
 
   // Facets dinâmicos carregados da API
   const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number }[]>([
-    { name: VAL_TODAS, count: 288 },
-    { name: "EFOMM", count: 202 },
+    { name: VAL_TODAS, count: 86 },
     { name: "CEDERJ", count: 74 },
-    { name: "ESA", count: 12 },
   ]);
 
   const [materiasDisponiveis, setMateriasDisponiveis] = useState<{ name: string; count: number }[]>([]);
@@ -1262,6 +1265,27 @@ export default function BancoQuestoesPage() {
                       </span>
                     )}
 
+                    {/* EDIÇÃO / TEMPORADA SE HOUVER */}
+                    {q.edicao && (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25" title="Edição da Competição">
+                        {q.edicao}
+                      </span>
+                    )}
+
+                    {/* ETAPA SE HOUVER */}
+                    {q.etapa && (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25" title="Etapa / Fase">
+                        {q.etapa}
+                      </span>
+                    )}
+
+                    {/* TIPO DE MATERIAL SE HOUVER (SHORTLIST, SELETIVA, TREINAMENTO) */}
+                    {q.tipo_material && (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/25 uppercase text-[10px]" title="Tipo de Material">
+                        {q.tipo_material}
+                      </span>
+                    )}
+
                     {/* TIPO: OBJETIVA OU DISCURSIVA */}
                     <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
                       q.tipo === "discursiva"
@@ -1304,6 +1328,19 @@ export default function BancoQuestoesPage() {
                 <div className="text-sm md:text-base font-medium text-slate-900 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
                   <MathText text={corpo} />
                 </div>
+
+                {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
+                {q.figura_path && (
+                  <div className="my-3 flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={q.figura_path}
+                      alt={`Figura da Questão ${q.id}`}
+                      className="max-h-64 max-w-full rounded-lg object-contain shadow-xs bg-white p-2"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
 
                 {/* PREVIEW DE ALTERNATIVAS (OBJETIVAS) */}
                 {Object.keys(alternativas).length > 0 ? (
