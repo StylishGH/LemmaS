@@ -14,7 +14,8 @@ import {
   Scale, 
   Info, 
   User,
-  LogIn
+  LogIn,
+  Sparkles
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Logo } from "@/app/(public)/landing/components/Logo";
@@ -72,6 +73,7 @@ export default function AppNavbar() {
     { label: "Banco de Lemas", href: "/questoes", icon: BookOpen },
     { label: "Resolver / Simulado", href: "/resolver", icon: PenTool },
     { label: "Segunda Opinião", href: "/opinioes", icon: Scale },
+    { label: "Auditoria Visual", href: "/auditoria-figuras", icon: Sparkles },
     { label: "Sobre o LEMMAS", href: "/landing", icon: Info },
   ];
 
