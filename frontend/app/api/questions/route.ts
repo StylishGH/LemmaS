@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 
+const MIN_QUESTIONS_PER_BANK = 1;
+
 interface CanonicalCategory {
   name: string;
   filter: string;
@@ -151,9 +153,18 @@ export async function GET(req: NextRequest) {
     const offset = (page - 1) * limit;
 
     // 1. Montagem da Query Principal com Filtros Multi-Dimensionais
+    // P0-01: Não seleciona gabarito na listagem pública do catálogo
     let query = supabase
       .from("questoes")
-      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, gabarito, tipo", { count: "exact" });
+      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais", { count: "exact" });
+
+    // Filtro por Tipo de Material (ex: "shortlist,seletiva,treinamento")
+    const tipoMaterial = searchParams.get("tipo_material");
+    const tipoMaterialValues = splitValues(tipoMaterial);
+    if (tipoMaterialValues.length > 0) {
+      const cond = tipoMaterialValues.map((v) => `tipo_material.ilike.%${esc(v)}%`).join(",");
+      query = query.or(cond);
+    }
 
     // Filtro por IDs específicos (ex: simulado ou lista customizada)
     const idsParam = searchParams.get("ids");
@@ -237,35 +248,28 @@ export async function GET(req: NextRequest) {
     query = query.order("id", { ascending: true }).range(offset, offset + limit - 1);
 
     // 2. Consulta paralela de facets globais para contagem dinâmica em todas as dimensões
-    const [mainResult, facetResult] = await Promise.all([
+    const [mainResult, facetResult, bankCountsResult] = await Promise.all([
       query,
-      supabase.from("questoes").select("banca, ano, tipo, dificuldade, materia, topico, subtopico")
+      supabase.from("questoes").select("banca, ano, tipo, dificuldade, materia, topico, subtopico", { count: "exact" }),
+      supabase.rpc("get_question_banca_counts"),
     ]);
 
     const { data, count, error } = mainResult;
 
     if (error) {
-      console.warn("Aviso do Supabase no /api/questions, usando fallback defensivo:", error.message);
-      return NextResponse.json({
-        questoes: FALLBACK_QUESTOES,
-        total: 288,
-        page,
-        limit,
-        total_pages: Math.ceil(288 / limit),
-        bancas: [
-          { name: "Todas", count: 288 },
-          { name: "EFOMM", count: 202 },
-          { name: "CEDERJ", count: 74 },
-          { name: "ESA", count: 12 },
-        ],
-        topicos: [
-          { name: "Todos", count: 288 },
-          { name: "Cálculo", count: 63 },
-          { name: "Álgebra", count: 62 },
-          { name: "Álgebra Linear", count: 31 },
-        ],
-        is_fallback: true,
-      });
+      console.error("Erro do Supabase no /api/questions:", error.message);
+      return NextResponse.json(
+        {
+          error: "Serviço de banco de dados temporariamente indisponível.",
+          details: error.message,
+          questoes: [],
+          total: 0,
+          page,
+          limit,
+          total_pages: 0,
+        },
+        { status: 503 }
+      );
     }
 
     // 3. Processamento dinâmico de Facets a partir dos dados do banco
@@ -281,18 +285,24 @@ export async function GET(req: NextRequest) {
 
     const allRows: DbRow[] = (facetResult.data || []) as DbRow[];
 
-    // Contagem de Bancas
-    const bancasCounts: Record<string, number> = { Todas: allRows.length, EFOMM: 0, CEDERJ: 0, ESA: 0 };
-    allRows.forEach((r) => {
-      const b = r.banca || "";
-      if (bancasCounts[b] !== undefined) bancasCounts[b]++;
+    // Banca só entra no seletor quando tem ao menos 50 questões no acervo.
+    // A RPC agrega no Postgres para não truncar a contagem no limite da API.
+    if (bankCountsResult.error) {
+      console.error("Erro ao carregar contagens de bancas:", bankCountsResult.error.message);
+    }
+    const fallbackBankCounts = new Map<string, number>();
+    allRows.forEach((row) => {
+      if (row.banca) fallbackBankCounts.set(row.banca, (fallbackBankCounts.get(row.banca) || 0) + 1);
     });
-
+    const bankCountRows = (bankCountsResult.data || []) as { banca: string; quantidade: number }[];
+    const bancasDisponiveis = bankCountsResult.error
+      ? [...fallbackBankCounts.entries()].map(([banca, quantidade]) => ({ banca, quantidade }))
+      : bankCountRows;
     const bancasFacets = [
-      { name: "Todas", count: bancasCounts["Todas"] || 0 },
-      { name: "EFOMM", count: bancasCounts["EFOMM"] || 0 },
-      { name: "CEDERJ", count: bancasCounts["CEDERJ"] || 0 },
-      { name: "ESA", count: bancasCounts["ESA"] || 0 },
+      { name: "Todas", count: facetResult.count ?? allRows.length },
+      ...bancasDisponiveis
+        .filter((row) => Number(row.quantidade) >= MIN_QUESTIONS_PER_BANK)
+        .map((row) => ({ name: row.banca, count: Number(row.quantidade) })),
     ];
 
     // Linhas filtradas pelas Bancas selecionadas (para contextualizar as outras dimensões)
@@ -437,18 +447,16 @@ export async function GET(req: NextRequest) {
     console.error("Exceção no /api/questions:", message);
     return NextResponse.json({
       questoes: FALLBACK_QUESTOES,
-      total: 288,
+      total: 86,
       page: 1,
       limit: 15,
-      total_pages: 20,
+      total_pages: 6,
       bancas: [
-        { name: "Todas", count: 288 },
-        { name: "EFOMM", count: 202 },
+        { name: "Todas", count: 86 },
         { name: "CEDERJ", count: 74 },
-        { name: "ESA", count: 12 },
       ],
       topicos: [
-        { name: "Todos", count: 288 },
+        { name: "Todos", count: 86 },
         { name: "Cálculo", count: 63 },
         { name: "Álgebra", count: 62 },
         { name: "Álgebra Linear", count: 31 },
@@ -466,7 +474,7 @@ export async function POST(req: NextRequest) {
 
     let query = supabase
       .from("questoes")
-      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, gabarito, tipo");
+      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, gabarito, tipo, edicao, etapa, tipo_material, pais, solucao");
 
     if (Array.isArray(ids) && ids.length > 0) {
       query = query.in("id", ids).order("id", { ascending: true });
