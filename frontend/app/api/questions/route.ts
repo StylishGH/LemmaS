@@ -166,6 +166,14 @@ export async function GET(req: NextRequest) {
       query = query.or(cond);
     }
 
+    // Filtro por Presença de Figura / Imagem
+    const temFigura = searchParams.get("tem_figura");
+    if (temFigura === "true") {
+      query = query.not("figura_path", "is", null);
+    } else if (temFigura === "false") {
+      query = query.is("figura_path", null);
+    }
+
     // Filtro por IDs específicos (ex: simulado ou lista customizada)
     const idsParam = searchParams.get("ids");
     if (idsParam) {
