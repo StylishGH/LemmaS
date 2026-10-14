@@ -15,9 +15,9 @@ export async function GET() {
           service: "lemmas-web-api",
           database: "error",
           error: error.message,
-          total_questions: 288,
+          total_questions: null,
         },
-        { status: 200 }
+        { status: 503 }
       );
     }
 
@@ -25,7 +25,7 @@ export async function GET() {
       status: "ok",
       service: "lemmas-supabase-engine",
       database: "connected",
-      total_questions: count ?? 288,
+      total_questions: count ?? 0,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -35,9 +35,9 @@ export async function GET() {
         service: "lemmas-web-api",
         database: "disconnected",
         message,
-        total_questions: 288,
+        total_questions: null,
       },
-      { status: 500 }
+      { status: 503 }
     );
   }
 }
