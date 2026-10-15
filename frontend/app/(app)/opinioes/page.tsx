@@ -15,22 +15,30 @@ export default function OpinioesPage() {
     "Dado um triângulo retângulo ABC com catetos de medidas 6 cm e 8 cm, determine o raio da circunferência inscrita (incentro)."
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [providerUsed, setProviderUsed] = useState<string>("nvidia-nim");
+
   const [modelA, setModelA] = useState<AIModelOpinion>({
-    name: "NVIDIA Nemotron-3 Ultra (550B)",
-    role: "Rigor Axiomático & Prova Formal",
+    name: "Rigor Axiomático e Prova Formal",
+    role: "Demonstração Analítica & Invariantes",
     content:
       "**1. Teorema Fundamental Aplicável:** Em qualquer triângulo retângulo de catetos $a$, $b$ e hipotenusa $c$, o raio $r$ do círculo inscrito satisfaz a relação exata $r = \\frac{a + b - c}{2}$.\n\n**2. Demonstração dos Invariantes:** Pelo Teorema de Pitágoras, $c = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$. Os pontos de tangência dividem os catetos em segmentos de comprimento $r$, gerando um quadrado de lado $r$ junto ao vértice do ângulo reto.\n\n**3. Solução Axiomática:** Substituindo os valores: $r = \\frac{6 + 8 - 10}{2} = \\frac{4}{2} = 2\\text{ cm}$.\n\n**Atenção a Singularidades:** Esta relação é estritamente válida para triângulos retângulos euclidianos planos.",
   });
 
   const [modelB, setModelB] = useState<AIModelOpinion>({
-    name: "DeepSeek R1 / Reasoning",
-    role: "Intuição Heurística & Atalhos Geométricos",
+    name: "Heurística & Atalhos Cognitivos",
+    role: "Intuição Heurística & Atalhos Cognitivos",
     content:
       "**1. Intuição pela Área Total:** Lembre-se de que a área de qualquer triângulo pode ser expressa como $S = p \\cdot r$, onde $p$ é o semiperímetro ($p = \\frac{6 + 8 + 10}{2} = 12\\text{ cm}$).\n\n**2. Cálculo Direto da Área:** Como é um triângulo retângulo, a área é imediata: $S = \\frac{6 \\times 8}{2} = 24\\text{ cm}^2$.\n\n**3. Igualdade Heurística:** Igualando as duas fórmulas: $24 = 12 \\cdot r \\implies r = 2\\text{ cm}$.\n\n**Dica Socrática:** Note que o triângulo 6-8-10 é uma homotetia de razão 2 do triângulo primitivo 3-4-5 (cujo inraio é 1). Portanto, o novo raio é diretamente $1 \\times 2 = 2\\text{ cm}$ sem contas!",
   });
 
+  const [sintese, setSintese] = useState<string>(
+    "O confronto entre as duas resoluções evidencia que o primeiro modelo ancorou a resposta na geometria analítica/algébrica dos invariantes do círculo inscrito ($r = \\frac{a + b - c}{2}$), enquanto o segundo mobilizou a relação global de área ($S = p \\cdot r$) e o conceito de semelhança/homotetia. Dominar ambas as linguagens é o segredo tanto para concursos de alto rendimento quanto para a prática docente em sala de aula."
+  );
+
   async function handleCompare() {
     if (!problemText.trim()) return;
+    setErrorMsg(null);
     setLoading(true);
 
     try {
@@ -40,13 +48,17 @@ export default function OpinioesPage() {
         body: JSON.stringify({ enunciado: problemText }),
       });
 
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         if (data.model_a) setModelA(data.model_a);
         if (data.model_b) setModelB(data.model_b);
+        if (data.sintese) setSintese(data.sintese);
+        if (data.provider) setProviderUsed(data.provider);
+      } else {
+        setErrorMsg(data.error || "Não foi possível comparar as abordagens no momento.");
       }
     } catch {
-      // Mantém respostas didáticas de referência caso backend esteja offline
+      setErrorMsg("Falha de conexão com o serviço cognitivo. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -96,7 +108,7 @@ export default function OpinioesPage() {
               {loading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Consultando...</span>
+                  <span>Consultando Modelos...</span>
                 </>
               ) : (
                 <>
@@ -106,6 +118,13 @@ export default function OpinioesPage() {
               )}
             </button>
           </div>
+
+          {errorMsg && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 animate-fadeIn">
+              <span>⚠️</span>
+              <span>{errorMsg}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -123,9 +142,6 @@ export default function OpinioesPage() {
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{modelA.role}</p>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-amber-500/15">
-              NVIDIA NIM
-            </span>
           </div>
 
           <div className="text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
@@ -138,7 +154,7 @@ export default function OpinioesPage() {
           </div>
         </div>
 
-        {/* MODELO B: DEEPSEEK (HEURÍSTICA) */}
+        {/* MODELO B: HEURÍSTICA & ATALHOS */}
         <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4 hover:border-amber-500/35 transition">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
             <div className="flex items-center gap-2.5">
@@ -172,7 +188,7 @@ export default function OpinioesPage() {
           <span>🧠</span> Síntese Pedagógica para o Licenciando em Matemática
         </h4>
         <div className="text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-          <MathText text="O confronto entre as duas resoluções evidencia que o primeiro modelo ancorou a resposta na geometria analítica/algébrica dos invariantes do círculo inscrito ($r = \frac{a + b - c}{2}$), enquanto o segundo mobilizou a relação global de área ($S = p \cdot r$) e o conceito de semelhança/homotetia. Dominar ambas as linguagens é o segredo tanto para concursos de alto rendimento quanto para a prática docente em sala de aula." />
+          <MathText text={sintese} />
         </div>
       </div>
     </div>

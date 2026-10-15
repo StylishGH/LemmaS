@@ -1,6 +1,6 @@
 # Arquitetura do Sistema
 
-O MathAI foi projetado para ser um sistema modular, separando responsabilidades entre ingestão pesada de dados, interface do usuário, armazenamento na nuvem e motores de IA.
+O LEMMAS foi projetado para ser um sistema modular, separando responsabilidades entre ingestão pesada de dados, interface do usuário, armazenamento na nuvem e motores de IA.
 
 ## 🏗️ Arquitetura Geral
 

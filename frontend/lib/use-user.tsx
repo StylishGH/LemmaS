@@ -15,6 +15,7 @@ export interface UserProfile {
   metaQuestoesDia: number;
   streakDias: number;
   focoConcurso: string;
+  fotoUrl?: string | null;
   isGuest: boolean;
 }
 
@@ -28,17 +29,70 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   motivacoesSelecionadas: [],
   metaQuestoesDia: 0,
   streakDias: 0,
-  focoConcurso: "",
+  focoConcurso: "Matemática Geral",
+  fotoUrl: null,
   isGuest: true,
 };
 
 export function getInitials(name?: string): string {
-  if (!name || !name.trim()) return "";
+  if (!name || !name.trim()) return "AL";
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
   }
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
+ * Calcula o streak de dias consecutivos com base no histórico de tentativas.
+ */
+export function calcularStreakDias(tentativas: { data_hora?: string | null }[]): number {
+  if (!tentativas || tentativas.length === 0) return 0;
+
+  const datasSet = new Set<string>();
+  for (const t of tentativas) {
+    if (!t.data_hora) continue;
+    const d = new Date(t.data_hora);
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const dia = String(d.getDate()).padStart(2, "0");
+    datasSet.add(`${ano}-${mes}-${dia}`);
+  }
+
+  if (datasSet.size === 0) return 0;
+
+  const agora = new Date();
+  const formatYMD = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  const hojeStr = formatYMD(agora);
+  const ontem = new Date(agora);
+  ontem.setDate(ontem.getDate() - 1);
+  const ontemStr = formatYMD(ontem);
+
+  // Se não estudou hoje nem ontem, o streak quebrou
+  if (!datasSet.has(hojeStr) && !datasSet.has(ontemStr)) {
+    return 0;
+  }
+
+  let cursor = datasSet.has(hojeStr) ? new Date(agora) : new Date(ontem);
+  let streak = 0;
+
+  while (true) {
+    const cursorStr = formatYMD(cursor);
+    if (datasSet.has(cursorStr)) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 }
 
 const STORAGE_KEY = "lemmas_user_profile";
@@ -95,22 +149,48 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (user && user.email) {
+        const rawGoogleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+        // Descarta data: base64 do metadata para impedir que cookies inflem
+        const googleAvatar = typeof rawGoogleAvatar === "string" && !rawGoogleAvatar.startsWith("data:") ? rawGoogleAvatar : null;
+
+        if (user.user_metadata?.avatar_url && typeof user.user_metadata.avatar_url === "string" && user.user_metadata.avatar_url.startsWith("data:")) {
+          try {
+            await supabase.auth.updateUser({ data: { avatar_url: null } });
+          } catch {}
+        }
+
         let loadedProfile: UserProfile = {
           ...DEFAULT_GUEST_PROFILE,
           id: user.id,
           nome: user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS",
           email: user.email,
+          fotoUrl: googleAvatar,
           isGuest: false,
         };
 
         try {
           const { data: dbUser } = await supabase
             .from("usuarios")
-            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco")
+            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, motivos")
             .eq("email", user.email)
             .maybeSingle();
 
+          let targetId = dbUser?.id;
+
           if (dbUser) {
+            let fotoDoBanco: string | null = null;
+            let concursosSalvos: string[] = [];
+            let motivacoesSalvas: string[] = [];
+
+            if (dbUser.motivos) {
+              try {
+                const parsed = JSON.parse(dbUser.motivos);
+                if (parsed?.foto_url) fotoDoBanco = parsed.foto_url;
+                if (Array.isArray(parsed?.concursos_selecionados)) concursosSalvos = parsed.concursos_selecionados;
+                if (Array.isArray(parsed?.motivacoes_selecionadas)) motivacoesSalvas = parsed.motivacoes_selecionadas;
+              } catch {}
+            }
+
             loadedProfile = {
               ...loadedProfile,
               id: dbUser.id,
@@ -118,10 +198,50 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               escolaridade: dbUser.escolaridade || loadedProfile.escolaridade,
               faculdade: dbUser.faculdade || loadedProfile.faculdade,
               focoConcurso: dbUser.concursos_foco || loadedProfile.focoConcurso,
+              fotoUrl: fotoDoBanco || googleAvatar || loadedProfile.fotoUrl,
+              concursosSelecionados: concursosSalvos.length > 0 ? concursosSalvos : loadedProfile.concursosSelecionados,
+              motivacoesSelecionadas: motivacoesSalvas.length > 0 ? motivacoesSalvas : loadedProfile.motivacoesSelecionadas,
             };
+          } else if (user.email) {
+            const { data: novoDbUser } = await supabase
+              .from("usuarios")
+              .insert({
+                nome: loadedProfile.nome,
+                email: user.email,
+                senha_hash: "supabase_managed",
+                escolaridade: "Ensino Superior",
+              })
+              .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco")
+              .maybeSingle();
+
+            if (novoDbUser) {
+              targetId = novoDbUser.id;
+              loadedProfile = {
+                ...loadedProfile,
+                id: novoDbUser.id,
+                nome: novoDbUser.nome || loadedProfile.nome,
+                escolaridade: novoDbUser.escolaridade || loadedProfile.escolaridade,
+                faculdade: novoDbUser.faculdade || loadedProfile.faculdade,
+                focoConcurso: novoDbUser.concursos_foco || loadedProfile.focoConcurso,
+              };
+            }
           }
-        } catch {
-          // Mantém loadedProfile de user_metadata
+
+          // Calcula streak factual consultando as datas das tentativas
+          if (targetId) {
+            const { data: tentativasDatas } = await supabase
+              .from("tentativas")
+              .select("data_hora")
+              .eq("aluno_id", targetId)
+              .order("data_hora", { ascending: false })
+              .limit(100);
+
+            if (tentativasDatas && tentativasDatas.length > 0) {
+              loadedProfile.streakDias = calcularStreakDias(tentativasDatas);
+            }
+          }
+        } catch (dbErr) {
+          console.warn("Aviso na sincronização do perfil com Postgres:", dbErr);
         }
 
         setProfile(loadedProfile);
@@ -192,15 +312,54 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     if (!next.isGuest && next.email) {
       try {
+        let parsed: Record<string, any> = {};
+        try {
+          const { data: dbUser } = await supabase
+            .from("usuarios")
+            .select("motivos")
+            .eq("email", next.email)
+            .maybeSingle();
+
+          if (dbUser?.motivos) {
+            try {
+              parsed = JSON.parse(dbUser.motivos);
+            } catch {}
+          }
+        } catch {}
+
+        if (next.fotoUrl !== undefined) {
+          parsed.foto_url = next.fotoUrl;
+        }
+        if (next.concursosSelecionados !== undefined) {
+          parsed.concursos_selecionados = next.concursosSelecionados;
+        }
+        if (next.motivacoesSelecionadas !== undefined) {
+          parsed.motivacoes_selecionadas = next.motivacoesSelecionadas;
+        }
+
+        const updatePayload: Record<string, any> = {
+          nome: next.nome,
+          escolaridade: next.escolaridade,
+          faculdade: next.faculdade,
+          concursos_foco: next.focoConcurso,
+          motivos: JSON.stringify(parsed),
+        };
+
         await supabase
           .from("usuarios")
-          .update({
-            nome: next.nome,
-            escolaridade: next.escolaridade,
-            faculdade: next.faculdade,
-            concursos_foco: next.focoConcurso,
-          })
+          .update(updatePayload)
           .eq("email", next.email);
+
+        // NUNCA grave data: URLs (base64) no Supabase Auth user_metadata para não inflar o JWT/cookies além do limite de 32KB do Vercel
+        if (next.fotoUrl && typeof next.fotoUrl === "string" && !next.fotoUrl.startsWith("data:")) {
+          await supabase.auth.updateUser({
+            data: { avatar_url: next.fotoUrl },
+          });
+        } else if (next.fotoUrl === null) {
+          await supabase.auth.updateUser({
+            data: { avatar_url: null },
+          });
+        }
       } catch (err) {
         console.error("Erro ao sincronizar perfil no Supabase:", err);
       }
@@ -240,7 +399,7 @@ export function useUserProfile() {
       profile: DEFAULT_GUEST_PROFILE,
       isAuthenticated: false,
       loading: false,
-      initials: "",
+      initials: "AL",
       saveProfile: async () => {},
       logout: async () => {},
       refresh: async () => {},

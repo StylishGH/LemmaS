@@ -44,7 +44,7 @@ interface RevisaoItem {
 
 export default function DashboardPage() {
   const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
-  const [totalQuestions, setTotalQuestions] = useState<number>(288);
+  const [totalQuestions, setTotalQuestions] = useState<number>(20764);
   const [metricas, setMetricas] = useState({
     total_resolvidas: 0,
     taxa_acerto: 0,
@@ -215,6 +215,7 @@ export default function DashboardPage() {
               Painel de Desempenho & Metacognição.
             </h1>
             <p className="text-sm md:text-base text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+              <span className="font-semibold text-slate-800 dark:text-zinc-200">Domínio progressivo de lemas e padrões de prova por repetição espaçada.</span>{" "}
               {revisoes.length > 0
                 ? `O algoritmo SuperMemo-2 do LEMMAS Core mapeou ${revisoes.length} revisão(ões) prioritária(s) hoje para calibrar seu repertório axiomático e analítico.`
                 : "Seu repertório está calibrado e em dia. Resolva novas questões no Iniciar Treino para alimentar seus ciclos de revisão espaçada SM-2."}

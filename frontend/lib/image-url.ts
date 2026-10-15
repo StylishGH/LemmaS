@@ -10,18 +10,46 @@ export const SUPABASE_STORAGE_URL =
 export function resolveFigureUrl(path: string | null | undefined): string {
   if (!path) return "";
   
-  // Se já for URL absoluta (http:// ou https://), retorna direto
-  if (path.startsWith("http://") || path.startsWith("https://")) {
+  // Se já for URL absoluta (http:// ou https://) ou data:image, retorna direto
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
     return path;
   }
 
-  // Remove prefixos locais redundantes
+  // Tratamento para caminhos da pasta /uploads/
+  if (path.startsWith("/uploads/") || path.startsWith("uploads/")) {
+    const cleanUpload = path.replace(/^\/?/, "");
+    // No ambiente local de desenvolvimento, serve direto do public
+    if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+      return `/${cleanUpload}`;
+    }
+    return `${SUPABASE_STORAGE_URL}/${cleanUpload}`;
+  }
+
+  // Remove prefixos redundantes
   const clean = path
     .replace(/^\/?(frontend\/public\/)?/, "")
     .replace(/^data\/imagens\//, "")
     .replace(/^\/data\/imagens\//, "");
 
-  // Na Vercel ou produção, o container serverless não possui os arquivos no disco.
-  // Resolvemos deterministicamente para o bucket público do Supabase Storage:
+  // Se estiver rodando localmente (localhost/127.0.0.1), prioriza servir estático de frontend/public/
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return `/data/imagens/${clean}`;
+  }
+
+  // Na Vercel / produção, resolve pelo CDN do bucket público do Supabase Storage
+  return `${SUPABASE_STORAGE_URL}/${clean}`;
+}
+
+export function getFallbackFigureUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  const clean = path
+    .replace(/^\/?(frontend\/public\/)?/, "")
+    .replace(/^data\/imagens\//, "")
+    .replace(/^\/data\/imagens\//, "");
+
+  // Fallback invertido: se falhou CDN, tenta local / vice-versa
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return `/data/imagens/${clean}`;
+  }
   return `${SUPABASE_STORAGE_URL}/${clean}`;
 }

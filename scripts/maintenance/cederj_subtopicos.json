@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1452,
+    "subtopico": "Adição de Frações com Denominadores Iguais",
+    "dificuldade": 1
+  },
+  {
+    "id": 1453,
+    "subtopico": "Adição de Frações com Denominadores Diferentes",
+    "dificuldade": 2
+  },
+  {
+    "id": 1454,
+    "subtopico": "Adição de Frações com Denominadores Iguais",
+    "dificuldade": 1
+  },
+  {
+    "id": 1455,
+    "subtopico": "Soma de Frações Algébricas",
+    "dificuldade": 3
+  },
+  {
+    "id": 1456,
+    "subtopico": "Soma de Frações Algébricas",
+    "dificuldade": 3
+  },
+  {
+    "id": 1457,
+    "subtopico": "Relação Fundamental da Trigonometria",
+    "dificuldade": 3
+  },
+  {
+    "id": 1474,
+    "subtopico": "Soma de Frações Algébricas",
+    "dificuldade": 3
+  },
+  {
+    "id": 1461,
+    "subtopico": "Relação de Euler em Poliedros",
+    "dificuldade": 2
+  },
+  {
+    "id": 1462,
+    "subtopico": "Poliedros Estrelados",
+    "dificuldade": 3
+  },
+  {
+    "id": 1463,
+    "subtopico": "Geometria Espacial no Cotidiano",
+    "dificuldade": 2
+  },
+  {
+    "id": 1464,
+    "subtopico": "Sólidos de Revolução",
+    "dificuldade": 2
+  },
+  {
+    "id": 1465,
+    "subtopico": "Fórmula de Bhaskara",
+    "dificuldade": 2
+  },
+  {
+    "id": 1466,
+    "subtopico": "Relações de Girard",
+    "dificuldade": 2
+  },
+  {
+    "id": 1467,
+    "subtopico": "Operações com Vetores",
+    "dificuldade": 3
+  },
+  {
+    "id": 1468,
+    "subtopico": "Combinação Linear e Módulo de Vetores",
+    "dificuldade": 4
+  },
+  {
+    "id": 1469,
+    "subtopico": "Conversão de Gramas para Quilogramas",
+    "dificuldade": 1
+  },
+  {
+    "id": 1470,
+    "subtopico": "Conversão de Gramas para Miligramas",
+    "dificuldade": 1
+  },
+  {
+    "id": 1471,
+    "subtopico": "Adição de Frações com Denominadores Iguais",
+    "dificuldade": 1
+  },
+  {
+    "id": 1472,
+    "subtopico": "Adição de Frações com Denominadores Diferentes",
+    "dificuldade": 2
+  },
+  {
+    "id": 1473,
+    "subtopico": "Adição de Frações com Denominadores Iguais",
+    "dificuldade": 1
+  },
+  {
+    "id": 1475,
+    "subtopico": "Soma de Frações Algébricas",
+    "dificuldade": 3
+  },
+  {
+    "id": 1476,
+    "subtopico": "Identidades Trigonométricas Fundamentais",
+    "dificuldade": 3
+  },
+  {
+    "id": 1488,
+    "subtopico": "Continuidade de Funções em um Ponto",
+    "dificuldade": 3
+  },
+  {
+    "id": 1489,
+    "subtopico": "Continuidade com Funções Definidas por Sentenças",
+    "dificuldade": 4
+  },
+  {
+    "id": 1490,
+    "subtopico": "Limites com Indeterminação 0/0",
+    "dificuldade": 3
+  },
+  {
+    "id": 1491,
+    "subtopico": "Limites no Infinito de Funções Racionais",
+    "dificuldade": 3
+  },
+  {
+    "id": 1492,
+    "subtopico": "Limites no Infinito de Funções Racionais",
+    "dificuldade": 3
+  },
+  {
+    "id": 1493,
+    "subtopico": "Limites com Radical e Racionalização",
+    "dificuldade": 4
+  },
+  {
+    "id": 1494,
+    "subtopico": "Cálculo de Limites por Substituição Direta",
+    "dificuldade": 1
+  },
+  {
+    "id": 1495,
+    "subtopico": "Cálculo de Limites de Funções Racionais",
+    "dificuldade": 2
+  },
+  {
+    "id": 1496,
+    "subtopico": "Limites Envolvendo Radicais",
+    "dificuldade": 4
+  },
+  {
+    "id": 1497,
+    "subtopico": "Equação do 2º Grau por Bhaskara",
+    "dificuldade": 2
+  },
+  {
+    "id": 1498,
+    "subtopico": "Equação do 2º Grau por Soma e Produto",
+    "dificuldade": 2
+  },
+  {
+    "id": 1499,
+    "subtopico": "Completamento de Quadrados",
+    "dificuldade": 3
+  }
+]

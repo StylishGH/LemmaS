@@ -1,6 +1,6 @@
-# MISSÃO MATHAI-WEB — migração gradual Streamlit → web profissional
+# MISSÃO LEMMAS-WEB — migração gradual Streamlit → web profissional
 
-> **Leia MATHAI-WEB-PLAN completo antes de começar.** Execução por workers paralelos
+> **Leia LEMMAS-WEB-PLAN completo antes de começar.** Execução por workers paralelos
 > no canvas. O usuário está DORMINDO: trabalhe a noite toda, NÃO commite no repo
 > core, deixe tudo no working tree + relatório final. Aprovação é dele de manhã.
 
@@ -12,8 +12,8 @@
    reescreve.
 2. **Trabalho todo em `web/`** (pasta nova na raiz): front Next.js + API leve
    que CHAMA o Python existente (subprocess/API shim), não reimplementa.
-3. **Repositório é clone isolado** (`D:\dev\mathai-web`, remote `mathai-core`
-   local): commits ficam AQUI, o MathAI real (OneDrive) nem fica sabendo.
+3. **Repositório é clone isolado** (`D:\dev\mathai-web`, remote `lemmas-core`
+   local): commits ficam AQUI, o Lemmas real (OneDrive) nem fica sabendo.
 4. **Localmente rodando ao acordar**: `web/README-ACORDAR.md` com os 2 comandos
    (npm install já feito; `npm run dev` + o backend que vocês escolherem) e
    print-screen das URLs. Se não rodar de primeira, a missão falhou.
@@ -25,7 +25,7 @@
 ## Arquitetura alvo (discutida com o usuário + consultoria)
 
 - **Front**: Next.js 14+ (App Router) + Tailwind, visual limpo/moderno ("css
-  bonitinho"), dark-mode-first (MathAI é usado de noite). Inspirar-se no
+  bonitinho"), dark-mode-first (LEMMAS é usado de noite). Inspirar-se no
   mockup.html se existir, senão: dashboard de estudos + página de questão.
 - **Backend**: **preservar Python**. Opção preferida: **FastAPI shim** em
   `web/api/` que importa/invoca os módulos existentes (`src/*`) direto —

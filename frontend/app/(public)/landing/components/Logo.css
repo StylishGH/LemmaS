@@ -1,1 +1,103 @@
-.lemmas-logo{position:relative;display:inline-flex;align-items:baseline;font-size:2rem;line-height:1;font-weight:700;letter-spacing:-.065em;white-space:nowrap}.lemmas-logo-chalk{position:relative;font-family:Georgia,"Times New Roman",serif;font-weight:650;color:#f1e7c5;text-shadow:0 0 1px rgb(255 249 226 / .8),1px 0 0 rgb(224 191 104 / .22),-1px 0 0 rgb(255 255 255 / .18)}.lemmas-logo-chalk:after{content:"";position:absolute;inset:12% -2% 0 0;background:repeating-linear-gradient(93deg,transparent 0 7px,rgb(255 255 255 / .1) 7px 8px,transparent 8px 13px);mix-blend-mode:screen;opacity:.7;pointer-events:none}.lemmas-logo-marker{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:600;letter-spacing:-.07em;color:#285889;text-shadow:0 0 1px rgb(40 88 137 / .38)}.lemmas-logo-divider{display:block;width:1px;height:1.16em;margin:0 .13em;align-self:center;background:linear-gradient(180deg,transparent 0,#d8b55b 12%,#e3cf94 48%,#2b5d8f 52%,#285889 88%,transparent 100%);box-shadow:0 0 7px rgb(224 184 77 / .16)}.lemmas-logo-compact{font-size:1.55rem}html[data-theme="lemmas-light"] .lemmas-logo-chalk{color:#173a63;text-shadow:none}html[data-theme="lemmas-light"] .lemmas-logo-marker{color:#173a63}.lemmas-logo-marker{transition:color .3s ease}.lemmas-logo-chalk{transition:color .3s ease}
+/* ==============================================================================
+   Logo LEMMAS (Estética Lousa de Giz & Canetão Editorial)
+   ============================================================================== */
+
+.lemmas-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  font-size: 1.85rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.lemmas-logo-compact {
+  font-size: 1.45rem;
+}
+
+/* Lado "Lem" (Giz de Lousa) */
+.lemmas-logo-chalk {
+  position: relative;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-weight: 700;
+  color: #f7f2dd;
+  text-shadow: 0 0 1px rgba(255, 249, 226, 0.85), 1px 0 0 rgba(217, 180, 82, 0.25), -1px 0 0 rgba(255, 255, 255, 0.18);
+  transition: color 0.3s ease;
+}
+
+.lemmas-logo-chalk::after {
+  content: "";
+  position: absolute;
+  inset: 10% -2% 0 0;
+  background: repeating-linear-gradient(
+    93deg,
+    transparent 0 6px,
+    rgba(255, 255, 255, 0.12) 6px 7px,
+    transparent 7px 12px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Divisor Vertical Luminoso */
+.lemmas-logo-divider {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.15em;
+  margin: 0 0.18em;
+  align-self: center;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    #d9b452 20%,
+    #f7f2dd 50%,
+    #d9b452 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(217, 180, 82, 0.3);
+}
+
+/* Lado "maS" (Canetão Técnico / Dourado) */
+.lemmas-logo-marker {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  color: #d9b452;
+  text-shadow: 0 0 1px rgba(217, 180, 82, 0.4);
+  transition: color 0.3s ease;
+}
+
+/* Tema Claro (Quadro Branco) */
+html[data-theme="lemmas-light"] .lemmas-logo-chalk,
+html:not(.dark) .lemmas-logo-chalk {
+  color: #173a63;
+  text-shadow: none;
+}
+
+html[data-theme="lemmas-light"] .lemmas-logo-chalk::after,
+html:not(.dark) .lemmas-logo-chalk::after {
+  display: none;
+}
+
+html[data-theme="lemmas-light"] .lemmas-logo-divider,
+html:not(.dark) .lemmas-logo-divider {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    #2563eb 20%,
+    #d9b452 50%,
+    #2563eb 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
+}
+
+html[data-theme="lemmas-light"] .lemmas-logo-marker,
+html:not(.dark) .lemmas-logo-marker {
+  color: #2563eb;
+  text-shadow: none;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   ArrowRight, 
   BrainCircuit, 
@@ -31,7 +31,7 @@ import "./Logo.css";
 import "./AboutTeacher.css"; 
 import "./LandingPage.css";
 
-// Amostra real e factual do banco de 288 questões do Supabase
+// Amostra real e factual do banco de questões do Supabase
 const AMOSTRA_QUESTOES = [
   {
     id: 1234,
@@ -72,6 +72,23 @@ const AMOSTRA_QUESTOES = [
 
 export function LandingPage() {
   const { isLight, toggleTheme } = useTheme();
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+
+  // Buscar contagem total de questões do banco
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/questions?limit=1&head=true", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.total) setTotalQuestions(data.total);
+        }
+      } catch (err) {
+        console.warn("Não foi possível buscar contagem de questões:", err);
+      }
+    };
+    fetchCount();
+  }, []);
 
   // Função para navegação suave e animada sem "teletransporte"
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -223,7 +240,7 @@ export function LandingPage() {
                 <li>Taxonomia de Erros: Sinal, Álgebra, Interpretação e Axioma</li>
                 <li>Roteamento Inteligente: NVIDIA Nemotron (Rigor) e DeepSeek (Heurística)</li>
                 <li>Processamento cirúrgico de fórmulas em KaTeX/LaTeX</li>
-                <li>Acervo indexado com 288+ lemas classificados</li>
+                <li>Acervo indexado com {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} questões e lemas classificados</li>
               </ul>
             </div>
           </div>
@@ -271,7 +288,7 @@ export function LandingPage() {
         {/* SEÇÃO NOVA: VITRINE DE QUESTÕES REAIS DO SUPABASE (CARREGAMENTO REAL) */}
         <section id="questoes-amostra" className="lemmas-section">
           <div className="lemmas-section-heading">
-            <span className="lemmas-eyebrow">ACERVO VIVO · 288 ITENS NO SUPABASE</span>
+            <span className="lemmas-eyebrow">ACERVO VIVO · {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} ITENS NO SUPABASE</span>
             <h2>Amostra do Banco de Questões & Lemas</h2>
             <p>
               Problemas matemáticos reais de concursos de elite e graduação com fórmulas em alta definição e diagnósticos passo a passo.
@@ -333,17 +350,17 @@ export function LandingPage() {
             ))}
           </div>
 
-          <div className="text-center pt-2">
-            <Link 
-              href="/questoes"
-              className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
-            >
-              <BookOpen size={17} />
-              <span>Explorar Todas as 288 Questões no Banco Completo</span>
-              <ArrowRight size={17} />
-            </Link>
-          </div>
-        </section>
+                    <div className="text-center pt-2">
+                      <Link 
+                        href="/questoes"
+                        className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
+                      >
+                        <BookOpen size={17} />
+                        <span>Explorar Todas as {totalQuestions.toLocaleString("pt-BR")} Questões no Banco Completo</span>
+                        <ArrowRight size={17} />
+                      </Link>
+                    </div>
+                  </section>
         
         {/* SEÇÃO 4: O QUE VEM POR AÍ (ROADMAP TÉCNICO & FUTURAS COISAS) */}
         <section id="roadmap" className="lemmas-section">

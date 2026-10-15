@@ -25,6 +25,23 @@ export async function POST(
 
         if (dbUser?.id) {
           validAlunoId = dbUser.id;
+        } else {
+          // Provisiona automaticamente o usuário na tabela usuarios
+          const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
+          const { data: novoDbUser } = await supabase
+            .from("usuarios")
+            .insert({
+              nome: nomeUsuario,
+              email: user.email,
+              senha_hash: "supabase_managed",
+              escolaridade: "Ensino Superior",
+            })
+            .select("id")
+            .maybeSingle();
+
+          if (novoDbUser?.id) {
+            validAlunoId = novoDbUser.id;
+          }
         }
       } else if (aluno_id && !isNaN(parseInt(String(aluno_id), 10))) {
         validAlunoId = parseInt(String(aluno_id), 10);

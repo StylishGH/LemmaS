@@ -1,9 +1,0 @@
-streamlit>=1.40.0,<2
-google-genai>=1.0.0,<3
-pandas>=2.2.3,<4
-plotly>=5.23.0,<8
-requests>=2.32.3,<3
-python-dotenv>=1.0.1,<2
-streamlit-autorefresh>=1.0.1
-libsql-client>=0.3.0,<0.4
-bcrypt>=4.2.0,<6

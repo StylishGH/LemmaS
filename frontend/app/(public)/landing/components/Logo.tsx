@@ -1,3 +1,5 @@
+import "./Logo.css";
+
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`lemmas-logo ${compact ? "lemmas-logo-compact" : ""}`} aria-label="LEMMAS">
@@ -7,3 +9,4 @@ export function Logo({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+

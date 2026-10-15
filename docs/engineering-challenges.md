@@ -1,6 +1,6 @@
 # Desafios de Engenharia
 
-Desenvolver a estrutura do MathAI e alimentar sua base de dados não foi algo trivial. O projeto enfrentou diversos problemas de integração e limite computacional de serviços externos. O foco desta seção é documentar os incidentes (e a resolução arquitetural) para mostrar como o projeto evoluiu para sua robustez atual.
+Desenvolver a estrutura do LEMMAS e alimentar sua base de dados não foi algo trivial. O projeto enfrentou diversos problemas de integração e limite computacional de serviços externos. O foco desta seção é documentar os incidentes (e a resolução arquitetural) para mostrar como o projeto evoluiu para sua robustez atual.
 
 ## 01 — Limites de API e Retries (Erro 429)
 

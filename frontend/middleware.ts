@@ -3,6 +3,20 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_SUPABASE_URL, getSafeAnonKey } from "@/lib/supabase";
 
 export async function middleware(request: NextRequest) {
+  // Proteção contra cookies inflados que excedem o limite de 32KB de headers do Vercel
+  const allCookies = request.cookies.getAll();
+  const totalCookieSize = allCookies.reduce((acc, c) => acc + c.name.length + c.value.length, 0);
+
+  if (totalCookieSize > 14000) {
+    const cleanResponse = NextResponse.next();
+    allCookies.forEach((c) => {
+      if (c.name.includes("auth-token") || c.name.startsWith("sb-")) {
+        cleanResponse.cookies.delete(c.name);
+      }
+    });
+    return cleanResponse;
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });

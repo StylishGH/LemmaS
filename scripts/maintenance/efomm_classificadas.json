@@ -1,0 +1,1208 @@
+[
+  {
+    "id": 1247,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão Aritmética (PA)"
+  },
+  {
+    "id": 1248,
+    "materia": "Matemática Financeira",
+    "topico": "SAC",
+    "subtopico": "Sistema de Amortização Constante"
+  },
+  {
+    "id": 1249,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Raízes Reais e Complexas"
+  },
+  {
+    "id": 1250,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Injetividade, Sobrejetividade e Imagem"
+  },
+  {
+    "id": 1251,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Comprimento de Arco"
+  },
+  {
+    "id": 1252,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Volume de Sólidos de Revolução e Criptas"
+  },
+  {
+    "id": 1253,
+    "materia": "Álgebra Linear",
+    "topico": "Autovalores",
+    "subtopico": "Autovalores e Matrizes"
+  },
+  {
+    "id": 1254,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Estatística",
+    "subtopico": "Média, Variância, Mediana e Moda"
+  },
+  {
+    "id": 1255,
+    "materia": "Geometria Espacial",
+    "topico": "Esferas",
+    "subtopico": "Esfera inscrita em Cilindro e Cones"
+  },
+  {
+    "id": 1256,
+    "materia": "Cálculo",
+    "topico": "Taxas Relacionadas",
+    "subtopico": "Taxas Relacionadas em Cones"
+  },
+  {
+    "id": 1257,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Otimização e Aplicações da Derivada"
+  },
+  {
+    "id": 1258,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Relações entre PA e PG"
+  },
+  {
+    "id": 1259,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Cálculo de Área entre Curvas"
+  },
+  {
+    "id": 1260,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas",
+    "subtopico": "Hipérbole e Circunferência"
+  },
+  {
+    "id": 1261,
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes",
+    "subtopico": "Matrizes e Invertibilidade"
+  },
+  {
+    "id": 1262,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão Geométrica (PG) e Frações"
+  },
+  {
+    "id": 1263,
+    "materia": "Matemática Financeira",
+    "topico": "Juros Compostos",
+    "subtopico": "Financiamentos e Parcelamentos"
+  },
+  {
+    "id": 1264,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Geometria Analítica no Espaço"
+  },
+  {
+    "id": 1265,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Estatística",
+    "subtopico": "Análise de Dados Amostrais"
+  },
+  {
+    "id": 1266,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Modelagem Matemática e Simulação"
+  },
+  {
+    "id": 1267,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Estatística",
+    "subtopico": "Medidas de tendência central e dispersão"
+  },
+  {
+    "id": 1268,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Taxas relacionadas"
+  },
+  {
+    "id": 1269,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Sequências e recorrências"
+  },
+  {
+    "id": 1270,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Áreas de triângulos e relações métricas"
+  },
+  {
+    "id": 1271,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas",
+    "subtopico": "Distância de ponto a curva e lugares geométricos"
+  },
+  {
+    "id": 1272,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Volume de sólidos de revolução"
+  },
+  {
+    "id": 1273,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Modelagem algébrica e sequências"
+  },
+  {
+    "id": 1274,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Problemas de otimização"
+  },
+  {
+    "id": 1275,
+    "materia": "Polinômios e Complexos",
+    "topico": "Números Complexos",
+    "subtopico": "Forma trigonométrica e Teorema de De Moivre"
+  },
+  {
+    "id": 1276,
+    "materia": "Geometria Espacial",
+    "topico": "Prismas",
+    "subtopico": "Áreas e volumes de prismas retos"
+  },
+  {
+    "id": 1277,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Teoria dos conjuntos e princípio inclusão-exclusão"
+  },
+  {
+    "id": 1278,
+    "materia": "Trigonometria",
+    "topico": "Identidades",
+    "subtopico": "Relações trigonométricas para arcos notáveis"
+  },
+  {
+    "id": 1279,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Equação da reta e propriedades do paralelogramo"
+  },
+  {
+    "id": 1280,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Análise combinatória com restrições"
+  },
+  {
+    "id": 1281,
+    "materia": "Física",
+    "topico": "Funções Afim/Quadrática/Exponencial/Logarítmica/Modular",
+    "subtopico": "Conversão de escalas termométricas (física aplicada)"
+  },
+  {
+    "id": 1282,
+    "materia": "Física",
+    "topico": "Eletrodinâmica",
+    "subtopico": "Análise de circuitos elétricos e correntes"
+  },
+  {
+    "id": 1283,
+    "materia": "Física",
+    "topico": "Relações Fundamentais",
+    "subtopico": "Reatância capacitiva e corrente alternada"
+  },
+  {
+    "id": 1284,
+    "materia": "Física",
+    "topico": "Eletrostática",
+    "subtopico": "Trabalho e energia potencial elétrica"
+  },
+  {
+    "id": 1285,
+    "materia": "Física",
+    "topico": "Eletromagnetismo",
+    "subtopico": "Lei de Ampère e fluxo magnético"
+  },
+  {
+    "id": 1286,
+    "materia": "Física",
+    "topico": "Eletromagnetismo",
+    "subtopico": "Força magnética sobre partícula carregada"
+  },
+  {
+    "id": 1287,
+    "materia": "Física",
+    "topico": "Eletrodinâmica",
+    "subtopico": "Cálculo de corrente elétrica em circuitos lineares"
+  },
+  {
+    "id": 1288,
+    "materia": "Física",
+    "topico": "Grandezas e Medidas",
+    "subtopico": "Unidades do Sistema Internacional (SI)"
+  },
+  {
+    "id": 1289,
+    "materia": "Física",
+    "topico": "Termodinâmica",
+    "subtopico": "Dilatação térmica e refrigeração de motores"
+  },
+  {
+    "id": 1290,
+    "materia": "Física",
+    "topico": "Mecânica",
+    "subtopico": "Trabalho realizado por força constante e variável"
+  },
+  {
+    "id": 1291,
+    "materia": "Física",
+    "topico": "Ondulatória",
+    "subtopico": "Frequência fundamental em cordas vibrantes"
+  },
+  {
+    "id": 1292,
+    "materia": "Física",
+    "topico": "Óptica",
+    "subtopico": "Lentes esféricas e formação de imagens"
+  },
+  {
+    "id": 1293,
+    "materia": "Física",
+    "topico": "Ondulatória",
+    "subtopico": "Velocidade de propagação e frequência em cordas"
+  },
+  {
+    "id": 1294,
+    "materia": "Física",
+    "topico": "Óptica",
+    "subtopico": "Velocidade relativa em espelhos planos"
+  },
+  {
+    "id": 1295,
+    "materia": "Física",
+    "topico": "Óptica",
+    "subtopico": "Convergência de raios solares em espelho côncavo"
+  },
+  {
+    "id": 1296,
+    "materia": "Inglês",
+    "topico": "Interpretação de Texto",
+    "subtopico": "Reading Comprehension"
+  },
+  {
+    "id": 1297,
+    "materia": "Geometria Plana",
+    "topico": "Polígonos",
+    "subtopico": "Teoria dos conjuntos aplicada a quadriláteros planos"
+  },
+  {
+    "id": 1298,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Função exponencial e geometria de circunferências"
+  },
+  {
+    "id": 1299,
+    "materia": "Trigonometria",
+    "topico": "Equações Trigonométricas",
+    "subtopico": "Identidades e resolução de equações com arcos múltiplos"
+  },
+  {
+    "id": 1300,
+    "materia": "Álgebra",
+    "topico": "Expressões Algébricas",
+    "subtopico": "Simplificação de expressões numéricas"
+  },
+  {
+    "id": 1301,
+    "materia": "Geometria Plana",
+    "topico": "Áreas de Figuras Planas",
+    "subtopico": "Área de regiões circulares após dobras geométricas"
+  },
+  {
+    "id": 1302,
+    "materia": "Álgebra",
+    "topico": "Questão Incompleta",
+    "subtopico": "Não aplicável devido a OCR incompleto"
+  },
+  {
+    "id": 1303,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Propriedades de funções estritamente decrescentes"
+  },
+  {
+    "id": 1304,
+    "materia": "Álgebra Linear",
+    "topico": "Matrizes",
+    "subtopico": "Multiplicação de matrizes e determinantes"
+  },
+  {
+    "id": 1305,
+    "materia": "Polinômios e Complexos",
+    "topico": "Números Complexos",
+    "subtopico": "Módulo, argumento e lugares geométricos no plano complexo"
+  },
+  {
+    "id": 1306,
+    "materia": "Álgebra",
+    "topico": "Equações Irracionais",
+    "subtopico": "Resolução de equações com radicais e divisores de um número"
+  },
+  {
+    "id": 1307,
+    "materia": "Álgebra",
+    "topico": "Logaritmos",
+    "subtopico": "Mudança de base e propriedades operatórias"
+  },
+  {
+    "id": 1308,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Equação da reta e quadriláteros circunscritos"
+  },
+  {
+    "id": 1309,
+    "materia": "Geometria Espacial",
+    "topico": "Pirâmides",
+    "subtopico": "Volume do tetraedro e planos perpendiculares"
+  },
+  {
+    "id": 1310,
+    "materia": "Trigonometria",
+    "topico": "Identidades",
+    "subtopico": "Relações trigonométricas em triângulos e lei dos cossenos/senos"
+  },
+  {
+    "id": 1311,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Triângulos isósceles, perímetro e relações métricas"
+  },
+  {
+    "id": 1312,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Equação funcional"
+  },
+  {
+    "id": 1313,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Equação funcional e recorrência"
+  },
+  {
+    "id": 1314,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Propriedades algébricas de funções"
+  },
+  {
+    "id": 1315,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Manipulação algébrica e isolamento de variáveis"
+  },
+  {
+    "id": 1316,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Avaliação de funções"
+  },
+  {
+    "id": 1317,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Relação de recorrência linear"
+  },
+  {
+    "id": 1318,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Relação de recorrência linear"
+  },
+  {
+    "id": 1319,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Relação de recorrência quadrática"
+  },
+  {
+    "id": 1320,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Equação funcional com condições iniciais"
+  },
+  {
+    "id": 1321,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Avaliação de funções com condição inicial"
+  },
+  {
+    "id": 1322,
+    "materia": "Álgebra",
+    "topico": "Inequações",
+    "subtopico": "Inequação racional"
+  },
+  {
+    "id": 1323,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão Geométrica e Progressão Aritmética"
+  },
+  {
+    "id": 1324,
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes",
+    "subtopico": "Propriedades de determinantes de matrizes inversíveis"
+  },
+  {
+    "id": 1325,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Problemas práticos e razões e proporções"
+  },
+  {
+    "id": 1326,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas",
+    "subtopico": "Circunferência no plano e distância ao centro"
+  },
+  {
+    "id": 1327,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Continuidade de funções e limites indeterminados"
+  },
+  {
+    "id": 1328,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Função Modular e cálculo de áreas"
+  },
+  {
+    "id": 1329,
+    "materia": "Geometria Analítica",
+    "topico": "Circunferência no Plano",
+    "subtopico": "Retas tangentes e ângulo entre vetores"
+  },
+  {
+    "id": 1330,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Máximos e mínimos de função quadrática"
+  },
+  {
+    "id": 1331,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Triângulo retângulo isósceles e Progressão Aritmética"
+  },
+  {
+    "id": 1332,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Funções compostas e lei geral de recorrência"
+  },
+  {
+    "id": 1333,
+    "materia": "Trigonometria",
+    "topico": "Identidades",
+    "subtopico": "Funções trigonométricas inversas e raízes"
+  },
+  {
+    "id": 1334,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Conjuntos",
+    "subtopico": "Operações com conjuntos e diagramas de Venn"
+  },
+  {
+    "id": 1335,
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes",
+    "subtopico": "Determinante de matrizes com parâmetros"
+  },
+  {
+    "id": 1336,
+    "materia": "Trigonometria",
+    "topico": "Identidades",
+    "subtopico": "Relações fundamentais com secante e tangente"
+  },
+  {
+    "id": 1337,
+    "materia": "Trigonometria",
+    "topico": "Triângulos Retângulos e Oblicuângulos",
+    "subtopico": "Lei dos Senos e resolução de triângulos"
+  },
+  {
+    "id": 1338,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas",
+    "subtopico": "Circunferência de Apolônio e lugares geométricos"
+  },
+  {
+    "id": 1339,
+    "materia": "Álgebra",
+    "topico": "Grandezas Proporcionais",
+    "subtopico": "Regra de três composta"
+  },
+  {
+    "id": 1340,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Princípio fundamental da contagem e arranjos"
+  },
+  {
+    "id": 1341,
+    "materia": "Geometria Espacial",
+    "topico": "Cones",
+    "subtopico": "Relações métricas no cone circular reto"
+  },
+  {
+    "id": 1342,
+    "materia": "Álgebra Linear",
+    "topico": "Espaços Vetoriais",
+    "subtopico": "Produto vetorial e matrizes"
+  },
+  {
+    "id": 1343,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Assíntotas horizontais"
+  },
+  {
+    "id": 1344,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integração indefinida por substituição"
+  },
+  {
+    "id": 1345,
+    "materia": "Álgebra",
+    "topico": "Razão e Proporção",
+    "subtopico": "Porcentagem e aumentos sucessivos"
+  },
+  {
+    "id": 1346,
+    "materia": "Geometria Espacial",
+    "topico": "Pirâmides",
+    "subtopico": "Tronco de pirâmide regular e área lateral"
+  },
+  {
+    "id": 1347,
+    "materia": "Álgebra",
+    "topico": "Inequações",
+    "subtopico": "Inequações do segundo grau"
+  },
+  {
+    "id": 1348,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integral definida"
+  },
+  {
+    "id": 1349,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Divisão de polinômios"
+  },
+  {
+    "id": 1350,
+    "materia": "Trigonometria",
+    "topico": "Identidades",
+    "subtopico": "Relações trigonométricas fundamentais"
+  },
+  {
+    "id": 1351,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Probabilidade condicional e binomial"
+  },
+  {
+    "id": 1352,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Soma de PG infinita"
+  },
+  {
+    "id": 1353,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Domínio de funções reais"
+  },
+  {
+    "id": 1354,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão aritmética"
+  },
+  {
+    "id": 1355,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Função composta"
+  },
+  {
+    "id": 1356,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Limites indeterminados"
+  },
+  {
+    "id": 1357,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Relações métricas no triângulo retângulo"
+  },
+  {
+    "id": 1358,
+    "materia": "Geometria Analítica",
+    "topico": "Planos",
+    "subtopico": "Equação geral do plano e perpendicularidade"
+  },
+  {
+    "id": 1359,
+    "materia": "Álgebra",
+    "topico": "Conjuntos",
+    "subtopico": "Teoria dos conjuntos e cardinalidade"
+  },
+  {
+    "id": 1360,
+    "materia": "Polinômios e Complexos",
+    "topico": "Números Complexos",
+    "subtopico": "Raiz quadrada de número complexo"
+  },
+  {
+    "id": 1361,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Relações de Girard"
+  },
+  {
+    "id": 1362,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Imagem de função racional"
+  },
+  {
+    "id": 1363,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Espaço amostral e eventos"
+  },
+  {
+    "id": 1364,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Limites fundamentais"
+  },
+  {
+    "id": 1365,
+    "materia": "Geometria Espacial",
+    "topico": "Esferas",
+    "subtopico": "Áreas e volumes de sólidos geométricos"
+  },
+  {
+    "id": 1366,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Perímetro e semelhança de triângulos"
+  },
+  {
+    "id": 1367,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão Geométrica aplicada a misturas"
+  },
+  {
+    "id": 1368,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Relações de Girard e raízes irracionais"
+  },
+  {
+    "id": 1369,
+    "materia": "Polinômios e Complexos",
+    "topico": "Números Complexos",
+    "subtopico": "Forma trigonométrica e desigualdade modular"
+  },
+  {
+    "id": 1370,
+    "materia": "Geometria Analítica",
+    "topico": "Circunferência no Plano",
+    "subtopico": "Posição relativa entre circunferências"
+  },
+  {
+    "id": 1371,
+    "materia": "Álgebra",
+    "topico": "Funções Afim/Quadrática/Exponencial/Logarítmica/Modular",
+    "subtopico": "Função quadrática aplicada a lucro e receita"
+  },
+  {
+    "id": 1372,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Distância de ponto a reta e altura de triângulo"
+  },
+  {
+    "id": 1373,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integração por substituição trigonométrica"
+  },
+  {
+    "id": 1374,
+    "materia": "Álgebra",
+    "topico": "Progressões",
+    "subtopico": "Progressão Geométrica"
+  },
+  {
+    "id": 1375,
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Plana",
+    "subtopico": "Comprimento de arco e área de triângulo"
+  },
+  {
+    "id": 1376,
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Plana",
+    "subtopico": "Círculos concêntricos e cordas"
+  },
+  {
+    "id": 1377,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas: Elipse, Hipérbole, Parábola",
+    "subtopico": "Identificação de elipse e seus focos"
+  },
+  {
+    "id": 1378,
+    "materia": "Álgebra",
+    "topico": "Funções Afim/Quadrática/Exponencial/Logarítmica/Modular",
+    "subtopico": "Equações do segundo grau com números consecutivos"
+  },
+  {
+    "id": 1379,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Raízes múltiplas e teorema do resto"
+  },
+  {
+    "id": 1380,
+    "materia": "Geometria Analítica",
+    "topico": "Circunferência no Plano",
+    "subtopico": "Intersecção entre circunferências"
+  },
+  {
+    "id": 1381,
+    "materia": "Álgebra",
+    "topico": "Funções Afim/Quadrática/Exponencial/Logarítmica/Modular",
+    "subtopico": "Função composta"
+  },
+  {
+    "id": 1382,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Probabilidade geométrica com sólidos"
+  },
+  {
+    "id": 1383,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Teorema Fundamental da Álgebra e raízes complexas"
+  },
+  {
+    "id": 1384,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integração indefinida por substituição"
+  },
+  {
+    "id": 1385,
+    "materia": "Geometria Espacial",
+    "topico": "Pirâmides",
+    "subtopico": "Volume de pirâmide delimitada por planos cartesianos"
+  },
+  {
+    "id": 1386,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Probabilidade com permutações e restrições"
+  },
+  {
+    "id": 1387,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Análise Combinatória",
+    "subtopico": "Permutação com restrições de posições alternadas"
+  },
+  {
+    "id": 1388,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Continuidade de funções e limites fundamentais"
+  },
+  {
+    "id": 1389,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Continuidade e limites no infinito"
+  },
+  {
+    "id": 1390,
+    "materia": "Geometria Analítica",
+    "topico": "Planos",
+    "subtopico": "Equação do plano mediador entre pontos"
+  },
+  {
+    "id": 1391,
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes",
+    "subtopico": "Cálculo de determinantes de matrizes de ordem n"
+  },
+  {
+    "id": 1392,
+    "materia": "Geometria Analítica",
+    "topico": "Vetores",
+    "subtopico": "Produto misto e volume de paralelepípedo"
+  },
+  {
+    "id": 1393,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Estatística",
+    "subtopico": "Diagramas de Venn e contagem de conjuntos"
+  },
+  {
+    "id": 1394,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Paradoxo de Monty Hall e probabilidade condicional"
+  },
+  {
+    "id": 1395,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Análise Combinatória",
+    "subtopico": "Princípio fundamental da contagem e permutações"
+  },
+  {
+    "id": 1396,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Probabilidade em elementos de poliedros de Platão"
+  },
+  {
+    "id": 1397,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Distribuição Binomial e eventos complementares"
+  },
+  {
+    "id": 1398,
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Plana",
+    "subtopico": "Círculos inscritos e circunscritos em triângulo equilátero"
+  },
+  {
+    "id": 1399,
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios",
+    "subtopico": "Relações de Girard e somas de potências de raízes"
+  },
+  {
+    "id": 1400,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Cálculo de área entre curvas por integral definida"
+  },
+  {
+    "id": 1401,
+    "materia": "Álgebra",
+    "topico": "Razão e Proporção",
+    "subtopico": "Sistemas de equações com razões"
+  },
+  {
+    "id": 1402,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Projeção ortogonal de ponto sobre reta no plano"
+  },
+  {
+    "id": 1403,
+    "materia": "Álgebra Linear",
+    "topico": "Matrizes",
+    "subtopico": "Multiplicação de matrizes e codificação"
+  },
+  {
+    "id": 1404,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Equação da reta tangente a uma curva"
+  },
+  {
+    "id": 1405,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Equação funcional"
+  },
+  {
+    "id": 1406,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Análise Combinatória",
+    "subtopico": "Teoria dos Grafos e combinatória extremal"
+  },
+  {
+    "id": 1407,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Continuidade de Funções"
+  },
+  {
+    "id": 1408,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Bissetrizes e Ângulos no Triângulo"
+  },
+  {
+    "id": 1409,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Limites no Infinito"
+  },
+  {
+    "id": 1410,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Regra da Cadeia"
+  },
+  {
+    "id": 1411,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Máximos e Mínimos"
+  },
+  {
+    "id": 1412,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Função Composta e Quadrática"
+  },
+  {
+    "id": 1413,
+    "materia": "Álgebra",
+    "topico": "Teoria dos Números",
+    "subtopico": "Divisibilidade e Congruências"
+  },
+  {
+    "id": 1414,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Otimização"
+  },
+  {
+    "id": 1415,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Probabilidade sem Reposição"
+  },
+  {
+    "id": 1416,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Probabilidade",
+    "subtopico": "Distribuição Binomial"
+  },
+  {
+    "id": 1417,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integral Definida"
+  },
+  {
+    "id": 1418,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integração por Substituição"
+  },
+  {
+    "id": 1419,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Derivadas de Funções Trigonométricas"
+  },
+  {
+    "id": 1420,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Combinações Simples com Restrição"
+  },
+  {
+    "id": 1421,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Combinação Completa"
+  },
+  {
+    "id": 1422,
+    "materia": "Álgebra",
+    "topico": "Conjuntos",
+    "subtopico": "Conjuntos Numéricos"
+  },
+  {
+    "id": 1423,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Álgebra de Funções"
+  },
+  {
+    "id": 1424,
+    "materia": "Geometria Espacial",
+    "topico": "Prismas",
+    "subtopico": "Razão de Volumes de Cubos"
+  },
+  {
+    "id": 1425,
+    "materia": "Geometria Analítica",
+    "topico": "Retas",
+    "subtopico": "Área de Triângulo no Plano"
+  },
+  {
+    "id": 1426,
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Plana",
+    "subtopico": "Relações métricas na circunferência"
+  },
+  {
+    "id": 1427,
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas",
+    "subtopico": "Elipse"
+  },
+  {
+    "id": 1428,
+    "materia": "Álgebra",
+    "topico": "Equações",
+    "subtopico": "Equações do 2º Grau e Problemas Algébricos"
+  },
+  {
+    "id": 1429,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Limites Fundamentais e Indeterminações"
+  },
+  {
+    "id": 1430,
+    "materia": "Álgebra",
+    "topico": "Funções",
+    "subtopico": "Equações Funcionais"
+  },
+  {
+    "id": 1431,
+    "materia": "Álgebra",
+    "topico": "Inequações",
+    "subtopico": "Módulos e Inequações Modulares"
+  },
+  {
+    "id": 1432,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Binômio de Newton"
+  },
+  {
+    "id": 1433,
+    "materia": "Probabilidade e Estatística",
+    "topico": "Combinatória",
+    "subtopico": "Princípio da Inclusão-Exclusão e Anagramas"
+  },
+  {
+    "id": 1434,
+    "materia": "Geometria Espacial",
+    "topico": "Esferas",
+    "subtopico": "Esfera Inscrita em Pirâmide"
+  },
+  {
+    "id": 1435,
+    "materia": "Trigonometria",
+    "topico": "Funções Trigonométricas",
+    "subtopico": "Gráficos de Funções Seno e Cosseno"
+  },
+  {
+    "id": 1436,
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Plana",
+    "subtopico": "Áreas de Figuras Planas e Intersecção de Circunferências"
+  },
+  {
+    "id": 1437,
+    "materia": "Cálculo",
+    "topico": "Derivadas",
+    "subtopico": "Funções Injetivas e Aplicações da Derivada"
+  },
+  {
+    "id": 1438,
+    "materia": "Geometria Analítica",
+    "topico": "Planos",
+    "subtopico": "Simetria em Relação a Planos"
+  },
+  {
+    "id": 1439,
+    "materia": "Álgebra",
+    "topico": "Inequações",
+    "subtopico": "Inequações Quociente e Produto com Módulo"
+  },
+  {
+    "id": 1440,
+    "materia": "Polinômios e Complexos",
+    "topico": "Números Complexos",
+    "subtopico": "Potências de i e Somatórios"
+  },
+  {
+    "id": 1441,
+    "materia": "Geometria Plana",
+    "topico": "Triângulos",
+    "subtopico": "Pontos Notáveis do Triângulo (Incentro e Circuncentro)"
+  },
+  {
+    "id": 1442,
+    "materia": "Geometria Espacial",
+    "topico": "Esferas",
+    "subtopico": "Esferas Tangentes e Cubo"
+  },
+  {
+    "id": 1443,
+    "materia": "Cálculo",
+    "topico": "Sequências e Séries",
+    "subtopico": "Séries Telescópicas"
+  },
+  {
+    "id": 1444,
+    "materia": "Geometria Analítica",
+    "topico": "Vetores",
+    "subtopico": "Produto Escalar em R3"
+  },
+  {
+    "id": 1445,
+    "materia": "Cálculo",
+    "topico": "Limites",
+    "subtopico": "Continuidade e Limites Laterais"
+  },
+  {
+    "id": 1446,
+    "materia": "Cálculo",
+    "topico": "Integrais",
+    "subtopico": "Integrais Impróprias e Sólidos de Revolução"
+  },
+  {
+    "id": 1447,
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes",
+    "subtopico": "Cálculo de Determinante de Matriz de Vandermonde"
+  }
+]

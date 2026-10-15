@@ -79,20 +79,19 @@ class MultimodalVisionProcessor:
                 )
                 return ocr_result
 
-        # Fallback determinístico caso o serviço multimodal não esteja conectado
+        # Fallback honesto: se nenhum provedor multimodal estiver disponível ou funcional,
+        # reporta indisponibilidade sem jamais fabricar dados ou equações fictícias (P0-02).
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
         return {
-            "transcricao_latex": r"x^2 + 5x + 6 = 0 \implies (x + 2)(x + 3) = 0",
-            "passos_detectados": [
-                r"Equação quadrática identificada: $x^2 + 5x + 6 = 0$",
-                r"Fatoração por produto e soma: $(x + 2)(x + 3) = 0$",
-                r"Soluções obtidas: $x_1 = -2$, $x_2 = -3$",
-            ],
-            "legibilidade": "alta",
+            "transcricao_latex": "",
+            "passos_detectados": [],
+            "legibilidade": "baixa",
+            "error": "Serviço de OCR multimodal indisponível ou nenhum provedor configurado.",
+            "status": "unavailable",
             "latency_ms": latency_ms,
             "input_hash": input_hash,
-            "model_used": "deterministic-ocr-fallback",
-            "provider": "fallback",
+            "model_used": None,
+            "provider": "none",
         }
 
     def _normalize_image_input(

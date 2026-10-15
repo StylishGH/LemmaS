@@ -26,11 +26,12 @@ import {
   CheckSquare,
   Square,
   Timer,
+  AlertTriangle,
 } from "lucide-react";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
-import { resolveFigureUrl } from "@/lib/image-url";
+import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 
 interface Question {
   id: number;
@@ -184,10 +185,12 @@ export default function BancoQuestoesPage() {
   ]);
 
   const [fasesDisponiveis, setFasesDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
-    { id: VAL_TODAS, label: "Todas as Fases / Níveis", count: 20764 },
-    { id: "Geral", label: "Geral", count: 18122 },
+    { id: VAL_TODAS, label: "Todas as Fases / Níveis", count: 20803 },
+    { id: "Geral", label: "Geral", count: 17984 },
     { id: "Final", label: "Fase Final", count: 2035 },
     { id: "Nível Júnior", label: "Nível Júnior", count: 603 },
+    { id: "Nível 2", label: "Nível 2", count: 122 },
+    { id: "Nível 3", label: "Nível 3", count: 59 },
   ]);
 
   const [categoriaBancaFiltro, setCategoriaBancaFiltro] = useState<string>("Todas");
@@ -204,6 +207,8 @@ export default function BancoQuestoesPage() {
   const [expandedMaterias, setExpandedMaterias] = useState<Set<string>>(new Set());
 
   const [anosDisponiveis, setAnosDisponiveis] = useState<{ ano: number; label?: string; count: number }[]>([]);
+  const [anoMin, setAnoMin] = useState<number>(1979);
+  const [anoMax, setAnoMax] = useState<number>(2026);
   const [anoDropdownOpen, setAnoDropdownOpen] = useState<boolean>(false);
   const anoDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -371,6 +376,8 @@ export default function BancoQuestoesPage() {
             if (data.anos && Array.isArray(data.anos)) {
               setAnosDisponiveis(data.anos);
             }
+            if (data.ano_min) setAnoMin(data.ano_min);
+            if (data.ano_max) setAnoMax(data.ano_max);
             if (data.tipos && Array.isArray(data.tipos)) {
               setTiposDisponiveis(data.tipos);
             }
@@ -477,25 +484,67 @@ export default function BancoQuestoesPage() {
 
   // Iniciar Modo Treino Livre (sem timer rígido, com IA e gabarito imediato)
   const handleTreinarListaEstudo = async () => {
-    let ids: number[] = [];
     if (selectedIds.size > 0) {
-      ids = Array.from(selectedIds);
-    } else {
-      ids = await fetchFilteredIds();
+      const ids = Array.from(selectedIds);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("lemmas_active_treino", JSON.stringify({
+          modo: "treino",
+          ids,
+          nome: `Lista de Treino (${ids.length} selecionadas)`,
+          totalQuestoes: ids.length,
+        }));
+      }
+      router.push(`/resolver?session=treino&total=${ids.length}`);
+      return;
     }
-    if (ids.length === 0) return;
+
+    const activeFilters = {
+      banca: paramFromFiltro(bancaFiltro),
+      materia: paramFromFiltro(materiaFiltro),
+      topico: paramFromFiltro(topicoFiltro),
+      ano: paramFromFiltro(anoFiltro),
+      tipo: paramFromFiltro(tipoFiltro),
+      dificuldade: paramFromFiltro(dificuldadeFiltro),
+      categoria_banca: categoriaBancaFiltro !== "Todas" ? categoriaBancaFiltro : null,
+      tipo_prova: paramFromFiltro(tipoProvaFiltro),
+      fase_nivel: paramFromFiltro(faseNivelFiltro),
+      search: busca.trim() || null,
+    };
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("lemmas_active_treino", JSON.stringify({
         modo: "treino",
-        ids,
-        nome: `Lista de Treino (${ids.length} questões)`,
-        totalQuestoes: ids.length,
+        filters: activeFilters,
+        nome: `Treino Livre (${total.toLocaleString("pt-BR")} questões)`,
+        totalQuestoes: total,
       }));
     }
-    router.push(`/resolver?session=treino&total=${ids.length}`);
+    router.push(`/resolver?session=treino&total=${total}`);
   };
 
+
+  // Função para reportar uma questão
+  const handleReport = async (questionId: number) => {
+    const reason = window.prompt(
+      "Motivo do relatório (formatação LaTeX, resposta errada, imagem incorreta, ilegível, outro):"
+    );
+    if (reason === null) return; // usuário cancelou
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: questionId,
+          reason,
+          description: "", // opcional
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao enviar");
+      alert("Relatório enviado com sucesso!");
+    } catch (e: any) {
+      alert("Erro ao enviar relatório: " + e.message);
+    }
+  };
   const filtrosAtivosCount = [
     numBancas > 0,
     numMaterias > 0,
@@ -653,15 +702,18 @@ export default function BancoQuestoesPage() {
             {bancasDisponiveis
               .filter((b) => {
                 if (b.name === VAL_TODAS) return true;
+                const nomeLower = b.name.toLowerCase();
+                if (nomeLower.includes("nível") || nomeLower.includes("nivel")) return false;
                 if (categoriaBancaFiltro === "Todas") return true;
                 return b.categoria === categoriaBancaFiltro;
               })
               .map((b) => {
-                const isSelected = bancaFiltro.includes(b.name);
-                return (
-                  <button
-                    key={b.name}
-                    onClick={() => handleSelectBanca(b.name)}
+                              const isSelected = bancaFiltro.includes(b.name);
+                              const bancaKey = b.categoria ? `${b.name}::${b.categoria}` : b.name;
+                              return (
+                                <button
+                                  key={bancaKey}
+                                  onClick={() => handleSelectBanca(b.name)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
                       isSelected
                         ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold shadow-sm"
@@ -975,7 +1027,7 @@ export default function BancoQuestoesPage() {
                       <Calendar className="w-4 h-4 shrink-0" />
                       <span className="truncate">
                         {numAnos === 0
-                          ? "Todos os Anos da Prova (2009–2026)"
+                          ? `Todos os Anos da Prova (${anoMin}–${anoMax})`
                           : numAnos === 1
                           ? `Ano: ${joinSelecionados(anoFiltro, VAL_TODOS)}`
                           : `${numAnos} anos selecionados (${joinSelecionados(anoFiltro, VAL_TODOS)})`}
@@ -1556,7 +1608,7 @@ export default function BancoQuestoesPage() {
                 </div>
 
                 {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
-                {q.figura_path && (
+                {q.figura_path && !corpo.includes("![") && (
                   <div className="my-3 flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -1564,6 +1616,13 @@ export default function BancoQuestoesPage() {
                       alt={`Figura da Questão ${q.id}`}
                       className="max-h-64 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-stone-900 p-2 border border-slate-200 dark:border-stone-800"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.fallback) {
+                          target.dataset.fallback = "1";
+                          target.src = getFallbackFigureUrl(q.figura_path);
+                        }
+                      }}
                     />
                   </div>
                 )}
@@ -1600,6 +1659,12 @@ export default function BancoQuestoesPage() {
                       className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
                     >
                       {revelado ? `Gabarito: [${q.gabarito}] (Ocultar)` : "Revelar Gabarito"}
+                    </button>
+                    <button
+                      onClick={() => handleReport(q.id)}
+                      className="text-[10px] underline text-amber-600 hover:text-amber-400"
+                    >
+                      Reportar
                     </button>
                     {revelado && (
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
