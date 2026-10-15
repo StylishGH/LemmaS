@@ -132,9 +132,23 @@ export default function GeometricCompassBoard({
     });
   }, [appletId, runGGBCommand]);
 
-  // Inicialização do Script Oficial do GeoGebra
+  // Inicialização do Script Oficial do GeoGebra com Timeout de Contingência Seguro
   useEffect(() => {
     let isMounted = true;
+
+    // Timer de segurança: se a injeção do GeoGebra demorar mais de 3.5s (bloqueio de rede/CDN), chaveia para iframe
+    const fallbackTimer = setTimeout(() => {
+      if (isMounted) {
+        setUseIframeFallback((prev) => {
+          if (!prev) {
+            console.warn("Tempo limite de injeção GeoGebra atingido (3.5s). Ativando iframe seguro.");
+            return true;
+          }
+          return prev;
+        });
+        setAppletLoaded(true);
+      }
+    }, 3500);
 
     const initGeoGebra = () => {
       if (!isMounted) return;
@@ -157,6 +171,7 @@ export default function GeometricCompassBoard({
             useBrowserForJS: false,
             appletOnLoad: () => {
               if (isMounted) {
+                clearTimeout(fallbackTimer);
                 setAppletLoaded(true);
                 // Executa comandos iniciais se houver
                 if (initialCommands && initialCommands.length > 0) {
@@ -173,9 +188,11 @@ export default function GeometricCompassBoard({
         } catch (err) {
           console.warn("Falha na injeção do GeoGebra deployggb, usando iframe:", err);
           setUseIframeFallback(true);
+          setAppletLoaded(true);
         }
       } else {
         setUseIframeFallback(true);
+        setAppletLoaded(true);
       }
     };
 
@@ -188,7 +205,10 @@ export default function GeometricCompassBoard({
       script.onload = () => initGeoGebra();
       script.onerror = () => {
         console.warn("Falha ao baixar script GeoGebra CDN, ativando iframe embed seguro.");
-        if (isMounted) setUseIframeFallback(true);
+        if (isMounted) {
+          setUseIframeFallback(true);
+          setAppletLoaded(true);
+        }
       };
       document.body.appendChild(script);
     } else if (window.GGBApplet) {
@@ -203,6 +223,7 @@ export default function GeometricCompassBoard({
 
     return () => {
       isMounted = false;
+      clearTimeout(fallbackTimer);
     };
   }, [appletId, initialCommands, runGGBCommand]);
 
@@ -264,7 +285,23 @@ export default function GeometricCompassBoard({
         </div>
 
         {/* AÇÕES DE TELA */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setUseIframeFallback(!useIframeFallback);
+              setAppletLoaded(true);
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono border transition-all ${
+              useIframeFallback
+                ? "bg-amber-500/20 text-[#d9b452] border-amber-500/40"
+                : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200"
+            }`}
+            title="Alternar entre motor GeoGebra Script e Iframe Oficial"
+          >
+            {useIframeFallback ? "Modo Iframe" : "Modo Script"}
+          </button>
+
           <button
             type="button"
             onClick={handleReset}
@@ -308,15 +345,26 @@ export default function GeometricCompassBoard({
               className="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              onLoad={() => setAppletLoaded(true)}
             />
           ) : (
             <div id={appletId} className="w-full h-full flex items-center justify-center" />
           )}
 
           {!appletLoaded && !useIframeFallback && (
-            <div className="absolute inset-0 bg-[#0e0d16]/80 flex flex-col items-center justify-center gap-3 z-10 text-[#d9b452]">
+            <div className="absolute inset-0 bg-[#0e0d16]/90 flex flex-col items-center justify-center gap-3 z-10 text-[#d9b452] p-4 text-center">
               <Compass className="w-8 h-8 animate-spin" />
               <p className="text-xs font-mono">Calibrando Régua e Compasso Euclidiano...</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseIframeFallback(true);
+                  setAppletLoaded(true);
+                }}
+                className="mt-2 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-[11px] font-sans text-[#f5f0df] transition-all cursor-pointer shadow-xs"
+              >
+                Carregar no Modo Iframe (Direto)
+              </button>
             </div>
           )}
         </div>

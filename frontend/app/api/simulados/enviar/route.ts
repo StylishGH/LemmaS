@@ -119,7 +119,20 @@ export async function POST(req: NextRequest) {
       }
 
       const respostaUpper = String(respostaAluno).trim().toUpperCase();
-      const acertou = Boolean(gabaritoOficial && respostaUpper === gabaritoOficial);
+
+      if (!gabaritoOficial) {
+        // Gabarito ausente no banco: não pontua como acerto nem penaliza como erro
+        resultados.push({
+          questao_id: question.id,
+          acertou: false,
+          gabarito_ausente: true,
+          resposta_enviada: respostaUpper,
+          gabarito: null,
+        });
+        continue;
+      }
+
+      const acertou = respostaUpper === gabaritoOficial;
 
       if (acertou) acertos++;
       else erros++;

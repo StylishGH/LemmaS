@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { resolveFigureUrl } from "@/lib/image-url";
+import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
+import { normalizarMatematica, autoWrapLatexExpressions } from "@/lib/math-parser";
 
 interface MathDisplayProps {
   children: string;
@@ -94,7 +95,8 @@ export function renderMathText(text: string) {
   // Protege a moeda brasileira "R$" e variações para não conflitar com delimitador matemático $
   // Exemplo: "R$ 150.000,00" não deve abrir nem fechar ambiente LaTeX!
   const TOKEN_REAL = "___LEMMAS_MOEDA_BRL___";
-  let preprocessed = text
+  // Normaliza caracteres matemáticos Unicode, traços e radicais
+  let preprocessed = normalizarMatematica(text)
     .replace(/R\$/g, TOKEN_REAL)
     // Converte blocos markdown com tags ```latex ou ```math para display math $$ ... $$
     .replace(/```(?:latex|math)\s*([\s\S]+?)\s*```/gi, (_, math) => `$$${math.trim()}$$`)
@@ -102,6 +104,11 @@ export function renderMathText(text: string) {
     .replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math}$$`)
     // Converte inline math canônico \( ... \) ou duplo escape \\( ... \\) para $ ... $
     .replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math}$`);
+
+  // Se o texto não possui nenhum delimitador matemático, aplica autoWrap em expressões óbvias
+  if (!preprocessed.includes("$")) {
+    preprocessed = autoWrapLatexExpressions(preprocessed);
+  }
 
   // 1. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
   const stage1Parts: Array<{ type: "text" | "block"; content: string }> = [];
@@ -211,6 +218,13 @@ function FormattedTextChunk({ content }: { content: string }) {
                 alt={alt || "Figura matemática da questão"}
                 className="max-h-80 max-w-full mx-auto rounded-xl object-contain p-2 bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-xs"
                 loading="lazy"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = "1";
+                    target.src = getFallbackFigureUrl(rawUrl);
+                  }
+                }}
               />
               {alt && !alt.toLowerCase().startsWith("figura") && (
                 <span className="block text-xs text-slate-500 dark:text-zinc-400 mt-1 italic font-sans">

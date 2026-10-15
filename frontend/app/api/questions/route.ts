@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { sortQuestionsByQuality } from "@/lib/quality-score";
 
 const MIN_QUESTIONS_PER_BANK = 1;
 
@@ -188,7 +189,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
           .from("questoes")
           .select(
-            "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao",
+            "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas",
             { count: "exact" }
           );
 
@@ -277,10 +278,14 @@ export async function GET(req: NextRequest) {
     if (dificuldadeValues.length > 0) {
       const conds: string[] = [];
       dificuldadeValues.forEach((v) => {
-        if (v === "facil") conds.push("dificuldade.lte.2");
+        if (v === "facil") conds.push("and(dificuldade.gte.1,dificuldade.lte.2)");
         else if (v === "media") conds.push("dificuldade.eq.3");
-        else if (v === "dificil") conds.push("dificuldade.gte.4");
-        else if (v === "nao_classificada") conds.push("dificuldade.is.null");
+        else if (v === "dificil") conds.push("and(dificuldade.gte.4,dificuldade.lte.5)");
+        else if (v === "nao_classificada") {
+          conds.push("dificuldade.is.null");
+          conds.push("dificuldade.lt.1");
+          conds.push("dificuldade.gt.5");
+        }
       });
       if (conds.length > 0) query = query.or(conds.join(","));
     }
@@ -317,7 +322,15 @@ export async function GET(req: NextRequest) {
       query = query.or(`enunciado.ilike.%${term}%,topico.ilike.%${term}%,subtopico.ilike.%${term}%,materia.ilike.%${term}%`);
     }
 
-    query = query.order("id", { ascending: true }).range(offset, offset + limit - 1);
+    // Ordenação padrão inteligente por ano mais recente e id desc (NUNCA id ASC)
+    // Para cold start (page 1 sem busca/filtros profundos), ampliamos a janela para triagem por quality score
+    const isColdStart = page === 1 && !search && bancaValues.length === 0 && materiaValues.length === 0;
+    const fetchLimit = isColdStart ? Math.max(limit * 3, 45) : limit;
+
+    query = query
+      .order("ano", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + fetchLimit - 1);
 
         // 2. Consulta paralela: itens paginados + RPC global stats (contagens REAIS sem limite 1000) + RPC filtro
         const rpcBanca = bancaValues.length === 1 ? bancaValues[0] : null;
@@ -355,6 +368,10 @@ export async function GET(req: NextRequest) {
           );
         }
 
+        // Ordenação por Quality Score: prioriza questões completas e de bancas principais, empurrando incompletas para o fim
+        const sortedRawData = sortQuestionsByQuality(data || []);
+        const questoesPaginadas = sortedRawData.slice(0, limit);
+
         // Parse global stats (RPC sem limite de 1000)
         const globalStats = (globalStatsResult.data || {}) as {
           total_questoes?: number;
@@ -389,13 +406,21 @@ export async function GET(req: NextRequest) {
         const rpcBancas: RpcBancaRow[] = rpcData.bancas || [];
         const rpcTiposProva: RpcGenericRow[] = rpcData.tipos_prova || [];
         const rpcFases: RpcGenericRow[] = rpcData.fases || [];
-        const rpcMaterias: RpcGenericRow[] = rpcData.materias || [];    // Facets de Bancas (com categoria para segmentação visual no front-end)
-    // Deduplicate bancas by normalized name (trim().toUpperCase())
-    const bancaMap = new Map<string, RpcBancaRow>();
+        const rpcMaterias: RpcGenericRow[] = rpcData.materias || [];
+
+    // Facets de Bancas (Deduplica e combina contagens de bancas com mesmo nome, ex: AFA)
+    const bancaMap = new Map<string, { nome: string; total: number; categoria: string }>();
     for (const row of rpcBancas) {
       const key = row.nome.trim().toUpperCase();
-      if (!bancaMap.has(key)) {
-        bancaMap.set(key, row);
+      const existing = bancaMap.get(key);
+      if (!existing) {
+        bancaMap.set(key, {
+          nome: row.nome.trim(),
+          total: Number(row.total) || 0,
+          categoria: row.categoria || "Olimpíadas",
+        });
+      } else {
+        existing.total += Number(row.total) || 0;
       }
     }
     const dedupedBancas = Array.from(bancaMap.values());
@@ -403,18 +428,19 @@ export async function GET(req: NextRequest) {
       { name: "Todas", count: totalRealQuestoes, categoria: "Todas" },
       ...dedupedBancas
         .filter((row) => {
-          const nomeLower = row.nome.trim().toLowerCase();
+          const nomeLower = row.nome.toLowerCase();
           return (
-            Number(row.total) >= MIN_QUESTIONS_PER_BANK &&
+            row.total >= MIN_QUESTIONS_PER_BANK &&
             !nomeLower.includes("nível") &&
             !nomeLower.includes("nivel")
           );
         })
         .map((row) => ({
           name: row.nome,
-          count: Number(row.total),
-          categoria: row.categoria || "Olimpíadas",
-        })),
+          count: row.total,
+          categoria: row.categoria,
+        }))
+        .sort((a, b) => b.count - a.count),
     ];
 
     // Facets de Categorias de Banca (Concursos Militares, Vestibulares & Superior, Olimpíadas)
@@ -489,10 +515,18 @@ export async function GET(req: NextRequest) {
           else if (t === "discursiva") countDiscursiva++;
 
           const d = r.dificuldade;
-          if (d === null || d === undefined) countNaoClassificada++;
-          else if (d <= 2) countFacil++;
-          else if (d === 3) countMedia++;
-          else if (d >= 4) countDificil++;
+          // Todo registro com dificuldade IS NULL ou fora do padrão (não 1..5) cai estritamente em Não Classificada
+          if (d === null || d === undefined || typeof d !== "number" || isNaN(d) || d < 1 || d > 5) {
+            countNaoClassificada++;
+          } else if (d === 1 || d === 2) {
+            countFacil++;
+          } else if (d === 3) {
+            countMedia++;
+          } else if (d === 4 || d === 5) {
+            countDificil++;
+          } else {
+            countNaoClassificada++;
+          }
 
           if (r.ano) anosMap[r.ano] = (anosMap[r.ano] || 0) + 1;
         });
@@ -503,14 +537,42 @@ export async function GET(req: NextRequest) {
           { id: "discursiva", label: "Discursivas", count: globalStats.tipos?.discursiva ?? countDiscursiva },
         ];
 
-        // Contagem de Dificuldades (Fácil, Média, Difícil, Não Classificada) - usar globalStats se disponível
+        // Contagem de Dificuldades (Fácil, Média, Difícil, Não Classificada)
+        // Todo registro com dificuldade IS NULL ou fora do padrão (1..5) cai estritamente em Não Classificada
+        // A soma das fatias (Fácil + Média + Difícil + Não Classificada) bate 100% com totalRealQuestoes
         const globalDificuldades = globalStats.dificuldades || {};
+        const countNivel1 = Number(globalDificuldades["1"]) || 0;
+        const countNivel2 = Number(globalDificuldades["2"]) || 0;
+        const countNivel3 = Number(globalDificuldades["3"]) || 0;
+        const countNivel4 = Number(globalDificuldades["4"]) || 0;
+        const countNivel5 = Number(globalDificuldades["5"]) || 0;
+
+        const hasGlobalDiffs = (countNivel1 + countNivel2 + countNivel3 + countNivel4 + countNivel5) > 0;
+
+        let facilFinal = 0;
+        let mediaFinal = 0;
+        let dificilFinal = 0;
+        let naoClassificadaFinal = 0;
+
+        if (hasGlobalDiffs) {
+          facilFinal = countNivel1 + countNivel2; // Dificuldades 1 e 2
+          mediaFinal = countNivel3;              // Dificuldade 3
+          dificilFinal = countNivel4 + countNivel5; // Dificuldades 4 e 5
+          // Todo registro IS NULL ou fora de 1..5 vai estritamente para Não Classificada
+          naoClassificadaFinal = Math.max(0, totalRealQuestoes - (facilFinal + mediaFinal + dificilFinal));
+        } else {
+          facilFinal = countFacil;
+          mediaFinal = countMedia;
+          dificilFinal = countDificil;
+          naoClassificadaFinal = countNaoClassificada;
+        }
+
         const dificuldadesFacets = [
           { id: "Todas", label: "Todas", count: totalRealQuestoes },
-          { id: "facil", label: "Fácil", count: globalDificuldades.facil ?? countFacil },
-          { id: "media", label: "Média", count: globalDificuldades.media ?? countMedia },
-          { id: "dificil", label: "Difícil", count: globalDificuldades.dificil ?? countDificil },
-          { id: "nao_classificada", label: "Não Classificada", count: globalDificuldades["Não Classificada"] ?? countNaoClassificada },
+          { id: "facil", label: "Fácil", count: facilFinal },
+          { id: "media", label: "Média", count: mediaFinal },
+          { id: "dificil", label: "Difícil", count: dificilFinal },
+          { id: "nao_classificada", label: "Não Classificada", count: naoClassificadaFinal },
         ];
 
         // Contagem de Anos - usar globalStats para ter TODOS os anos (sem limite 1000)
@@ -581,7 +643,7 @@ export async function GET(req: NextRequest) {
     }).filter((m) => m.count > 0);
 
     return NextResponse.json({
-      questoes: data || [],
+      questoes: questoesPaginadas,
       total: count || 0,
       page,
       limit,
@@ -664,10 +726,13 @@ export async function POST(req: NextRequest) {
 
     let query = supabase
       .from("questoes")
-      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, gabarito, tipo, edicao, etapa, tipo_material, pais, solucao, categoria_banca, tipo_prova, fase_nivel", { count: "exact" });
+      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, gabarito, tipo, edicao, etapa, tipo_material, pais, solucao, categoria_banca, tipo_prova, fase_nivel, estrategias_esperadas", { count: "exact" });
 
     if (Array.isArray(ids) && ids.length > 0) {
-      query = query.in("id", ids).order("id", { ascending: true });
+      query = query
+        .in("id", ids)
+        .order("ano", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false });
     } else if (filters) {
       const normalize = (v: unknown): string[] => {
         if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter((x) => x.length > 0 && x !== "Todas" && x !== "Todos");
@@ -744,9 +809,32 @@ export async function POST(req: NextRequest) {
         query = query.or(conds.join(","));
       }
 
-      query = query.order("id", { ascending: true }).range(offset, offset + limit - 1);
+      const dificuldadeValues = normalize(filters.dificuldade);
+      if (dificuldadeValues.length > 0) {
+        const conds: string[] = [];
+        dificuldadeValues.forEach((v) => {
+          const lower = v.toLowerCase();
+          if (lower === "facil") conds.push("and(dificuldade.gte.1,dificuldade.lte.2)");
+          else if (lower === "media") conds.push("dificuldade.eq.3");
+          else if (lower === "dificil") conds.push("and(dificuldade.gte.4,dificuldade.lte.5)");
+          else if (lower === "nao_classificada") {
+            conds.push("dificuldade.is.null");
+            conds.push("dificuldade.lt.1");
+            conds.push("dificuldade.gt.5");
+          }
+        });
+        if (conds.length > 0) query = query.or(conds.join(","));
+      }
+
+      query = query
+        .order("ano", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1);
     } else {
-      query = query.order("id", { ascending: true }).range(offset, offset + limit - 1);
+      query = query
+        .order("ano", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1);
     }
 
     const { data, count, error } = await query;
@@ -755,8 +843,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const sortedData = sortQuestionsByQuality(data || []);
+
     return NextResponse.json({
-      questoes: data || [],
+      questoes: sortedData,
       total: count ?? (data?.length || 0),
       page,
       limit,

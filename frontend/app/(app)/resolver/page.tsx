@@ -39,7 +39,7 @@ import {
   PenTool,
   Flag,
 } from "lucide-react";
-import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
+import { extrairEnunciadoEAlternativas, hasImageAlternatives } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { useUserProfile } from "@/lib/use-user";
 import { createClient } from "@/lib/supabase";
@@ -66,6 +66,7 @@ interface Question {
   tipo_material?: string;
   pais?: string;
   solucao?: string;
+  estrategias_esperadas?: string | string[] | null;
 }
 
 interface SubmitResult {
@@ -814,7 +815,8 @@ function ResolverContent() {
           comentario: fb.comentario || null,
           metadados: {
             questao_index: idx,
-            resposta_estudante: answers[idx] || null,
+            questao_id: qId,
+            resposta_estudante: answers[qId] || answers[idx] || null,
           },
         }),
       });
@@ -1561,8 +1563,8 @@ function ResolverContent() {
           <MathText text={corpo} />
         </div>
 
-        {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
-        {currentQ?.figura_path && !corpo.includes("![") && (
+        {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER (OCULTA SE AS ALTERNATIVAS JÁ FOREM AS IMAGENS OU SE JÁ ESTIVER NO CORPO) */}
+        {currentQ?.figura_path && !corpo.includes("![") && !hasImageAlternatives(alternativas) && (
           <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -1632,35 +1634,74 @@ function ResolverContent() {
 
         {/* ALTERNATIVAS (A-E) */}
         {Object.keys(alternativas).length > 0 && (
-          <div className="space-y-3 pt-2">
-            {Object.entries(alternativas).map(([key, val]) => {
-                          const isSelected = currentQ && answers[currentQ.id] === key;
+          hasImageAlternatives(alternativas) ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+              {Object.entries(alternativas).map(([key, val]) => {
+                const isSelected = currentQ && answers[currentQ.id] === key;
 
-              return (
-                <button
-                  key={key}
-                  disabled={!isSimuladoAtivo && currentResult !== undefined}
-                  onClick={() => handleSelectOption(key)}
-                  className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
-                    isSelected
-                      ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df]"
-                      : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-amber-500/30"
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                return (
+                  <button
+                    key={key}
+                    disabled={!isSimuladoAtivo && currentResult !== undefined}
+                    onClick={() => handleSelectOption(key)}
+                    className={`w-full text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all ${
                       isSelected
-                        ? "lemmas-gold-cta font-bold shadow-sm"
-                        : "bg-slate-200 dark:bg-[#231f38] text-slate-600 dark:text-zinc-400"
+                        ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df] ring-2 ring-amber-500/40"
+                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300 hover:border-amber-500/40"
                     }`}
                   >
-                    {key}
-                  </div>
-                  <span className="text-sm font-medium"><MathText text={val} /></span>
-                </button>
-              );
-            })}
-          </div>
+                    <div className="flex items-center justify-between w-full">
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                          isSelected
+                            ? "lemmas-gold-cta font-bold shadow-sm"
+                            : "bg-slate-200 dark:bg-[#231f38] text-slate-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        {key}
+                      </div>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+                        {isSelected ? "Selecionada" : "Clique para assinalar"}
+                      </span>
+                    </div>
+                    <div className="w-full flex items-center justify-center p-2 rounded-xl bg-white dark:bg-stone-900 border border-slate-200/80 dark:border-stone-800">
+                      <MathText text={val} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-3 pt-2">
+              {Object.entries(alternativas).map(([key, val]) => {
+                const isSelected = currentQ && answers[currentQ.id] === key;
+
+                return (
+                  <button
+                    key={key}
+                    disabled={!isSimuladoAtivo && currentResult !== undefined}
+                    onClick={() => handleSelectOption(key)}
+                    className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
+                      isSelected
+                        ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df]"
+                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-amber-500/30"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                        isSelected
+                          ? "lemmas-gold-cta font-bold shadow-sm"
+                          : "bg-slate-200 dark:bg-[#231f38] text-slate-600 dark:text-zinc-400"
+                      }`}
+                    >
+                      {key}
+                    </div>
+                    <span className="text-sm font-medium"><MathText text={val} /></span>
+                  </button>
+                );
+              })}
+            </div>
+          )
         )}
 
         {/* MODO TREINO: FEEDBACK IMEDIATO DE SUBMISSÃO E GABARITO OFICIAL */}
@@ -2154,7 +2195,7 @@ function ResolverContent() {
                   });
 
                   const data = await res.json();
-                  if (data && data.resultado?.resultados) {
+                  if (res.ok && data && data.resultado?.resultados) {
                     const newSubmitResults: Record<number, SubmitResult> = {};
                     data.resultado.resultados.forEach((r: any) => {
                       const qIndex = questions.findIndex((q) => q.id === r.questao_id);
@@ -2168,9 +2209,45 @@ function ResolverContent() {
                       }
                     });
                     setSubmitResults(newSubmitResults);
+                  } else {
+                    throw new Error(data?.error || "Resposta inválida do backend de simulados");
                   }
                 } catch (err) {
-                  console.warn("Erro ao enviar simulado para backend:", err);
+                  console.warn("Aviso ao enviar simulado para backend, usando cálculo e persistência local de contingência:", err);
+                  // Popula submitResults localmente a partir de answers e q.gabarito para revisão perfeita
+                  const fallbackResults: Record<number, SubmitResult> = {};
+                  questions.forEach((q, idx) => {
+                    const resp = answers[q.id];
+                    const gabarito = (q.gabarito || "").trim().toUpperCase();
+                    if (resp) {
+                      const acertou = Boolean(gabarito && resp.toUpperCase() === gabarito);
+                      fallbackResults[idx] = {
+                        acertou,
+                        gabarito: gabarito || "(Não informado)",
+                        resposta_enviada: resp,
+                        sm2: {
+                          repeticoes: 1,
+                          fator_facilidade: 2.5,
+                          intervalo_dias: acertou ? 3 : 1,
+                          proxima_revisao_data: new Date(Date.now() + (acertou ? 3 : 1) * 86400000).toISOString(),
+                        },
+                      };
+                    }
+                  });
+                  setSubmitResults(fallbackResults);
+
+                  // Salva no sessionStorage para histórico de contingência
+                  if (typeof window !== "undefined") {
+                    try {
+                      sessionStorage.setItem("lemmas_last_simulado_backup", JSON.stringify({
+                        simuladoId,
+                        questionIds,
+                        answers,
+                        tempoGasto,
+                        timestamp: Date.now(),
+                      }));
+                    } catch {}
+                  }
                 } finally {
                   setSubmitting(false);
                   setShowConfirmModal(false);

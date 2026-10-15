@@ -131,6 +131,7 @@ test_download_exams.py
 execute_sql_corrected.py
 test*.json
 tests/benchmark_output/
+data/audit/
 
 # Integração Drive / OAuth Local
 drive_*.py
