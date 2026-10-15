@@ -7,11 +7,18 @@ if sys.platform == "win32" and hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
+import pytest
+import os
+
 def test_api():
-    url = "http://localhost:3000/api/questions?page=1&limit=15"
+    base_url = os.environ.get("LEMMAS_API_URL", "http://localhost:3000")
+    url = f"{base_url}/api/questions?page=1&limit=15"
     req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode())
+    except (urllib.error.URLError, TimeoutError, OSError) as err:
+        pytest.skip(f"Next.js server not reachable at {base_url} ({err}), skipping live test in CI.")
     
     total = data.get("total")
     questoes = data.get("questoes", [])
