@@ -36,15 +36,17 @@ import {
   ChevronUp,
   Award,
   Compass,
-  PenTool
+  PenTool,
+  Flag,
 } from "lucide-react";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { useUserProfile } from "@/lib/use-user";
 import { createClient } from "@/lib/supabase";
-import { resolveFigureUrl } from "@/lib/image-url";
+import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 import MathScratchpad from "@/components/math/MathScratchpad";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
+import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 
 interface Question {
   id: number;
@@ -244,6 +246,7 @@ function ResolverContent() {
   const supabase = useMemo(() => createClient(), []);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -1529,17 +1532,29 @@ function ResolverContent() {
           <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
             {currentQ?.materia} • <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
           </div>
-          <button
-            onClick={() => toggleBookmark(currentIndex)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
-              bookmarks.has(currentIndex)
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-[#d9b452]"
-                : "border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500"
-            }`}
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-            <span>{bookmarks.has(currentIndex) ? "Marcada" : "Marcar"}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-[#d9b452] hover:bg-amber-500/10 hover:border-amber-500/25 transition-colors"
+              title="Reportar inconsistência (digitação, LaTeX, imagem ou gabarito)"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span>Reportar</span>
+            </button>
+            <button
+              onClick={() => toggleBookmark(currentIndex)}
+              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
+                bookmarks.has(currentIndex)
+                  ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-[#d9b452]"
+                  : "border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:border-amber-500/30"
+              }`}
+              title={bookmarks.has(currentIndex) ? "Remover dos marcados" : "Marcar questão para revisar depois"}
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>{bookmarks.has(currentIndex) ? "Marcada" : "Marcar"}</span>
+            </button>
+          </div>
         </div>
 
         <div className="font-serif-math text-base md:text-lg font-normal text-slate-900 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
@@ -1547,7 +1562,7 @@ function ResolverContent() {
         </div>
 
         {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
-        {currentQ?.figura_path && (
+        {currentQ?.figura_path && !corpo.includes("![") && (
           <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -1555,6 +1570,13 @@ function ResolverContent() {
               alt={`Figura da Questão ${currentQ.id}`}
               className="max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-stone-900 p-2 border border-slate-200 dark:border-stone-800"
               loading="lazy"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.fallback) {
+                  target.dataset.fallback = "1";
+                  target.src = getFallbackFigureUrl(currentQ.figura_path);
+                }
+              }}
             />
             <span className="text-[11px] text-slate-400 dark:text-stone-500 mt-2 font-mono">
               Figura de referência da questão
@@ -2162,6 +2184,14 @@ function ResolverContent() {
 
       {/* MODAL DE AVISO: LOGAR PARA RESPONDER */}
       <AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      {/* MODAL DE REPORTAR INCONSISTÊNCIA NA QUESTÃO */}
+      <ReportarQuestaoModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        questaoId={currentQ?.id || null}
+        origem="resolver"
+      />
     </div>
   );
 }

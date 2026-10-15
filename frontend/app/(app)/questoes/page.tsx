@@ -27,10 +27,12 @@ import {
   Square,
   Timer,
   AlertTriangle,
+  Flag,
 } from "lucide-react";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
+import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 
 interface Question {
@@ -152,6 +154,7 @@ export default function BancoQuestoesPage() {
   // Estado de Seleção em Lote de Questões para Treino / Simulado
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [modalSimuladoAberto, setModalSimuladoAberto] = useState<boolean>(false);
+  const [reportQuestaoId, setReportQuestaoId] = useState<number | null>(null);
 
   // Estado dos dados da página
   const [questoes, setQuestoes] = useState<Question[]>([]);
@@ -1596,6 +1599,15 @@ export default function BancoQuestoesPage() {
                   </div>
 
                   <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setReportQuestaoId(q.id)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-[#d9b452] hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 transition-all"
+                      title="Reportar inconsistência (digitação, gabarito, imagem)"
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                      <span>Reportar</span>
+                    </button>
                     <span className="font-mono text-xs text-slate-400 dark:text-zinc-500 font-semibold">
                       Lema #{q.id.toString().padStart(3, "0")}
                     </span>
@@ -1659,12 +1671,6 @@ export default function BancoQuestoesPage() {
                       className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
                     >
                       {revelado ? `Gabarito: [${q.gabarito}] (Ocultar)` : "Revelar Gabarito"}
-                    </button>
-                    <button
-                      onClick={() => handleReport(q.id)}
-                      className="text-[10px] underline text-amber-600 hover:text-amber-400"
-                    >
-                      Reportar
                     </button>
                     {revelado && (
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -1733,6 +1739,14 @@ export default function BancoQuestoesPage() {
         totalFiltradas={total}
         filtrosAtivosResumo={resumoFiltrosTexto}
         onFetchFilteredIds={fetchFilteredIds}
+      />
+
+      {/* MODAL DE REPORTAR INCONSISTÊNCIA NA QUESTÃO */}
+      <ReportarQuestaoModal
+        isOpen={reportQuestaoId !== null}
+        onClose={() => setReportQuestaoId(null)}
+        questaoId={reportQuestaoId}
+        origem="questoes"
       />
     </div>
   );
