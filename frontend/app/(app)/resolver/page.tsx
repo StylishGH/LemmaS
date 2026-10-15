@@ -66,6 +66,7 @@ interface Question {
   tipo_material?: string;
   pais?: string;
   solucao?: string;
+  estrategias_esperadas?: string | string[] | null;
 }
 
 interface SubmitResult {
@@ -814,7 +815,8 @@ function ResolverContent() {
           comentario: fb.comentario || null,
           metadados: {
             questao_index: idx,
-            resposta_estudante: answers[idx] || null,
+            questao_id: qId,
+            resposta_estudante: answers[qId] || answers[idx] || null,
           },
         }),
       });
@@ -2193,7 +2195,7 @@ function ResolverContent() {
                   });
 
                   const data = await res.json();
-                  if (data && data.resultado?.resultados) {
+                  if (res.ok && data && data.resultado?.resultados) {
                     const newSubmitResults: Record<number, SubmitResult> = {};
                     data.resultado.resultados.forEach((r: any) => {
                       const qIndex = questions.findIndex((q) => q.id === r.questao_id);
@@ -2207,9 +2209,45 @@ function ResolverContent() {
                       }
                     });
                     setSubmitResults(newSubmitResults);
+                  } else {
+                    throw new Error(data?.error || "Resposta inválida do backend de simulados");
                   }
                 } catch (err) {
-                  console.warn("Erro ao enviar simulado para backend:", err);
+                  console.warn("Aviso ao enviar simulado para backend, usando cálculo e persistência local de contingência:", err);
+                  // Popula submitResults localmente a partir de answers e q.gabarito para revisão perfeita
+                  const fallbackResults: Record<number, SubmitResult> = {};
+                  questions.forEach((q, idx) => {
+                    const resp = answers[q.id];
+                    const gabarito = (q.gabarito || "").trim().toUpperCase();
+                    if (resp) {
+                      const acertou = Boolean(gabarito && resp.toUpperCase() === gabarito);
+                      fallbackResults[idx] = {
+                        acertou,
+                        gabarito: gabarito || "(Não informado)",
+                        resposta_enviada: resp,
+                        sm2: {
+                          repeticoes: 1,
+                          fator_facilidade: 2.5,
+                          intervalo_dias: acertou ? 3 : 1,
+                          proxima_revisao_data: new Date(Date.now() + (acertou ? 3 : 1) * 86400000).toISOString(),
+                        },
+                      };
+                    }
+                  });
+                  setSubmitResults(fallbackResults);
+
+                  // Salva no sessionStorage para histórico de contingência
+                  if (typeof window !== "undefined") {
+                    try {
+                      sessionStorage.setItem("lemmas_last_simulado_backup", JSON.stringify({
+                        simuladoId,
+                        questionIds,
+                        answers,
+                        tempoGasto,
+                        timestamp: Date.now(),
+                      }));
+                    } catch {}
+                  }
                 } finally {
                   setSubmitting(false);
                   setShowConfirmModal(false);

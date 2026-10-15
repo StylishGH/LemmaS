@@ -54,6 +54,8 @@ interface Question {
   categoria_banca?: string;
   tipo_prova?: string;
   fase_nivel?: string;
+  solucao?: string | null;
+  estrategias_esperadas?: string | string[] | null;
 }
 
 // ============================================================
