@@ -7,13 +7,24 @@ export async function POST(req: NextRequest) {
     const authorization = req.headers.get("authorization");
     if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "Sessão ausente. Entre novamente no Lemmas." }, { status: 401 });
     const body = await req.json();
-    const { enunciado, nivel = 1 } = body;
+    const { enunciado, nivel = 1, pedagogicalPreference, pedagogical_preference, foco_concurso, motivacoes } = body;
     if (!enunciado || typeof enunciado !== "string") return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
+
+    const pref = pedagogical_preference || pedagogicalPreference || "conceitual";
 
     const response = await fetch(BACKEND_URL + "/api/tutor/hint", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authorization },
-      body: JSON.stringify({ enunciado, level: Math.min(5, Math.max(1, Number(nivel) || 1)), topico: "Matemática", estrategias_esperadas: [] }),
+      body: JSON.stringify({
+        enunciado,
+        level: Math.min(5, Math.max(1, Number(nivel) || 1)),
+        topico: "Matemática",
+        estrategias_esperadas: [],
+        pedagogical_preference: pref,
+        pedagogicalPreference: pref,
+        foco_concurso: foco_concurso || null,
+        motivacoes: Array.isArray(motivacoes) ? motivacoes : [],
+      }),
       signal: AbortSignal.timeout(35000),
       cache: "no-store",
     });
