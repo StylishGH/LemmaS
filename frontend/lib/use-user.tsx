@@ -12,9 +12,11 @@ export interface UserProfile {
   semestre: string;
   concursosSelecionados: string[];
   motivacoesSelecionadas: string[];
+  conceitosSelecionados?: string[];
   metaQuestoesDia: number;
   streakDias: number;
   focoConcurso: string;
+  pedagogicalPreference?: string;
   fotoUrl?: string | null;
   isGuest: boolean;
 }
@@ -27,9 +29,11 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   semestre: "",
   concursosSelecionados: [],
   motivacoesSelecionadas: [],
+  conceitosSelecionados: [],
   metaQuestoesDia: 0,
   streakDias: 0,
   focoConcurso: "Matemática Geral",
+  pedagogicalPreference: "conceitual",
   fotoUrl: null,
   isGuest: true,
 };
@@ -96,7 +100,6 @@ export function calcularStreakDias(tentativas: { data_hora?: string | null }[]):
 }
 
 const STORAGE_KEY = "lemmas_user_profile";
-const PROFILE_EVENT = "lemmas_profile_updated";
 
 function getCachedProfile(): UserProfile | null {
   if (typeof window === "undefined") return null;
@@ -104,7 +107,7 @@ function getCachedProfile(): UserProfile | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && parsed.email && !parsed.isGuest) {
+      if (parsed && typeof parsed === "object") {
         return parsed;
       }
     }
@@ -129,16 +132,9 @@ const UserContext = createContext<UserContextType | null>(null);
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
 
-  // Hidratação síncrona do cache do localStorage: zero delay e zero flicker de visitante
-  const [profile, setProfile] = useState<UserProfile>(() => {
-    const cached = getCachedProfile();
-    return cached || DEFAULT_GUEST_PROFILE;
-  });
-
-  const [loading, setLoading] = useState<boolean>(() => {
-    const cached = getCachedProfile();
-    return cached ? false : true;
-  });
+  // Start with guest profile and loading state true
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_GUEST_PROFILE);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchProfile = useCallback(async (providedUser?: any) => {
     try {
@@ -159,12 +155,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           } catch {}
         }
 
+        const cached = getCachedProfile();
+
         let loadedProfile: UserProfile = {
           ...DEFAULT_GUEST_PROFILE,
+          ...(cached || {}),
           id: user.id,
-          nome: user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS",
+          nome: user.user_metadata?.full_name || cached?.nome || user.email.split("@")[0] || "Aluno LEMMAS",
           email: user.email,
-          fotoUrl: googleAvatar,
+          fotoUrl: googleAvatar || cached?.fotoUrl || null,
           isGuest: false,
         };
 
@@ -181,6 +180,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             let fotoDoBanco: string | null = null;
             let concursosSalvos: string[] = [];
             let motivacoesSalvas: string[] = [];
+            let conceitosSalvos: string[] = [];
+            let pedPrefSalva: string | undefined = undefined;
 
             if (dbUser.motivos) {
               try {
@@ -188,6 +189,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 if (parsed?.foto_url) fotoDoBanco = parsed.foto_url;
                 if (Array.isArray(parsed?.concursos_selecionados)) concursosSalvos = parsed.concursos_selecionados;
                 if (Array.isArray(parsed?.motivacoes_selecionadas)) motivacoesSalvas = parsed.motivacoes_selecionadas;
+                if (Array.isArray(parsed?.conceitos_selecionados)) conceitosSalvos = parsed.conceitos_selecionados;
+                if (parsed?.pedagogical_preference) pedPrefSalva = parsed.pedagogical_preference;
               } catch {}
             }
 
@@ -199,8 +202,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               faculdade: dbUser.faculdade || loadedProfile.faculdade,
               focoConcurso: dbUser.concursos_foco || loadedProfile.focoConcurso,
               fotoUrl: fotoDoBanco || googleAvatar || loadedProfile.fotoUrl,
-              concursosSelecionados: concursosSalvos.length > 0 ? concursosSalvos : loadedProfile.concursosSelecionados,
-              motivacoesSelecionadas: motivacoesSalvas.length > 0 ? motivacoesSalvas : loadedProfile.motivacoesSelecionadas,
+              concursosSelecionados: concursosSalvos.length > 0 ? concursosSalvos : (loadedProfile.concursosSelecionados || []),
+              motivacoesSelecionadas: motivacoesSalvas.length > 0 ? motivacoesSalvas : (loadedProfile.motivacoesSelecionadas || []),
+              conceitosSelecionados: conceitosSalvos.length > 0 ? conceitosSalvos : (loadedProfile.conceitosSelecionados || []),
+              pedagogicalPreference: pedPrefSalva || loadedProfile.pedagogicalPreference || "conceitual",
             };
           } else if (user.email) {
             const { data: novoDbUser } = await supabase
@@ -252,14 +257,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Sessão deslogada
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(STORAGE_KEY);
+      // Sessão sem usuário autenticado (modo local/visitante)
+      const cached = getCachedProfile();
+      if (cached) {
+        setProfile(cached);
+      } else {
+        setProfile(DEFAULT_GUEST_PROFILE);
       }
-      setProfile(DEFAULT_GUEST_PROFILE);
     } catch {
       const cached = getCachedProfile();
-      if (!cached) {
+      if (cached) {
+        setProfile(cached);
+      } else {
         setProfile(DEFAULT_GUEST_PROFILE);
       }
     } finally {
@@ -268,7 +277,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   useEffect(() => {
-    fetchProfile();
+    // Check for cached profile on mount
+    const cached = getCachedProfile();
+    if (cached) {
+      setProfile(cached);
+      setLoading(false);
+    } else {
+      fetchProfile();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
@@ -283,20 +299,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    const handleCustomEvent = () => {
-      fetchProfile();
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed && typeof parsed === "object") {
+            setProfile(parsed);
+          }
+        } catch {}
+      }
     };
 
     if (typeof window !== "undefined") {
-      window.addEventListener(PROFILE_EVENT, handleCustomEvent);
-      window.addEventListener("storage", handleCustomEvent);
+      window.addEventListener("storage", handleStorageEvent);
     }
 
     return () => {
       subscription.unsubscribe();
       if (typeof window !== "undefined") {
-        window.removeEventListener(PROFILE_EVENT, handleCustomEvent);
-        window.removeEventListener("storage", handleCustomEvent);
+        window.removeEventListener("storage", handleStorageEvent);
       }
     };
   }, [fetchProfile, supabase]);
@@ -307,7 +328,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      window.dispatchEvent(new Event(PROFILE_EVENT));
     }
 
     if (!next.isGuest && next.email) {
@@ -336,6 +356,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (next.motivacoesSelecionadas !== undefined) {
           parsed.motivacoes_selecionadas = next.motivacoesSelecionadas;
         }
+        if (next.pedagogicalPreference !== undefined) {
+          parsed.pedagogical_preference = next.pedagogicalPreference;
+        }
+        if (next.conceitosSelecionados !== undefined) {
+          parsed.conceitos_selecionados = next.conceitosSelecionados;
+        }
 
         const updatePayload: Record<string, any> = {
           nome: next.nome,
@@ -345,10 +371,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           motivos: JSON.stringify(parsed),
         };
 
-        await supabase
+        const { error: upsertErr } = await supabase
           .from("usuarios")
-          .update(updatePayload)
-          .eq("email", next.email);
+          .upsert({
+            email: next.email,
+            ...updatePayload,
+            senha_hash: "supabase_managed",
+          }, { onConflict: "email" });
+
+        if (upsertErr) {
+          console.warn("Aviso no upsert de perfil no Supabase, tentando update:", upsertErr);
+          await supabase
+            .from("usuarios")
+            .update(updatePayload)
+            .eq("email", next.email);
+        }
 
         // NUNCA grave data: URLs (base64) no Supabase Auth user_metadata para não inflar o JWT/cookies além do limite de 32KB do Vercel
         if (next.fotoUrl && typeof next.fotoUrl === "string" && !next.fotoUrl.startsWith("data:")) {
@@ -374,7 +411,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
-      window.dispatchEvent(new Event(PROFILE_EVENT));
     }
     setProfile(DEFAULT_GUEST_PROFILE);
   };
@@ -390,9 +426,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
-}
-
-export function useUserProfile() {
+}export function useUserProfile() {
   const context = useContext(UserContext);
   if (!context) {
     return {

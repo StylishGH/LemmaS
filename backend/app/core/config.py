@@ -69,6 +69,12 @@ class Settings:
         self.NINEROUTER_URL: str = os.getenv("NINEROUTER_URL", "").rstrip("/")
         self.NINEROUTER_API_KEY: str = os.getenv("NINEROUTER_API_KEY", "").strip()
 
+        # Provedor Aberto Especializado Local (vLLM / Ollama / LM Studio) - Rota Nível E
+        self.PRIMARY_AI_PROVIDER: str = os.getenv("PRIMARY_AI_PROVIDER", "auto").strip().lower()
+        self.LOCAL_LLM_URL: str = os.getenv("LOCAL_LLM_URL", "").rstrip("/")
+        self.LOCAL_LLM_MODEL: str = os.getenv("LOCAL_LLM_MODEL", "Qwen/Qwen2.5-Math-7B-Instruct").strip()
+        self.LOCAL_LLM_API_KEY: str = os.getenv("LOCAL_LLM_API_KEY", "EMPTY").strip()
+
     @property
     def has_supabase(self) -> bool:
         """Verifica se as credenciais do Supabase estão configuradas."""
@@ -98,6 +104,11 @@ class Settings:
     def has_9router(self) -> bool:
         """Verifica se o endpoint do 9Router está explicitamente configurado."""
         return bool(self.NINEROUTER_URL)
+
+    @property
+    def has_local_llm(self) -> bool:
+        """Verifica se um endpoint de inferência local (vLLM / Ollama) está configurado."""
+        return bool(self.LOCAL_LLM_URL)
 
 
 settings = Settings()

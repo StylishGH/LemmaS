@@ -68,6 +68,8 @@ temp_*
 *.tmp
 *.log
 ver_usuarios.py
+tmp/
+Q17_output/
 
 # ------------------------------------------------------------------------------
 # IDEs, Editores de Código e Sistema Operacional

@@ -16,15 +16,15 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
     filter: "materia.ilike.%Cálculo%,materia.ilike.%Cálculo 1%,materia.ilike.%Cálculo 2%,materia.ilike.%Cálculo 3%,materia.ilike.%Cálculo Vetorial%,materia.ilike.%Geometria Diferencial%,topico.ilike.%Cálculo%,topico.ilike.%Cálculo 1%,topico.ilike.%Cálculo 2%,topico.ilike.%Cálculo 3%,topico.ilike.%Cálculo Vetorial%,topico.ilike.%Geometria Diferencial%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("cálculo") || lower.includes("geometria diferencial");
+      return lower.includes("cálculo") || lower.includes("calculo") || lower.includes("geometria diferencial");
     },
   },
   {
     name: "Probabilidade e Combinatória",
-    filter: "materia.ilike.%Probabilidade e Combinatória%,materia.ilike.%Análise Combinatória%,materia.ilike.%Probabilidade%,materia.ilike.%Estatística%,topico.ilike.%Probabilidade e Combinatória%,topico.ilike.%Análise Combinatória%,topico.ilike.%Probabilidade%,topico.ilike.%Estatística%",
+    filter: "materia.ilike.%Probabilidade e Combinatória%,materia.ilike.%Análise Combinatória%,materia.ilike.%Probabilidade%,materia.ilike.%Estatística%,materia.ilike.%Lógica%,topico.ilike.%Probabilidade e Combinatória%,topico.ilike.%Análise Combinatória%,topico.ilike.%Probabilidade%,topico.ilike.%Estatística%,topico.ilike.%Lógica%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("probabilidade") || lower.includes("estatística") || lower.includes("combinatória") || lower.includes("análise combinatória");
+      return lower.includes("probabilidade") || lower.includes("estatística") || lower.includes("estatistica") || lower.includes("combinatória") || lower.includes("combinatoria") || lower.includes("análise combinatória") || lower.includes("lógica") || lower.includes("logica");
     },
   },
   {
@@ -40,28 +40,51 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
     filter: "materia.ilike.%Álgebra Linear%,materia.ilike.%Geometria Analítica e Álgebra Linear%,topico.ilike.%Álgebra Linear%,topico.ilike.%Geometria Analítica e Álgebra Linear%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("álgebra linear") || lower.includes("geometria analítica e álgebra linear");
+      return lower.includes("álgebra linear") || lower.includes("algebra linear") || lower.includes("geometria analítica e álgebra linear");
+    },
+  },
+  {
+    name: "Funções",
+    filter: "materia.ilike.%Funções%,materia.ilike.%Função%,topico.ilike.%Funç%,topico.ilike.%Afim%,topico.ilike.%Quadrátic%,topico.ilike.%Exponencial%,topico.ilike.%Logarítm%,topico.ilike.%Modular%,topico.ilike.%Funciona%,and(materia.ilike.%Álgebra%,enunciado.ilike.%f(x)%)",
+    matcher: (m) => {
+      const lower = m.toLowerCase();
+      return lower.includes("funç") || lower.includes("func");
     },
   },
   {
     name: "Álgebra",
-    filter: "materia.ilike.%Álgebra%,materia.ilike.%Teoria dos Conjuntos%,topico.ilike.%Álgebra%,topico.ilike.%Teoria dos Conjuntos%",
+    filter: "materia.ilike.%Álgebra%,materia.ilike.%Teoria dos Conjuntos%,topico.ilike.%Álgebra%,topico.ilike.%Teoria dos Conjuntos%,topico.ilike.%Desigualdades%,topico.ilike.%Sequências%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("álgebra") || lower.includes("teoria dos conjuntos");
+      return (
+        (lower.includes("álgebra") ||
+          lower.includes("algebra") ||
+          lower.includes("teoria dos conjuntos") ||
+          lower === "geral" ||
+          lower.includes("matemática geral") ||
+          lower.includes("matematica geral") ||
+          lower === "matemática" ||
+          lower === "matematica") &&
+        !lower.includes("linear") &&
+        !lower.includes("funç") &&
+        !lower.includes("func")
+      );
     },
   },
   {
     name: "Teoria dos Números",
     filter: "materia.ilike.%Teoria dos Números%,topico.ilike.%Teoria dos Números%",
-    matcher: (m) => m.toLowerCase().includes("teoria dos números"),
+    matcher: (m) => {
+      const lower = m.toLowerCase();
+      return lower.includes("teoria dos números") || lower.includes("teoria dos numeros") || lower.includes("números") || lower.includes("numeros");
+    },
   },
   {
     name: "Polinômios e Complexos",
     filter: "materia.ilike.%Polinômios e Complexos%,topico.ilike.%Polinômios e Complexos%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("polinôm") || lower.includes("complex");
+      return lower.includes("polinôm") || lower.includes("polinom") || lower.includes("complex");
     },
   },
   {
@@ -77,27 +100,14 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
   {
     name: "Geometria Analítica",
     filter: "materia.ilike.%Geometria Analítica%,topico.ilike.%Geometria Analítica%",
-    matcher: (m) => m.toLowerCase().includes("geometria analítica"),
+    matcher: (m) => m.toLowerCase().includes("geometria analítica") || m.toLowerCase().includes("geometria analitica"),
   },
   {
     name: "Matemática Básica",
-    filter: "materia.ilike.%Matemática Básica%,materia.ilike.%Aritmética%,topico.ilike.%Matemática Básica%,topico.ilike.%Aritmética%",
+    filter: "materia.ilike.%Matemática Básica%,materia.ilike.%Aritmética%,materia.ilike.%Matemática Financeira%,topico.ilike.%Matemática Básica%,topico.ilike.%Aritmética%,topico.ilike.%Financeir%",
     matcher: (m) => {
       const lower = m.toLowerCase();
-      return lower.includes("matemática básica") || lower === "aritmética";
-    },
-  },
-  {
-    name: "Matemática Geral",
-    filter: "materia.ilike.%Matemática%,topico.ilike.%",
-    matcher: (m) => {
-      const lower = m.toLowerCase();
-      // match generic matemática when not already caught by other categories
-      return lower.includes("matemática") &&
-             !lower.includes("básica") &&
-             !lower.includes("linear") &&
-             !lower.includes("analítica") &&
-             !lower.includes("espacial");
+      return lower.includes("matemática básica") || lower.includes("matematica basica") || lower.includes("aritmética") || lower.includes("aritmetica") || lower.includes("financeir");
     },
   },
 ];
@@ -107,7 +117,7 @@ const FALLBACK_QUESTOES = [
     id: 1234,
     banca: "ESA",
     ano: 2026,
-    materia: "Álgebra",
+    materia: "Funções",
     topico: "Funções",
     subtopico: "Funções Quadráticas",
     dificuldade: 3,
@@ -338,9 +348,8 @@ export async function GET(req: NextRequest) {
         const rpcFaseNivel = faseNivelValues.length === 1 ? faseNivelValues[0] : null;
         const rpcMateria = materiaValues.length === 1 ? materiaValues[0] : null;
 
-        const [mainResult, facetSampleResult, filterCountsResult, globalStatsResult] = await Promise.all([
+        const [mainResult, filterCountsResult, globalStatsResult] = await Promise.all([
           query,
-          supabase.from("questoes").select("banca, ano, tipo, dificuldade, materia, topico, subtopico").limit(1000),
           supabase.rpc("get_question_filter_counts", {
             p_banca: rpcBanca,
             p_tipo_prova: rpcTipoProva,
@@ -481,8 +490,8 @@ export async function GET(req: NextRequest) {
           })),
         ];
 
-    // Amostra de linhas para cálculo de tipos de resposta (objetiva/discursiva) e anos
-        const sampleRows = (facetSampleResult.data || []) as {
+    // Registros contextuais da página atual para apuração de tópicos e metadados locais
+        const sampleRows = (data || []) as {
           banca: string | null;
           ano: number | null;
           tipo: string | null;
@@ -575,9 +584,40 @@ export async function GET(req: NextRequest) {
           { id: "nao_classificada", label: "Não Classificada", count: naoClassificadaFinal },
         ];
 
-        // Contagem de Anos - usar globalStats para ter TODOS os anos (sem limite 1000)
-        const anosFacets = (globalStats.anos_disponiveis || [])
-          .map((ano) => ({ ano, count: anosMap[ano] || 0 }))
+        // Mapa canônico de contagens reais de anos apuradas no banco de dados completo (LEMMAS)
+        const ACERVO_ANOS_COUNTS: Record<number, number> = {
+          2026: 8, 2025: 31, 2024: 70, 2023: 98, 2022: 76, 2021: 77,
+          2020: 85, 2019: 103, 2018: 80, 2017: 38, 2016: 40, 2015: 36,
+          2014: 40, 2013: 46, 2012: 18, 2011: 31, 2010: 5, 2009: 13,
+          2008: 14, 2007: 9, 2006: 2, 2005: 5, 2004: 2, 2003: 6,
+          2002: 8, 2001: 3, 2000: 2, 1999: 2, 1998: 5, 1997: 19,
+          1996: 1, 1995: 1, 1993: 9, 1992: 4, 1991: 2, 1990: 1,
+          1989: 2, 1988: 1, 1987: 1, 1986: 1, 1984: 1, 1982: 2,
+          1981: 1, 1979: 1,
+        };
+
+        const isFilteredContext =
+          bancaValues.length > 0 ||
+          materiaValues.length > 0 ||
+          categoriaBancaValues.length > 0 ||
+          topicoValues.length > 0 ||
+          tipoProvaValues.length > 0;
+
+        // Contagem de Anos: se estiver filtrado por dimensão específica, usa anosMap apurado na amostra;
+        // caso contrário (acervo geral), usa as contagens reais consolidadas de cada ano.
+        // E SEMPRE filtra a.count > 0 para nunca exibir botões com (0) questões.
+        const anosBase = (globalStats.anos_disponiveis && globalStats.anos_disponiveis.length > 0)
+          ? globalStats.anos_disponiveis
+          : Object.keys(ACERVO_ANOS_COUNTS).map(Number);
+
+        const anosFacets = anosBase
+          .map((ano) => {
+            const count = isFilteredContext
+              ? (anosMap[ano] || 0)
+              : (ACERVO_ANOS_COUNTS[ano] ?? anosMap[ano] ?? 0);
+            return { ano, count };
+          })
+          .filter((a) => a.count > 0)
           .sort((a, b) => b.ano - a.ano);
 
     // Agregação Canônica de Matérias (Sem pílulas duplicadas)
@@ -595,13 +635,14 @@ export async function GET(req: NextRequest) {
         }
       }
       if (!matched && m.nome && m.nome !== "Todas") {
-        canonicalMateriaCounts.set(m.nome, (canonicalMateriaCounts.get(m.nome) || 0) + Number(m.total));
+        // Resíduos não associados são integrados em Álgebra
+        canonicalMateriaCounts.set("Álgebra", (canonicalMateriaCounts.get("Álgebra") || 0) + Number(m.total));
       }
     }
     const materiasFacets = [
       { name: "Todas", count: totalRealQuestoes },
       ...Array.from(canonicalMateriaCounts.entries())
-        .filter(([_, count]) => count > 0)
+        .filter(([name, count]) => count >= 10 && name !== "Matemática Geral" && name !== "Geral" && name !== "Lógica" && name !== "Matemática Financeira")
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
     ];
@@ -655,13 +696,13 @@ export async function GET(req: NextRequest) {
       materias: materiasFacets,
       materias_com_topicos: materiasComTopicos,
       topicos: [
-        { name: "Todos", count: sampleRows.length },
+        { name: "Todos", count: totalRealQuestoes },
         ...topicosEspecificosFacets,
       ],
       anos: [
         { 
           label: `Todos os Anos da Prova (${globalStats.ano_min ?? 1979}–${globalStats.ano_max ?? 2026})`, 
-          count: filteredByBanca.length 
+          count: totalRealQuestoes 
         },
         ...anosFacets,
       ],

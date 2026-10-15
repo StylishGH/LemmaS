@@ -1,6 +1,6 @@
 """Esquemas Pydantic para Requisições e Respostas de Avaliação de IA."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
@@ -77,4 +77,36 @@ class AiEvaluationResponse(BaseModel):
     confianca_diagnostico: Literal["alta", "media", "baixa"] = Field(
         default="media", description="Grau de certeza da IA baseado nas evidências visíveis"
     )
-    created_at: datetime
+    # Contrato Estruturado de Avaliação Discursiva (4 vereditos de negócio)
+    veredito: Literal["aprovado", "parcial", "sem_desenvolvimento", "incorreto"] = Field(
+        default="incorreto",
+        description="Veredito categorial de negócio para questões discursivas"
+    )
+    desenvolvimento_presente: bool = Field(
+        default=False,
+        description="Se o aluno apresentou passos matemáticos e raciocínio verificável"
+    )
+    resultado_final_correto: bool = Field(
+        default=False,
+        description="Se o resultado final ou conclusão obtida coincide com a verdade matemática"
+    )
+    etapas_corretas: List[str] = Field(
+        default_factory=list,
+        description="Etapas e passagens intermediárias corretas identificadas"
+    )
+    erros_identificados: List[str] = Field(
+        default_factory=list,
+        description="Erros específicos de cálculo, álgebra ou lógica encontrados"
+    )
+    feedback_latex: str = Field(
+        default="",
+        description="Feedback pedagógico detalhado com equações e fórmulas em LaTeX"
+    )
+    precisa_revisao_humana: bool = Field(
+        default=False,
+        description="Sinaliza avaliação inconclusiva, imagem ilegível ou falha de OCR"
+    )
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Data e hora da avaliação cognitiva"
+    )

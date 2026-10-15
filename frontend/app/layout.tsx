@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/lib/use-user";
+import { ThemeInitializer } from "@/components/theme-initializer";
 
 export const metadata: Metadata = {
   title: "LEMMAS — Plataforma Cognitiva de Aprendizagem | Powered by MathAI Engine",
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>",
   },
 };
+
 
 export default function RootLayout({
   children,
@@ -21,9 +22,7 @@ export default function RootLayout({
     <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
       <head />
       <body className="min-h-full">
-        <Script id="lemmas-theme-init" strategy="beforeInteractive">
-          {`(function(){try{var t=localStorage.getItem("lemmas-theme")||"lemmas-dark";document.documentElement.dataset.theme=t;if(t==="lemmas-light"){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}else{document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`}
-        </Script>
+        <ThemeInitializer />
         <ThemeProvider>
           <UserProvider>
             {children}

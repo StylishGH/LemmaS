@@ -16,7 +16,12 @@ import {
   Layers,
   BookOpen,
   Play,
-  GraduationCap
+  GraduationCap,
+  PenTool,
+  Target,
+  Cpu,
+  FileText,
+  CheckCircle2
 } from "lucide-react";
 import { BackgroundAnimation } from "./BackgroundAnimation";
 import { BoardFrame } from "./BoardFrame";
@@ -72,7 +77,7 @@ const AMOSTRA_QUESTOES = [
 
 export function LandingPage() {
   const { isLight, toggleTheme } = useTheme();
-  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  const [totalQuestions, setTotalQuestions] = useState<number>(20803);
 
   // Buscar contagem total de questões do banco
   useEffect(() => {
@@ -104,15 +109,15 @@ export function LandingPage() {
       <div className="lemmas-page">
         <BackgroundAnimation />
         
-        {/* NAVEGAÇÃO SUPERIOR (SEM A OPÇÃO 'SOBRE NÓS', COM SCROLL SUAVE) */}
+        {/* NAVEGAÇÃO SUPERIOR */}
         <nav className="lemmas-nav">
           <Logo compact />
           <div className="lemmas-nav-links">
             <a href="#metodo" onClick={(e) => scrollToSection(e, "metodo")}>
               O Método
             </a>
-            <a href="#processo" onClick={(e) => scrollToSection(e, "processo")}>
-              Como Funciona
+            <a href="#bancada" onClick={(e) => scrollToSection(e, "bancada")}>
+              Bancada Discursiva
             </a>
             <a href="#arquitetura" onClick={(e) => scrollToSection(e, "arquitetura")}>
               Arquitetura
@@ -125,8 +130,8 @@ export function LandingPage() {
             </a>
           </div>
           <div className="lemmas-nav-actions">
-            <Link href="/" className="lemmas-nav-auth-btn">
-              Área do Aluno →
+            <Link href="/questoes" className="lemmas-nav-auth-btn">
+              Explorar Questões →
             </Link>
             <button 
               type="button" 
@@ -143,24 +148,24 @@ export function LandingPage() {
         {/* HERO SECTION EDITORIAL */}
         <section className="lemmas-hero">
           <div className="lemmas-hero-copy">
-            <span className="lemmas-eyebrow">PLATAFORMA COGNITIVA · POWERED BY MATHAI ENGINE</span>
+            <span className="lemmas-eyebrow">PLATAFORMA COGNITIVA · POWERED BY MATHAI ENGINE · V1 OFICIAL</span>
             <h1>Aprenda como<br /><em>você pensa.</em></h1>
             <p className="lemmas-hero-lede">
-              Diferente dos bancos de questões convencionais que apenas conferem alternativas, a plataforma <strong>LEMMAS</strong> investiga o seu <strong>processo metacognitivo</strong>, identifica <strong>vícios de cálculo</strong> e mapeia <strong>estratégias de resolução</strong> através da inteligência especializada da <strong>MathAI Engine</strong>.
+              Diferente dos bancos de questões convencionais que apenas conferem alternativas, a plataforma <strong>LEMMAS</strong> investiga o seu <strong>desenvolvimento matemático passo a passo</strong> na nova <strong>Bancada Discursiva</strong>, personaliza a tutoria para sua meta real (Licenciatura, Concursos Militares ou Ciência de Dados) e cataloga <strong>20.803 questões</strong> com estética minimalista e rigor conceitual.
             </p>
             <div className="lemmas-hero-actions">
-              <Link className="lemmas-cta lemmas-cta-primary" href="/">
-                Acessar a Plataforma <ArrowRight size={17} />
+              <Link className="lemmas-cta lemmas-cta-primary" href="/questoes">
+                Acessar Acervo de Elite <ArrowRight size={17} />
               </Link>
-              <a className="lemmas-cta lemmas-cta-secondary" href="#metodo" onClick={(e) => scrollToSection(e, "metodo")}>
-                Conhecer o Método
+              <a className="lemmas-cta lemmas-cta-secondary" href="#bancada" onClick={(e) => scrollToSection(e, "bancada")}>
+                Conhecer a Bancada Discursiva
               </a>
               <a className="lemmas-cta lemmas-cta-secondary" href="#questoes-amostra" onClick={(e) => scrollToSection(e, "questoes-amostra")}>
                 Ver Questões em Ação
               </a>
             </div>
             <div className="lemmas-hero-note">
-              <span /> A plataforma cognitiva que aprende com seu raciocínio.
+              <span /> 20.803 questões auditadas · 138 lemas matemáticos · Avaliação analítica com 4 vereditos.
             </div>
           </div>
         </section>
@@ -170,38 +175,77 @@ export function LandingPage() {
           <div className="lemmas-section-heading">
             <span className="lemmas-eyebrow">A FILOSOFIA</span>
             <h2>Por que o LEMMAS é diferente?</h2>
-            <p>A maioria dos estudantes de matemática não falha por falta de fórmulas, mas pela ausência de diagnóstico metacognitivo.</p>
+            <p>A maioria dos estudantes de matemática não falha por falta de fórmulas, mas pela ausência de diagnóstico metacognitivo e reflexão guiada.</p>
           </div>
           
           <div className="lemmas-principles">
             <PixelCard variant={isLight ? "blue" : "gold"} className="lemmas-principle">
               <div style={{ padding: "24px 26px", width: "100%" }}>
-                <BrainCircuit size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
-                <strong>Diagnóstico Metacognitivo</strong>
-                <p>Mapeamos se a sua dúvida decorre de álgebra básica, interpretação de texto, falha de axioma ou falta de repertório heurístico.</p>
+                <PenTool size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
+                <strong>Bancada Discursiva Multimodal</strong>
+                <p>Rascunhe na Lousa Digital, construa com o Compasso Euclidiano ou envie foto do caderno/tablet via OCR. A MathAI Engine valida o raciocínio sem penalizar demonstrações curtas válidas.</p>
               </div>
             </PixelCard>
             <PixelCard variant={isLight ? "blue" : "violet"} className="lemmas-principle">
               <div style={{ padding: "24px 26px", width: "100%" }}>
-                <Camera size={26} color={isLight ? "#2d6da1" : "#a855f7"} style={{ marginBottom: 12 }} />
-                <strong>Caderno & Tablet</strong>
-                <p>Envie foto do seu rascunho manuscrito. A MathAI Engine analisa seus passos intermediários e aponta a exata linha do desvio.</p>
+                <Target size={26} color={isLight ? "#2d6da1" : "#a855f7"} style={{ marginBottom: 12 }} />
+                <strong>Tutor Socrático por Perfil</strong>
+                <p>Se você busca Licenciatura (didática e primeiros princípios), ITA/IME (rigor axiomático puro) ou Ciência de Dados (matrizes e probabilidade), a IA calibra o tom e as dicas para sua meta.</p>
               </div>
             </PixelCard>
             <PixelCard variant={isLight ? "blue" : "gold"} className="lemmas-principle">
               <div style={{ padding: "24px 26px", width: "100%" }}>
-                <Timer size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
-                <strong>Simulados Reais</strong>
-                <p>Treine sob pressão com cronômetro regressivo com tempo oficial de prova e receba relatórios analíticos de rendimento.</p>
+                <BrainCircuit size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
+                <strong>Barra LeetCode / Linear</strong>
+                <p>Navegação horizontal minimalista (≤ 140px) com 5 Trilhas Rápidas de 1 clique, popovers com busca interna instantânea e bancas de elite brasileiras fixadas no topo.</p>
               </div>
             </PixelCard>
             <PixelCard variant={isLight ? "blue" : "violet"} className="lemmas-principle">
               <div style={{ padding: "24px 26px", width: "100%" }}>
                 <LineChart size={26} color={isLight ? "#2d6da1" : "#a855f7"} style={{ marginBottom: 12 }} />
-                <strong>Repetição Espaçada (SM-2)</strong>
-                <p>O algoritmo SuperMemo-2 puro gerencia revisões no momento ideal da curva de retenção de memória, agnóstico a qualquer disciplina.</p>
+                <strong>Repetição Espaçada FSRS-v4 & SM-2</strong>
+                <p>Algoritmos determinísticos agendam revisões no momento exato em que a curva do esquecimento começa a decair, agnóstico a qualquer disciplina futura.</p>
               </div>
             </PixelCard>
+          </div>
+        </section>
+
+        {/* SEÇÃO NOVA: A BANCADA DISCURSIVA */}
+        <section id="bancada" className="lemmas-section lemmas-magic-section">
+          <div className="lemmas-section-heading">
+            <span className="lemmas-eyebrow">NOVIDADE V1 · O CORAÇÃO DO MATHAI ENGINE</span>
+            <h2>A Nova Bancada Discursiva</h2>
+            <p>Três ferramentas integradas para você expressar seu raciocínio como um verdadeiro matemático.</p>
+          </div>
+          <div className="lemmas-magic-steps">
+             <div className="lemmas-magic-step">
+                <div className="lemmas-magic-number">1</div>
+                <div>
+                  <strong>Lousa de Rascunho Digital</strong>
+                  <p>Área de rascunho com suporte a escrita livre, equações em KaTeX e manipulações algébricas sem perder o foco do enunciado.</p>
+                </div>
+             </div>
+             <div className="lemmas-magic-step">
+                <div className="lemmas-magic-number">2</div>
+                <div>
+                  <strong>Compasso & Geometria Euclidiana</strong>
+                  <p>Mesa geométrica interativa com régua e compasso para traçar arcos, retas tangentes, circunferências e bissetrizes com precisão analítica.</p>
+                </div>
+             </div>
+             <div className="lemmas-magic-step">
+                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>3</div>
+                <div>
+                  <strong>Dedução & OCR Multimodal</strong>
+                  <p>Envie foto do rascunho em papel ou do seu tablet. O motor multimodal transcreve os passos e analisa o encadeamento dedutivo da sua resposta.</p>
+                </div>
+             </div>
+             <div className="lemmas-magic-step">
+                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>4</div>
+                <div>
+                  <strong>Avaliação com 4 Vereditos Auditáveis</strong>
+                  <p>Classificação transparente entre <em>Aprovado</em>, <em>Parcial</em>, <em>Sem Desenvolvimento</em> e <em>Incorreto</em>, com salvaguarda estrita contra conclusões precipitadas.</p>
+                </div>
+             </div>
           </div>
         </section>
 
@@ -211,7 +255,7 @@ export function LandingPage() {
             <span className="lemmas-eyebrow">SEPARAÇÃO ARQUITETURAL · PLATAFORMA VS ENGINE</span>
             <h2>Construído sobre Engenharia Rigorosa</h2>
             <p>
-              Uma decisão central da nossa arquitetura: separamos tarefas determinísticas de inferências interpretativas de IA para garantir dados observados inquestionáveis.
+              Uma decisão central da nossa arquitetura: separamos tarefas determinísticas de inferências interpretativas de IA para garantir dados observados inquestionáveis: <strong>Dado Observado ≠ Interpretação da IA ≠ Dado Validado</strong>.
             </p>
           </div>
 
@@ -220,13 +264,13 @@ export function LandingPage() {
               <div className="lemmas-arch-badge">🌐 CAMADA 1</div>
               <h3>Plataforma LEMMAS & LEMMAS Core</h3>
               <p>
-                Gerencia o ecossistema web, sessões dos estudantes, cronometragem precisa, histórico de tentativas e o motor determinístico de repetição espaçada SM-2. Agnóstica e escalável para qualquer disciplina futura.
+                Gerencia o ecossistema web, sessões dos estudantes, cronometragem precisa, histórico de tentativas e o motor determinístico de repetição espaçada SM-2 e FSRS-v4. Agnóstica e escalável para qualquer disciplina futura.
               </p>
               <ul className="lemmas-arch-list">
-                <li>Next.js 16 (App Router) & TypeScript</li>
-                <li>Design System Quanta com Estética Lousa de Prestígio</li>
-                <li>Algoritmo SuperMemo-2 (SM-2) puro</li>
-                <li>Supabase Postgres com Prova de Autoria & RLS</li>
+                <li>Next.js 16 (App Router, Turbopack) & TypeScript</li>
+                <li>Design System Editorial com Estética Lousa de Prestígio</li>
+                <li>Barra de Comando LeetCode/Linear minimalista (≤ 140px)</li>
+                <li>Supabase Postgres com Hash SHA-256 de Autoria & RLS</li>
               </ul>
             </div>
 
@@ -234,58 +278,19 @@ export function LandingPage() {
               <div className="lemmas-arch-badge arch-badge-gold">⚡ CAMADA 2</div>
               <h3>MathAI Engine (Núcleo de Inteligência)</h3>
               <p>
-                O motor cognitivo especializado em Matemática superior e militar. Conduz diagnósticos de erro em 4 quadrantes, gera dicas heurísticas e orquestra múltiplos modelos em tempo real.
+                O motor cognitivo especializado em Matemática superior e militar. Avalia desenvolvimento discursivo, conduz tutoria socrática personalizada e orquestra múltiplos modelos via Padrão Strategy.
               </p>
               <ul className="lemmas-arch-list">
-                <li>Taxonomia de Erros: Sinal, Álgebra, Interpretação e Axioma</li>
-                <li>Roteamento Inteligente: NVIDIA Nemotron (Rigor) e DeepSeek (Heurística)</li>
-                <li>Processamento cirúrgico de fórmulas em KaTeX/LaTeX</li>
-                <li>Acervo indexado com {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} questões e lemas classificados</li>
+                <li>Bancada Discursiva com 4 Vereditos de Ponta a Ponta</li>
+                <li>Roteamento Inteligente: NVIDIA Nemotron, DeepSeek, Gemini e SLMs Locais</li>
+                <li>Telemetria N:1 com rastreabilidade de tokens e latência</li>
+                <li>Acervo indexado com {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} questões e 138 lemas</li>
               </ul>
             </div>
           </div>
         </section>
 
-        {/* SEÇÃO 3: O PROCESSO EM 4 ETAPAS */}
-        <section id="processo" className="lemmas-section lemmas-magic-section">
-          <div className="lemmas-section-heading">
-            <span className="lemmas-eyebrow">O PROCESSO</span>
-            <h2>Como a mágica acontece?</h2>
-            <p>O ciclo de resolução e aprendizagem adaptativa em 4 etapas estruturadas.</p>
-          </div>
-          <div className="lemmas-magic-steps">
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number">1</div>
-                <div>
-                  <strong>Resolução Focada & Cronometrada</strong>
-                  <p>Você resolve a questão visualizando diagramas e fórmulas nítidas. O tempo exato gasto é monitorado de forma invisível.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number">2</div>
-                <div>
-                  <strong>Metacognição Ativa & Justificativa</strong>
-                  <p>Antes de marcar a alternativa, você indica qual teorema tentou utilizar e justifica sucintamente seu raciocínio.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>3</div>
-                <div>
-                  <strong>Diagnóstico e Dica Socrática com MathAI</strong>
-                  <p>A MathAI Engine compara seu rascunho com as resoluções esperadas, indicando o desvio exato no seu desenvolvimento sem dar spoiler.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>4</div>
-                <div>
-                  <strong>Perfil Cognitivo & Agendamento SM-2</strong>
-                  <p>O radar de habilidades mapeia seus pontos fortes e fracos, e o SM-2 agenda a próxima revisão no momento ótimo da retenção.</p>
-                </div>
-             </div>
-          </div>
-        </section>
-
-        {/* SEÇÃO NOVA: VITRINE DE QUESTÕES REAIS DO SUPABASE (CARREGAMENTO REAL) */}
+        {/* SEÇÃO: VITRINE DE QUESTÕES REAIS DO SUPABASE */}
         <section id="questoes-amostra" className="lemmas-section">
           <div className="lemmas-section-heading">
             <span className="lemmas-eyebrow">ACERVO VIVO · {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} ITENS NO SUPABASE</span>
@@ -350,25 +355,25 @@ export function LandingPage() {
             ))}
           </div>
 
-                    <div className="text-center pt-2">
-                      <Link 
-                        href="/questoes"
-                        className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
-                      >
-                        <BookOpen size={17} />
-                        <span>Explorar Todas as {totalQuestions.toLocaleString("pt-BR")} Questões no Banco Completo</span>
-                        <ArrowRight size={17} />
-                      </Link>
-                    </div>
-                  </section>
+          <div className="text-center pt-2">
+            <Link 
+              href="/questoes"
+              className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
+            >
+              <BookOpen size={17} />
+              <span>Explorar Todas as {totalQuestions.toLocaleString("pt-BR")} Questões no Acervo Completo</span>
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+        </section>
         
-        {/* SEÇÃO 4: O QUE VEM POR AÍ (ROADMAP TÉCNICO & FUTURAS COISAS) */}
+        {/* SEÇÃO 4: O QUE VEM POR AÍ (ROADMAP TÉCNICO & PRÓXIMAS FRONTEIRAS) */}
         <section id="roadmap" className="lemmas-section">
           <div className="lemmas-section-heading">
-            <span className="lemmas-eyebrow">O QUE VEM POR AÍ · ROADMAP TÉCNICO</span>
+            <span className="lemmas-eyebrow">O QUE VEM POR AÍ · ROADMAP TÉCNICO V1.X / V2</span>
             <h2>As Próximas Fronteiras da Plataforma</h2>
             <p>
-              O LEMMAS foi construído com uma base sólida de engenharia e dados. Conheça as inovações cognitivas, preditivas e didáticas que estamos construindo nos próximos ciclos.
+              Com a V1 no ar e a Bancada Discursiva em pleno funcionamento, conheça as inovações psicométricas, preditivas e de IA que estamos desenvolvendo para os próximos ciclos.
             </p>
           </div>
 
@@ -377,90 +382,90 @@ export function LandingPage() {
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <Camera size={22} />
+                  <LineChart size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-progress">Em Desenvolvimento</span>
+                <span className="lemmas-roadmap-tag tag-progress">Próxima Etapa</span>
               </div>
-              <h3>OCR Multimodal de Caderno & Tablet</h3>
+              <h3>Teoria de Resposta ao Item (TRI) Multidimensional</h3>
               <p>
-                Resolução à mão livre como você sempre fez. Tire foto do rascunho no papel ou envie o PDF do tablet: a MathAI Engine transcreve os passos em KaTeX e detecta a linha exata em que o cálculo divergiu do gabarito.
+                Calibração estatística dos parâmetros psicométricos das questões: discriminação (a), dificuldade real (b) e chance de acerto casual (c). Seu score no simulado passa a refletir sua proficiência latente (θ) com rigor de concurso público.
               </p>
-              <div className="lemmas-roadmap-tech">Visão Computacional · Gemini Multimodal · KaTeX AST</div>
+              <div className="lemmas-roadmap-tech">Item Response Theory (IRT) · Modelo Logístico 3PL · Calibração Estatística</div>
             </div>
 
             {/* CARD 2 */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <Sparkles size={22} />
+                  <Compass size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-upcoming">Próxima Etapa</span>
+                <span className="lemmas-roadmap-tag tag-upcoming">Em Modelagem</span>
               </div>
-              <h3>Machine Learning & Knowledge Tracing</h3>
+              <h3>Caçador de Gatilhos & Grafo de Lemas</h3>
               <p>
-                Modelagem estocástica contínua da curva de domínio matemático do estudante. Algoritmos preditivos calculam a probabilidade real de acerto e antecipam pontos cegos em teoremas antes da prova.
+                Treino cognitivo focado em reconhecer *qual estratégia destrava a questão* antes de ver as alternativas. Um radar heurístico que ensina você a enxergar padrões geométricos e algébricos em segundos.
               </p>
-              <div className="lemmas-roadmap-tech">Knowledge Tracing · Logistic Regression / XGBoost · Scikit-Learn</div>
+              <div className="lemmas-roadmap-tech">Reconhecimento Heurístico · Grafo de Conceitos · Dicas Axiomáticas</div>
             </div>
 
             {/* CARD 3 */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <Compass size={22} />
+                  <Cpu size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-upcoming">Próxima Etapa</span>
+                <span className="lemmas-roadmap-tag tag-research">Pesquisa Ativa</span>
               </div>
-              <h3>Recomendação Adaptativa (Contextual Bandits)</h3>
+              <h3>Fine-Tuning de SLM Especialista Local (Qwen2.5-Math)</h3>
               <p>
-                Adeus listas estáticas repetitivas. Um motor de recomendação inteligente que seleciona a próxima questão na fronteira do conhecimento (Zona de Desenvolvimento Proximal), equilibrando reforço e novidade heurística.
+                Execução local de Small Language Models especializados em demonstrações axiomáticas, permitindo avaliação de provas com altíssimo rigor matemático, latência zero e custo nulo de inferência na GPU.
               </p>
-              <div className="lemmas-roadmap-tech">Contextual Bandits · Exploração vs Aproveitamento · Grafo de Conceitos</div>
+              <div className="lemmas-roadmap-tech">Qwen2.5-Math-7B · vLLM / Ollama · Inferência Submétrica Local</div>
             </div>
 
             {/* CARD 4 */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <Lightbulb size={22} />
+                  <Sparkles size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-research">Pesquisa Ativa</span>
+                <span className="lemmas-roadmap-tag tag-upcoming">Comunidade</span>
               </div>
-              <h3>Tutor Socrático Adaptativo</h3>
+              <h3>Comunidade de Demonstrações Elegantes</h3>
               <p>
-                Um tutor que nunca entrega a resposta de bandeja. Através de perguntas reflexivas, contra-exemplos direcionados e ancoragem axiomática, ele guia o estudante até a dedução autônoma da solução.
+                Um repositório colaborativo onde professores e estudantes compartilham múltiplos caminhos de prova para a mesma questão, com ranking por concisão, elegância e clareza matemática.
               </p>
-              <div className="lemmas-roadmap-tech">Intervenções Graduais · Roteamento Multi-Modelo · Rigor Axiomático</div>
+              <div className="lemmas-roadmap-tech">Provas Alternativas · Avaliação de Elegância · Peer Review</div>
             </div>
 
             {/* CARD 5 */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <ShieldCheck size={22} />
+                  <FileText size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-continuous">Ingestão Contínua</span>
+                <span className="lemmas-roadmap-tag tag-upcoming">Próxima Etapa</span>
               </div>
-              <h3>Expansão de Bancas Militares e de Elite</h3>
+              <h3>Simulados Diagramados em PDF para Impressão</h3>
               <p>
-                Mineração e curadoria contínua de questões com alta densidade conceitual: ESA, EsPCEx, IME, ITA, AFA, EFOMM, CEDERJ, UERJ, Fuvest e ENEM, classificadas por estratégias de resolução.
+                Geração automática de provas completas em formato A4 diagramadas em duas colunas com padrão visual dos cadernos oficiais militares e vestibulares, incluindo folha de respostas e gabarito comentado.
               </p>
-              <div className="lemmas-roadmap-tech">Pipelines de ETL Python · Turso / LibSQL · Classificação de Erros</div>
+              <div className="lemmas-roadmap-tech">Layout Editorial · Tipografia KaTeX · PDF Vetorial em 2 Colunas</div>
             </div>
 
             {/* CARD 6 */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
-                  <Layers size={22} />
+                  <BrainCircuit size={22} />
                 </div>
-                <span className="lemmas-roadmap-tag tag-future">Visão de Produto</span>
+                <span className="lemmas-roadmap-tag tag-future">Machine Learning</span>
               </div>
-              <h3>Trilhas Personalizadas & Flashcards Axiomáticos</h3>
+              <h3>Knowledge Tracing & Previsão com Scikit-Learn</h3>
               <p>
-                Deck inteligente de lemas e teoremas fundamentais acoplados à repetição espaçada SM-2, permitindo revisões relâmpago de propriedades matemáticas nos intervalos do dia a dia.
+                Modelagem da evolução de domínio do aluno através de séries temporais de tentativas, prevendo pontos cegos conceituais e recomendando a questão ideal na Zona de Desenvolvimento Proximal.
               </p>
-              <div className="lemmas-roadmap-tech">SuperMemo-2 · Mobile Web PWA · Sincronização em Nuvem</div>
+              <div className="lemmas-roadmap-tech">Knowledge Tracing · Logistic Regression / XGBoost · Scikit-Learn</div>
             </div>
           </div>
         </section>

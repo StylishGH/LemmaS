@@ -153,9 +153,10 @@ class LoteVisao(BaseModel):
     questoes: List[QuestaoVisao]
 
 MATERIAS_VALIDAS = [
-    "Álgebra", "Geometria Plana", "Geometria Espacial", "Trigonometria",
-    "Geometria Analítica", "Probabilidade e Combinatória", "Álgebra Linear",
-    "Cálculo", "Matemática Básica", "Polinômios e Complexos"
+    "Álgebra", "Funções", "Geometria Plana", "Geometria Espacial",
+    "Geometria Analítica", "Trigonometria", "Polinômios e Complexos",
+    "Probabilidade e Combinatória", "Teoria dos Números", "Álgebra Linear",
+    "Cálculo", "Matemática Básica"
 ]
 
 # ==========================================
