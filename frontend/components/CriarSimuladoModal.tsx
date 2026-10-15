@@ -22,6 +22,7 @@ export interface SimuladoConfig {
   tempoPorQuestaoSegundos?: number;
   nome?: string;
   totalQuestoes: number;
+  simuladoId?: string;
 }
 
 interface CriarSimuladoModalProps {
@@ -131,22 +132,50 @@ export function CriarSimuladoModal({
         return;
       }
 
+      let data: { questions?: any[]; simuladoId?: string } = {};
+      let res: Response | null = null;
+
+      try {
+        res = await fetch("/api/simulados/criar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ids: idsFinais,
+            quantidade: idsFinais.length,
+            comTempo: true,
+            tempoTotalSegundos: Math.max(60, tempoFinalSegundos),
+            tempoPorQuestaoSegundos: tipoTempo === "por_questao" ? segundosPorQuestaoTotal : undefined,
+          }),
+        });
+
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (e) {
+        console.warn("Aviso ao criar simulado via API:", e);
+      }
+
+      const simuladoIdFinal = data.simuladoId || crypto.randomUUID();
+      const idsConfig = data.questions && data.questions.length > 0
+        ? data.questions.map((q: any) => q.id)
+        : idsFinais;
+
       const config: SimuladoConfig = {
         modo: "simulado",
-        ids: idsFinais,
+        ids: idsConfig,
         tempoTotalSegundos: Math.max(60, tempoFinalSegundos),
         tempoPorQuestaoSegundos: tipoTempo === "por_questao" ? segundosPorQuestaoTotal : undefined,
-        nome: `Simulado (${idsFinais.length} questões)`,
-        totalQuestoes: idsFinais.length,
+        nome: `Simulado (${idsConfig.length} questões)`,
+        totalQuestoes: idsConfig.length,
+        simuladoId: simuladoIdFinal,
       };
 
-      // Salva no sessionStorage para que a página /resolver consuma sem estourar URL query
       if (typeof window !== "undefined") {
         sessionStorage.setItem("lemmas_active_simulado", JSON.stringify(config));
       }
 
       onClose();
-      router.push(`/resolver?session=simulado&total=${idsFinais.length}`);
+      router.push(`/resolver?session=simulado&total=${idsConfig.length}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao preparar simulado.";
       setError(msg);

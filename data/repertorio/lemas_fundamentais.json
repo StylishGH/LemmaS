@@ -1,9 +1,9 @@
 [
   {
     "nome": "Lema de Euclides",
-    "materia": "Aritmética & Álgebra",
+    "materia": "Teoria dos Números",
     "topico": "Divisibilidade e Números Primos",
-    "gatilho": "Quando um número primo divide o produto de dois inteiros p | (ab)",
+    "gatilho": "Quando um número primo divide o produto de dois inteiros p | (ab) ou quando mdc(a, p) = 1",
     "acao_ou_teorema": "O primo p necessariamente divide a ou p divide b",
     "formula_latex": "$$p \\mid ab \\implies p \\mid a \\lor p \\mid b$$"
   },
@@ -19,17 +19,17 @@
     "nome": "Teorema de Menelaus",
     "materia": "Geometria Plana",
     "topico": "Pontos Colineares em Triângulos",
-    "gatilho": "Quando uma reta transversal corta os três lados (ou prolongamentos) de um triângulo",
-    "acao_ou_teorema": "O produto das razões orientadas dos segmentos é igual a 1",
+    "gatilho": "Quando uma reta transversal corta dois lados de um triângulo e o prolongamento do terceiro lado",
+    "acao_ou_teorema": "Percorra o ciclo vértice-ponto-vértice nos três lados: o produto das razões dos segmentos é igual a 1",
     "formula_latex": "$$\\frac{AF}{FB} \\cdot \\frac{BD}{DC} \\cdot \\frac{CE}{EA} = 1$$"
   },
   {
     "nome": "Teorema de Ceva",
     "materia": "Geometria Plana",
     "topico": "Cevianas Concorrentes",
-    "gatilho": "Quando três cevianas concorrem em um único ponto interior ou exterior ao triângulo",
-    "acao_ou_teorema": "O produto das razões dos segmentos determinados pelas cevianas nos lados é igual a 1",
-    "formula_latex": "$$\\frac{AZ}{ZB} \\cdot \\frac{BX}{XC} \\cdot \\frac{CY}{YA} = 1$$"
+    "gatilho": "Quando três cevianas (AD, BE, CF) concorrem em um mesmo ponto P ou quando busca-se razão de segmentos nos lados",
+    "acao_ou_teorema": "O produto das três razões cíclicas dos segmentos determinados nos lados do triângulo é igual a 1",
+    "formula_latex": "$$\\frac{AF}{FB} \\cdot \\frac{BD}{DC} \\cdot \\frac{CE}{EA} = 1$$"
   },
   {
     "nome": "Princípio da Casa dos Pombos",
@@ -43,9 +43,9 @@
     "nome": "Relações de Girard",
     "materia": "Álgebra",
     "topico": "Polinômios e Raízes",
-    "gatilho": "Quando precisa-se relacionar a soma, soma produto a produto ou produto das raízes com coeficientes",
-    "acao_ou_teorema": "A soma das raízes é -b/a e o produto é (-1)^n * (termo independente / a)",
-    "formula_latex": "$$x_1 + x_2 + \\dots + x_n = -\\frac{a_{n-1}}{a_n}$$"
+    "gatilho": "Quando precisa-se relacionar a soma, soma produto a produto ou produto das raízes com os coeficientes sem achar as raízes",
+    "acao_ou_teorema": "Expresse as somas simétricas elementares das raízes pelas razões alternadas dos coeficientes",
+    "formula_latex": "$$\\sum x_i = -\\frac{a_{n-1}}{a_n}, \\quad \\sum_{i<j} x_i x_j = \\frac{a_{n-2}}{a_n}, \\quad \\prod x_i = (-1)^n \\frac{a_0}{a_n}$$"
   },
   {
     "nome": "Lei dos Senos e Diâmetro Circunscrito",
@@ -62,5 +62,2013 @@
     "gatilho": "Quando o problema envolve vértices, faces e arestas de poliedros convexos",
     "acao_ou_teorema": "A soma dos vértices com as faces excede o número de arestas em 2",
     "formula_latex": "$$V - A + F = 2$$"
+  },
+  {
+    "nome": "Identidade de Bézout",
+    "materia": "Teoria dos Números",
+    "topico": "MDC e Equações Diofantinas Lineares",
+    "gatilho": "Quando o problema envolve combinação linear de inteiros ax + by = c ou pede para provar que dois números são primos entre si",
+    "acao_ou_teorema": "A equação ax + by = c tem solução inteira se, e somente se, mdc(a,b) divide c. Se ax + by = 1, então mdc(a,b) = 1",
+    "formula_latex": "$$\\text{mdc}(a, b) = d \\iff \\exists x, y \\in \\mathbb{Z} : ax + by = d$$"
+  },
+  {
+    "nome": "Algoritmo de Euclides e Invariância do MDC",
+    "materia": "Teoria dos Números",
+    "topico": "Máximo Divisor Comum",
+    "gatilho": "Quando é preciso calcular o MDC de expressões algébricas em função de n, como mdc(2n+1, 5n+3)",
+    "acao_ou_teorema": "Elimine a variável n subtraindo múltiplos de uma expressão pela outra até restar uma constante",
+    "formula_latex": "$$\\text{mdc}(a, b) = \\text{mdc}(a, b - ka), \\quad \\forall k \\in \\mathbb{Z}$$"
+  },
+  {
+    "nome": "Quantidade e Soma de Divisores Positivos",
+    "materia": "Teoria dos Números",
+    "topico": "Fatoração Prima",
+    "gatilho": "Quando o enunciado pede o número de divisores, soma dos divisores ou informa que N é quadrado perfeito (número ímpar de divisores)",
+    "acao_ou_teorema": "Fatore N em primos e aplique o produto dos expoentes acrescidos de 1 para a quantidade, ou a soma de PGs para a soma",
+    "formula_latex": "$$N = \\prod_{i=1}^{k} p_i^{\\alpha_i} \\implies d(N) = \\prod_{i=1}^{k} (\\alpha_i + 1) \\quad \\text{e} \\quad \\sigma(N) = \\prod_{i=1}^{k} \\frac{p_i^{\\alpha_i + 1} - 1}{p_i - 1}$$"
+  },
+  {
+    "nome": "Pequeno Teorema de Fermat",
+    "materia": "Teoria dos Números",
+    "topico": "Aritmética Modular",
+    "gatilho": "Quando pede-se o resto da divisão de uma potência de expoente muito grande por um número primo p",
+    "acao_ou_teorema": "Reduza o expoente módulo (p - 1), pois a^(p-1) deixa resto 1 na divisão por p quando p não divide a",
+    "formula_latex": "$$p \\text{ primo}, \\; p \\nmid a \\implies a^{p-1} \\equiv 1 \\pmod{p}$$"
+  },
+  {
+    "nome": "Teorema de Euler (Função Totiente)",
+    "materia": "Teoria dos Números",
+    "topico": "Aritmética Modular",
+    "gatilho": "Quando pede-se o resto de uma potência elevada (ou os últimos dígitos de um número, módulo 10 ou 100) onde o divisor m não é primo",
+    "acao_ou_teorema": "Calcule a função totiente phi(m) e reduza o expoente módulo phi(m), desde que mdc(a, m) = 1",
+    "formula_latex": "$$\\text{mdc}(a, m) = 1 \\implies a^{\\varphi(m)} \\equiv 1 \\pmod{m}, \\quad \\varphi(m) = m \\prod_{p \\mid m} \\left(1 - \\frac{1}{p}\\right)$$"
+  },
+  {
+    "nome": "Teorema de Wilson",
+    "materia": "Teoria dos Números",
+    "topico": "Fatoriais e Aritmética Modular",
+    "gatilho": "Quando aparece um fatorial do tipo (p-1)! ou (p-2)! sendo dividido por um número primo p",
+    "acao_ou_teorema": "Substitua (p-1)! por -1 (mod p) e (p-2)! por 1 (mod p)",
+    "formula_latex": "$$p \\text{ é primo} \\iff (p - 1)! \\equiv -1 \\pmod{p}$$"
+  },
+  {
+    "nome": "Fórmula de Legendre (Expoente de p em n!)",
+    "materia": "Teoria dos Números",
+    "topico": "Fatoriais e Divisibilidade",
+    "gatilho": "Quando pergunta-se com quantos zeros termina n! ou qual a maior potência de um primo p que divide n!",
+    "acao_ou_teorema": "Some os quocientes inteiros das divisões sucessivas de n pelas potências de p",
+    "formula_latex": "$$v_p(n!) = \\sum_{k=1}^{\\infty} \\left\\lfloor \\frac{n}{p^k} \\right\\rfloor$$"
+  },
+  {
+    "nome": "Lema de Lifting The Exponent (LTE)",
+    "materia": "Teoria dos Números",
+    "topico": "Potências e Divisibilidade",
+    "gatilho": "Quando busca-se a maior potência de um primo ímpar p que divide a^n - b^n ou a^n + b^n, sabendo que p | (a - b)",
+    "acao_ou_teorema": "O expoente de p na diferença das potências é a soma do expoente em (a-b) com o expoente em n",
+    "formula_latex": "$$p \\nmid a, b \\; \\text{e} \\; p \\mid (a - b) \\implies v_p(a^n - b^n) = v_p(a - b) + v_p(n)$$"
+  },
+  {
+    "nome": "Desigualdade das Médias (MQ-MA-MG-MH)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades e Otimização",
+    "gatilho": "Quando a soma de termos positivos é constante e busca-se o produto máximo (ou vice-versa), sem necessidade de derivadas",
+    "acao_ou_teorema": "A média quadrática >= aritmética >= geométrica >= harmônica, ocorrendo a igualdade se e somente se todos os termos forem iguais",
+    "formula_latex": "$$\\sqrt{\\frac{\\sum a_i^2}{n}} \\ge \\frac{\\sum a_i}{n} \\ge \\sqrt[n]{\\prod a_i} \\ge \\frac{n}{\\sum \\frac{1}{a_i}}$$"
+  },
+  {
+    "nome": "Desigualdade de Cauchy-Schwarz",
+    "materia": "Álgebra",
+    "topico": "Desigualdades",
+    "gatilho": "Quando há soma de quadrados multiplicando outra soma de quadrados, ou quando busca-se o máximo/mínimo de ax + by + cz dado x^2 + y^2 + z^2",
+    "acao_ou_teorema": "O quadrado do produto escalar é menor ou igual ao produto das normas ao quadrado",
+    "formula_latex": "$$\\left(\\sum_{i=1}^{n} a_i^2\\right)\\left(\\sum_{i=1}^{n} b_i^2\\right) \\ge \\left(\\sum_{i=1}^{n} a_i b_i\\right)^2$$"
+  },
+  {
+    "nome": "Lema de Titu (Forma de Engel de Cauchy-Schwarz)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades com Frações",
+    "gatilho": "Quando há uma soma de frações com denominadores positivos variáveis, especialmente quando os numeradores são quadrados",
+    "acao_ou_teorema": "A soma das frações é maior ou igual ao quadrado da soma das raízes dos numeradores dividido pela soma dos denominadores",
+    "formula_latex": "$$\\frac{a_1^2}{x_1} + \\frac{a_2^2}{x_2} + \\dots + \\frac{a_n^2}{x_n} \\ge \\frac{(a_1 + a_2 + \\dots + a_n)^2}{x_1 + x_2 + \\dots + x_n}, \\quad x_i > 0$$"
+  },
+  {
+    "nome": "Desigualdade de Jensen",
+    "materia": "Álgebra",
+    "topico": "Desigualdades e Convexidade",
+    "gatilho": "Quando aparece soma de funções convexas (ou côncavas) como sen(A)+sen(B)+sen(C) em um triângulo ou soma de logaritmos/potências",
+    "acao_ou_teorema": "Para função convexa (f''(x) >= 0), a média das imagens é maior ou igual à imagem da média",
+    "formula_latex": "$$f \\text{ convexa} \\implies \\frac{f(x_1) + f(x_2) + \\dots + f(x_n)}{n} \\ge f\\left(\\frac{x_1 + x_2 + \\dots + x_n}{n}\\right)$$"
+  },
+  {
+    "nome": "Desigualdade de Bernoulli",
+    "materia": "Álgebra",
+    "topico": "Potências e Aproximações",
+    "gatilho": "Quando é preciso comparar uma potência do tipo (1 + x)^n com uma função afim 1 + nx",
+    "acao_ou_teorema": "Para todo real x >= -1 e inteiro n >= 1, a potência supera ou iguala a aproximação linear",
+    "formula_latex": "$$(1 + x)^n \\ge 1 + nx, \\quad \\forall x \\ge -1, \\; n \\in \\mathbb{N}^*$$"
+  },
+  {
+    "nome": "Identidade de Sophie Germain",
+    "materia": "Álgebra",
+    "topico": "Fatoração e Produtos Notáveis",
+    "gatilho": "Quando surge uma expressão da forma a^4 + 4b^4 ou n^4 + 4 e pergunta-se se o número é primo ou como fatorar",
+    "acao_ou_teorema": "Complete o quadrado somando e subtraindo 4a^2b^2 para fatorar como diferença de quadrados",
+    "formula_latex": "$$a^4 + 4b^4 = (a^2 + 2b^2 - 2ab)(a^2 + 2b^2 + 2ab)$$"
+  },
+  {
+    "nome": "Identidade de Gauss (Soma de Três Cubos)",
+    "materia": "Álgebra",
+    "topico": "Fatoração Simétrica",
+    "gatilho": "Quando aparece a^3 + b^3 + c^3 e 3abc, ou quando é dado que a + b + c = 0 e pede-se o valor de a^3 + b^3 + c^3",
+    "acao_ou_teorema": "Se a + b + c = 0, então a soma dos cubos é exatamente igual a 3abc",
+    "formula_latex": "$$a^3 + b^3 + c^3 - 3abc = \\frac{1}{2}(a + b + c)\\left[(a - b)^2 + (b - c)^2 + (c - a)^2\\right]$$"
+  },
+  {
+    "nome": "Somas de Newton para Raízes de Polinômios",
+    "materia": "Álgebra",
+    "topico": "Polinômios",
+    "gatilho": "Quando pede-se a soma das k-ésimas potências das raízes (x_1^k + x_2^k + ... + x_n^k) de um polinômio",
+    "acao_ou_teorema": "Substitua cada raiz na equação polinomial e some todas as equações para obter uma recorrência entre S_k",
+    "formula_latex": "$$a_n S_k + a_{n-1} S_{k-1} + \\dots + a_{n-k+1} S_1 + k a_{n-k} = 0 \\quad (1 \\le k \\le n)$$"
+  },
+  {
+    "nome": "Critério de Raiz Múltipla via Derivada",
+    "materia": "Álgebra",
+    "topico": "Polinômios e Multiplicidade",
+    "gatilho": "Quando o enunciado afirma que P(x) possui uma raiz dupla, tripla ou é divisível por (x - r)^m",
+    "acao_ou_teorema": "Uma raiz de multiplicidade m anula o polinômio e também suas (m-1) primeiras derivadas formais",
+    "formula_latex": "$$(x - r)^m \\mid P(x) \\iff P(r) = P'(r) = P''(r) = \\dots = P^{(m-1)}(r) = 0$$"
+  },
+  {
+    "nome": "Teorema das Raízes Racionais",
+    "materia": "Álgebra",
+    "topico": "Equações Polinomiais",
+    "gatilho": "Quando é preciso encontrar uma raiz inicial por inspeção em um polinômio de coeficientes inteiros de grau >= 3",
+    "acao_ou_teorema": "Toda raiz racional p/q irredutível tem p dividindo o termo independente a_0 e q dividindo o coeficiente dominante a_n",
+    "formula_latex": "$$P\\left(\\frac{p}{q}\\right) = 0, \\; \\text{mdc}(p,q)=1 \\implies p \\mid a_0 \\land q \\mid a_n$$"
+  },
+  {
+    "nome": "Teorema das Raízes Complexas Conjugadas",
+    "materia": "Álgebra",
+    "topico": "Polinômios e Números Complexos",
+    "gatilho": "Quando um polinômio tem todos os coeficientes reais e o enunciado fornece uma raiz complexa a + bi",
+    "acao_ou_teorema": "O conjugado a - bi também é obrigatoriamente raiz com a mesma multiplicidade, e P(x) é divisível por (x-a)^2 + b^2",
+    "formula_latex": "$$P(x) \\in \\mathbb{R}[x] \\land P(z) = 0 \\implies P(\\bar{z}) = 0$$"
+  },
+  {
+    "nome": "Fórmula de De Moivre e Raízes da Unidade",
+    "materia": "Álgebra",
+    "topico": "Números Complexos",
+    "gatilho": "Quando envolve potências elevadas de números complexos, raízes n-ésimas de z ou vértices de polígono regular no plano de Argand-Gauss",
+    "acao_ou_teorema": "Passe para a forma trigonométrica/exponencial; a soma de todas as n raízes da unidade é zero",
+    "formula_latex": "$$(\\cos\\theta + i\\sin\\theta)^n = \\cos(n\\theta) + i\\sin(n\\theta), \\quad \\sum_{k=0}^{n-1} e^{i\\frac{2k\\pi}{n}} = 0$$"
+  },
+  {
+    "nome": "Desigualdade Triangular para Números Complexos",
+    "materia": "Álgebra",
+    "topico": "Geometria no Plano Complexo",
+    "gatilho": "Quando pede-se o valor máximo ou mínimo de |z - w| sabendo que |z - z_0| = R (lugar geométrico de circunferência)",
+    "acao_ou_teorema": "O módulo da soma é limitado pela soma dos módulos e pela diferença absoluta dos módulos",
+    "formula_latex": "$$\\big||z| - |w|\\big| \\le |z + w| \\le |z| + |w|$$"
+  },
+  {
+    "nome": "Fração Parcial e Soma Telescópica",
+    "materia": "Álgebra",
+    "topico": "Séries e Somatórios",
+    "gatilho": "Quando aparece um somatório cujo termo geral tem um produto no denominador, como 1/[k(k+d)] ou 1/(sqrt(k+1)+sqrt(k))",
+    "acao_ou_teorema": "Quebre a fração em uma diferença de dois termos consecutivos para cancelar todos os termos intermediários",
+    "formula_latex": "$$\\sum_{k=1}^{n} \\frac{1}{k(k+d)} = \\frac{1}{d} \\sum_{k=1}^{n} \\left(\\frac{1}{k} - \\frac{1}{k+d}\\right)$$"
+  },
+  {
+    "nome": "Soma de Progressão Aritmético-Geométrica (PAG)",
+    "materia": "Álgebra",
+    "topico": "Sequências e Séries",
+    "gatilho": "Quando o termo geral de uma soma é o produto de uma PA por uma PG, como S = 1x + 2x^2 + 3x^3 + ...",
+    "acao_ou_teorema": "Multiplique toda a soma S pela razão q da PG e subtraia a nova equação da original (S - qS) para recair numa PG simples",
+    "formula_latex": "$$\\sum_{k=1}^{\\infty} k q^{k-1} = \\frac{1}{(1 - q)^2}, \\quad |q| < 1$$"
+  },
+  {
+    "nome": "Soma de Quadrados e Cubos dos Naturais",
+    "materia": "Álgebra",
+    "topico": "Somatórios Finitos",
+    "gatilho": "Quando é preciso fechar uma soma de PA de 2ª ou 3ª ordem (1^2 + 2^2 + ... + n^2 ou 1^3 + 2^3 + ... + n^3)",
+    "acao_ou_teorema": "Aplique as fórmulas fechadas de Faulhaber para somas de potências",
+    "formula_latex": "$$\\sum_{k=1}^{n} k^2 = \\frac{n(n+1)(2n+1)}{6}, \\quad \\sum_{k=1}^{n} k^3 = \\left[\\frac{n(n+1)}{2}\\right]^2$$"
+  },
+  {
+    "nome": "Relação de Stewart",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas em Triângulos Qualquer",
+    "gatilho": "Quando conhece-se os três lados de um triângulo e pede-se o comprimento de uma ceviana qualquer (mediana, bissetriz, etc.)",
+    "acao_ou_teorema": "Relacione o comprimento x da ceviana com os lados b, c e as projeções m, n que ela determina na base a",
+    "formula_latex": "$$b^2 m + c^2 n = a(x^2 + mn), \\quad \\text{onde } m + n = a$$"
+  },
+  {
+    "nome": "Comprimento da Mediana (Apolônio)",
+    "materia": "Geometria Plana",
+    "topico": "Cevianas Notáveis",
+    "gatilho": "Quando são dados os lados a, b, c de um triângulo e pede-se a mediana relativa ao lado a (ou distância ao baricentro)",
+    "acao_ou_teorema": "Use o caso particular de Stewart para m = n = a/2",
+    "formula_latex": "$$m_a = \\frac{1}{2}\\sqrt{2(b^2 + c^2) - a^2}$$"
+  },
+  {
+    "nome": "Teorema da Bissetriz Interna e Comprimento da Bissetriz",
+    "materia": "Geometria Plana",
+    "topico": "Cevianas Notáveis",
+    "gatilho": "Quando um ângulo interno do triângulo é dividido ao meio por uma ceviana AD",
+    "acao_ou_teorema": "A bissetriz divide o lado oposto na razão dos lados adjacentes, e seu quadrado é o produto dos lados menos o produto dos segmentos da base",
+    "formula_latex": "$$\\frac{m}{c} = \\frac{n}{b} \\quad \\text{e} \\quad \\beta_a^2 = bc - mn$$"
+  },
+  {
+    "nome": "Teorema da Bissetriz Externa",
+    "materia": "Geometria Plana",
+    "topico": "Cevianas Notáveis",
+    "gatilho": "Quando a bissetriz do ângulo externo de um vértice intercepta o prolongamento do lado oposto",
+    "acao_ou_teorema": "As distâncias do pé da bissetriz externa aos vértices da base são proporcionais aos lados adjacentes",
+    "formula_latex": "$$\\frac{BD'}{c} = \\frac{CD'}{b}$$"
+  },
+  {
+    "nome": "Potência de Ponto em Relação à Circunferência",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas no Círculo",
+    "gatilho": "Quando cordas se cruzam dentro de um círculo ou retas secantes/tangentes partem de um mesmo ponto externo P",
+    "acao_ou_teorema": "O produto dos segmentos de qualquer secante passando por P é constante e igual ao quadrado da tangente",
+    "formula_latex": "$$PA \\cdot PB = PC \\cdot PD = PT^2 = |d^2 - R^2|$$"
+  },
+  {
+    "nome": "Teorema de Ptolomeu",
+    "materia": "Geometria Plana",
+    "topico": "Quadriláteros Inscritíveis",
+    "gatilho": "Quando um quadrilátero está inscrito em uma circunferência (ou tem ângulos opostos suplementares) e envolvem-se lados e diagonais",
+    "acao_ou_teorema": "O produto das diagonais é igual à soma dos produtos dos lados opostos",
+    "formula_latex": "$$p \\cdot q = a \\cdot c + b \\cdot d$$"
+  },
+  {
+    "nome": "Teorema de Hiparco",
+    "materia": "Geometria Plana",
+    "topico": "Quadriláteros Inscritíveis",
+    "gatilho": "Quando conhece-se os quatro lados a, b, c, d de um quadrilátero inscritível e pede-se a razão entre suas diagonais p e q",
+    "acao_ou_teorema": "A razão das diagonais depende dos produtos dos lados que concorrem nas extremidades de cada diagonal",
+    "formula_latex": "$$\\frac{p}{q} = \\frac{ab + cd}{ad + bc}$$"
+  },
+  {
+    "nome": "Fórmula de Brahmagupta e Fórmula de Heron",
+    "materia": "Geometria Plana",
+    "topico": "Áreas de Figuras Planas",
+    "gatilho": "Quando são dados todos os lados de um quadrilátero inscritível (ou de um triângulo, fazendo d = 0) e pede-se a área",
+    "acao_ou_teorema": "Calcule o semiperímetro p e extraia a raiz do produto de (p - lado)",
+    "formula_latex": "$$S = \\sqrt{(p - a)(p - b)(p - c)(p - d)}, \\quad p = \\frac{a + b + c + d}{2}$$"
+  },
+  {
+    "nome": "Teorema de Pitot",
+    "materia": "Geometria Plana",
+    "topico": "Quadriláteros Circunscritíveis",
+    "gatilho": "Quando uma circunferência está inscrita em um quadrilátero (tangencia os quatro lados)",
+    "acao_ou_teorema": "As somas dos lados opostos são iguais ao semiperímetro",
+    "formula_latex": "$$a + c = b + d = p$$"
+  },
+  {
+    "nome": "Áreas do Triângulo via Raio Inscrito (r), Circunscrito (R) e Ex-inscrito (r_a)",
+    "materia": "Geometria Plana",
+    "topico": "Incentro, Circuncentro e Ex-incentro",
+    "gatilho": "Quando o problema pede o raio da circunferência inscrita, circunscrita ou ex-inscrita a um triângulo",
+    "acao_ou_teorema": "Ache a área S do triângulo (por Heron ou base*altura/2) e iguale às expressões clássicas de área",
+    "formula_latex": "$$S = p \\cdot r = \\frac{abc}{4R} = (p - a)r_a$$"
+  },
+  {
+    "nome": "Segmentos de Tangência do Círculo Inscrito e Ex-inscrito",
+    "materia": "Geometria Plana",
+    "topico": "Tangência em Triângulos",
+    "gatilho": "Quando a circunferência inscrita ou ex-inscrita tangencia os lados do triângulo ABC nos pontos D, E, F",
+    "acao_ou_teorema": "As distâncias dos vértices aos pontos de tangência da inscrita valem p-a, p-b, p-c; da ex-inscrita valem o semiperímetro p",
+    "formula_latex": "$$AE = AF = p - a, \\quad BD = BF = p - b, \\quad CD = CE = p - c, \\quad AQ_{\\text{ex}} = p$$"
+  },
+  {
+    "nome": "Reta de Euler e Propriedade de Báricentro-Ortocentro-Circuncentro",
+    "materia": "Geometria Plana",
+    "topico": "Pontos Notáveis do Triângulo",
+    "gatilho": "Quando o problema envolve simultaneamente o circuncentro O, o baricentro G e o ortocentro H",
+    "acao_ou_teorema": "O, G e H são colineares; a distância do baricentro ao ortocentro é o dobro da distância ao circuncentro, e a distância de um vértice a H é o dobro da distância de O ao lado oposto",
+    "formula_latex": "$$GH = 2 \\cdot OG \\quad \\text{e} \\quad AH = 2 \\cdot OM_a = 2R|\\cos A|$$"
+  },
+  {
+    "nome": "Relação de Euler para Distância entre Incentro e Circuncentro",
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Inscrita e Circunscrita",
+    "gatilho": "Quando pede-se a distância d entre o centro da circunferência inscrita (I) e o centro da circunscrita (O) de um triângulo",
+    "acao_ou_teorema": "Use a relação direta entre d, o raio circunscrito R e o raio inscrito r",
+    "formula_latex": "$$OI^2 = R(R - 2r) \\implies R \\ge 2r$$"
+  },
+  {
+    "nome": "Teorema de Carnot",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas no Triângulo",
+    "gatilho": "Quando o problema envolve a soma das distâncias do circuncentro O aos três lados de um triângulo acutângulo",
+    "acao_ou_teorema": "A soma das distâncias orientadas do circuncentro aos lados é igual à soma do raio circunscrito com o raio inscrito",
+    "formula_latex": "$$OM_a + OM_b + OM_c = R + r$$"
+  },
+  {
+    "nome": "Lei dos Cossenos",
+    "materia": "Trigonometria",
+    "topico": "Triângulos Quaisquer",
+    "gatilho": "Quando são conhecidos dois lados e o ângulo entre eles, ou os três lados e busca-se um ângulo interno",
+    "acao_ou_teorema": "Relacione o quadrado do lado oposto ao ângulo com a soma dos quadrados dos outros dois menos o duplo produto pelo cosseno",
+    "formula_latex": "$$a^2 = b^2 + c^2 - 2bc\\cos A$$"
+  },
+  {
+    "nome": "Fórmulas de Prostaférese (Soma em Produto)",
+    "materia": "Trigonometria",
+    "topico": "Transformações Trigonométricas",
+    "gatilho": "Quando é preciso fatorar ou igualar a zero uma soma/diferença de senos ou cossenos (sen p + sen q ou cos p - cos q)",
+    "acao_ou_teorema": "Transforme a soma algébrica em produto usando a semissoma e a semidiferença dos arcos",
+    "formula_latex": "$$\\sin p + \\sin q = 2\\sin\\left(\\frac{p+q}{2}\\right)\\cos\\left(\\frac{p-q}{2}\\right), \\quad \\cos p - \\cos q = -2\\sin\\left(\\frac{p+q}{2}\\right)\\sin\\left(\\frac{p-q}{2}\\right)$$"
+  },
+  {
+    "nome": "Fórmulas de Werner (Produto em Soma)",
+    "materia": "Trigonometria",
+    "topico": "Transformações Trigonométricas",
+    "gatilho": "Quando aparece um produto de senos e cossenos dentro de uma integral, somatório ou equação trigonométrica",
+    "acao_ou_teorema": "Converta o produto em metade da soma ou diferença dos arcos (a+b) e (a-b)",
+    "formula_latex": "$$2\\sin a\\cos b = \\sin(a+b) + \\sin(a-b), \\quad 2\\sin a\\sin b = \\cos(a-b) - \\cos(a+b)$$"
+  },
+  {
+    "nome": "Substituição Universal de Weierstrass (Arco Metade)",
+    "materia": "Trigonometria",
+    "topico": "Equações e Integrais Trigonométricas",
+    "gatilho": "Quando uma equação ou integral racional envolve simultaneamente sen(x) e cos(x) de forma não homogênea",
+    "acao_ou_teorema": "Faça t = tg(x/2) e reescreva sen(x), cos(x) e tg(x) inteiramente como funções racionais de t",
+    "formula_latex": "$$t = \\tan\\left(\\frac{x}{2}\\right) \\implies \\sin x = \\frac{2t}{1+t^2}, \\quad \\cos x = \\frac{1-t^2}{1+t^2}, \\quad \\tan x = \\frac{2t}{1-t^2}$$"
+  },
+  {
+    "nome": "Combinação Linear Harmônica (a sen x + b cos x)",
+    "materia": "Trigonometria",
+    "topico": "Máximos, Mínimos e Equações",
+    "gatilho": "Quando pede-se o valor máximo, mínimo, imagem ou período de f(x) = a*sen(x) + b*cos(x)",
+    "acao_ou_teorema": "Coloque a hipotenusa sqrt(a^2 + b^2) em evidência e contraia em um único seno deslocado",
+    "formula_latex": "$$a\\sin x + b\\cos x = \\sqrt{a^2 + b^2}\\sin(x + \\varphi) \\in \\left[-\\sqrt{a^2+b^2}, \\; \\sqrt{a^2+b^2}\\right]$$"
+  },
+  {
+    "nome": "Identidade Condicional das Tangentes no Triângulo",
+    "materia": "Trigonometria",
+    "topico": "Trigonometria em Triângulos",
+    "gatilho": "Quando A, B e C são ângulos internos de um triângulo (A + B + C = pi) e aparecem tg(A), tg(B) e tg(C)",
+    "acao_ou_teorema": "Em qualquer triângulo não retângulo, a soma das três tangentes é igual ao produto delas",
+    "formula_latex": "$$A + B + C = \\pi \\implies \\tan A + \\tan B + \\tan C = \\tan A \\cdot \\tan B \\cdot \\tan C$$"
+  },
+  {
+    "nome": "Soma de Senos e Cossenos com Arcos em PA",
+    "materia": "Trigonometria",
+    "topico": "Somatórios Trigonométricos",
+    "gatilho": "Quando pede-se o valor de cos(a) + cos(a+r) + ... + cos(a+(n-1)r) ou o equivalente para senos",
+    "acao_ou_teorema": "Multiplique e divida por 2*sen(r/2) para fazer a soma colapsar telescopicamente",
+    "formula_latex": "$$\\sum_{k=0}^{n-1} \\cos(a + kr) = \\frac{\\sin\\left(\\frac{nr}{2}\\right)}{\\sin\\left(\\frac{r}{2}\\right)} \\cos\\left(a + \\frac{(n-1)r}{2}\\right)$$"
+  },
+  {
+    "nome": "Fórmula de Euler para Poliedros Convexos",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros Convexos",
+    "gatilho": "Quando o problema envolve vértices, faces e arestas de poliedros convexos",
+    "acao_ou_teorema": "A soma dos vértices com as faces excede o número de arestas em 2",
+    "formula_latex": "$$V - A + F = 2$$"
+  },
+  {
+    "nome": "Lema do Aperto de Mão para Arestas de Poliedros",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros",
+    "gatilho": "Quando o enunciado informa a quantidade de faces triangulares, quadrangulares, pentagonais, etc. de um poliedro",
+    "acao_ou_teorema": "O dobro do número de arestas é igual à soma do número de lados de todas as faces (ou da valência de todos os vértices)",
+    "formula_latex": "$$2A = 3F_3 + 4F_4 + 5F_5 + \\dots = \\sum_{k \\ge 3} k \\cdot F_k$$"
+  },
+  {
+    "nome": "Soma dos Ângulos Internos das Faces de um Poliedro",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros Convexos",
+    "gatilho": "Quando o enunciado dá ou pede a soma de todos os ângulos das faces de um poliedro convexo",
+    "acao_ou_teorema": "A soma depende exclusivamente do número de vértices V do poliedro",
+    "formula_latex": "$$S = (V - 2) \\cdot 360^\\circ = 2\\pi(V - 2)$$"
+  },
+  {
+    "nome": "Teorema de De Gua (Tetraedro Trirretângulo)",
+    "materia": "Geometria Espacial",
+    "topico": "Tetraedros e Pirâmides",
+    "gatilho": "Quando três arestas concorrentes de um tetraedro são mutuamente perpendiculares entre si (canto de parede)",
+    "acao_ou_teorema": "O quadrado da área da face hipotenusa é a soma dos quadrados das áreas das três faces catetos, e o inverso do quadrado da altura é a soma dos inversos dos quadrados das arestas ortogonais",
+    "formula_latex": "$$S_{ABC}^2 = S_1^2 + S_2^2 + S_3^2 \\quad \\text{e} \\quad \\frac{1}{h^2} = \\frac{1}{a^2} + \\frac{1}{b^2} + \\frac{1}{c^2}$$"
+  },
+  {
+    "nome": "Raio da Esfera Inscrita em Qualquer Poliedro Circunscritível",
+    "materia": "Geometria Espacial",
+    "topico": "Esferas e Pirâmides",
+    "gatilho": "Quando uma esfera é tangente a todas as faces internas de um tetraedro, pirâmide ou poliedro",
+    "acao_ou_teorema": "O volume total do poliedro é um terço do produto de sua área total pelo raio da esfera inscrita (análogo espacial de S = p*r)",
+    "formula_latex": "$$V = \\frac{1}{3} S_{\\text{total}} \\cdot r$$"
+  },
+  {
+    "nome": "Teorema de Pappus-Guldin (Áreas e Volumes de Revolução)",
+    "materia": "Geometria Espacial",
+    "topico": "Sólidos de Revolução",
+    "gatilho": "Quando uma figura plana (triângulo, trapézio, círculo) gira em torno de um eixo externo que não a atravessa",
+    "acao_ou_teorema": "O volume é a área da figura multiplicada pelo comprimento da circunferência descrita pelo seu baricentro (centroide)",
+    "formula_latex": "$$V = 2\\pi \\bar{d} \\cdot S \\quad \\text{e} \\quad A_{\\text{sup}} = 2\\pi \\bar{d} \\cdot L$$"
+  },
+  {
+    "nome": "Volume do Tronco de Pirâmide ou Cone",
+    "materia": "Geometria Espacial",
+    "topico": "Troncos e Semelhança",
+    "gatilho": "Quando uma pirâmide ou cone é seccionado por um plano paralelo à base e pede-se o volume do tronco",
+    "acao_ou_teorema": "Use a média heroniania das áreas das bases ou a razão cúbica de semelhança entre os sólidos",
+    "formula_latex": "$$V = \\frac{h}{3}\\left(B + \\sqrt{B \\cdot b} + b\\right) \\quad \\text{e} \\quad \\frac{v}{V} = \\left(\\frac{h_1}{H}\\right)^3 = \\left(\\frac{b}{B}\\right)^{\\frac{3}{2}}$$"
+  },
+  {
+    "nome": "Distância de Ponto a Reta e a Plano",
+    "materia": "Geometria Analítica",
+    "topico": "Retas e Planos",
+    "gatilho": "Quando pede-se a menor distância entre um ponto P(x_0, y_0) e uma reta ax + by + c = 0, ou altura de um triângulo no plano cartesiano",
+    "acao_ou_teorema": "Substitua as coordenadas do ponto na equação geral em módulo e divida pela norma do vetor normal",
+    "formula_latex": "$$d(P, r) = \\frac{|ax_0 + by_0 + c|}{\\sqrt{a^2 + b^2}}$$"
+  },
+  {
+    "nome": "Fórmula do Cadarço (Shoelace / Determinante de Gauss)",
+    "materia": "Geometria Analítica",
+    "topico": "Área de Polígonos e Colinearidade",
+    "gatilho": "Quando são dadas as coordenadas dos vértices de um triângulo ou polígono qualquer no plano cartesiano",
+    "acao_ou_teorema": "A área é a metade do módulo do determinante das coordenadas; se o determinante for zero, os pontos são colineares",
+    "formula_latex": "$$S = \\frac{1}{2} \\left| \\sum_{i=1}^{n} (x_i y_{i+1} - x_{i+1} y_i) \\right|$$"
+  },
+  {
+    "nome": "Ângulo Agudo entre Duas Retas no Plano",
+    "materia": "Geometria Analítica",
+    "topico": "Estudo da Reta",
+    "gatilho": "Quando são conhecidas as inclinações m_1 e m_2 de duas retas concorrentes e pede-se o ângulo entre elas (ou a reta bissetriz)",
+    "acao_ou_teorema": "Use a fórmula da tangente da diferença dos ângulos de inclinação em módulo",
+    "formula_latex": "$$\\tan\\theta = \\left| \\frac{m_1 - m_2}{1 + m_1 m_2} \\right|$$"
+  },
+  {
+    "nome": "Classificação e Rotação de Cônicas (Eliminação do Termo xy)",
+    "materia": "Geometria Analítica",
+    "topico": "Seções Cônicas e Rotação de Eixos",
+    "gatilho": "Quando a equação do 2º grau Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0 possui o termo misto Bxy != 0",
+    "acao_ou_teorema": "O discriminante B^2 - 4AC é invariante por rotação (<0 elipse, =0 parábola, >0 hipérbole) e o ângulo que elimina xy satisfaz cotg(2*theta) = (A-C)/B",
+    "formula_latex": "$$\\Delta = B^2 - 4AC, \\quad \\cot(2\\theta) = \\frac{A - C}{B}$$"
+  },
+  {
+    "nome": "Reta Tangente a Cônica por Desdobramento (Polar)",
+    "materia": "Geometria Analítica",
+    "topico": "Tangência em Circunferências e Cônicas",
+    "gatilho": "Quando pede-se a equação da reta tangente a uma circunferência, elipse, parábola ou hipérbole em um ponto P(x_0, y_0) pertencente à curva",
+    "acao_ou_teorema": "Substitua x^2 por x*x_0, y^2 por y*y_0, x por (x+x_0)/2 e y por (y+y_0)/2 diretamente na equação da cônica",
+    "formula_latex": "$$\\frac{x x_0}{a^2} \\pm \\frac{y y_0}{b^2} = 1 \\quad \\text{(Elipse / Hipérbole)}$$"
+  },
+  {
+    "nome": "Propriedade Óptica e Raios Focais das Cônicas",
+    "materia": "Geometria Analítica",
+    "topico": "Elipse, Hipérbole e Parábola",
+    "gatilho": "Quando um raio de luz parte de um foco F_1 e reflete na cônica, ou quando um triângulo tem vértices nos focos F_1, F_2 e num ponto P da cônica",
+    "acao_ou_teorema": "A reta normal/tangente em P é bissetriz do ângulo focal F_1PF_2; a área do triângulo focal na elipse vale b^2*tg(theta/2)",
+    "formula_latex": "$$PF_1 + PF_2 = 2a, \\quad S_{\\triangle F_1PF_2} = b^2 \\tan\\left(\\frac{\\angle F_1PF_2}{2}\\right) \\quad \\text{(Elipse)}$$"
+  },
+  {
+    "nome": "Produto Vetorial e Produto Misto (Áreas e Volumes em R^3)",
+    "materia": "Geometria Analítica",
+    "topico": "Vetores no Espaço",
+    "gatilho": "Quando são dados os vértices A, B, C, D em R^3 e pede-se a área do triângulo ABC ou o volume do tetraedro ABCD",
+    "acao_ou_teorema": "A área do triângulo é metade da norma do produto vetorial; o volume do tetraedro é 1/6 do módulo do produto misto (determinante 3x3)",
+    "formula_latex": "$$S_{\\triangle ABC} = \\frac{1}{2}\\|\\vec{AB} \\times \\vec{AC}\\|, \\quad V_{ABCD} = \\frac{1}{6}\\left|[\\vec{AB}, \\vec{AC}, \\vec{AD}]\\right|$$"
+  },
+  {
+    "nome": "Princípio da Casa dos Pombos (Generalizado)",
+    "materia": "Análise Combinatória",
+    "topico": "Princípio de Dirichlet",
+    "gatilho": "Quando o enunciado pergunta 'qual o número mínimo para garantir que pelo menos k elementos tenham a mesma característica'",
+    "acao_ou_teorema": "Considere o pior caso (k-1 objetos em cada uma das n caixas) e some 1",
+    "formula_latex": "$$N_{\\min} = n(k - 1) + 1 \\implies \\left\\lceil \\frac{N}{n} \\right\\rceil \\ge k$$"
+  },
+  {
+    "nome": "Princípio da Inclusão-Exclusão (PIE)",
+    "materia": "Análise Combinatória",
+    "topico": "Contagem de Uniões e Restrições",
+    "gatilho": "Quando precisa-se contar elementos que satisfazem pelo menos uma entre várias condições que possuem interseção",
+    "acao_ou_teorema": "Some os tamanhos individuais, subtraia as interseções dois a dois, some três a três, alternando os sinais",
+    "formula_latex": "$$\\left|\\bigcup_{i=1}^{n} A_i\\right| = \\sum |A_i| - \\sum_{i<j} |A_i \\cap A_j| + \\sum_{i<j<k} |A_i \\cap A_j \\cap A_k| - \\dots$$"
+  },
+  {
+    "nome": "Permutação Caótica (Desarranjos)",
+    "materia": "Análise Combinatória",
+    "topico": "Permutações com Restrição de Posição",
+    "gatilho": "Quando permutam-se n objetos de modo que NENHUM elemento ocupe sua posição original (ex: amigo oculto, cartas em envelopes trocados)",
+    "acao_ou_teorema": "Aplique a fórmula de desarranjo derivada da Inclusão-Exclusão (aproxima-se de n!/e)",
+    "formula_latex": "$$D_n = n! \\sum_{k=0}^{n} \\frac{(-1)^k}{k!} = n!\\left(1 - \\frac{1}{1!} + \\frac{1}{2!} - \\frac{1}{3!} + \\dots + \\frac{(-1)^n}{n!}\\right)$$"
+  },
+  {
+    "nome": "Combinação Completa (Soluções Inteiras Não Negativas)",
+    "materia": "Análise Combinatória",
+    "topico": "Método dos Traços e Bolas (Stars and Bars)",
+    "gatilho": "Quando pede-se o número de soluções inteiras não negativas de x_1 + x_2 + ... + x_n = k ou distribuição de k objetos idênticos em n caixas distintas",
+    "acao_ou_teorema": "Permute k objetos idênticos com (n - 1) divisórias",
+    "formula_latex": "$$CR_n^k = \\binom{n + k - 1}{k} = \\binom{n + k - 1}{n - 1}$$"
+  },
+  {
+    "nome": "Primeiro Lema de Kaplansky",
+    "materia": "Análise Combinatória",
+    "topico": "Escolhas sem Elementos Consecutivos",
+    "gatilho": "Quando deve-se escolher p elementos de {1, 2, ..., n} em fila ou círculo de modo que não haja dois elementos vizinhos/consecutivos",
+    "acao_ou_teorema": "Use a fórmula linear ou circular de Kaplansky",
+    "formula_latex": "$$F(n, p) = \\binom{n - p + 1}{p} \\quad \\text{(Linear)}, \\qquad G(n, p) = \\frac{n}{n - p}\\binom{n - p}{p} \\quad \\text{(Circular)}$$"
+  },
+  {
+    "nome": "Relação de Stifel e Teorema das Colunas (Pascal)",
+    "materia": "Análise Combinatória",
+    "topico": "Números Binomiais e Triângulo de Pascal",
+    "gatilho": "Quando aparece uma soma de números binomiais onde o numerador cresce de 1 em 1 e a classe (denominador) é constante ou cresce junto",
+    "acao_ou_teorema": "A soma de uma coluna até a linha n resulta no elemento da linha seguinte e coluna seguinte (Teorema do Taco de Hóquei)",
+    "formula_latex": "$$\\binom{n}{k} + \\binom{n}{k+1} = \\binom{n+1}{k+1} \\quad \\text{e} \\quad \\sum_{i=k}^{n} \\binom{i}{k} = \\binom{n+1}{k+1}$$"
+  },
+  {
+    "nome": "Identidade de Vandermonde (Convolução Binomial)",
+    "materia": "Análise Combinatória",
+    "topico": "Somas de Produtos de Binomiais",
+    "gatilho": "Quando aparece um somatório de produtos de combinações C(m, k)*C(n, p-k) ou a soma dos quadrados dos elementos de uma linha de Pascal",
+    "acao_ou_teorema": "Contar subconjuntos de tamanho p separados em dois grupos de tamanhos m e n equivale a escolher p diretamente do total m + n",
+    "formula_latex": "$$\\sum_{k=0}^{p} \\binom{m}{k}\\binom{n}{p - k} = \\binom{m + n}{p}, \\quad \\sum_{k=0}^{n} \\binom{n}{k}^2 = \\binom{2n}{n}$$"
+  },
+  {
+    "nome": "Teorema da Probabilidade Total e Teorema de Bayes",
+    "materia": "Análise Combinatória",
+    "topico": "Probabilidade Condicional",
+    "gatilho": "Quando o evento final ocorreu (ex: teste deu positivo, peça saiu defeituosa) e pergunta-se a probabilidade de ter vindo da urna/causa A_i",
+    "acao_ou_teorema": "Divida o ramo favorável da árvore de probabilidades pela soma de todos os ramos que levam ao evento observado",
+    "formula_latex": "$$P(A_i \\mid B) = \\frac{P(A_i) \\cdot P(B \\mid A_i)}{\\sum_{j=1}^{n} P(A_j) \\cdot P(B \\mid A_j)}$$"
+  },
+  {
+    "nome": "Teorema de Binet e Propriedade Homogênea do Determinante",
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes e Matrizes",
+    "gatilho": "Quando pede-se det(k * A^m * B^(-1) * C^T) para matrizes quadradas de ordem n",
+    "acao_ou_teorema": "O determinante do produto é o produto dos determinantes, mas uma constante k multiplicando uma matriz n x n sai elevada a n",
+    "formula_latex": "$$\\det(kA) = k^n \\det(A), \\quad \\det(AB) = \\det(A)\\det(B), \\quad \\det(A^{-1}) = \\frac{1}{\\det(A)}$$"
+  },
+  {
+    "nome": "Determinante de Vandermonde",
+    "materia": "Álgebra Linear",
+    "topico": "Determinantes Especiais",
+    "gatilho": "Quando as linhas ou colunas de uma matriz formam progressões geométricas (potências 1, x, x^2, ..., x^(n-1))",
+    "acao_ou_teorema": "O determinante é igual ao produto de todas as diferenças possíveis entre os elementos característicos (com i > j)",
+    "formula_latex": "$$V(x_1, x_2, \\dots, x_n) = \\prod_{1 \\le j < i \\le n} (x_i - x_j)$$"
+  },
+  {
+    "nome": "Polinômio Característico e Cayley-Hamilton (Matrizes 2x2)",
+    "materia": "Álgebra Linear",
+    "topico": "Potências de Matrizes e Autovalores",
+    "gatilho": "Quando pede-se A^n ou um polinômio matricial P(A) para uma matriz quadrada 2x2",
+    "acao_ou_teorema": "Toda matriz anula seu próprio polinômio característico: A^2 - tr(A)*A + det(A)*I = 0",
+    "formula_latex": "$$A^2 - \\text{tr}(A)A + \\det(A)I_2 = 0$$"
+  },
+  {
+    "nome": "Discussão de Sistemas Lineares (Cramer e Rouché-Capelli)",
+    "materia": "Álgebra Linear",
+    "topico": "Sistemas Lineares",
+    "gatilho": "Quando pede-se o valor do parâmetro k para que um sistema linear n x n seja SPD, SPI ou SI (ou tenha solução não trivial no caso homogêneo)",
+    "acao_ou_teorema": "Comece sempre impondo det(A) = 0 para achar os valores críticos de k e substitua no sistema escalonado para distinguir SPI de SI",
+    "formula_latex": "$$\\det(A) \\ne 0 \\iff \\text{SPD}; \\quad \\text{Sistema Homogêneo admite solução não nula} \\iff \\det(A) = 0$$"
+  },
+  {
+    "nome": "Limites Fundamentais (Trigonométrico e Exponencial)",
+    "materia": "Cálculo",
+    "topico": "Cálculo de Limites",
+    "gatilho": "Quando surgem indeterminações do tipo 0/0 envolvendo sen(u)/u, (e^u - 1)/u ou do tipo 1^(infinito)",
+    "acao_ou_teorema": "Ajuste o argumento para aplicar os limites fundamentais canônicos",
+    "formula_latex": "$$\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1, \\quad \\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1, \\quad \\lim_{x \\to \\infty} \\left(1 + \\frac{k}{x}\\right)^x = e^k$$"
+  },
+  {
+    "nome": "Regra de L'Hôpital e Transformação Exponencial",
+    "materia": "Cálculo",
+    "topico": "Indeterminações de Limites",
+    "gatilho": "Quando o limite apresenta indeterminação 0/0 ou inf/inf (ou 0^0, inf^0, 1^inf após aplicar ln)",
+    "acao_ou_teorema": "Derive numerador e denominador separadamente em relação à variável até levantar a indeterminação",
+    "formula_latex": "$$\\lim_{x \\to a} \\frac{f(x)}{g(x)} = \\lim_{x \\to a} \\frac{f'(x)}{g'(x)}, \\quad \\lim f(x)^{g(x)} = \\exp\\left(\\lim g(x)\\ln f(x)\\right)$$"
+  },
+  {
+    "nome": "Teorema Fundamental do Cálculo com Regra de Leibniz",
+    "materia": "Cálculo",
+    "topico": "Derivada de Função Definida por Integral",
+    "gatilho": "Quando pede-se a derivada F'(x) (ou limite via L'Hôpital) de uma integral cujos limites de integração são funções de x",
+    "acao_ou_teorema": "Substitua o limite superior no integrando multiplicado pela sua derivada, menos o limite inferior multiplicado pela sua derivada",
+    "formula_latex": "$$\\frac{d}{dx} \\left[ \\int_{a(x)}^{b(x)} f(t)\\,dt \\right] = f(b(x))\\cdot b'(x) - f(a(x))\\cdot a'(x)$$"
+  },
+  {
+    "nome": "Soma de Riemann como Limite de Série",
+    "materia": "Cálculo",
+    "topico": "Integrais Definidas e Limites",
+    "gatilho": "Quando pede-se o limite quando n -> infinito de um somatório de k=1 até n envolvendo termos com (1/n) e funções de (k/n)",
+    "acao_ou_teorema": "Coloque 1/n em evidência como dx, identifique k/n como x e converta o limite na integral definida de 0 a 1",
+    "formula_latex": "$$\\lim_{n \\to \\infty} \\frac{1}{n} \\sum_{k=1}^{n} f\\left(\\frac{k}{n}\\right) = \\int_{0}^{1} f(x)\\,dx$$"
+  },
+  {
+    "nome": "Projeção Ortogonal de um Vetor sobre Outro",
+    "materia": "Cálculo Vetorial",
+    "topico": "Álgebra Vetorial em R^3",
+    "gatilho": "Quando o problema pede a componente de um vetor u na direção de um vetor v, ou o pé da perpendicular de um ponto sobre uma reta",
+    "acao_ou_teorema": "Projete u sobre v dividindo o produto escalar pelo quadrado da norma do vetor base v; a componente ortogonal é u menos a projeção",
+    "formula_latex": "$$\\text{proj}_{\\vec{v}}\\vec{u} = \\left(\\frac{\\vec{u} \\cdot \\vec{v}}{\\|\\vec{v}\\|^2}\\right)\\vec{v}, \\quad \\vec{u}_{\\perp} = \\vec{u} - \\text{proj}_{\\vec{v}}\\vec{u}$$"
+  },
+  {
+    "nome": "Identidade de Lagrange para Produto Vetorial e Escalar",
+    "materia": "Cálculo Vetorial",
+    "topico": "Produto Escalar e Vetorial",
+    "gatilho": "Quando o enunciado fornece o módulo de u, o módulo de v e o produto escalar u.v, e pede o módulo do produto vetorial ||u x v|| (ou vice-versa) sem dar o ângulo",
+    "acao_ou_teorema": "Relacione diretamente o quadrado da norma do produto vetorial com o quadrado do produto escalar via sen^2 + cos^2 = 1",
+    "formula_latex": "$$\\|\\vec{u} \\times \\vec{v}\\|^2 + (\\vec{u} \\cdot \\vec{v})^2 = \\|\\vec{u}\\|^2 \\|\\vec{v}\\|^2$$"
+  },
+  {
+    "nome": "Duplo Produto Vetorial (Regra do BAC-CAB)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Identidades Vetoriais",
+    "gatilho": "Quando aparece um produto vetorial triplo u x (v x w) em equações vetoriais da Escola Naval ou demonstrações",
+    "acao_ou_teorema": "Expanda como combinação linear dos dois vetores dentro dos parênteses (o resultado é sempre coplanar a v e w)",
+    "formula_latex": "$$\\vec{u} \\times (\\vec{v} \\times \\vec{w}) = (\\vec{u} \\cdot \\vec{w})\\vec{v} - (\\vec{u} \\cdot \\vec{v})\\vec{w}$$"
+  },
+  {
+    "nome": "Condição de Coplanaridade e Simetria Cíclica do Produto Misto",
+    "materia": "Cálculo Vetorial",
+    "topico": "Produto Misto em R^3",
+    "gatilho": "Quando quatro pontos A, B, C, D pertencem ao mesmo plano, três vetores são linearmente dependentes em R^3, ou pede-se a equação geral do plano",
+    "acao_ou_teorema": "O produto misto (determinante 3x3) é nulo se e somente se os vetores forem coplanares, e permutações cíclicas não alteram o seu sinal",
+    "formula_latex": "$$[\\vec{u}, \\vec{v}, \\vec{w}] = \\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = [\\vec{v}, \\vec{w}, \\vec{u}] = 0 \\iff \\text{coplanares}$$"
+  },
+  {
+    "nome": "Vetor Diretor da Bissetriz entre Dois Vetores",
+    "materia": "Cálculo Vetorial",
+    "topico": "Geometria Vetorial",
+    "gatilho": "Quando pede-se um vetor ou reta que divide ao meio o ângulo entre dois vetores u e v de módulos diferentes",
+    "acao_ou_teorema": "Normalize ambos os vetores (transforme em versores de módulo 1) e some-os, pois a diagonal de um losango é sempre bissetriz",
+    "formula_latex": "$$\\vec{b}_{\\text{int}} = \\frac{\\vec{u}}{\\|\\vec{u}\\|} + \\frac{\\vec{v}}{\\|\\vec{v}\\|}, \\quad \\vec{b}_{\\text{ext}} = \\frac{\\vec{u}}{\\|\\vec{u}\\|} - \\frac{\\vec{v}}{\\|\\vec{v}\\|}$$"
+  },
+  {
+    "nome": "Distância de Ponto a Reta em R^3 via Produto Vetorial",
+    "materia": "Cálculo Vetorial",
+    "topico": "Distâncias no Espaço",
+    "gatilho": "Quando pede-se a distância de um ponto P a uma reta r no espaço 3D (conhecendo um ponto A da reta e seu vetor diretor v)",
+    "acao_ou_teorema": "Divida a área do paralelogramo (módulo do produto vetorial AP x v) pela base (módulo do vetor diretor v)",
+    "formula_latex": "$$d(P, r) = \\frac{\\|\\vec{AP} \\times \\vec{v}\\|}{\\|\\vec{v}\\|}$$"
+  },
+  {
+    "nome": "Distância entre Duas Retas Reversas em R^3",
+    "materia": "Cálculo Vetorial",
+    "topico": "Distâncias no Espaço",
+    "gatilho": "Quando duas retas no espaço não são paralelas e não se cruzam, e pede-se a distância mínima entre elas",
+    "acao_ou_teorema": "Divida o volume do paralelepípedo (módulo do produto misto entre os diretores e o vetor que liga um ponto de cada reta) pela área da base ||v_1 x v_2||",
+    "formula_latex": "$$d(r_1, r_2) = \\frac{\\left|[\\vec{v}_1, \\vec{v}_2, \\vec{P_1P_2}]\\right|}{\\|\\vec{v}_1 \\times \\vec{v}_2\\|}$$"
+  },
+  {
+    "nome": "Equação Vetorial da Reta (Divisão de Segmento / Baricentro)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Combinação Afim de Pontos",
+    "gatilho": "Quando um ponto P divide um segmento AB na razão k ou quando trabalha-se com o baricentro G e medianas vetorialmente",
+    "acao_ou_teorema": "Expresse os pontos em relação a uma origem arbitrária O; o baricentro é a média aritmética dos três vértices",
+    "formula_latex": "$$\\vec{OG} = \\frac{\\vec{OA} + \\vec{OB} + \\vec{OC}}{3} \\iff \\vec{GA} + \\vec{GB} + \\vec{GC} = \\vec{0}$$"
+  },
+  {
+    "nome": "Ortogonalidade de Vetor de Módulo Constante com sua Derivada",
+    "materia": "Cálculo Vetorial",
+    "topico": "Funções Vetoriais e Curvas",
+    "gatilho": "Quando uma curva r(t) está contida em uma superfície esférica (||r(t)|| = R constante) ou quando um versor u(t) é derivado em relação a t",
+    "acao_ou_teorema": "Derive o produto escalar r(t).r(t) = c^2 para concluir que o vetor e sua derivada são sempre perpendiculares",
+    "formula_latex": "$$\\|\\vec{r}(t)\\| = \\text{constante} \\iff \\vec{r}(t) \\cdot \\vec{r}\\,'(t) = 0$$"
+  },
+  {
+    "nome": "Comprimento de Arco de Curva Parametrizada",
+    "materia": "Cálculo Vetorial",
+    "topico": "Geometria Diferencial de Curvas",
+    "gatilho": "Quando pede-se o comprimento de uma curva espacial r(t) = (x(t), y(t), z(t)) entre t = a e t = b, ou a reparametrização pelo comprimento de arco s",
+    "acao_ou_teorema": "Integre a norma do vetor velocidade ||r'(t)|| no intervalo dado",
+    "formula_latex": "$$L = \\int_{a}^{b} \\|\\vec{r}\\,'(t)\\|\\,dt = \\int_{a}^{b} \\sqrt{(x')^2 + (y')^2 + (z')^2}\\,dt$$"
+  },
+  {
+    "nome": "Triedro de Frenet-Serret (Tangente, Normal Principal e Binormal)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Geometria Diferencial de Curvas",
+    "gatilho": "Quando pede-se o vetor tangente unitário T, normal principal N, binormal B ou a equação do plano osculador de uma curva",
+    "acao_ou_teorema": "T é o versor de r', B é o versor de r' x r'' (normal ao plano osculador) e N = B x T completa a base ortonormal positiva",
+    "formula_latex": "$$\\vec{T} = \\frac{\\vec{r}\\,'}{\\|\\vec{r}\\,'\\|}, \\quad \\vec{B} = \\frac{\\vec{r}\\,' \\times \\vec{r}\\,''}{\\|\\vec{r}\\,' \\times \\vec{r}\\,''\\|}, \\quad \\vec{N} = \\vec{B} \\times \\vec{T}$$"
+  },
+  {
+    "nome": "Curvatura e Raio de Curvatura de Curva no Espaço e no Plano",
+    "materia": "Cálculo Vetorial",
+    "topico": "Curvatura e Torção",
+    "gatilho": "Quando pede-se a curvatura k(t) (ou o raio do círculo osculador R = 1/k) de uma curva parametrizada r(t) ou de um gráfico y = f(x)",
+    "acao_ou_teorema": "Divida o módulo do produto vetorial da 1ª e 2ª derivadas pelo cubo do módulo da 1ª derivada",
+    "formula_latex": "$$\\kappa(t) = \\frac{\\|\\vec{r}\\,'(t) \\times \\vec{r}\\,''(t)\\|}{\\|\\vec{r}\\,'(t)\\|^3}, \\quad \\kappa(x) = \\frac{|f''(x)|}{\\left(1 + [f'(x)]^2\\right)^{3/2}}$$"
+  },
+  {
+    "nome": "Torção de uma Curva Espacial",
+    "materia": "Cálculo Vetorial",
+    "topico": "Curvatura e Torção",
+    "gatilho": "Quando pede-se a torção de uma curva em R^3 ou a condição para que uma curva espacial seja plana (contida em um único plano)",
+    "acao_ou_teorema": "Divida o produto misto [r', r'', r'''] pelo quadrado da norma de (r' x r''); a curva é plana se e somente se o produto misto for identicamente nulo",
+    "formula_latex": "$$\\tau(t) = \\frac{[\\vec{r}\\,'(t), \\vec{r}\\,''(t), \\vec{r}\\,'''(t)]}{\\|\\vec{r}\\,'(t) \\times \\vec{r}\\,''(t)\\|^2}$$"
+  },
+  {
+    "nome": "Decomposição Tangencial e Normal da Segunda Derivada",
+    "materia": "Cálculo Vetorial",
+    "topico": "Curvas Parametrizadas",
+    "gatilho": "Quando pede-se as componentes escalares tangencial (a_T) e normal (a_N) do vetor r''(t) sem precisar calcular a derivada do versor T",
+    "acao_ou_teorema": "Use o produto escalar para a componente tangencial e o módulo do produto vetorial para a componente normal",
+    "formula_latex": "$$a_T = \\frac{\\vec{r}\\,' \\cdot \\vec{r}\\,''}{\\|\\vec{r}\\,'\\|}, \\quad a_N = \\frac{\\|\\vec{r}\\,' \\times \\vec{r}\\,''\\|}{\\|\\vec{r}\\,'\\|} = \\kappa \\|\\vec{r}\\,'\\|^2$$"
+  },
+  {
+    "nome": "Teste de Limite Multivariável por Caminhos (Não Existência)",
+    "materia": "Cálculo",
+    "topico": "Limites de Várias Variáveis",
+    "gatilho": "Quando pede-se o limite de f(x,y) quando (x,y) -> (0,0) e o grau do numerador é igual ao grau do denominador (homogêneo)",
+    "acao_ou_teorema": "Teste caminhos do tipo y = mx ou y = kx^p (onde os graus se igualam); se o resultado depender de m ou k, o limite não existe",
+    "formula_latex": "$$\\lim_{\\substack{x \\to 0 \\\\ y = mx^p}} f(x, y) = L(m) \\text{ varia com } m \\implies \\nexists \\lim_{(x,y)\\to(0,0)} f(x,y)$$"
+  },
+  {
+    "nome": "Limite Multivariável via Coordenadas Polares (Confronto)",
+    "materia": "Cálculo",
+    "topico": "Limites e Continuidade em R^2",
+    "gatilho": "Quando aparece x^2 + y^2 no denominador de um limite com (x,y) -> (0,0) e o grau do numerador é estritamente maior que 2",
+    "acao_ou_teorema": "Substitua x = r*cos(theta) e y = r*sen(theta); se |f(r,theta) - L| <= g(r) com g(r) -> 0 independente de theta, o limite vale L",
+    "formula_latex": "$$|f(r\\cos\\theta, r\\sin\\theta) - L| \\le g(r) \\xrightarrow{r \\to 0^+} 0 \\implies \\lim_{(x,y)\\to(0,0)} f(x,y) = L$$"
+  },
+  {
+    "nome": "Teorema de Clairaut-Schwarz (Simetria das Derivadas Mistas)",
+    "materia": "Cálculo",
+    "topico": "Derivadas Parciais de Ordem Superior",
+    "gatilho": "Quando pede-se uma derivada parcial mista complexa f_xy, onde derivar em uma ordem é muito mais fácil do que na outra",
+    "acao_ou_teorema": "Se as derivadas parciais de segunda ordem são contínuas, a ordem de derivação é irrelevante",
+    "formula_latex": "$$f \\in C^2 \\implies \\frac{\\partial^2 f}{\\partial x \\partial y} = \\frac{\\partial^2 f}{\\partial y \\partial x}$$"
+  },
+  {
+    "nome": "Plano Tangente e Aproximação Linear (Diferencial Total)",
+    "materia": "Cálculo",
+    "topico": "Diferenciabilidade em R^n",
+    "gatilho": "Quando pede-se a equação do plano tangente ao gráfico z = f(x,y) em (x_0, y_0) ou um valor aproximado de f(x_0 + dx, y_0 + dy)",
+    "acao_ou_teorema": "Calcule as derivadas parciais no ponto e monte a aproximação afim de primeira ordem",
+    "formula_latex": "$$z - z_0 = f_x(x_0, y_0)(x - x_0) + f_y(x_0, y_0)(y - y_0), \\quad df = f_x\\,dx + f_y\\,dy$$"
+  },
+  {
+    "nome": "Regra da Cadeia Multivariável (Forma Vetorial)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Derivação Composta",
+    "gatilho": "Quando uma função escalar f(x,y,z) é composta com uma curva parametrizada r(t) = (x(t), y(t), z(t))",
+    "acao_ou_teorema": "A derivada de f(r(t)) em relação a t é o produto escalar do vetor gradiente de f pelo vetor velocidade r'(t)",
+    "formula_latex": "$$\\frac{d}{dt}f(\\vec{r}(t)) = \\nabla f(\\vec{r}(t)) \\cdot \\vec{r}\\,'(t) = \\frac{\\partial f}{\\partial x}\\frac{dx}{dt} + \\frac{\\partial f}{\\partial y}\\frac{dy}{dt} + \\frac{\\partial f}{\\partial z}\\frac{dz}{dt}$$"
+  },
+  {
+    "nome": "Teorema da Função Implícita (Derivação Implícita via Parciais)",
+    "materia": "Cálculo",
+    "topico": "Derivação Implícita",
+    "gatilho": "Quando as variáveis estão misturadas em uma equação F(x, y) = 0 ou F(x, y, z) = 0 e pede-se dy/dx ou dz/dx",
+    "acao_ou_teorema": "Passe todos os termos para um lado formando F = 0 e divida a parcial da variável independente pela parcial da dependente com sinal negativo",
+    "formula_latex": "$$F(x,y,z) = 0 \\implies \\frac{\\partial z}{\\partial x} = -\\frac{F_x}{F_z} \\quad \\text{e} \\quad \\frac{dy}{dx} = -\\frac{F_x}{F_y}$$"
+  },
+  {
+    "nome": "Teorema de Euler para Funções Homogêneas",
+    "materia": "Cálculo",
+    "topico": "Equações com Derivadas Parciais",
+    "gatilho": "Quando aparece a expressão x*(df/dx) + y*(df/dy) + z*(df/dz) e nota-se que f(tx, ty, tz) = t^k * f(x, y, z)",
+    "acao_ou_teorema": "Não calcule as derivadas parciais no braço: o produto escalar de (x,y,z) pelo gradiente de f é simplesmente o grau de homogeneidade k vezes a própria função f",
+    "formula_latex": "$$f(tx, ty, tz) = t^k f(x,y,z) \\implies x\\frac{\\partial f}{\\partial x} + y\\frac{\\partial f}{\\partial y} + z\\frac{\\partial f}{\\partial z} = k \\cdot f(x,y,z)$$"
+  },
+  {
+    "nome": "Derivada Direcional e Direção de Máxima Taxa de Variação",
+    "materia": "Cálculo Vetorial",
+    "topico": "Gradiente e Derivada Direcional",
+    "gatilho": "Quando pede-se a taxa de variação de f na direção de um vetor v, ou qual direção e qual o valor do crescimento/decrescimento máximo",
+    "acao_ou_teorema": "Normalize o vetor direção (versor u) e faça o produto escalar com o gradiente; o valor máximo da derivada direcional é a norma do gradiente ||grad f||",
+    "formula_latex": "$$D_{\\hat{u}}f(P) = \\nabla f(P) \\cdot \\frac{\\vec{v}}{\\|\\vec{v}\\|} = \\|\\nabla f(P)\\|\\cos\\theta \\in \\left[-\\|\\nabla f(P)\\|, \\; \\|\\nabla f(P)\\|\\right]$$"
+  },
+  {
+    "nome": "Ortogonalidade do Gradiente às Curvas e Superfícies de Nível",
+    "materia": "Cálculo Vetorial",
+    "topico": "Geometria do Gradiente",
+    "gatilho": "Quando pede-se a reta normal ou o plano tangente a uma superfície implícita F(x, y, z) = c em um ponto P_0",
+    "acao_ou_teorema": "O vetor gradiente calculado em P_0 é diretamente o vetor normal ao plano tangente e à superfície de nível",
+    "formula_latex": "$$\\vec{n} = \\nabla F(P_0) \\implies \\nabla F(P_0) \\cdot (\\vec{r} - \\vec{r}_0) = 0$$"
+  },
+  {
+    "nome": "Reta Tangente à Interseção de Duas Superfícies",
+    "materia": "Cálculo Vetorial",
+    "topico": "Gradiente e Produto Vetorial",
+    "gatilho": "Quando uma curva C é dada pela interseção de duas superfícies F(x,y,z) = c_1 e G(x,y,z) = c_2 e pede-se a reta tangente a C em P_0",
+    "acao_ou_teorema": "Como a curva pertence a ambas as superfícies, seu vetor tangente é simultaneamente ortogonal aos dois gradientes: tome o produto vetorial grad(F) x grad(G)",
+    "formula_latex": "$$\\vec{v}_{\\text{tangente}} = \\nabla F(P_0) \\times \\nabla G(P_0)$$"
+  },
+  {
+    "nome": "Teste da Matriz Hessiana (Máximos, Mínimos e Sela em R^2)",
+    "materia": "Cálculo",
+    "topico": "Otimização Livre de Várias Variáveis",
+    "gatilho": "Quando é preciso classificar os pontos críticos onde grad f(x,y) = (0,0) em máximo local, mínimo local ou ponto de sela",
+    "acao_ou_teorema": "Calcule o determinante Hessiano H = f_xx * f_yy - (f_xy)^2; se H < 0 é sela; se H > 0 olhe o sinal de f_xx (>0 mínimo, <0 máximo)",
+    "formula_latex": "$$H(P) = \\det\\begin{bmatrix} f_{xx} & f_{xy} \\\\ f_{yx} & f_{yy} \\end{bmatrix} = f_{xx}f_{yy} - (f_{xy})^2$$"
+  },
+  {
+    "nome": "Método dos Multiplicadores de Lagrange",
+    "materia": "Cálculo Vetorial",
+    "topico": "Otimização com Restrição",
+    "gatilho": "Quando pede-se o valor máximo ou mínimo de f(x,y,z) sujeito a uma restrição de igualdade g(x,y,z) = c (ex: ponto de uma superfície mais próximo da origem)",
+    "acao_ou_teorema": "No ponto extremo, os vetores gradientes de f e g são paralelos (colineares); em R^2 isso equivale a zerar o determinante 2x2 dos gradientes",
+    "formula_latex": "$$\\nabla f(P) = \\lambda \\nabla g(P) \\quad \\text{com} \\quad g(P) = c$$"
+  },
+  {
+    "nome": "Teorema de Fubini e Inversão da Ordem de Integração",
+    "materia": "Cálculo",
+    "topico": "Integrais Duplas",
+    "gatilho": "Quando aparece uma integral dupla iterada impossível de integrar na ordem dada, como int int exp(y^2) dy dx ou sen(x^2) dx dy",
+    "acao_ou_teorema": "Desenhe a região de integração no plano xy, inverta os limites para dx dy (ou dy dx) e integre primeiro a variável que destrava a primitiva",
+    "formula_latex": "$$\\int_{a}^{b} \\int_{g_1(x)}^{g_2(x)} f(x,y)\\,dy\\,dx = \\int_{c}^{d} \\int_{h_1(y)}^{h_2(y)} f(x,y)\\,dx\\,dy$$"
+  },
+  {
+    "nome": "Teorema da Mudança de Variáveis e Determinante Jacobiano",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais Múltiplas",
+    "gatilho": "Quando a região de integração é um paralelogramo inclinado ou limitada por curvas u(x,y) = c_1 e v(x,y) = c_2",
+    "acao_ou_teorema": "Multiplique o integrando pelo módulo do determinante Jacobiano; se for mais fácil achar u(x,y) e v(x,y), use o inverso de |det J(x,y)|",
+    "formula_latex": "$$dx\\,dy = \\left|\\frac{\\partial(x,y)}{\\partial(u,v)}\\right|du\\,dv = \\left|\\frac{\\partial(u,v)}{\\partial(x,y)}\\right|^{-1}du\\,dv$$"
+  },
+  {
+    "nome": "Coordenadas Polares e Polares Elípticas em Integrais Duplas",
+    "materia": "Cálculo",
+    "topico": "Integrais Duplas",
+    "gatilho": "Quando a região ou o integrando envolve círculos x^2 + y^2 <= R^2 ou elipses (x/a)^2 + (y/b)^2 <= 1",
+    "acao_ou_teorema": "Faça x = a*r*cos(theta) e y = b*r*sen(theta) com o Jacobiano valendo a*b*r (no caso circular a=b=1, vale r)",
+    "formula_latex": "$$x = ar\\cos\\theta, \\; y = br\\sin\\theta \\implies dx\\,dy = ab\\,r\\,dr\\,d\\theta$$"
+  },
+  {
+    "nome": "Coordenadas Cilíndricas em Integrais Triplas",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais Triplas",
+    "gatilho": "Quando um sólido em R^3 possui simetria axial em torno do eixo z (cilindros, paraboloides z = x^2+y^2, cones z = sqrt(x^2+y^2))",
+    "acao_ou_teorema": "Mantenha z e converta x, y em polares com elemento de volume dV = r dz dr d(theta)",
+    "formula_latex": "$$x = r\\cos\\theta, \\; y = r\\sin\\theta, \\; z = z \\implies dV = r\\,dz\\,dr\\,d\\theta$$"
+  },
+  {
+    "nome": "Coordenadas Esféricas em Integrais Triplas",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais Triplas",
+    "gatilho": "Quando o sólido envolve esferas centradas na origem x^2 + y^2 + z^2 <= R^2 combinadas ou não com cones",
+    "acao_ou_teorema": "Use a distância à origem rho, o ângulo polar phi (0 a pi, medido a partir de +z) e o azimutal theta (0 a 2pi), com Jacobiano rho^2 * sen(phi)",
+    "formula_latex": "$$x = \\rho\\sin\\varphi\\cos\\theta, \\; y = \\rho\\sin\\varphi\\sin\\theta, \\; z = \\rho\\cos\\varphi \\implies dV = \\rho^2\\sin\\varphi\\,d\\rho\\,d\\varphi\\,d\\theta$$"
+  },
+  {
+    "nome": "Integral Gaussiana via Coordenadas Polares",
+    "materia": "Cálculo",
+    "topico": "Integrais Impróprias e Duplas",
+    "gatilho": "Quando aparece a integral de exp(-a*x^2) de -infinito a +infinito (ou de 0 a +infinito)",
+    "acao_ou_teorema": "Eleve a integral ao quadrado transformando em integral dupla sobre R^2 e passe para coordenadas polares",
+    "formula_latex": "$$\\int_{-\\infty}^{\\infty} e^{-ax^2}\\,dx = \\sqrt{\\frac{\\pi}{a}}, \\quad \\int_{0}^{\\infty} e^{-ax^2}\\,dx = \\frac{1}{2}\\sqrt{\\frac{\\pi}{a}} \\quad (a > 0)$$"
+  },
+  {
+    "nome": "Divergente de um Campo Vetorial",
+    "materia": "Cálculo Vetorial",
+    "topico": "Operadores Diferenciais (Nabla)",
+    "gatilho": "Quando precisa-se calcular a taxa líquida de expansão/fluxo pontual de um campo F = (P, Q, R) ou aplicar o Teorema de Gauss",
+    "acao_ou_teorema": "Faça o produto escalar formal do operador nabla pelo campo vetorial F (o resultado é um campo escalar)",
+    "formula_latex": "$$\\text{div}\\,\\vec{F} = \\nabla \\cdot \\vec{F} = \\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y} + \\frac{\\partial R}{\\partial z}$$"
+  },
+  {
+    "nome": "Rotacional de um Campo Vetorial",
+    "materia": "Cálculo Vetorial",
+    "topico": "Operadores Diferenciais (Nabla)",
+    "gatilho": "Quando precisa-se testar se um campo em R^3 é conservativo, medir sua tendência de rotação ou aplicar o Teorema de Stokes",
+    "acao_ou_teorema": "Calcule o determinante simbólico 3x3 entre os versores (i, j, k), as derivadas parciais e as componentes (P, Q, R)",
+    "formula_latex": "$$\\text{rot}\\,\\vec{F} = \\nabla \\times \\vec{F} = \\left(\\frac{\\partial R}{\\partial y} - \\frac{\\partial Q}{\\partial z}, \\; \\frac{\\partial P}{\\partial z} - \\frac{\\partial R}{\\partial x}, \\; \\frac{\\partial Q}{\\partial x} - \\frac{\\partial P}{\\partial y}\\right)$$"
+  },
+  {
+    "nome": "Anulamento do Rotacional do Gradiente (Campos Irrotacionais)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Identidades do Operador Nabla",
+    "gatilho": "Quando o campo vetorial é o gradiente de um potencial escalar (F = grad f) ou pergunta-se se um campo pode ser conservativo",
+    "acao_ou_teorema": "Todo campo gradiente de classe C^2 possui rotacional identicamente nulo; se rot F != 0, o campo JAMAIS é conservativo",
+    "formula_latex": "$$\\text{rot}(\\nabla f) = \\nabla \\times (\\nabla f) = \\vec{0}$$"
+  },
+  {
+    "nome": "Anulamento do Divergente do Rotacional (Campos Solenoidais)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Identidades do Operador Nabla",
+    "gatilho": "Quando um campo é dado como F = rot G, quando pergunta-se se F admite potencial vetor, ou ao calcular o fluxo de rot F sobre uma superfície fechada",
+    "acao_ou_teorema": "O divergente de qualquer rotacional de classe C^2 é sempre zero; logo, pelo Teorema de Gauss, o fluxo de rot F através de qualquer superfície fechada é zero",
+    "formula_latex": "$$\\text{div}(\\text{rot}\\,\\vec{G}) = \\nabla \\cdot (\\nabla \\times \\vec{G}) = 0 \\implies \\oiint_S (\\nabla \\times \\vec{G}) \\cdot d\\vec{S} = 0$$"
+  },
+  {
+    "nome": "Operador Laplaciano e Equação de Laplace (Funções Harmônicas)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Operadores Diferenciais de 2ª Ordem",
+    "gatilho": "Quando pede-se o divergente do gradiente de f ou pergunta-se se uma função escalar f é harmônica",
+    "acao_ou_teorema": "Some as segundas derivadas parciais puras; a função é harmônica se o seu Laplaciano for nulo",
+    "formula_latex": "$$\\Delta f = \\nabla^2 f = \\nabla \\cdot (\\nabla f) = \\frac{\\partial^2 f}{\\partial x^2} + \\frac{\\partial^2 f}{\\partial y^2} + \\frac{\\partial^2 f}{\\partial z^2} = 0$$"
+  },
+  {
+    "nome": "Regra do Produto para o Divergente (Campo Escalar vezes Vetorial)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Identidades Vetoriais",
+    "gatilho": "Quando é preciso simplificar ou integrar div(f * F), onde f é escalar e F é vetorial",
+    "acao_ou_teorema": "Aplique a regra de Leibniz: gradiente de f escalar F mais f vezes o divergente de F",
+    "formula_latex": "$$\\nabla \\cdot (f\\vec{F}) = (\\nabla f) \\cdot \\vec{F} + f(\\nabla \\cdot \\vec{F})$$"
+  },
+  {
+    "nome": "Derivadas do Campo Radial r = (x, y, z) e de sua Norma",
+    "materia": "Cálculo Vetorial",
+    "topico": "Campos Centrais e Radiais",
+    "gatilho": "Quando o campo envolve o vetor posição r = (x,y,z) e potências da distância à origem r = ||r|| = sqrt(x^2+y^2+z^2)",
+    "acao_ou_teorema": "Use as identidades diretas em vez de abrir coordenadas: div r = 3, rot r = 0 e grad(r^n) = n * r^(n-2) * vetor(r); para n = -3 em R^3, o divergente de r/||r||^3 é zero fora da origem",
+    "formula_latex": "$$\\nabla \\cdot \\vec{r} = 3, \\quad \\nabla \\times \\vec{r} = \\vec{0}, \\quad \\nabla(r^n) = n r^{n-2}\\vec{r}, \\quad \\nabla \\cdot \\left(\\frac{\\vec{r}}{r^n}\\right) = \\frac{3 - n}{r^n}$$"
+  },
+  {
+    "nome": "Lema de Poincaré (Critério de Campo Conservativo)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Campos Conservativos e Formas Exatas",
+    "gatilho": "Quando o domínio D é simplesmente conexo (sem furos) e dP/dy = dQ/dx (em R^2) ou rot F = 0 (em R^3)",
+    "acao_ou_teorema": "O campo é conservativo e admite uma função potencial f tal que grad f = F, encontrada integrando parcialmente cada componente",
+    "formula_latex": "$$\\nabla \\times \\vec{F} = \\vec{0} \\text{ em } D \\text{ simplesmente conexo} \\iff \\exists f : \\vec{F} = \\nabla f$$"
+  },
+  {
+    "nome": "Teorema Fundamental para Integrais de Linha",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais de Linha e Independência de Caminho",
+    "gatilho": "Quando pede-se a integral de linha de um campo conservativo F = grad f ao longo de uma curva complicada C que liga A até B",
+    "acao_ou_teorema": "Ignore a parametrização da curva C: encontre a função potencial f e calcule apenas f(B) - f(A); se a curva for fechada, a integral é zero",
+    "formula_latex": "$$\\int_{C} \\nabla f \\cdot d\\vec{r} = f(\\vec{r}(b)) - f(\\vec{r}(a)), \\qquad \\oint_{C} \\nabla f \\cdot d\\vec{r} = 0$$"
+  },
+  {
+    "nome": "Integral de Linha de Campo Escalar vs. Campo Vetorial",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais de Linha",
+    "gatilho": "Quando é preciso parametrizar e calcular diretamente uma integral sobre uma curva C: r(t), a <= t <= b",
+    "acao_ou_teorema": "Para campo escalar ds multiplique por ||r'(t)|| dt (independe da orientação); para campo vetorial dr faça o produto escalar com r'(t) dt (muda de sinal se inverter a orientação)",
+    "formula_latex": "$$\\int_C f\\,ds = \\int_a^b f(\\vec{r}(t))\\|\\vec{r}\\,'(t)\\|\\,dt, \\qquad \\int_C \\vec{F}\\cdot d\\vec{r} = \\int_a^b \\vec{F}(\\vec{r}(t))\\cdot \\vec{r}\\,'(t)\\,dt$$"
+  },
+  {
+    "nome": "Teorema de Green no Plano (Forma Tangencial / Circulação)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Teorema de Green",
+    "gatilho": "Quando pede-se uma integral de linha fechada oint (P dx + Q dy) no plano R^2 sobre a fronteira de uma região D, e as derivadas parciais Q_x e P_y simplificam a expressão",
+    "acao_ou_teorema": "Converta a integral de linha positivamente orientada (anti-horária) na integral dupla de (dQ/dx - dP/dy) sobre a região interna D",
+    "formula_latex": "$$\\oint_{\\partial D^+} (P\\,dx + Q\\,dy) = \\iint_{D} \\left(\\frac{\\partial Q}{\\partial x} - \\frac{\\partial P}{\\partial y}\\right)dx\\,dy$$"
+  },
+  {
+    "nome": "Cálculo de Área Plana via Integral de Linha (Green)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Aplicações do Teorema de Green",
+    "gatilho": "Quando pede-se a área interna a uma curva fechada parametrizada C (como astroide, elipse, cicloide ou laço de curva)",
+    "acao_ou_teorema": "Escolha um campo com rotacional escalar igual a 1 e integre ao longo do bordo no sentido anti-horário",
+    "formula_latex": "$$\\text{Área}(D) = \\oint_{\\partial D^+} x\\,dy = -\\oint_{\\partial D^+} y\\,dx = \\frac{1}{2}\\oint_{\\partial D^+} (x\\,dy - y\\,dx)$$"
+  },
+  {
+    "nome": "Teorema de Green na Forma Normal (Fluxo-Divergência em R^2)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Teorema de Green e Fluxo 2D",
+    "gatilho": "Quando pede-se o fluxo de um campo 2D F = (P, Q) para fora de uma curva fechada simples C no plano",
+    "acao_ou_teorema": "Use d(vetor n) = (dy, -dx) e converta na integral dupla do divergente 2D sobre a região D",
+    "formula_latex": "$$\\oint_{\\partial D^+} \\vec{F} \\cdot \\hat{n}\\,ds = \\oint_{\\partial D^+} (P\\,dy - Q\\,dx) = \\iint_{D} \\left(\\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y}\\right)dx\\,dy$$"
+  },
+  {
+    "nome": "Teorema de Green em Região com Singularidade (Técnica do Furo)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Singularidades e Número de Envolvimento",
+    "gatilho": "Quando o campo tem rotacional zero (dQ/dx = dP/dy), como F = (-y/(x^2+y^2), x/(x^2+y^2)), mas possui uma singularidade (0,0) DENTRO da curva fechada C",
+    "acao_ou_teorema": "A integral sobre qualquer curva fechada complexa C ao redor da origem é exatamente igual à integral sobre um círculo ou elipse auxiliar pequeno envolvendo a singularidade (vale 2*pi para o campo padrão)",
+    "formula_latex": "$$(0,0) \\in \\text{int}(C) \\implies \\oint_{C^+} \\frac{-y\\,dx + x\\,dy}{x^2 + y^2} = \\oint_{x^2+y^2=\\varepsilon^2} \\frac{-y\\,dx + x\\,dy}{x^2 + y^2} = 2\\pi$$"
+  },
+  {
+    "nome": "Elemento de Área e Integral de Superfície Parametrizada",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais de Superfície",
+    "gatilho": "Quando uma superfície S é parametrizada por r(u,v) e pede-se sua área ou a integral de uma função/fluxo sobre S",
+    "acao_ou_teorema": "Calcule o produto vetorial fundamental r_u x r_v: sua norma fornece o elemento de área dS, e o próprio vetor fornece o elemento orientado de fluxo d(vetor S)",
+    "formula_latex": "$$dS = \\|\\vec{r}_u \\times \\vec{r}_v\\|\\,du\\,dv, \\qquad \\iint_S \\vec{F}\\cdot d\\vec{S} = \\iint_D \\vec{F}(\\vec{r}(u,v)) \\cdot (\\vec{r}_u \\times \\vec{r}_v)\\,du\\,dv$$"
+  },
+  {
+    "nome": "Integral de Superfície e Fluxo em Gráfico Explícito z = g(x,y)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Integrais de Superfície",
+    "gatilho": "Quando a superfície S é dada explicitamente como z = g(x,y) sobre uma projeção D no plano xy",
+    "acao_ou_teorema": "Use diretamente o vetor normal orientado para cima (-g_x, -g_y, 1) dx dy sem precisar parametrizar do zero",
+    "formula_latex": "$$dS = \\sqrt{1 + g_x^2 + g_y^2}\\,dx\\,dy, \\qquad d\\vec{S}_{\\text{cima}} = \\left(-\\frac{\\partial g}{\\partial x}, \\; -\\frac{\\partial g}{\\partial y}, \\; 1\\right)dx\\,dy$$"
+  },
+  {
+    "nome": "Teorema de Stokes",
+    "materia": "Cálculo Vetorial",
+    "topico": "Teoremas Integrais no Espaço",
+    "gatilho": "Quando pede-se uma integral de linha fechada em R^3 sobre uma curva espacial C (ex: interseção de cilindro com plano) ou o fluxo de um rotacional",
+    "acao_ou_teorema": "Troque a integral de linha de F ao longo do bordo C pela integral de superfície do rotacional de F sobre qualquer superfície suave S cuja fronteira seja C (respeitando a regra da mão direita)",
+    "formula_latex": "$$\\oint_{\\partial S} \\vec{F} \\cdot d\\vec{r} = \\iint_{S} (\\nabla \\times \\vec{F}) \\cdot d\\vec{S}$$"
+  },
+  {
+    "nome": "Troca de Superfície pelo Teorema de Stokes (Mesmo Bordo)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Aplicações do Teorema de Stokes",
+    "gatilho": "Quando pede-se o fluxo do rotacional iint_S (rot F).dS sobre uma superfície curva complicada S (como um paraboloide ou semiesfera aberta) cujo bordo está em um plano simples",
+    "acao_ou_teorema": "Substitua a superfície complicada S pelo disco/região plana D que compartilha exatamente a mesma curva de fronteira e a mesma orientação de bordo",
+    "formula_latex": "$$\\partial S_1 = \\partial S_2 \\implies \\iint_{S_1} (\\nabla \\times \\vec{F}) \\cdot d\\vec{S} = \\iint_{S_2} (\\nabla \\times \\vec{F}) \\cdot d\\vec{S}$$"
+  },
+  {
+    "nome": "Teorema da Divergência de Gauss",
+    "materia": "Cálculo Vetorial",
+    "topico": "Teoremas Integrais no Espaço",
+    "gatilho": "Quando pede-se o fluxo de um campo vetorial F através de uma superfície fechada S (esfera, cubo, cilindro fechado) orientada para fora",
+    "acao_ou_teorema": "Troque a integral de superfície complicada pela integral tripla do divergente de F no interior do sólido E limitado por S",
+    "formula_latex": "$$\\oiint_{\\partial E} \\vec{F} \\cdot d\\vec{S} = \\iiint_{E} (\\nabla \\cdot \\vec{F})\\,dV$$"
+  },
+  {
+    "nome": "Teorema de Gauss para Superfície Aberta (Técnica da Tampa)",
+    "materia": "Cálculo Vetorial",
+    "topico": "Aplicações do Teorema de Gauss",
+    "gatilho": "Quando pede-se o fluxo de F através de uma superfície ABERTA S_1 (ex: copo parabólico sem a tampa superior) e div F é muito simples",
+    "acao_ou_teorema": "Feche o sólido adicionando uma tampa plana S_2, aplique Gauss no sólido fechado e subtraia o fluxo fácil calculado na tampa S_2",
+    "formula_latex": "$$\\iint_{S_1} \\vec{F}\\cdot d\\vec{S} = \\iiint_{E} (\\nabla \\cdot \\vec{F})\\,dV - \\iint_{S_{\\text{tampa}}} \\vec{F}\\cdot d\\vec{S}$$"
+  },
+  {
+    "nome": "Primeira e Segunda Identidades de Green",
+    "materia": "Cálculo Vetorial",
+    "topico": "Equações Diferenciais Parciais e Teorema de Gauss",
+    "gatilho": "Quando uma questão teórica envolve a integral do Laplaciano u*nabla^2(v) e o produto escalar de gradientes aplicando o Teorema da Divergência a F = u * grad(v)",
+    "acao_ou_teorema": "Aplique o Teorema de Gauss sobre F = u * grad(v) para relacionar a derivada normal na fronteira com o Laplaciano no interior",
+    "formula_latex": "$$\\oiint_{\\partial E} u(\\nabla v)\\cdot \\hat{n}\\,dS = \\iiint_{E} \\left(u\\nabla^2 v + \\nabla u \\cdot \\nabla v\\right)dV$$"
+  },
+  {
+    "nome": "Área de Superfície de Revolução (Cálculo 1)",
+    "materia": "Cálculo",
+    "topico": "Aplicações da Integral Definida",
+    "gatilho": "Quando o gráfico de y = f(x) gira em torno do eixo x (ou eixo y) e pede-se a área da superfície gerada",
+    "acao_ou_teorema": "Integre 2*pi vezes o raio de giro multiplicado pelo elemento de comprimento de arco ds",
+    "formula_latex": "$$A_x = 2\\pi \\int_{a}^{b} |f(x)|\\sqrt{1 + [f'(x)]^2}\\,dx$$"
+  },
+  {
+    "nome": "EDO Linear de 1ª Ordem via Fator Integrante",
+    "materia": "Cálculo",
+    "topico": "Equações Diferenciais Ordinárias",
+    "gatilho": "Quando aparece uma equação diferencial da forma y' + P(x)y = Q(x)",
+    "acao_ou_teorema": "Multiplique toda a equação pelo fator integrante mu(x) = exp(int P(x) dx) para transformar o lado esquerdo na derivada do produto (mu * y)'",
+    "formula_latex": "$$\\mu(x) = e^{\\int P(x)\\,dx} \\implies y(x) = \\frac{1}{\\mu(x)}\\left(\\int \\mu(x)Q(x)\\,dx + C\\right)$$"
+  },
+  {
+    "nome": "Fatoração de Gauss (Soma de Três Cubos menos 3abc)",
+    "materia": "Álgebra",
+    "topico": "Produtos Notáveis e Simetria",
+    "gatilho": "Quando o problema envolve a^3 + b^3 + c^3 e a soma a + b + c (especialmente quando a + b + c = 0 ou quando a^3 + b^3 + c^3 = 3abc)",
+    "acao_ou_teorema": "Aplique a identidade de Gauss; se a + b + c = 0, conclua imediatamente que a^3 + b^3 + c^3 = 3abc; se a, b, c > 0 e a^3+b^3+c^3=3abc, então a = b = c",
+    "formula_latex": "$$a^3 + b^3 + c^3 - 3abc = (a + b + c)(a^2 + b^2 + c^2 - ab - bc - ca) = \\frac{1}{2}(a+b+c)\\left[(a-b)^2 + (b-c)^2 + (c-a)^2\\right]$$"
+  },
+  {
+    "nome": "Lema de Titu (Cauchy-Schwarz na Forma de Engel)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades Clássicas",
+    "gatilho": "Quando pede-se o valor mínimo de uma soma de frações cujos denominadores são positivos e os numeradores são quadrados (ou constantes)",
+    "acao_ou_teorema": "Some as raízes dos numeradores ao quadrado e divida pela soma direta dos denominadores",
+    "formula_latex": "$$\\sum_{i=1}^{n} \\frac{a_i^2}{x_i} \\ge \\frac{(a_1 + a_2 + \\dots + a_n)^2}{x_1 + x_2 + \\dots + x_n}, \\quad \\forall x_i > 0$$"
+  },
+  {
+    "nome": "Desigualdade das Médias (MA >= MG >= MH e MQ >= MA)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades e Otimização sem Cálculo",
+    "gatilho": "Quando pede-se o máximo de um produto com soma fixa, ou o mínimo de uma soma com produto fixo de variáveis reais positivas",
+    "acao_ou_teorema": "Relacione as médias Quadrática, Aritmética, Geométrica e Harmônica; a igualdade ocorre se e somente se todas as variáveis forem iguais",
+    "formula_latex": "$$\\sqrt{\\frac{\\sum x_i^2}{n}} \\ge \\frac{\\sum x_i}{n} \\ge \\sqrt[n]{\\prod x_i} \\ge \\frac{n}{\\sum \\frac{1}{x_i}}, \\quad (x_i > 0)$$"
+  },
+  {
+    "nome": "Desigualdade de Jensen (Funções Convexas e Côncavas)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades Avançadas",
+    "gatilho": "Quando é preciso provar uma desigualdade simétrica envolvendo soma de funções f(x) + f(y) + f(z) com restrição na soma x + y + z (como senos dos ângulos de um triângulo)",
+    "acao_ou_teorema": "Verifique o sinal da segunda derivada f''(x): se f'' >= 0 (convexa), a média dos valores é maior ou igual ao valor na média; se f'' <= 0 (côncava), inverte-se o sinal",
+    "formula_latex": "$$f''(x) \\ge 0 \\implies \\frac{f(x_1) + \\dots + f(x_n)}{n} \\ge f\\left(\\frac{x_1 + \\dots + x_n}{n}\\right)$$"
+  },
+  {
+    "nome": "Radical Duplo de Bhaskara (Desaninhamento de Raízes)",
+    "materia": "Álgebra",
+    "topico": "Radiciação e Racionalização",
+    "gatilho": "Quando aparece uma raiz quadrada dentro de outra na forma sqrt(A +- sqrt(B)) e A^2 - B é um quadrado perfeito C^2",
+    "acao_ou_teorema": "Calcule C = sqrt(A^2 - B) e separe em soma ou diferença de dois radicais simples",
+    "formula_latex": "$$\\sqrt{A \\pm \\sqrt{B}} = \\sqrt{\\frac{A + C}{2}} \\pm \\sqrt{\\frac{A - C}{2}}, \\quad \\text{onde } C = \\sqrt{A^2 - B}$$"
+  },
+  {
+    "nome": "Soma Telescópica de Frações Parciais e Fatoriais",
+    "materia": "Álgebra",
+    "topico": "Séries Finitas e Somas Telescópicas",
+    "gatilho": "Quando pede-se a soma de termos como 1/[k(k+1)], 1/[k(k+1)(k+2)] ou k * k!",
+    "acao_ou_teorema": "Quebre o termo geral a_k na diferença de termos consecutivos F(k+1) - F(k) para cancelar todos os termos intermediários",
+    "formula_latex": "$$\\sum_{k=1}^{n} \\frac{1}{k(k+1)} = 1 - \\frac{1}{n+1}, \\qquad \\sum_{k=1}^{n} k \\cdot k! = \\sum_{k=1}^{n} \\left[(k+1)! - k!\\right] = (n+1)! - 1$$"
+  },
+  {
+    "nome": "Equação Característica para Recorrências Lineares de 2ª Ordem",
+    "materia": "Álgebra",
+    "topico": "Sequências e Recorrências",
+    "gatilho": "Quando uma sequência é definida por a_{n+2} = p*a_{n+1} + q*a_n (como Fibonacci ou Lucas) e pede-se o termo geral a_n",
+    "acao_ou_teorema": "Resolva r^2 - pr - q = 0; se as raízes r_1, r_2 forem distintas, combine potências; se r_1 = r_2 = r, multiplique a segunda por n",
+    "formula_latex": "$$r_1 \\neq r_2 \\implies a_n = C_1 r_1^n + C_2 r_2^n; \\qquad r_1 = r_2 = r \\implies a_n = (C_1 + C_2 n)r^n$$"
+  },
+  {
+    "nome": "Equações Funcionais de Cauchy (Aditiva, Exponencial, Logarítmica e Multiplicativa)",
+    "materia": "Álgebra",
+    "topico": "Equações Funcionais",
+    "gatilho": "Quando uma função contínua (ou monótona) satisfaz f(x+y) = f(x)+f(y), f(x+y) = f(x)f(y) ou f(xy) = f(x)+f(y)",
+    "acao_ou_teorema": "Substitua pela família canônica correspondente e use um valor particular dado no enunciado para achar a constante c",
+    "formula_latex": "$$f(x+y)=f(x)+f(y) \\implies f(x)=cx; \\quad f(x+y)=f(x)f(y) \\implies f(x)=a^x; \\quad f(xy)=f(x)+f(y) \\implies f(x)=c\\ln(x)$$"
+  },
+  {
+    "nome": "Substituição Simétrica (Soma s = x+y e Produto p = xy)",
+    "materia": "Álgebra",
+    "topico": "Sistemas Não-Lineares Simétricos",
+    "gatilho": "Quando um sistema de duas variáveis x, y não muda ao trocar x por y e envolve x^2+y^2, x^3+y^3 ou x^4+y^4",
+    "acao_ou_teorema": "Reescreva todas as somas de potências em função de s = x+y e p = xy; depois encontre x e y como raízes de t^2 - st + p = 0",
+    "formula_latex": "$$x^2 + y^2 = s^2 - 2p, \\quad x^3 + y^3 = s^3 - 3sp, \\quad x^4 + y^4 = (s^2 - 2p)^2 - 2p^2$$"
+  },
+  {
+    "nome": "Critério de Raiz Múltipla via Derivada Formal",
+    "materia": "Polinômios e Complexos",
+    "topico": "Multiplicidade de Raízes",
+    "gatilho": "Quando o enunciado diz que r é raiz dupla, tripla ou de multiplicidade m de um polinômio P(x), ou que P(x) é divisível por (x - r)^m",
+    "acao_ou_teorema": "Anule simultaneamente o polinômio e suas (m - 1) primeiras derivadas no ponto x = r",
+    "formula_latex": "$$(x - r)^m \\mid P(x) \\iff P(r) = P'(r) = P''(r) = \\dots = P^{(m-1)}(r) = 0$$"
+  },
+  {
+    "nome": "Somas de Newton para Potências das Raízes de um Polinômio",
+    "materia": "Polinômios e Complexos",
+    "topico": "Relações de Girard e Somas de Potências",
+    "gatilho": "Quando pede-se a soma S_k = r_1^k + r_2^k + ... + r_n^k das potências de grau alto das raízes de um polinômio sem calcular as raízes individualmente",
+    "acao_ou_teorema": "Use a recorrência linear de Newton substituindo as somas S_k na própria equação polinomial",
+    "formula_latex": "$$a_n S_k + a_{n-1}S_{k-1} + \\dots + a_0 S_{k-n} = 0 \\quad (\\text{para } k \\ge n)$$"
+  },
+  {
+    "nome": "Equações Recíprocas (Substituição u = x + 1/x)",
+    "materia": "Polinômios e Complexos",
+    "topico": "Equações Polinomiais Recíprocas",
+    "gatilho": "Quando os coeficientes de um polinômio de grau par 2m são simétricos (a_k = a_{n-k}), como ax^4 + bx^3 + cx^2 + bx + a = 0",
+    "acao_ou_teorema": "Divida toda a equação por x^m e faça a mudança u = x + 1/x, reduzindo o grau do polinômio pela metade",
+    "formula_latex": "$$u = x + \\frac{1}{x} \\implies x^2 + \\frac{1}{x^2} = u^2 - 2, \\quad x^3 + \\frac{1}{x^3} = u^3 - 3u$$"
+  },
+  {
+    "nome": "Teorema do Resto para Divisores Quadráticos ou de Grau Superior",
+    "materia": "Polinômios e Complexos",
+    "topico": "Divisão Polinomial",
+    "gatilho": "Quando pede-se o resto da divisão de P(x) (de grau muito alto, ex: x^{100} + x + 1) por um produto (x - a)(x - b) ou por x^2 + x + 1",
+    "acao_ou_teorema": "Escreva o resto como R(x) = Ax + B (grau menor que o divisor) e substitua as raízes do divisor (mesmo que sejam complexas, como omega onde omega^3 = 1)",
+    "formula_latex": "$$P(x) = Q(x)(x - a)(x - b) + Ax + B \\implies \\begin{cases} P(a) = Aa + B \\\\ P(b) = Ab + B \\end{cases}$$"
+  },
+  {
+    "nome": "Teorema das Raízes Racionais (Pesquisa de Raízes p/q)",
+    "materia": "Polinômios e Complexos",
+    "topico": "Raízes de Polinômios com Coeficientes Inteiros",
+    "gatilho": "Quando um polinômio de grau >= 3 possui coeficientes inteiros e é preciso descobrir uma primeira raiz para baixar o grau via Briot-Ruffini",
+    "acao_ou_teorema": "Toda raiz racional irredutível p/q tem p divisor do termo independente a_0 e q divisor do coeficiente dominante a_n",
+    "formula_latex": "$$P\\left(\\frac{p}{q}\\right) = 0, \\; \\text{mdc}(p,q)=1 \\implies p \\mid a_0 \\quad \\text{e} \\quad q \\mid a_n$$"
+  },
+  {
+    "nome": "Soma e Produto das Raízes n-ésimas da Unidade",
+    "materia": "Polinômios e Complexos",
+    "topico": "Raízes da Unidade e Ciclometria",
+    "gatilho": "Quando aparece z^n = 1 (com omega = cis(2pi/n)) e pede-se somas de potências 1 + omega^k + omega^{2k} + ... ou o produto (z - omega)(z - omega^2)...(z - omega^{n-1})",
+    "acao_ou_teorema": "A soma das potências k-ésimas das raízes da unidade é zero (exceto se n divide k, quando vale n); o polinômio ciclotômico em z=1 vale n",
+    "formula_latex": "$$\\sum_{j=0}^{n-1} \\omega^{jk} = \\begin{cases} n, & \\text{se } n \\mid k \\\\ 0, & \\text{se } n \\nmid k \\end{cases}, \\qquad \\prod_{j=1}^{n-1}(1 - \\omega^j) = n$$"
+  },
+  {
+    "nome": "Relações de Euler para Seno e Cosseno via Exponencial Complexa",
+    "materia": "Polinômios e Complexos",
+    "topico": "Forma Exponencial e De Moivre",
+    "gatilho": "Quando aparece |z| = 1 (z = e^{i*theta}), potências z^n + 1/z^n ou somas trigonométricas difíceis em provas do ITA/IME",
+    "acao_ou_teorema": "Se |z| = 1, então 1/z = conjugado(z), logo z^n + z^{-n} = 2*cos(n*theta) e z^n - z^{-n} = 2i*sen(n*theta)",
+    "formula_latex": "$$z = e^{i\\theta} \\implies z^n + \\frac{1}{z^n} = 2\\cos(n\\theta) \\quad \\text{e} \\quad z^n - \\frac{1}{z^n} = 2i\\sin(n\\theta)$$"
+  },
+  {
+    "nome": "Rotação de Vetores e Triângulo Equilátero no Plano de Argand-Gauss",
+    "materia": "Polinômios e Complexos",
+    "topico": "Geometria dos Números Complexos",
+    "gatilho": "Quando um segmento no plano complexo é rotacionado de um ângulo theta em torno de um vértice z_0, ou quando três afixos z_1, z_2, z_3 formam um triângulo equilátero",
+    "acao_ou_teorema": "Multiplique a diferença (z - z_0) por e^{i*theta}; para triângulo equilátero, use a relação quadrática simétrica dos afixos",
+    "formula_latex": "$$z' - z_0 = (z - z_0)e^{i\\theta}; \\qquad \\triangle z_1z_2z_3 \\text{ equilátero} \\iff z_1^2 + z_2^2 + z_3^2 = z_1z_2 + z_2z_3 + z_3z_1$$"
+  },
+  {
+    "nome": "Lugares Geométricos Clássicos no Plano Complexo",
+    "materia": "Polinômios e Complexos",
+    "topico": "Lugares Geométricos em C",
+    "gatilho": "Quando pede-se a interpretação geométrica de |z - z_1| = R, |z - z_1| = |z - z_2|, |z - z_1| + |z - z_2| = 2a ou arg((z - z_1)/(z - z_2)) = alfa",
+    "acao_ou_teorema": "Traduzir módulo de diferença como distância euclidiana entre pontos: circunferência, mediatriz, elipse ou arco capaz",
+    "formula_latex": "$$|z - z_1| = |z - z_2| \\text{ (Mediatriz)}, \\quad |z - z_1| + |z - z_2| = 2a > |z_1 - z_2| \\text{ (Elipse)}, \\quad \\arg\\left(\\frac{z - z_1}{z - z_2}\\right) = \\alpha \\text{ (Arco Capaz)}$$"
+  },
+  {
+    "nome": "Teorema de Bolzano (Sinal de Polinômio nas Extremidades)",
+    "materia": "Polinômios e Complexos",
+    "topico": "Localização de Raízes Reais",
+    "gatilho": "Quando pergunta-se se existe um número ímpar (ou pelo menos uma) de raízes reais de P(x) no intervalo aberto ]a, b[",
+    "acao_ou_teorema": "Calcule o produto P(a)*P(b): se for estritamente negativo, há um número ímpar de raízes reais (contadas com multiplicidade) em ]a, b[",
+    "formula_latex": "$$P(a) \\cdot P(b) < 0 \\implies \\exists \\text{ número ímpar de raízes em } ]a, b[$$"
+  },
+  {
+    "nome": "Teorema de Stewart (Comprimento de Qualquer Ceviana)",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas em Triângulos",
+    "gatilho": "Quando uma ceviana qualquer AD de comprimento x divide o lado oposto BC = a em dois segmentos m e n, conhecendo-se os lados b e c",
+    "acao_ou_teorema": "Aplique a relação métrica linear nos quadrados sem precisar usar Lei dos Cossenos duas vezes",
+    "formula_latex": "$$b^2 m + c^2 n = a(x^2 + mn), \\quad \\text{onde } a = m + n$$"
+  },
+  {
+    "nome": "Teorema de Menelaus (Colinearidade e Razão de Seção)",
+    "materia": "Geometria Plana",
+    "topico": "Colinearidade e Proporcionalidade",
+    "gatilho": "Quando uma reta transversal corta dois lados de um triângulo e o prolongamento do terceiro lado, e pede-se a razão em que um segmento é dividido",
+    "acao_ou_teorema": "Percorra o ciclo vértice-ponto-vértice nos três lados do triângulo igualando o produto das razões a 1",
+    "formula_latex": "$$\\frac{BD}{DC} \\cdot \\frac{CE}{EA} \\cdot \\frac{AF}{FB} = 1$$"
+  },
+  {
+    "nome": "Teorema de Ceva (Concorrência de Três Cevianas)",
+    "materia": "Geometria Plana",
+    "topico": "Concorrência de Cevianas",
+    "gatilho": "Quando três cevianas AD, BE e CF se cruzam em um mesmo ponto P (como baricentro, incentro, ortocentro, ponto de Gergonne ou Nagel)",
+    "acao_ou_teorema": "O produto das três razões cíclicas sobre os lados do triângulo é igual a 1",
+    "formula_latex": "$$\\text{AD, BE, CF concorrentes} \\iff \\frac{BD}{DC} \\cdot \\frac{CE}{EA} \\cdot \\frac{AF}{FB} = 1$$"
+  },
+  {
+    "nome": "Teorema de Ptolomeu e Desigualdade de Ptolomeu",
+    "materia": "Geometria Plana",
+    "topico": "Quadriláteros Inscritíveis",
+    "gatilho": "Quando um quadrilátero ABCD está inscrito em uma circunferência e o problema relaciona os quatro lados com as duas diagonais AC e BD",
+    "acao_ou_teorema": "Em todo quadrilátero inscritível, o produto das diagonais é igual à soma dos produtos dos lados opostos",
+    "formula_latex": "$$ABCD \\text{ inscritível} \\iff AC \\cdot BD = AB \\cdot CD + BC \\cdot AD$$"
+  },
+  {
+    "nome": "Teorema de Euler para a Distância entre Incentro e Circuncentro (d^2 = R(R - 2r))",
+    "materia": "Geometria Plana",
+    "topico": "Pontos Notáveis do Triângulo",
+    "gatilho": "Quando o enunciado fornece o raio da circunferência circunscrita R e o raio da inscrita r de um triângulo e pede a distância OI entre seus centros",
+    "acao_ou_teorema": "Aplique diretamente a relação de Euler (que também prova a Desigualdade de Euler R >= 2r)",
+    "formula_latex": "$$OI^2 = R^2 - 2Rr = R(R - 2r) \\implies R \\ge 2r$$"
+  },
+  {
+    "nome": "Reta de Euler e Círculo dos Nove Pontos",
+    "materia": "Geometria Plana",
+    "topico": "Geometria Avançada do Triângulo",
+    "gatilho": "Quando uma questão do ITA/IME/Olimpíadas relaciona a posição do Ortocentro (H), Baricentro (G) e Circuncentro (O)",
+    "acao_ou_teorema": "H, G e O são sempre colineares na Reta de Euler, com HG = 2*GO; o centro N do Círculo dos 9 Pontos é o ponto médio de OH e tem raio R/2",
+    "formula_latex": "$$\\vec{HG} = 2\\vec{GO} \\iff \\vec{OH} = 3\\vec{OG}, \\qquad R_{9\\text{pts}} = \\frac{R}{2}$$"
+  },
+  {
+    "nome": "Eixo Radical de Duas Circunferências e Centro Radical",
+    "materia": "Geometria Plana",
+    "topico": "Potência de Ponto",
+    "gatilho": "Quando busca-se o lugar geométrico dos pontos que possuem a mesma potência (ou tangentes de mesmo comprimento) em relação a duas circunferências",
+    "acao_ou_teorema": "Subtraia as duas equações das circunferências para obter a reta do Eixo Radical (perpendicular à linha dos centros); os três eixos radicais de três círculos concorrem no Centro Radical",
+    "formula_latex": "$$\\text{Pot}_{C_1}(P) = \\text{Pot}_{C_2}(P) \\iff d(P, O_1)^2 - R_1^2 = d(P, O_2)^2 - R_2^2$$"
+  },
+  {
+    "nome": "Teorema da Bissetriz Interna e Externa + Comprimento das Bissetrizes",
+    "materia": "Geometria Plana",
+    "topico": "Bissetrizes no Triângulo",
+    "gatilho": "Quando uma bissetriz interna (ou externa) de A divide o lado BC em segmentos m e n e pede-se a razão dos segmentos ou o próprio comprimento da bissetriz",
+    "acao_ou_teorema": "Os segmentos determinados pela bissetriz são proporcionais aos lados adjacentes; o quadrado da bissetriz interna é o produto dos lados menos o produto dos segmentos da base",
+    "formula_latex": "$$\\frac{m}{c} = \\frac{n}{b} = \\frac{a}{b+c}, \\qquad \\beta_i^2 = bc - mn = \\frac{4bc \\cdot p(p-a)}{(b+c)^2}$$"
+  },
+  {
+    "nome": "Teorema de Carnot (Soma das Distâncias do Circuncentro aos Lados)",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas com R e r",
+    "gatilho": "Quando pede-se a soma das distâncias (com sinal) do circuncentro O aos três lados de um triângulo acutângulo",
+    "acao_ou_teorema": "A soma das distâncias do circuncentro O aos três lados é igual à soma do circunraio R com o inraio r",
+    "formula_latex": "$$d_a + d_b + d_c = R + r \\quad (\\text{para } \\triangle \\text{ acutângulo})$$"
+  },
+  {
+    "nome": "Relação de Euler para Poliedros Convexos e Soma dos Ângulos das Faces",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros Convexos",
+    "gatilho": "Quando o enunciado dá o número de faces triangulares, quadrangulares, pentagonais de um poliedro convexo e pede V, A ou a soma dos ângulos das faces",
+    "acao_ou_teorema": "Use a contagem dupla de arestas (2A = soma de n_i * F_i) combinada com V - A + F = 2 e S = (V - 2)*360°",
+    "formula_latex": "$$V - A + F = 2, \\qquad 2A = 3F_3 + 4F_4 + 5F_5 + \\dots, \\qquad S_{\\text{ângulos}} = (V - 2) \\cdot 360^\\circ$$"
+  },
+  {
+    "nome": "Teorema de De Gua (Pitágoras em 3D para o Tetraedro Tri-Retângulo)",
+    "materia": "Geometria Espacial",
+    "topico": "Tetraedros e Triedros Tri-Retângulos",
+    "gatilho": "Quando um tetraedro OABC possui três arestas OA, OB, OC mutuamente perpendiculares no vértice O (canto de parede)",
+    "acao_ou_teorema": "O quadrado da área da face hipotenusa ABC é a soma dos quadrados das áreas das três faces catetos; e o inverso do quadrado da altura h_O é a soma dos inversos dos quadrados das arestas a, b, c",
+    "formula_latex": "$$S_{ABC}^2 = S_{OAB}^2 + S_{OBC}^2 + S_{OCA}^2, \\qquad \\frac{1}{h^2} = \\frac{1}{a^2} + \\frac{1}{b^2} + \\frac{1}{c^2}$$"
+  },
+  {
+    "nome": "Teoremas de Pappus-Guldin (Área e Volume de Sólidos de Revolução)",
+    "materia": "Geometria Espacial",
+    "topico": "Sólidos de Revolução e Centroide",
+    "gatilho": "Quando uma figura plana de área S (ou linha de comprimento L) gira em torno de um eixo externo coplanar sem cruzá-lo (ex: toro ou polígono rotacionado)",
+    "acao_ou_teorema": "Multiplique a área S (ou comprimento L) pelo comprimento da circunferência descrita pelo seu baricentro (2*pi*d)",
+    "formula_latex": "$$V = 2\\pi \\bar{d} \\cdot S, \\qquad A_{\\text{lat}} = 2\\pi \\bar{d} \\cdot L$$"
+  },
+  {
+    "nome": "Raio da Esfera Inscrita em um Poliedro circunscritível (V = S_total * r / 3)",
+    "materia": "Geometria Espacial",
+    "topico": "Esfera Inscrita em Pirâmides e Tetraedros",
+    "gatilho": "Quando pede-se o raio r da esfera inscrita (tangente a todas as faces) em um tetraedro ou pirâmide qualquer",
+    "acao_ou_teorema": "Análogo a S = p*r no plano: o volume total V do poliedro é um terço da área total das faces multiplicada pelo raio da esfera inscrita r",
+    "formula_latex": "$$V = \\frac{1}{3} A_{\\text{total}} \\cdot r \\iff r = \\frac{3V}{A_{\\text{total}}}$$"
+  },
+  {
+    "nome": "Volume do Tronco de Pirâmide ou Tronco de Cone (Média Heronian)",
+    "materia": "Geometria Espacial",
+    "topico": "Troncos de Pirâmide e Cone",
+    "gatilho": "Quando uma pirâmide ou cone é seccionado por um plano paralelo à base, gerando duas bases paralelas de áreas B e b separadas por altura h",
+    "acao_ou_teorema": "Multiplique h/3 pela soma das áreas das duas bases mais a média geométrica entre elas",
+    "formula_latex": "$$V_{\\text{tronco}} = \\frac{h}{3}\\left(B + \\sqrt{Bb} + b\\right), \\qquad V_{\\text{cone}} = \\frac{\\pi h}{3}(R^2 + Rr + r^2)$$"
+  },
+  {
+    "nome": "Volume do Tronco de Prisma Triangular (Seção Não-Paralela)",
+    "materia": "Geometria Espacial",
+    "topico": "Tronco de Prisma",
+    "gatilho": "Quando um prisma reto de base triangular (área da seção reta S) é cortado por um plano inclinado, deixando três arestas laterais de comprimentos distintos a, b, c",
+    "acao_ou_teorema": "O volume é simplesmente a área da seção reta multiplicada pela média aritmética das três arestas laterais",
+    "formula_latex": "$$V = S_{\\text{reta}} \\cdot \\left(\\frac{a + b + c}{3}\\right)$$"
+  },
+  {
+    "nome": "Relações Métricas do Tetraedro Regular de Aresta a",
+    "materia": "Geometria Espacial",
+    "topico": "Tetraedro Regular",
+    "gatilho": "Quando o problema envolve um tetraedro regular de aresta a e pede altura H, volume V, raio da esfera inscrita r, circunscrita R ou distância entre arestas opostas",
+    "acao_ou_teorema": "Use as razões diretas: H = a*sqrt(6)/3, sendo r = H/4 e R = 3H/4; a distância entre duas arestas reversas opostas é a*sqrt(2)/2",
+    "formula_latex": "$$H = \\frac{a\\sqrt{6}}{3}, \\quad r = \\frac{H}{4}, \\quad R = \\frac{3H}{4}, \\quad V = \\frac{a^3\\sqrt{2}}{12}, \\quad d_{\\text{opostas}} = \\frac{a\\sqrt{2}}{2}$$"
+  },
+  {
+    "nome": "Fórmula do Cadarço (Shoelace / Gauss) para Área de Polígono no Plano Cartesiano",
+    "materia": "Geometria Analítica",
+    "topico": "Áreas em Coordenadas Cartesianas",
+    "gatilho": "Quando são dadas as coordenadas dos vértices (x_1, y_1), ..., (x_n, y_n) de um triângulo ou polígono qualquer no plano cartesiano e pede-se sua área",
+    "acao_ou_teorema": "Liste os vértices em sentido anti-horário repetindo o primeiro no final e tome metade do módulo da diferença das diagonais",
+    "formula_latex": "$$S = \\frac{1}{2}\\left|\\sum_{i=1}^{n} (x_i y_{i+1} - x_{i+1} y_i)\\right|, \\quad \\text{com } (x_{n+1}, y_{n+1}) = (x_1, y_1)$$"
+  },
+  {
+    "nome": "Distância de Ponto a Reta e entre Retas Paralelas em R^2",
+    "materia": "Geometria Analítica",
+    "topico": "Distâncias no Plano",
+    "gatilho": "Quando pede-se a distância de P(x_0, y_0) à reta ax + by + c = 0 (ex: raio de circunferência tangente a uma reta)",
+    "acao_ou_teorema": "Substitua as coordenadas do ponto na equação geral da reta em módulo e divida pela hipotenusa dos coeficientes sqrt(a^2 + b^2)",
+    "formula_latex": "$$d(P, r) = \\frac{|ax_0 + by_0 + c|}{\\sqrt{a^2 + b^2}}, \\qquad d(r_1, r_2) = \\frac{|c_1 - c_2|}{\\sqrt{a^2 + b^2}}$$"
+  },
+  {
+    "nome": "Equação das Bissetrizes de Duas Retas Concorrentes no Plano Cartesiano",
+    "materia": "Geometria Analítica",
+    "topico": "Lugares Geométricos Lineares",
+    "gatilho": "Quando são dadas as equações gerais de duas retas concorrentes r_1 e r_2 e pede-se as equações das duas retas bissetrizes dos ângulos entre elas",
+    "acao_ou_teorema": "Iguale as distâncias de um ponto genérico (x, y) às duas retas tirando o módulo com sinal +-",
+    "formula_latex": "$$\\frac{a_1 x + b_1 y + c_1}{\\sqrt{a_1^2 + b_1^2}} = \\pm \\frac{a_2 x + b_2 y + c_2}{\\sqrt{a_2^2 + b_2^2}}$$"
+  },
+  {
+    "nome": "Classificação de Cônicas com Termo Misto Bxy e Rotação de Eixos",
+    "materia": "Geometria Analítica",
+    "topico": "Cônicas e Rotação de Eixos",
+    "gatilho": "Quando uma equação do 2º grau Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0 possui termo cruzado B != 0 e pede-se identificar a cônica ou o ângulo theta de rotação que elimina xy",
+    "acao_ou_teorema": "Calcule o discriminante invariante Delta = B^2 - 4AC (< 0 elipse, = 0 parábola, > 0 hipérbole) e elimine o termo xy rodando os eixos por cot(2*theta) = (A - C)/B",
+    "formula_latex": "$$\\Delta = B^2 - 4AC, \\qquad \\cot(2\\theta) = \\frac{A - C}{B}$$"
+  },
+  {
+    "nome": "Reta Tangente a uma Cônica por Desdobramento (Polar de um Ponto)",
+    "materia": "Geometria Analítica",
+    "topico": "Tangentes a Cônicas sem Derivada",
+    "gatilho": "Quando pede-se a equação da reta tangente a uma circunferência, elipse, hipérbole ou parábola em um ponto P(x_0, y_0) pertencente à curva",
+    "acao_ou_teorema": "Substitua diretamente na equação da cônica: x^2 por x*x_0, y^2 por y*y_0, 2x por (x + x_0) e 2y por (y + y_0)",
+    "formula_latex": "$$\\frac{x^2}{a^2} \\pm \\frac{y^2}{b^2} = 1 \\implies \\text{Tangente em } (x_0, y_0): \\frac{x x_0}{a^2} \\pm \\frac{y y_0}{b^2} = 1$$"
+  },
+  {
+    "nome": "Definição Unificada das Cônicas via Foco, Diretriz e Excentricidade",
+    "materia": "Geometria Analítica",
+    "topico": "Excentricidade e Diretrizes de Cônicas",
+    "gatilho": "Quando o problema relaciona a distância de um ponto da cônica ao foco F com sua distância à reta diretriz d (ou dá a excentricidade e)",
+    "acao_ou_teorema": "A razão d(P, F) / d(P, diretriz) é constante e igual à excentricidade e (e < 1 elipse, e = 1 parábola, e > 1 hipérbole); as diretrizes de elipse/hipérbole ficam a distância a/e do centro",
+    "formula_latex": "$$\\frac{d(P, F)}{d(P, d)} = e = \\frac{c}{a}, \\qquad x_{\\text{diretriz}} = \\pm \\frac{a}{e} = \\pm \\frac{a^2}{c}$$"
+  },
+  {
+    "nome": "Propriedade Óptica (Refletora) da Parábola, Elipse e Hipérbole",
+    "materia": "Geometria Analítica",
+    "topico": "Propriedades Geométricas das Cônicas",
+    "gatilho": "Quando um raio luminoso parte de um foco e reflete na cônica, ou quando pede-se a bissetriz dos raios focais PF_1 e PF_2 em um ponto P da elipse/hipérbole",
+    "acao_ou_teorema": "Na elipse, a reta normal em P é a bissetriz interna de F_1PF_2; na hipérbole, a reta tangente em P é a bissetriz interna de F_1PF_2; na parábola, raios paralelos ao eixo refletem para o foco",
+    "formula_latex": "$$\\text{Elipse: Normal é bissetriz de } \\angle F_1PF_2; \\qquad \\text{Hipérbole: Tangente é bissetriz de } \\angle F_1PF_2$$"
+  },
+  {
+    "nome": "Equação Polar das Cônicas com Polo no Foco",
+    "materia": "Geometria Analítica",
+    "topico": "Coordenadas Polares e Cônicas",
+    "gatilho": "Quando aparece uma equação em coordenadas polares da forma r = p / (1 +- e*cos(theta)) ou pede-se o comprimento de uma corda focal",
+    "acao_ou_teorema": "Identifique p = b^2/a como o semilatus rectum e 'e' como a excentricidade; em qualquer cônica, a soma dos inversos dos segmentos de uma corda focal vale 2/p",
+    "formula_latex": "$$r(\\theta) = \\frac{p}{1 + e\\cos\\theta}, \\qquad \\frac{1}{FA} + \\frac{1}{FB} = \\frac{2}{p} = \\frac{2a}{b^2}$$"
+  },
+  {
+    "nome": "Substituição Universal de Weierstrass (Tangente do Arco Metade)",
+    "materia": "Trigonometria",
+    "topico": "Equações Trigonométricas e Integração",
+    "gatilho": "Quando aparece uma equação linear a*cos(x) + b*sen(x) = c ou uma expressão racional envolvendo sen(x) e cos(x) difícil de fatorar",
+    "acao_ou_teorema": "Faça t = tg(x/2) para converter sen(x), cos(x) e tg(x) em frações racionais puramente algébricas em t",
+    "formula_latex": "$$t = \\tan\\left(\\frac{x}{2}\\right) \\implies \\sin x = \\frac{2t}{1 + t^2}, \\quad \\cos x = \\frac{1 - t^2}{1 + t^2}, \\quad \\tan x = \\frac{2t}{1 - t^2}$$"
+  },
+  {
+    "nome": "Método do Ângulo Auxiliar (Amplitude-Fase para a*sen(x) + b*cos(x))",
+    "materia": "Trigonometria",
+    "topico": "Máximos, Mínimos e Equações Trigonométricas",
+    "gatilho": "Quando pede-se o valor máximo, o valor mínimo, o período ou as raízes de f(x) = a*sen(x) + b*cos(x)",
+    "acao_ou_teorema": "Coloque a hipotenusa R = sqrt(a^2 + b^2) em evidência e transforme em um único seno; a imagem está sempre limitada ao intervalo [-sqrt(a^2+b^2), +sqrt(a^2+b^2)]",
+    "formula_latex": "$$a\\sin x + b\\cos x = \\sqrt{a^2 + b^2}\\sin(x + \\varphi), \\quad \\text{onde } \\tan\\varphi = \\frac{b}{a}$$"
+  },
+  {
+    "nome": "Fórmulas de Prostaférese e de Werner (Soma <-> Produto)",
+    "materia": "Trigonometria",
+    "topico": "Transformação em Produto",
+    "gatilho": "Quando é preciso fatorar sen(p) +- sen(q), cos(p) +- cos(q) para achar zeros, ou abrir o produto sen(a)*cos(b) em uma soma para cancelar termos",
+    "acao_ou_teorema": "Use a semissoma (p+q)/2 e a semidiferença (p-q)/2; lembre-se do sinal negativo em cos(p) - cos(q) = -2*sen*sen",
+    "formula_latex": "$$\\cos p - \\cos q = -2\\sin\\left(\\frac{p+q}{2}\\right)\\sin\\left(\\frac{p-q}{2}\\right), \\qquad 2\\sin a\\cos b = \\sin(a+b) + \\sin(a-b)$$"
+  },
+  {
+    "nome": "Produto Telescópico de Cossenos em PG de Razão 2 (Truque do Seno Duplo)",
+    "materia": "Trigonometria",
+    "topico": "Produtórios Trigonométricos",
+    "gatilho": "Quando pede-se o produto cos(x)*cos(2x)*cos(4x)*...*cos(2^{n-1}x), como cos(pi/7)*cos(2pi/7)*cos(4pi/7)",
+    "acao_ou_teorema": "Multiplique e divida todo o produto por 2^n * sen(x) para desencadear a regra do arco duplo sen(2a) = 2*sen(a)*cos(a) em efeito dominó",
+    "formula_latex": "$$\\prod_{k=0}^{n-1} \\cos(2^k x) = \\frac{\\sin(2^n x)}{2^n \\sin x} \\quad (\\sin x \\neq 0)$$"
+  },
+  {
+    "nome": "Soma de Senos ou Cossenos com Arcos em Progressão Aritmética (Núcleo de Dirichlet)",
+    "materia": "Trigonometria",
+    "topico": "Somatórios Trigonométricos",
+    "gatilho": "Quando pede-se a soma cos(a) + cos(a+r) + cos(a+2r) + ... + cos(a+(n-1)r) (ou a mesma soma para senos)",
+    "acao_ou_teorema": "Multiplique e divida por 2*sen(r/2): o resultado é o seno de (n*r/2) dividido por sen(r/2), multiplicado pelo cosseno (ou seno) do arco médio",
+    "formula_latex": "$$\\sum_{k=0}^{n-1} \\cos(a + kr) = \\frac{\\sin\\left(\\frac{nr}{2}\\right)}{\\sin\\left(\\frac{r}{2}\\right)} \\cdot \\cos\\left(a + \\frac{(n-1)r}{2}\\right)$$"
+  },
+  {
+    "nome": "Identidades Condicionais para os Três Ângulos de um Triângulo (A + B + C = pi)",
+    "materia": "Trigonometria",
+    "topico": "Trigonometria no Triângulo",
+    "gatilho": "Quando A, B, C são os ângulos internos de um triângulo (A + B + C = 180°) e aparece tg(A) + tg(B) + tg(C) ou sen(A) + sen(B) + sen(C)",
+    "acao_ou_teorema": "Em todo triângulo não-retângulo, a soma das três tangentes é igual ao produto das três tangentes; e a soma dos senos fatora no produto dos cossenos das metades",
+    "formula_latex": "$$A+B+C=\\pi \\implies \\tan A + \\tan B + \\tan C = \\tan A \\tan B \\tan C \\quad \\text{e} \\quad \\sin A + \\sin B + \\sin C = 4\\cos\\frac{A}{2}\\cos\\frac{B}{2}\\cos\\frac{C}{2}$$"
+  },
+  {
+    "nome": "Arco Triplo e Fatoração Simétrica de sen(3x), cos(3x) e tg(3x)",
+    "materia": "Trigonometria",
+    "topico": "Arcos Múltiplos",
+    "gatilho": "Quando aparece o produto sen(x)*sen(60°-x)*sen(60°+x) ou cos(x)*cos(60°-x)*cos(60°+x)",
+    "acao_ou_teorema": "Reduza imediatamente o produto dos três fatores a um quarto do seno (ou cosseno) do arco triplo 3x",
+    "formula_latex": "$$\\sin x \\sin(60^\\circ - x)\\sin(60^\\circ + x) = \\frac{1}{4}\\sin(3x), \\qquad \\cos x \\cos(60^\\circ - x)\\cos(60^\\circ + x) = \\frac{1}{4}\\cos(3x)$$"
+  },
+  {
+    "nome": "Soma de Arcos Tangentes (Fórmula de Machin / Telescopia de arctan)",
+    "materia": "Trigonometria",
+    "topico": "Funções Trigonométricas Inversas",
+    "gatilho": "Quando pede-se arctan(a) + arctan(b) ou o somatório de arctan(1 / (k^2 + k + 1))",
+    "acao_ou_teorema": "Use a fórmula da tangente da diferença para quebrar arctan((a - b)/(1 + ab)) em arctan(a) - arctan(b), criando uma soma telescópica",
+    "formula_latex": "$$\\arctan\\left(\\frac{1}{k^2 + k + 1}\\right) = \\arctan\\left(\\frac{(k+1) - k}{1 + k(k+1)}\\right) = \\arctan(k+1) - \\arctan(k)$$"
+  },
+  {
+    "nome": "Combinações Completas (Método dos Pontos e Barras / Stars and Bars)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Solucões Inteiras Não-Negativas",
+    "gatilho": "Quando pede-se o número de soluções inteiras não-negativas (x_i >= 0) ou estritamente positivas (x_i >= 1) de x_1 + x_2 + ... + x_k = n",
+    "acao_ou_teorema": "Para x_i >= 0, permute n objetos e (k-1) divisórias; para x_i >= 1, dê 1 unidade prévia para cada variável (ou escolha k-1 espaços entre n-1 intervalos)",
+    "formula_latex": "$$x_i \\ge 0 \\implies CR_k^n = \\binom{n + k - 1}{k - 1}; \\qquad x_i \\ge 1 \\implies \\binom{n - 1}{k - 1}$$"
+  },
+  {
+    "nome": "Primeiro e Segundo Lemas de Kaplansky (Subconjuntos sem Elementos Consecutivos)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Combinatória Avançada",
+    "gatilho": "Quando é preciso escolher p elementos de {1, 2, ..., n} (em fila ou em roda/círculo) de modo que não haja dois elementos adjacentes/consecutivos",
+    "acao_ou_teorema": "Use diretamente o 1º Lema de Kaplansky para fila linear e o 2º Lema de Kaplansky para disposição circular",
+    "formula_latex": "$$K_{\\text{linear}}(n, p) = \\binom{n - p + 1}{p}, \\qquad K_{\\text{circular}}(n, p) = \\frac{n}{n - p}\\binom{n - p}{p}$$"
+  },
+  {
+    "nome": "Permutações Caóticas (Desarranjos D_n)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Princípio da Inclusão-Exclusão",
+    "gatilho": "Quando n cartas são colocadas em n envelopes (ou n pessoas pegam chapéus/presentes) e pede-se de quantas formas NENHUM elemento fica em sua posição original",
+    "acao_ou_teorema": "Aplique a fórmula de subfatorial D_n (para n grande, a probabilidade D_n / n! converge rapidamente para 1/e ~ 36,79%)",
+    "formula_latex": "$$D_n = n! \\sum_{k=0}^{n} \\frac{(-1)^k}{k!}, \\qquad D_n = (n-1)(D_{n-1} + D_{n-2})$$"
+  },
+  {
+    "nome": "Identidade de Stifel e Teorema das Colunas (Hockey-Stick Identity)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Triângulo de Pascal e Binômio de Newton",
+    "gatilho": "Quando pede-se a soma de números binomiais onde a parte de baixo é fixa e a parte de cima cresce de k até n: C(k,k) + C(k+1,k) + ... + C(n,k)",
+    "acao_ou_teorema": "A soma de uma coluna do Triângulo de Pascal começando em C(k,k) é igual ao elemento na diagonal abaixo à direita: C(n+1, k+1)",
+    "formula_latex": "$$\\sum_{i=k}^{n} \\binom{i}{k} = \\binom{n + 1}{k + 1}$$"
+  },
+  {
+    "nome": "Identidade de Vandermonde (Convolução de Números Binomiais)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Identidades Binomiais",
+    "gatilho": "Quando aparece um somatório de produtos de binomiais C(m, k)*C(n, r-k) ou a soma dos quadrados dos elementos de uma linha de Pascal sum [C(n,k)]^2",
+    "acao_ou_teorema": "Interprete como escolher r pessoas de um grupo com m homens e n mulheres; para a soma dos quadrados (m=n=r), o resultado é o binomial central C(2n, n)",
+    "formula_latex": "$$\\sum_{k=0}^{r} \\binom{m}{k}\\binom{n}{r - k} = \\binom{m + n}{r}, \\qquad \\sum_{k=0}^{n} \\binom{n}{k}^2 = \\binom{2n}{n}$$"
+  },
+  {
+    "nome": "Filtro de Paridade no Binômio de Newton (Raízes da Unidade)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Polinômios e Somatórios Binomiais",
+    "gatilho": "Quando pede-se apenas a soma dos coeficientes de índice par C(n,0) + C(n,2) + ... ou apenas os múltiplos de 3 ou 4",
+    "acao_ou_teorema": "Use a semissoma P(1) + P(-1) para pares, P(1) - P(-1) para ímpares, e use i ou omega = e^{2pi*i/3} para filtrar índices de 4 em 4 ou de 3 em 3",
+    "formula_latex": "$$\\sum_{k \\text{ par}} a_k = \\frac{P(1) + P(-1)}{2}, \\qquad \\sum_{k \\text{ ímpar}} a_k = \\frac{P(1) - P(-1)}{2}$$"
+  },
+  {
+    "nome": "Números de Catalan",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Caminhos na Grade e Triangulação",
+    "gatilho": "Quando pede-se o número de caminhos de (0,0) a (n,n) que não ultrapassam a diagonal y = x, sequências válidas de n pares de parênteses ou triangulações de um polígono de (n+2) lados",
+    "acao_ou_teorema": "Aplique diretamente o n-ésimo Número de Catalan C_n",
+    "formula_latex": "$$C_n = \\frac{1}{n + 1}\\binom{2n}{n} = \\binom{2n}{n} - \\binom{2n}{n-1}$$"
+  },
+  {
+    "nome": "Linearidade do Valor Esperado com Variáveis Indicadoras",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Esperança Matemática",
+    "gatilho": "Quando pede-se o número esperado (média) de pontos fixos, pares adjacentes, caixas vazias ou acertos, e as variáveis são dependentes entre si",
+    "acao_ou_teorema": "A esperança da soma é SEMPRE a soma das esperanças E[X_1 + ... + X_n] = sum E[X_i], mesmo quando as variáveis X_i NÃO são independentes!",
+    "formula_latex": "$$X = \\sum_{i=1}^{n} I_i \\implies \\mathbb{E}[X] = \\sum_{i=1}^{n} \\mathbb{E}[I_i] = \\sum_{i=1}^{n} P(A_i)$$"
+  },
+  {
+    "nome": "Esperança do Número de Tentativas até o 1º Sucesso (Distribuição Geométrica)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Processos de Bernoulli e Colecionador de Cupons",
+    "gatilho": "Quando repete-se um experimento com probabilidade de sucesso p até acertar pela primeira vez (ou o Problema do Colecionador de n figurinhas)",
+    "acao_ou_teorema": "O número médio de tentativas até o primeiro sucesso de probabilidade p é exatamente 1/p; para completar n figurinhas distintas, vale n * H_n",
+    "formula_latex": "$$\\mathbb{E}[T] = \\frac{1}{p}, \\qquad \\mathbb{E}[T_{\\text{cupons}}] = n\\left(1 + \\frac{1}{2} + \\frac{1}{3} + \\dots + \\frac{1}{n}\\right)$$"
+  },
+  {
+    "nome": "Pequeno Teorema de Fermat e Teorema de Euler (Aritmética Modular)",
+    "materia": "Teoria dos Números",
+    "topico": "Congruências e Restos de Potências",
+    "gatilho": "Quando pede-se o resto da divisão de uma potência gigante a^N por um primo p (ou por um composto m com mdc(a, m) = 1)",
+    "acao_ou_teorema": "Reduza o expoente N módulo (p - 1) pelo Pequeno Teorema de Fermat, ou módulo phi(m) pelo Teorema de Euler",
+    "formula_latex": "$$\\text{mdc}(a, p) = 1 \\implies a^{p-1} \\equiv 1 \\pmod{p}; \\qquad \\text{mdc}(a, m) = 1 \\implies a^{\\varphi(m)} \\equiv 1 \\pmod{m}$$"
+  },
+  {
+    "nome": "Teorema de Wilson (Fatorial Módulo Primo)",
+    "materia": "Teoria dos Números",
+    "topico": "Congruências com Fatoriais",
+    "gatilho": "Quando pede-se o resto de (p - 1)! ou (p - 2)! dividido por um número primo p",
+    "acao_ou_teorema": "Para todo primo p, (p - 1)! deixa resto -1 (ou seja, p - 1) na divisão por p, e (p - 2)! deixa resto 1",
+    "formula_latex": "$$p \\text{ é primo} \\iff (p - 1)! \\equiv -1 \\pmod{p} \\quad \\text{e} \\quad (p - 2)! \\equiv 1 \\pmod{p}$$"
+  },
+  {
+    "nome": "Fórmula de Legendre / Polignac (Expoente de um Primo p em n!)",
+    "materia": "Teoria dos Números",
+    "topico": "Valoração p-ádica e Fatoriais",
+    "gatilho": "Quando pergunta-se com quantos zeros termina n! (expoente de 5 em n!) ou qual a maior potência de um primo p que divide n!",
+    "acao_ou_teorema": "Some as partes inteiras de n dividido pelas potências sucessivas de p (ou subtraia a soma dos dígitos de n na base p e divida por p - 1)",
+    "formula_latex": "$$v_p(n!) = \\sum_{k=1}^{\\infty} \\left\\lfloor \\frac{n}{p^k} \\right\\rfloor = \\frac{n - s_p(n)}{p - 1}$$"
+  },
+  {
+    "nome": "Lema de Lifting The Exponent (LTE - Elevação do Expoente)",
+    "materia": "Teoria dos Números",
+    "topico": "Divisibilidade Olímpica de Potências",
+    "gatilho": "Quando um primo ímpar p divide (x - y), não divide x nem y, e pede-se a maior potência de p que divide x^n - y^n",
+    "acao_ou_teorema": "A valoração p-ádica de (x^n - y^n) é simplesmente a soma da valoração de (x - y) com a valoração do expoente n",
+    "formula_latex": "$$p \\text{ ímpar}, \\; p \\mid (x-y), \\; p \\nmid xy \\implies v_p(x^n - y^n) = v_p(x - y) + v_p(n)$$"
+  },
+  {
+    "nome": "Teorema Chinês dos Restos",
+    "materia": "Teoria dos Números",
+    "topico": "Sistemas de Congruências Lineares",
+    "gatilho": "Quando um número inteiro x deixa restos conhecidos na divisão por vários módulos m_1, m_2, ..., m_k primos entre si dois a dois",
+    "acao_ou_teorema": "Existe uma única solução módulo M = m_1 * m_2 * ... * m_k, construída somando os termos ortogonais a_i * M_i * y_i",
+    "formula_latex": "$$x \\equiv a_i \\pmod{m_i} \\implies x \\equiv \\sum_{i=1}^{k} a_i M_i y_i \\pmod{M}, \\quad \\text{onde } M_i = \\frac{M}{m_i} \\text{ e } M_i y_i \\equiv 1 \\pmod{m_i}$$"
+  },
+  {
+    "nome": "Identidade de Bézout e Equações Diofantinas Lineares (ax + by = c)",
+    "materia": "Teoria dos Números",
+    "topico": "MDC e Equações Diofantinas",
+    "gatilho": "Quando pede-se todas as soluções inteiras (x, y) da equação linear ax + by = c",
+    "acao_ou_teorema": "Verifique se d = mdc(a, b) divide c; encontre uma solução particular (x_0, y_0) e gere a família infinita somando múltiplos de (b/d) e (-a/d)",
+    "formula_latex": "$$ax + by = c \\text{ tem solução} \\iff d = \\text{mdc}(a,b) \\mid c \\implies \\begin{cases} x = x_0 + \\frac{b}{d}t \\\\ y = y_0 - \\frac{a}{d}t \\end{cases} (t \\in \\mathbb{Z})$$"
+  },
+  {
+    "nome": "Teorema de Sylvester / Frobenius (Problema das Moedas ou Chicken McNugget)",
+    "materia": "Teoria dos Números",
+    "topico": "Combinações Lineares com Inteiros Não-Negativos",
+    "gatilho": "Quando são dados dois inteiros positivos primos entre si a e b (ex: selos/moedas de valores 5 e 7) e pergunta-se qual o maior valor inteiro que NÃO pode ser formado por ax + by com x, y >= 0",
+    "acao_ou_teorema": "O maior inteiro impossível de representar é ab - a - b, e a quantidade total de naturais impossíveis de formar é (a - 1)(b - 1)/2",
+    "formula_latex": "$$\\text{mdc}(a, b) = 1 \\implies N_{\\max} = ab - a - b, \\qquad Q_{\\text{impossíveis}} = \\frac{(a - 1)(b - 1)}{2}$$"
+  },
+  {
+    "nome": "Quantidade, Soma e Produto dos Divisores Positivos de n",
+    "materia": "Teoria dos Números",
+    "topico": "Fatoração Prima e Funções Aritméticas",
+    "gatilho": "Quando n = p_1^{a_1} * ... * p_k^{a_k} e pede-se quantos divisores positivos n possui, qual a soma deles ou qual o produto deles",
+    "acao_ou_teorema": "Some 1 aos expoentes e multiplique para achar d(n); use a soma de PG para sigma(n) e eleve n a d(n)/2 para o produto",
+    "formula_latex": "$$d(n) = \\prod (a_i + 1), \\qquad \\sigma(n) = \\prod \\frac{p_i^{a_i+1} - 1}{p_i - 1}, \\qquad P(n) = n^{d(n)/2}$$"
+  },
+  {
+    "nome": "Restos de Quadrados Perfeitos Módulo 3, 4 e 8",
+    "materia": "Teoria dos Números",
+    "topico": "Equações Diofantinas Não-Lineares",
+    "gatilho": "Quando é preciso provar que uma equação diofantina envolvendo x^2 (como x^2 - 3y = 2 ou x^2 + y^2 = 4z + 3) não possui soluções inteiras",
+    "acao_ou_teorema": "Reduza a equação módulo 3, 4 ou 8: todo quadrado perfeito deixa resto 0 ou 1 (mod 3 e mod 4), e todo quadrado ímpar deixa resto 1 (mod 8)",
+    "formula_latex": "$$x^2 \\equiv 0, 1 \\pmod{3}, \\qquad x^2 \\equiv 0, 1 \\pmod{4}, \\qquad x_{\\text{ímpar}}^2 \\equiv 1 \\pmod{8}$$"
+  },
+  {
+    "nome": "Truque de Fatoração de Simon (xy + ax + by = c)",
+    "materia": "Teoria dos Números",
+    "topico": "Fatoração em Equações Diofantinas",
+    "gatilho": "Quando aparece uma equação com variáveis inteiras na forma xy + ax + by = c ou 1/x + 1/y = 1/n",
+    "acao_ou_teorema": "Some a*b em ambos os lados da equação para fatorar o lado esquerdo em (x + b)(y + a) = c + ab e iguale aos divisores inteiros de (c + ab)",
+    "formula_latex": "$$xy + ax + by = c \\iff (x + b)(y + a) = c + ab$$"
+  },
+  {
+    "nome": "Teorema de Binet e Determinante de k*A e de A^{-1}",
+    "materia": "Álgebra Linear",
+    "topico": "Propriedades dos Determinantes",
+    "gatilho": "Quando aparece det(k * A^m * B^{-1} * C^T) para matrizes quadradas de ordem n e não vale a pena multiplicar as matrizes no braço",
+    "acao_ou_teorema": "Retire a constante escalar elevada à ordem n da matriz (k^n) e separe o determinante do produto no produto dos determinantes",
+    "formula_latex": "$$\\det(k A_{n\\times n}) = k^n \\det(A), \\qquad \\det(AB) = \\det(A)\\det(B), \\qquad \\det(A^{-1}) = \\frac{1}{\\det(A)}$$"
+  },
+  {
+    "nome": "Determinante de Matriz Antissimétrica de Ordem Ímpar",
+    "materia": "Álgebra Linear",
+    "topico": "Matrizes Especiais",
+    "gatilho": "Quando uma matriz quadrada A satisfaz A^T = -A (diagonal nula e elementos opostos em relação à diagonal principal) e sua ordem n é um número ímpar (ex: 3x3 ou 5x5)",
+    "acao_ou_teorema": "Sem fazer nenhuma conta, o determinante de qualquer matriz antissimétrica de ordem ímpar é sempre igual a ZERO",
+    "formula_latex": "$$A^T = -A \\text{ e } n \\text{ ímpar} \\implies \\det(A) = (-1)^n \\det(A) = -\\det(A) \\implies \\det(A) = 0$$"
+  },
+  {
+    "nome": "Teorema de Cayley-Hamilton (Polinômio Característico Anula a Matriz)",
+    "materia": "Álgebra Linear",
+    "topico": "Autovalores e Potências de Matrizes",
+    "gatilho": "Quando pede-se uma potência alta A^n ou a inversa A^{-1} de uma matriz 2x2 ou 3x3 em combinação linear de I, A, A^2",
+    "acao_ou_teorema": "Toda matriz quadrada satisfaz sua própria equação característica: para uma matriz 2x2, A^2 - tr(A)*A + det(A)*I = 0",
+    "formula_latex": "$$p(\\lambda) = \\det(A - \\lambda I) \\implies p(A) = \\mathbf{0}; \\quad \\text{Em } 2\\times 2: A^2 - \\text{tr}(A)A + \\det(A)I = \\mathbf{0}$$"
+  },
+  {
+    "nome": "Traço e Determinante via Soma e Produto dos Autovalores",
+    "materia": "Álgebra Linear",
+    "topico": "Autovalores e Autovetores",
+    "gatilho": "Quando são dados (ou pedidos) os autovalores lambda_1, ..., lambda_n de uma matriz A e precisa-se relacioná-los rapidamente com a matriz original",
+    "acao_ou_teorema": "A soma de todos os autovalores é igual ao traço de A (soma da diagonal principal) e o produto de todos os autovalores é igual ao determinante de A",
+    "formula_latex": "$$\\sum_{i=1}^{n} \\lambda_i = \\text{tr}(A), \\qquad \\prod_{i=1}^{n} \\lambda_i = \\det(A)$$"
+  },
+  {
+    "nome": "Teorema do Núcleo e da Imagem (Posto + Nulidade)",
+    "materia": "Álgebra Linear",
+    "topico": "Transformações Lineares",
+    "gatilho": "Quando uma transformação linear T: V -> W é dada e pede-se a dimensão do núcleo dim(Ker T) conhecendo-se o posto dim(Im T), ou vice-versa",
+    "acao_ou_teorema": "A soma da dimensão do núcleo (nulidade) com a dimensão da imagem (posto) é sempre igual à dimensão do espaço de saída V",
+    "formula_latex": "$$\\dim(\\ker T) + \\dim(\\text{Im}\\,T) = \\dim(V)$$"
+  },
+  {
+    "nome": "Teorema Espectral (Diagonalização Ortogonal de Matrizes Simétricas Reais)",
+    "materia": "Álgebra Linear",
+    "topico": "Diagonalização e Formas Quadráticas",
+    "gatilho": "Quando uma matriz real A é simétrica (A^T = A) em provas do ITA/IME ou de Álgebra Linear do CEDERJ",
+    "acao_ou_teorema": "Toda matriz simétrica real possui apenas autovalores REAIS, é sempre diagonalizável e autovetores associados a autovalores distintos são automaticamente ortogonais (P^{-1} = P^T)",
+    "formula_latex": "$$A^T = A \\implies A = Q D Q^T, \\quad \\text{com } Q^T Q = I \\text{ e } \\lambda_i \\in \\mathbb{R}$$"
+  },
+  {
+    "nome": "Matrizes Ortogonais, Idempotentes e Nilpotentes (Autovalores Restritos)",
+    "materia": "Álgebra Linear",
+    "topico": "Polinômio Minimal e Autovalores",
+    "gatilho": "Quando o enunciado diz que A^2 = A (projeção/idempotente), A^2 = I (involutiva), A^k = 0 (nilpotente) ou A^T*A = I (ortogonal)",
+    "acao_ou_teorema": "Idempotente só tem autovalores 0 ou 1 (e tr(A) = posto(A)); nilpotente só tem autovalor 0 (logo det(I + A) = 1); ortogonal tem det(A) = +-1",
+    "formula_latex": "$$A^2 = A \\implies \\lambda \\in \\{0, 1\\}; \\qquad A^k = \\mathbf{0} \\implies \\lambda = 0 \\text{ e } \\det(I - A) = 1$$"
+  },
+  {
+    "nome": "Propriedade Ciclica do Traço (tr(ABC) = tr(BCA) = tr(CAB))",
+    "materia": "Álgebra Linear",
+    "topico": "Operador Traço",
+    "gatilho": "Quando aparece o traço de um produto de matrizes tr(AB), de uma matriz semelhante tr(P^{-1}AP) ou de um comutador AB - BA",
+    "acao_ou_teorema": "O traço de AB é sempre igual ao traço de BA; logo tr(AB - BA) = 0 (nunca existe AB - BA = I) e matrizes semelhantes têm o mesmo traço",
+    "formula_latex": "$$\\text{tr}(AB) = \\text{tr}(BA) \\implies \\text{tr}(AB - BA) = 0 \\quad \\text{e} \\quad \\text{tr}(P^{-1}AP) = \\text{tr}(A)$$"
+  },
+  {
+    "nome": "Teorema de Rouché-Capelli (Discussão de Sistemas Lineares)",
+    "materia": "Álgebra Linear",
+    "topico": "Sistemas Lineares SPD, SPI e SI",
+    "gatilho": "Quando pede-se os valores de um parâmetro k para que um sistema linear Ax = b seja Possível e Determinado (SPD), Indeterminado (SPI) ou Impossível (SI)",
+    "acao_ou_teorema": "Compare o posto da matriz dos coeficientes p(A) com o posto da matriz ampliada p(A|b) e com o número de incógnitas n",
+    "formula_latex": "$$p(A) = p(A|b) = n \\implies \\text{SPD}; \\quad p(A) = p(A|b) < n \\implies \\text{SPI}; \\quad p(A) < p(A|b) \\implies \\text{SI}$$"
+  },
+  {
+    "nome": "Propriedade do Rei em Integrais Definidas (Simetria do Intervalo)",
+    "materia": "Cálculo",
+    "topico": "Técnicas de Integração Definida",
+    "gatilho": "Quando aparece uma integral definida de a até b como int_0^{pi/2} sen^n(x)/(sen^n(x) + cos^n(x)) dx cujo integrando não tem primitiva elementar simples",
+    "acao_ou_teorema": "Substitua x por (a + b - x) na integral I e some a versão original com a versão espelhada (2I = int_a^b 1 dx = b - a)",
+    "formula_latex": "$$I = \\int_{a}^{b} f(x)\\,dx = \\int_{a}^{b} f(a + b - x)\\,dx$$"
+  },
+  {
+    "nome": "Regra de Leibniz (Derivação de Integral com Limites Variáveis)",
+    "materia": "Cálculo",
+    "topico": "Teorema Fundamental do Cálculo e L'Hôpital",
+    "gatilho": "Quando pede-se a derivada em relação a x de uma função definida por uma integral F(x) = int_{g(x)}^{h(x)} f(t) dt (muito comum em limites 0/0 com L'Hôpital)",
+    "acao_ou_teorema": "Avalie o integrando no limite superior multiplicado pela derivada do limite superior, menos o mesmo para o limite inferior",
+    "formula_latex": "$$\\frac{d}{dx}\\left(\\int_{g(x)}^{h(x)} f(t)\\,dt\\right) = f(h(x))\\cdot h'(x) - f(g(x))\\cdot g'(x)$$"
+  },
+  {
+    "nome": "Truque de Feynman (Derivação sob o Sinal de Integral em Relação a um Parâmetro)",
+    "materia": "Cálculo",
+    "topico": "Integrais Definidas e Impróprias Avançadas",
+    "gatilho": "Quando aparece um logaritmo ou termo no denominador como int_0^1 (x^a - 1)/ln(x) dx ou int_0^{inf} e^{-ax}*sen(x)/x dx",
+    "acao_ou_teorema": "Introduza um parâmetro 'a', derive dentro da integral em relação a 'a' para cancelar o denominador (como ln(x) ou x), resolva a integral fácil em x e depois integre em 'a'",
+    "formula_latex": "$$I(a) = \\int_{x_0}^{x_1} f(x, a)\\,dx \\implies I'(a) = \\int_{x_0}^{x_1} \\frac{\\partial f}{\\partial a}(x, a)\\,dx$$"
+  },
+  {
+    "nome": "Integrais de Wallis (Potências de Seno e Cosseno de 0 a pi/2)",
+    "materia": "Cálculo",
+    "topico": "Integrais Trigonométricas Definidas",
+    "gatilho": "Quando pede-se int_0^{pi/2} sen^n(x) dx ou int_0^{pi/2} cos^n(x) dx para n inteiro positivo",
+    "acao_ou_teorema": "Use o duplo fatorial: se n é par, multiplique por pi/2 no final; se n é ímpar, não há fator pi",
+    "formula_latex": "$$W_n = \\int_{0}^{\\pi/2} \\sin^n x\\,dx = \\int_{0}^{\\pi/2} \\cos^n x\\,dx = \\begin{cases} \\frac{(n-1)!!}{n!!} \\cdot \\frac{\\pi}{2}, & n \\text{ par} \\\\ \\frac{(n-1)!!}{n!!}, & n \\text{ ímpar} \\end{cases}$$"
+  },
+  {
+    "nome": "Funções Gama e Beta de Euler em Integrais",
+    "materia": "Cálculo",
+    "topico": "Integrais Impróprias e Trigonométricas",
+    "gatilho": "Quando aparece int_0^1 x^m*(1-x)^n dx, int_0^{pi/2} sen^{2p-1}(x)*cos^{2q-1}(x) dx ou int_0^{inf} x^n * e^{-x} dx",
+    "acao_ou_teorema": "Converta imediatamente em fatoriais usando Gamma(n+1) = n! e Beta(p, q) = Gamma(p)*Gamma(q)/Gamma(p+q)",
+    "formula_latex": "$$\\int_{0}^{1} x^{p-1}(1-x)^{q-1}\\,dx = 2\\int_{0}^{\\pi/2} \\sin^{2p-1}\\theta \\cos^{2q-1}\\theta\\,d\\theta = \\frac{\\Gamma(p)\\Gamma(q)}{\\Gamma(p+q)}$$"
+  },
+  {
+    "nome": "Soma de Riemann como Limite de Série Infinita",
+    "materia": "Cálculo",
+    "topico": "Limites de Somas via Integral Definida",
+    "gatilho": "Quando pede-se o limite para n -> infinito de uma soma de n termos como sum_{k=1}^n n / (n^2 + k^2) ou (1/n) * sum f(k/n)",
+    "acao_ou_teorema": "Coloque (1/n) em evidência como dx e troque (k/n) por x, convertendo o limite do somatório na integral definida de 0 até 1",
+    "formula_latex": "$$\\lim_{n \\to \\infty} \\frac{1}{n} \\sum_{k=1}^{n} f\\left(\\frac{k}{n}\\right) = \\int_{0}^{1} f(x)\\,dx$$"
+  },
+  {
+    "nome": "Teorema de Stolz-Cesàro (O L'Hôpital das Sequências e Somatórios)",
+    "materia": "Cálculo",
+    "topico": "Limites de Sequências",
+    "gatilho": "Quando pede-se o limite de a_n / b_n onde b_n é estritamente crescente para +infinito e a_n envolve um somatório (ex: (1^k + 2^k + ... + n^k) / n^{k+1})",
+    "acao_ou_teorema": "Calcule o limite da razão das diferenças discretas (a_{n+1} - a_n) / (b_{n+1} - b_n), eliminando o somatório em um único passo",
+    "formula_latex": "$$\\lim_{n \\to \\infty} \\frac{a_{n+1} - a_n}{b_{n+1} - b_n} = L \\implies \\lim_{n \\to \\infty} \\frac{a_n}{b_n} = L$$"
+  },
+  {
+    "nome": "Expansões de Maclaurin / Taylor para Limites com Cancelamento de Ordem Alta",
+    "materia": "Cálculo",
+    "topico": "Polinômio de Taylor e Limites",
+    "gatilho": "Quando aplicar L'Hôpital repetidas vezes em um limite x -> 0 gera derivadas gigantescas (ex: (sen(x) - x + x^3/6) / x^5)",
+    "acao_ou_teorema": "Substitua cada função pelos primeiros termos de sua série de Maclaurin em torno de x = 0 e corte as potências dominantes",
+    "formula_latex": "$$\\sin x = x - \\frac{x^3}{6} + \\frac{x^5}{120} - \\dots, \\quad \\cos x = 1 - \\frac{x^2}{2} + \\frac{x^4}{24} - \\dots, \\quad e^x = 1 + x + \\frac{x^2}{2} + \\frac{x^3}{6} + \\dots, \\quad \\ln(1+x) = x - \\frac{x^2}{2} + \\frac{x^3}{3} - \\dots$$"
+  },
+  {
+    "nome": "EDO de Bernoulli (Redução de Não-Linear para Linear)",
+    "materia": "Cálculo",
+    "topico": "Equações Diferenciais Ordinárias",
+    "gatilho": "Quando aparece uma EDO de 1ª ordem da forma y' + P(x)y = Q(x)*y^n (com n != 0 e n != 1)",
+    "acao_ou_teorema": "Divida por y^n e faça a mudança de variável u = y^{1-n}, que transforma a equação em uma EDO linear de 1ª ordem em u(x)",
+    "formula_latex": "$$u = y^{1-n} \\implies \\frac{du}{dx} + (1 - n)P(x)u = (1 - n)Q(x)$$"
+  },
+  {
+    "nome": "EDO Equidimensional de Cauchy-Euler (Coeficientes Potência de x)",
+    "materia": "Cálculo",
+    "topico": "EDOs de 2ª Ordem",
+    "gatilho": "Quando os coeficientes acompanhando cada derivada têm o mesmo grau da ordem da derivada: a*x^2*y'' + b*x*y' + c*y = 0",
+    "acao_ou_teorema": "Teste soluções da forma y = x^m (ou faça x = e^t), recaindo na equação indicial algébrica a*m(m - 1) + b*m + c = 0",
+    "formula_latex": "$$ax^2 y'' + bxy' + cy = 0 \\xrightarrow{y = x^m} am(m-1) + bm + c = 0$$"
+  },
+  {
+    "nome": "Identidade de Abel para o Wronskiano e Redução de Ordem de D'Alembert",
+    "materia": "Cálculo",
+    "topico": "EDOs Lineares de 2ª Ordem",
+    "gatilho": "Quando é dada uma solução particular y_1(x) de y'' + P(x)y' + Q(x)y = 0 e pede-se a segunda solução linearmente independente y_2(x) ou o Wronskiano W(x)",
+    "acao_ou_teorema": "Pela Identidade de Abel, W(x) = C*exp(-int P(x) dx), e a segunda solução é obtida integrando W(x) / y_1(x)^2",
+    "formula_latex": "$$W(y_1, y_2)(x) = W_0 e^{-\\int P(x)\\,dx}, \\qquad y_2(x) = y_1(x)\\int \\frac{e^{-\\int P(x)\\,dx}}{y_1^2(x)}\\,dx$$"
+  },
+  {
+    "nome": "Propriedade Característica das Progressões Aritméticas de 2ª Ordem",
+    "materia": "Matemática Básica",
+    "topico": "Sequências e Progressões",
+    "gatilho": "Quando a diferença entre termos consecutivos (b_n = a_{n+1} - a_n) não é constante, mas forma uma PA (ex: números triangulares, diagonais, figuras em grade)",
+    "acao_ou_teorema": "O termo geral de toda PA de 2ª ordem é um polinômio de 2º grau em n, dado pela combinação binomial de a_1, Delta a_1 e Delta^2 a_1",
+    "formula_latex": "$$a_n = a_1 \\binom{n-1}{0} + \\Delta a_1 \\binom{n-1}{1} + \\Delta^2 a_1 \\binom{n-1}{2}$$"
+  },
+  {
+    "nome": "Soma de PA multiplicada por PG (Série Aritmético-Geométrica)",
+    "materia": "Álgebra",
+    "topico": "Progressões Aritmético-Geométricas",
+    "gatilho": "Quando pede-se a soma S = 1*q + 2*q^2 + 3*q^3 + ... + n*q^n (ou infinita com |q| < 1)",
+    "acao_ou_teorema": "Multiplique a soma S pela razão q da PG e subtraia de S (calculando S - qS) para transformar o lado direito em uma PG comum",
+    "formula_latex": "$$|q| < 1 \\implies \\sum_{k=1}^{\\infty} k q^{k-1} = \\frac{1}{(1 - q)^2} \\quad \\text{e} \\quad \\sum_{k=1}^{\\infty} k q^k = \\frac{q}{(1 - q)^2}$$"
+  },
+  {
+    "nome": "Princípio da Casa dos Pombos (Dirichlet) na Forma Generalizada",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Combinatória de Existência",
+    "gatilho": "Quando pergunta-se o número mínimo de elementos que devem ser escolhidos ao acaso para garantir com 100% de certeza que pelo menos r deles pertençam à mesma categoria (entre k categorias)",
+    "acao_ou_teorema": "Considere o pior caso possível (k*(r - 1) escolhas sem completar r em nenhuma caixa) e some 1",
+    "formula_latex": "$$N_{\\min} = k(r - 1) + 1 \\iff \\left\\lceil \\frac{N}{k} \\right\\rceil \\ge r$$"
+  },
+  {
+    "nome": "Lema de Burnside (Contagem de Colares e Coloracões sob Simetria)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Simetrias e Grupos de Permutação",
+    "gatilho": "Quando pede-se de quantas maneiras distintas pode-se pintar os vértices de um polígono regular, um dado ou um colar considerando equivalentes as pinturas obtidas por rotação",
+    "acao_ou_teorema": "O número de configurações distintas (órbitas) é a média aritmética do número de configurações que ficam invariantes sob cada simetria g do grupo G",
+    "formula_latex": "$$N_{\\text{distintas}} = \\frac{1}{|G|}\\sum_{g \\in G} |X^g|; \\quad \\text{Para rotações de } n\\text{-ágono com } k \\text{ cores: } \\frac{1}{n}\\sum_{d \\mid n} \\varphi\\left(\\frac{n}{d}\\right) k^d$$"
+  },
+  {
+    "nome": "Reta de Simson-Wallace (Projeções de Ponto da Circunferência Circunscrita)",
+    "materia": "Geometria Plana",
+    "topico": "Colinearidade e Quadriláteros Inscritíveis",
+    "gatilho": "Quando são traçadas as três perpendiculares de um ponto P aos lados (ou prolongamentos) de um triângulo ABC",
+    "acao_ou_teorema": "Os três pés das perpendiculares são colineares (formam a Reta de Simson) se e somente se o ponto P pertencer à circunferência circunscrita ao triângulo ABC",
+    "formula_latex": "$$P_a, P_b, P_c \\text{ colineares} \\iff P \\in \\odot(ABC)$$"
+  },
+  {
+    "nome": "Segmentos de Tangência do Círculo Inscrito e Ex-inscritos (p - a, p - b, p - c)",
+    "materia": "Geometria Plana",
+    "topico": "Circunferência Inscrita e Ex-inscrita",
+    "gatilho": "Quando uma circunferência está inscrita (ou ex-inscrita) em um triângulo de lados a, b, c e pede-se a medida dos segmentos determinados pelos pontos de tangência até os vértices",
+    "acao_ou_teorema": "A distância do vértice A aos pontos de tangência da circunferência inscrita vale (p - a); e a distância de A até os pontos de tangência da ex-inscrita relativa ao lado a vale exatamente o semiperímetro p",
+    "formula_latex": "$$AT_{\\text{in}} = p - a, \\quad BT_{\\text{in}} = p - b, \\quad CT_{\\text{in}} = p - c, \\qquad AT_{\\text{ex-}a} = p = \\frac{a+b+c}{2}$$"
+  },
+  {
+    "nome": "Relação entre o Inraio r e os Três Ex-raios r_a, r_b, r_c de um Triângulo",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas com Círculos Ex-inscritos",
+    "gatilho": "Quando uma questão do IME/ITA/CN envolve os raios r_a, r_b, r_c das três circunferências ex-inscritas e a área S ou o inraio r",
+    "acao_ou_teorema": "A área é S = (p - a)*r_a; a soma dos inversos dos três ex-raios é igual ao inverso do inraio r; e a área ao quadrado é S^2 = r * r_a * r_b * r_c",
+    "formula_latex": "$$\\frac{1}{r} = \\frac{1}{r_a} + \\frac{1}{r_b} + \\frac{1}{r_c}, \\qquad S = \\sqrt{r \\cdot r_a \\cdot r_b \\cdot r_c}, \\qquad r_a + r_b + r_c - r = 4R$$"
+  },
+  {
+    "nome": "Teorema de Arquimedes para a Área do Segmento Parabólico",
+    "materia": "Geometria Analítica",
+    "topico": "Áreas em Parábolas sem Integral",
+    "gatilho": "Quando uma reta corta uma parábola em dois pontos A e B e pede-se a área da região fechada entre o arco da parábola e a corda AB",
+    "acao_ou_teorema": "A área do segmento parabólico é exatamente 4/3 da área do triângulo inscrito cujo terceiro vértice tem reta tangente paralela à corda AB (ou 2/3 da área do paralelogramo circunscrito)",
+    "formula_latex": "$$S_{\\text{parábola}} = \\frac{4}{3} S_{\\triangle ABC} = \\frac{a \\cdot |x_B - x_A|^3}{6} \\quad (\\text{para } y = ax^2 + bx + c)$$"
+  },
+  {
+    "nome": "Desigualdade de Cauchy-Schwarz (Formas Algébrica, Vetorial e Integral)",
+    "materia": "Álgebra",
+    "topico": "Desigualdades Fundamentais",
+    "gatilho": "Quando é preciso limitar o quadrado de uma soma de produtos (sum a_i*b_i)^2 ou o quadrado de uma integral definida (int f*g dx)^2",
+    "acao_ou_teorema": "O quadrado do produto interno nunca supera o produto das somas dos quadrados; a igualdade ocorre se e somente se as sequências (ou funções) forem proporcionais",
+    "formula_latex": "$$\\left(\\sum_{i=1}^{n} a_i b_i\\right)^2 \\le \\left(\\sum_{i=1}^{n} a_i^2\\right)\\left(\\sum_{i=1}^{n} b_i^2\\right), \\qquad \\left(\\int_a^b f(x)g(x)\\,dx\\right)^2 \\le \\left(\\int_a^b f^2(x)\\,dx\\right)\\left(\\int_a^b g^2(x)\\,dx\\right)$$"
+  },
+  {
+    "nome": "Propriedade Fundamental da Função Parte Inteira (Piso) e Identidade de Hermite",
+    "materia": "Álgebra",
+    "topico": "Equações com Função Modular e Parte Inteira",
+    "gatilho": "Quando aparece a função piso floor(x) = [x] em equações ou somatórios da forma [x] + [x + 1/n] + ... + [x + (n-1)/n]",
+    "acao_ou_teorema": "Decomponha x = [x] + {x} com 0 <= {x} < 1; para somas com passos de 1/n, aplique a Identidade de Hermite que reduz toda a soma a [n*x]",
+    "formula_latex": "$$x - 1 < \\lfloor x \\rfloor \\le x, \\qquad \\sum_{k=0}^{n-1} \\left\\lfloor x + \\frac{k}{n} \\right\\rfloor = \\lfloor nx \\rfloor$$"
+  },
+  {
+    "nome": "Polinômios de Chebyshev (cos(nx) como Polinômio em cos(x))",
+    "materia": "Polinômios e Complexos",
+    "topico": "Polinômios e Trigonometria",
+    "gatilho": "Quando pede-se as raízes ou o coeficiente dominante do polinômio T_n(u) tal que T_n(cos theta) = cos(n*theta)",
+    "acao_ou_teorema": "Use a recorrência T_{n+1}(u) = 2u*T_n(u) - T_{n-1}(u) com T_0(u) = 1 e T_1(u) = u; seu coeficiente dominante é 2^{n-1} e suas raízes são cos((2k-1)pi / 2n)",
+    "formula_latex": "$$T_n(\\cos\\theta) = \\cos(n\\theta) \\implies T_{n+1}(u) = 2u\\,T_n(u) - T_{n-1}(u)$$"
+  },
+  {
+    "nome": "Teorema de Eneström-Kakeya e Limite de Cauchy para o Módulo das Raízes",
+    "materia": "Polinômios e Complexos",
+    "topico": "Localização de Raízes no Plano Complexo",
+    "gatilho": "Quando um polinômio tem coeficientes positivos estritamente crescentes (0 < a_0 < a_1 < ... < a_n) e pergunta-se se ele pode ter raízes com módulo >= 1",
+    "acao_ou_teorema": "Se 0 < a_0 <= a_1 <= ... <= a_n, todas as raízes complexas z satisfazem |z| <= 1 (mais geralmente, estão contidas na coroa min(a_k/a_{k+1}) <= |z| <= max(a_k/a_{k+1}))",
+    "formula_latex": "$$a_k > 0 \\implies \\min_{0 \\le k < n}\\left(\\frac{a_k}{a_{k+1}}\\right) \\le |z| \\le \\max_{0 \\le k < n}\\left(\\frac{a_k}{a_{k+1}}\\right)$$"
+  },
+  {
+    "nome": "Regra dos Sinais de Descartes (Número de Raízes Positivas e Negativas)",
+    "materia": "Polinômios e Complexos",
+    "topico": "Contagem de Raízes Reais",
+    "gatilho": "Quando pede-se a quantidade de raízes reais estritamente positivas e estritamente negativas de um polinômio de grau alto",
+    "acao_ou_teorema": "O número de raízes reais positivas de P(x) é igual ao número de variações de sinal na sequência de coeficientes de P(x) (ou menor por um número par); para as negativas, conte as variações em P(-x)",
+    "formula_latex": "$$n_+ = V(P(x)) - 2k, \\qquad n_- = V(P(-x)) - 2m \\quad (k, m \\in \\mathbb{N}_0)$$"
+  },
+  {
+    "nome": "Interpolação Polinomial de Lagrange e Diferenças Finitas para Polinômios",
+    "materia": "Polinômios e Complexos",
+    "topico": "Determinação de Polinômios por Valores",
+    "gatilho": "Quando um polinômio mônico P(x) de grau n satisfaz P(k) = c (ou P(k) = f(k)) para k = 1, 2, ..., n e pede-se P(n+1)",
+    "acao_ou_teorema": "Construa o polinômio auxiliar Q(x) = P(x) - f(x) = (x - 1)(x - 2)...(x - n), sem precisar montar sistema linear!",
+    "formula_latex": "$$P(k) = g(k) \\text{ para } k=1,\\dots,n \\implies P(x) - g(x) = A(x-1)(x-2)\\cdots(x-n)$$"
+  },
+  {
+    "nome": "Teorema de Pascal e Teorema de Brianchon (Hexágonos em Cônicas)",
+    "materia": "Geometria Plana",
+    "topico": "Geometria Projetiva e Cônicas",
+    "gatilho": "Quando um hexágono está inscrito em uma circunferência (ou cônica) e cruzam-se os pares de lados opostos, ou circunscrito e ligam-se os vértices opostos",
+    "acao_ou_teorema": "Pelo Teorema de Pascal, as três interseções dos pares de lados opostos de um hexágono inscrito são colineares; por Brianchon, as três diagonais principais de um hexágono circunscrito são concorrentes",
+    "formula_latex": "$$ABCDEF \\text{ inscrito} \\implies (AB \\cap DE), \\; (BC \\cap EF), \\; (CD \\cap FA) \\text{ são colineares}$$"
+  },
+  {
+    "nome": "Teorema de Miquel e Ponto de Miquel",
+    "materia": "Geometria Plana",
+    "topico": "Circunferências Concorrentes",
+    "gatilho": "Quando são marcados pontos D, E, F sobre os lados BC, CA, AB de um triângulo ABC e traçam-se as circunferências circunscritas a AEF, BDF e CDE",
+    "acao_ou_teorema": "As três circunferências (AEF), (BDF) e (CDE) sempre passam por um mesmo ponto comum M (Ponto de Miquel)",
+    "formula_latex": "$$\\odot(AEF) \\cap \\odot(BDF) \\cap \\odot(CDE) = \\{M\\}$$"
+  },
+  {
+    "nome": "Teorema de Pitot e Teorema de Hiparco (Quadriláteros Circunscritíveis)",
+    "materia": "Geometria Plana",
+    "topico": "Quadriláteros Circunscritíveis e Bicêntricos",
+    "gatilho": "Quando uma circunferência está inscrita em um quadrilátero ABCD de lados a, b, c, d (ou quando o quadrilátero é simultaneamente inscritível e circunscritível)",
+    "acao_ou_teorema": "Pelo Teorema de Pitot, a soma dos lados opostos é igual (a + c = b + d); se o quadrilátero for bicêntrico (inscritível e circunscritível), sua área reduz-se a S = sqrt(a*b*c*d)",
+    "formula_latex": "$$ABCD \\text{ circunscritível} \\iff a + c = b + d; \\qquad \\text{Bicêntrico} \\implies S = \\sqrt{abcd}$$"
+  },
+  {
+    "nome": "Teorema das Cordas, das Secantes e da Tangente-Secante (Potência de Ponto)",
+    "materia": "Geometria Plana",
+    "topico": "Relações Métricas na Circunferência",
+    "gatilho": "Quando duas retas que passam por um ponto P cortam uma circunferência em A, B e C, D (ou uma delas é tangente em T)",
+    "acao_ou_teorema": "O produto das distâncias de P até as duas interseções na mesma reta é constante e igual ao quadrado do segmento tangente PT^2 = |d^2 - R^2|",
+    "formula_latex": "$$PA \\cdot PB = PC \\cdot PD = PT^2 = |PO^2 - R^2|$$"
+  },
+  {
+    "nome": "Fórmula da Mediana e Soma dos Quadrados das Três Medianas",
+    "materia": "Geometria Plana",
+    "topico": "Medianas e Baricentro",
+    "gatilho": "Quando são dados os lados a, b, c de um triângulo e pede-se o comprimento da mediana m_a relativa ao lado a (ou vice-versa, dados os comprimentos das medianas, achar a área)",
+    "acao_ou_teorema": "Use a fórmula de Apolônio para m_a; a soma dos quadrados das três medianas é 3/4 da soma dos quadrados dos lados, e a área do triângulo original é 4/3 da área do triângulo formado pelas suas medianas",
+    "formula_latex": "$$m_a^2 = \\frac{2b^2 + 2c^2 - a^2}{4}, \\qquad m_a^2 + m_b^2 + m_c^2 = \\frac{3}{4}(a^2 + b^2 + c^2), \\qquad S_{ABC} = \\frac{4}{3}S_{(m_a, m_b, m_c)}$$"
+  },
+  {
+    "nome": "Princípio de Cavalieri e Método das Seções Transversais",
+    "materia": "Geometria Espacial",
+    "topico": "Comparação de Volumes (Esfera e Anticlepsidra)",
+    "gatilho": "Quando dois sólidos de mesma altura têm seções planas paralelas de áreas iguais (ou proporcionais na razão k) em qualquer cota h",
+    "acao_ou_teorema": "Se a razão entre as áreas das seções transversais em toda altura h for constante k, então a razão entre os volumes dos dois sólidos também é exatamente k",
+    "formula_latex": "$$\\frac{A_1(z)}{A_2(z)} = k \\; (\\forall z \\in [0, H]) \\implies V_1 = k \\cdot V_2$$"
+  },
+  {
+    "nome": "Esfera Inscrita e Circunscrita ao Tronco de Cone Reto",
+    "materia": "Geometria Espacial",
+    "topico": "Tronco de Cone Circunscritível a uma Esfera",
+    "gatilho": "Quando uma esfera de raio r está inscrita em um tronco de cone reto de raios das bases R_1 e R_2 e geratriz g",
+    "acao_ou_teorema": "Pelo Teorema de Pitot na seção meridiana, a geratriz vale g = R_1 + R_2, e a altura do tronco (diâmetro 2r da esfera) é o dobro da média geométrica dos raios das bases: r = sqrt(R_1 * R_2)",
+    "formula_latex": "$$g = R_1 + R_2, \\qquad r_{\\text{esfera}} = \\frac{h}{2} = \\sqrt{R_1 R_2}$$"
+  },
+  {
+    "nome": "Lei dos Cossenos para Triedros (Geometria Esférica / Ângulos Diedros)",
+    "materia": "Geometria Espacial",
+    "topico": "Triedros e Ângulos entre Planos",
+    "gatilho": "Quando são dados os três ângulos das faces (a, b, c) de um vértice tridimensional (triedro V-ABC) e pede-se o cosseno do ângulo diedro A entre duas faces",
+    "acao_ou_teorema": "Aplique a Lei dos Cossenos para as faces do triedro relacionando os cossenos das faces com o cosseno do diedro oposto",
+    "formula_latex": "$$\\cos a = \\cos b \\cos c + \\sin b \\sin c \\cos \\hat{A}_{\\text{diedro}}$$"
+  },
+  {
+    "nome": "Projeção Ortogonal de uma Figura Plana sobre Outro Plano",
+    "materia": "Geometria Espacial",
+    "topico": "Áreas e Ângulo Diedro entre Planos",
+    "gatilho": "Quando uma figura plana de área S contida em um plano alfa é projetada ortogonalmente sobre um plano beta que forma ângulo diedro theta com alfa",
+    "acao_ou_teorema": "A área da projeção ortogonal S_proj é igual à área original S multiplicada pelo módulo do cosseno do ângulo diedro entre os dois planos",
+    "formula_latex": "$$S_{\\text{proj}} = S \\cdot |\\cos\\theta|$$"
+  },
+  {
+    "nome": "Volume do Octaedro Regular e Dualidade Cubo-Octaedro",
+    "materia": "Geometria Espacial",
+    "topico": "Poliedros de Platão e Poliedros Duais",
+    "gatilho": "Quando ligam-se os centros das 6 faces de um cubo de aresta L (formando um octaedro regular inscrito) ou os centros das 8 faces de um octaedro (formando um cubo)",
+    "acao_ou_teorema": "Os centros das faces de um cubo de aresta L formam um octaedro regular de aresta a = L*sqrt(2)/2 e volume igual a 1/6 do volume do cubo; os centros de um octaedro de aresta a formam um cubo de volume 2/9 do octaedro",
+    "formula_latex": "$$V_{\\text{octaedro}}(a) = \\frac{a^3\\sqrt{2}}{3}, \\qquad V_{\\text{octaedro inscrito no cubo}} = \\frac{1}{6}V_{\\text{cubo}}, \\qquad V_{\\text{cubo inscrito no octaedro}} = \\frac{2}{9}V_{\\text{octaedro}}$$"
+  },
+  {
+    "nome": "Família (Feixe) de Circunferências passando pela Interseção de Duas Circunferências",
+    "materia": "Geometria Analítica",
+    "topico": "Feixe de Circunferências",
+    "gatilho": "Quando pede-se a equação da circunferência que passa pelos dois pontos de interseção de duas circunferências C_1 = 0 e C_2 = 0 e por um terceiro ponto P dado, sem querer resolver o sistema quadrático da interseção",
+    "acao_ou_teorema": "Escreva a combinação linear C_1(x,y) + k*C_2(x,y) = 0 (com k != -1) e substitua apenas as coordenadas do ponto P para descobrir k imediatamente",
+    "formula_latex": "$$C_1(x, y) + k \\cdot C_2(x, y) = 0 \\quad (k \\neq -1; \\text{ para } k = -1 \\text{ obtém-se o Eixo Radical})$$"
+  },
+  {
+    "nome": "Circunferência Diretora de Monge (Lugar Geométrico das Tangentes Perpendiculares a uma Elipse)",
+    "materia": "Geometria Analítica",
+    "topico": "Lugares Geométricos em Cônicas (ITA/IME)",
+    "gatilho": "Quando pede-se o lugar geométrico dos pontos P do plano pelos quais passam duas retas tangentes PERPENDICULARES entre si a uma elipse x^2/a^2 + y^2/b^2 = 1 (ou hipérbole)",
+    "acao_ou_teorema": "O lugar geométrico é a Circunferência de Monge concêntrica à cônica, cujo raio ao quadrado é a^2 + b^2 para a elipse e a^2 - b^2 para a hipérbole",
+    "formula_latex": "$$\\text{Elipse: } x^2 + y^2 = a^2 + b^2; \\qquad \\text{Hipérbole } (a > b)\\text{: } x^2 + y^2 = a^2 - b^2$$"
+  },
+  {
+    "nome": "Ruína do Jogador (Passeio Aleatório / Cadeia de Markov 1D)",
+    "materia": "Probabilidade e Combinatória",
+    "topico": "Probabilidade Recorrente e Cadeias de Markov",
+    "gatilho": "Quando um jogador começa com k reais, ganha 1 real com probabilidade p (e perde 1 com q = 1-p) e o jogo para quando ele atinge N reais ou 0 reais (falência)",
+    "acao_ou_teorema": "Se o jogo é justo (p = 1/2), a probabilidade de chegar em N antes de 0 é simplesmente k/N; se p != q, use a razão r = q/p na fórmula geométrica",
+    "formula_latex": "$$P_k = \\begin{cases} \\dfrac{k}{N}, & \\text{se } p = q = \\frac{1}{2} \\\\[8pt] \\dfrac{1 - (q/p)^k}{1 - (q/p)^N}, & \\text{se } p \\neq q \\end{cases}$$"
+  },
+  {
+    "nome": "Processo de Gram-Schmidt e Matriz de Projeção Ortogonal P = A(A^T A)^{-1}A^T",
+    "materia": "Álgebra Linear",
+    "topico": "Espaços com Produto Interno e Mínimos Quadrados",
+    "gatilho": "Quando pede-se a projeção ortogonal de um vetor b sobre o subespaço gerado pelas colunas de uma matriz A, ou a solução de mínimos quadrados de um sistema impossível Ax = b",
+    "acao_ou_teorema": "Resolva o Sistema Normal A^T * A * x = A^T * b; o vetor projetado no subespaço coluna de A é p = A * x_chapéu",
+    "formula_latex": "$$A^T A \\hat{x} = A^T b \\implies \\text{proj}_{\\text{Col}(A)}(b) = A(A^T A)^{-1}A^T b$$"
+  },
+  {
+    "nome": "Regra de Chió e Teorema de Cauchy para Matriz Adjunta / Cofatores",
+    "materia": "Álgebra Linear",
+    "topico": "Matriz Inversa e Matriz dos Cofatores",
+    "gatilho": "Quando uma questão pede o determinante da matriz dos cofatores (ou adjunta cl(A)) de uma matriz A de ordem n conoscendo apenas det(A)",
+    "acao_ou_teorema": "Como A * adj(A) = det(A) * I_n, aplicando determinante em ambos os lados obtém-se diretamente que det(adj(A)) = [det(A)]^{n-1}",
+    "formula_latex": "$$A \\cdot \\text{adj}(A) = \\det(A) I_n \\implies \\det(\\text{adj}(A)) = \\left(\\det(A)\\right)^{n-1}$$"
+  },
+  {
+    "nome": "Critério de Convergência da Integral de Dirichlet e Teste da Integral para Séries",
+    "materia": "Cálculo",
+    "topico": "Séries Infinitas e Integrais Impróprias",
+    "gatilho": "Quando pergunta-se para quais valores de p a série sum 1/(n * (ln n)^p) ou a integral int_1^{inf} dx / x^p converge ou diverge",
+    "acao_ou_teorema": "A p-série sum 1/n^p e a série logarítmica de Bertrand sum 1/(n*(ln n)^p) convergem se e somente se o expoente p for estritamente maior que 1",
+    "formula_latex": "$$\\sum_{n=2}^{\\infty} \\frac{1}{n^p} \\text{ e } \\sum_{n=2}^{\\infty} \\frac{1}{n(\\ln n)^p} \\text{ convergem} \\iff p > 1$$"
+  },
+  {
+    "nome": "Médias de Potências e Desigualdade de Bernoulli",
+    "materia": "Álgebra",
+    "topico": "Desigualdades e Aproximações",
+    "gatilho": "Quando é preciso comparar potências como (1 + x)^n com 1 + nx para x > -1, ou estimar raízes sem calculadora",
+    "acao_ou_teorema": "Para todo real x >= -1 e racional r >= 1 (ou r <= 0), vale (1 + x)^r >= 1 + rx; se 0 < r < 1, o sinal da desigualdade se inverte",
+    "formula_latex": "$$(1 + x)^r \\ge 1 + rx \\quad (\\text{para } r \\ge 1 \\text{ ou } r \\le 0), \\qquad (1 + x)^r \\le 1 + rx \\quad (\\text{para } 0 < r < 1)$$"
   }
 ]

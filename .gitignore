@@ -118,3 +118,26 @@ backend/graphify-out/
 frontend/graphify-out/
 .codex/
 PROGRESS_REPORT.md
+
+# Arquivos de Auditoria Temporária e Inventários de Imagens
+military_image_inventory*
+audit_military_images*.py
+produce_final_inventory.py
+compute_categories.py
+extract_questions.py
+download_*_exams.py
+download_specific_missing.py
+test_download_exams.py
+execute_sql_corrected.py
+test*.json
+tests/benchmark_output/
+
+# Integração Drive / OAuth Local
+drive_*.py
+token.json
+client_secret*.json
+
+# Relatórios temporários de scratch
+*_SUMMARY.md
+IMPLEMENTATION_AND_INSTRUCTIONS.md
+

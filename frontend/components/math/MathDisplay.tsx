@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { resolveFigureUrl } from "@/lib/image-url";
 
 interface MathDisplayProps {
   children: string;
@@ -191,46 +192,78 @@ export function renderMathText(text: string) {
 
 function FormattedTextChunk({ content }: { content: string }) {
   if (!content) return null;
-  // Divide por blocos de código inline `...`
-  const codeParts = content.split(/(`[^`]+?`)/g);
+
+  // 1. Extrai blocos de imagem markdown ![alt](url)
+  const imageParts = content.split(/(!\[[^\]]*\]\([^)]+\))/g);
+
   return (
     <>
-      {codeParts.map((part, i) => {
-        if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
+      {imageParts.map((imgPart, imgIdx) => {
+        const imgMatch = imgPart.match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (imgMatch) {
+          const alt = imgMatch[1];
+          const rawUrl = imgMatch[2];
           return (
-            <code
-              key={`c-${i}`}
-              className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
-            >
-              {part.slice(1, -1)}
-            </code>
+            <span key={`img-${imgIdx}`} className="my-3 block text-center clear-both">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resolveFigureUrl(rawUrl)}
+                alt={alt || "Figura matemática da questão"}
+                className="max-h-80 max-w-full mx-auto rounded-xl object-contain p-2 bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-xs"
+                loading="lazy"
+              />
+              {alt && !alt.toLowerCase().startsWith("figura") && (
+                <span className="block text-xs text-slate-500 dark:text-zinc-400 mt-1 italic font-sans">
+                  {alt}
+                </span>
+              )}
+            </span>
           );
         }
-        // Divide por negrito **...**
-        const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
+
+        // Divide por blocos de código inline `...`
+        const codeParts = imgPart.split(/(`[^`]+?`)/g);
         return (
-          <span key={`cp-${i}`}>
-            {boldParts.map((sub, j) => {
-              if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
+          <span key={`txt-${imgIdx}`}>
+            {codeParts.map((part, i) => {
+              if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
                 return (
-                  <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
-                    {sub.slice(2, -2)}
-                  </strong>
+                  <code
+                    key={`c-${i}`}
+                    className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
+                  >
+                    {part.slice(1, -1)}
+                  </code>
                 );
               }
-              // Divide por itálico *...* (asterisco simples)
-              const italicParts = sub.split(/(\*[^\*]+?\*)/g);
+              // Divide por negrito **...**
+              const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
               return (
-                <span key={`nb-${j}`}>
-                  {italicParts.map((it, k) => {
-                    if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
+                <span key={`cp-${i}`}>
+                  {boldParts.map((sub, j) => {
+                    if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
                       return (
-                        <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
-                          {it.slice(1, -1)}
-                        </em>
+                        <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
+                          {sub.slice(2, -2)}
+                        </strong>
                       );
                     }
-                    return it;
+                    // Divide por itálico *...* (asterisco simples)
+                    const italicParts = sub.split(/(\*[^\*]+?\*)/g);
+                    return (
+                      <span key={`nb-${j}`}>
+                        {italicParts.map((it, k) => {
+                          if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
+                            return (
+                              <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
+                                {it.slice(1, -1)}
+                              </em>
+                            );
+                          }
+                          return it;
+                        })}
+                      </span>
+                    );
                   })}
                 </span>
               );

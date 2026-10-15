@@ -1,6 +1,6 @@
 # Pipeline de Dados
 
-A extração de questões matemáticas e científicas de documentos (especialmente PDFs) é notoriamente complexa devido a formatos, leiautes, numeração e ao uso intenso de símbolos que o OCR comum distorce. Para contornar isso, o MathAI utiliza um pipeline robusto, escalonado e focado na redução de dependências excessivas (e caras) de IA.
+A extração de questões matemáticas e científicas de documentos (especialmente PDFs) é notoriamente complexa devido a formatos, leiautes, numeração e ao uso intenso de símbolos que o OCR comum distorce. Para contornar isso, o LEMMAS utiliza um pipeline robusto, escalonado e focado na redução de dependências excessivas (e caras) de IA.
 
 ## 📚 Fontes de Dados
 

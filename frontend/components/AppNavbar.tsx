@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Flame, 
-  Cpu, 
+  Target, 
   Menu, 
   X, 
   BookOpen, 
@@ -26,58 +26,20 @@ export default function AppNavbar() {
   const { profile, initials, isAuthenticated } = useUserProfile();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-  const [questionsCount, setQuestionsCount] = useState<number>(288);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    let controller = new AbortController();
-
-    async function checkHealth() {
-      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-        return;
-      }
-      try {
-        controller.abort();
-        controller = new AbortController();
-        const res = await fetch("/api/health", {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setApiOnline(true);
-          if (data.total_questions) setQuestionsCount(data.total_questions);
-        } else {
-          setApiOnline(false);
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === "AbortError") return;
-        setApiOnline(false);
-      }
-    }
-
-    checkHealth();
-    const interval = setInterval(checkHealth, 25000);
-    return () => {
-      clearInterval(interval);
-      controller.abort();
-    };
-  }, []);
-
   const navLinks = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "Banco de Lemas", href: "/questoes", icon: BookOpen },
-    { label: "Resolver / Simulado", href: "/resolver", icon: PenTool },
-    { label: "Segunda Opinião", href: "/opinioes", icon: Scale },
-    { label: "Auditoria Visual", href: "/auditoria-figuras", icon: Sparkles },
-    { label: "Sobre o LEMMAS", href: "/landing", icon: Info },
-  ];
+      { label: "Dashboard", href: "/", icon: LayoutDashboard },
+      { label: "Banco de Lemas", href: "/questoes", icon: BookOpen },
+      { label: "Resolver / Simulado", href: "/resolver", icon: PenTool },
+      { label: "Segunda Opinião", href: "/opinioes", icon: Scale },
+      { label: "Sobre o LEMMAS", href: "/landing", icon: Info },
+    ];
 
-  const isLinkActive = (href: string) => {
+    const isLinkActive = (href: string) => {
     if (href === "/" && (pathname === "/" || pathname === "/dashboard")) return true;
     if (href === "/landing" && pathname === "/landing") return true;
     return pathname.startsWith(href) && href !== "/";
@@ -118,31 +80,40 @@ export default function AppNavbar() {
         {/* LADO DIREITO: CONTROLES, TEMA, STREAK E AVATAR */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           
-          {/* STATUS ENGINE */}
-          <div 
-            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-[11px] font-semibold text-slate-600 dark:text-[#dedbd0]"
-            title={`MathAI Engine: ${questionsCount} lemas ativos`}
-          >
-            <Cpu className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452]" />
-            <span className="hidden lg:inline">MathAI:</span>
-            <span className="font-mono text-amber-700 dark:text-[#d9b452] font-bold">{questionsCount}</span>
-            <span className={`w-1.5 h-1.5 rounded-full ${apiOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-          </div>
-
-          {/* STREAK E FOCO (APENAS PARA USUÁRIOS AUTENTICADOS) */}
+          {/* STREAK (DIAS CONSECUTIVOS DE ESTUDO) */}
           {mounted && isAuthenticated && (
             <div 
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" 
-              title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold whitespace-nowrap shrink-0 transition-colors ${
+                profile.streakDias > 0
+                  ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-[#d9b452]"
+                  : "bg-slate-100 dark:bg-zinc-800/40 border-slate-200 dark:border-zinc-700/50 text-slate-500 dark:text-zinc-400"
+              }`}
+              title={
+                profile.streakDias > 0
+                  ? `Fogo aceso! ${profile.streakDias} ${profile.streakDias === 1 ? "dia consecutivo" : "dias consecutivos"} de estudo ativo.`
+                  : "Resolva uma questão hoje para acender seu fogo de dias consecutivos!"
+              }
             >
-              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <Flame 
+                className={`w-3.5 h-3.5 transition-transform ${
+                  profile.streakDias > 0 
+                    ? "fill-amber-500 text-amber-500 animate-pulse" 
+                    : "text-slate-400 dark:text-zinc-500 opacity-60"
+                }`} 
+              />
               <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
             </div>
           )}
 
+          {/* FOCO DE ESTUDO / OBJETIVO */}
           {mounted && isAuthenticated && profile.focoConcurso && (
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-700 dark:text-[#dedbd0]">
-              <span>🎯 {profile.focoConcurso}</span>
+            <div 
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#1a172c] border border-slate-200/90 dark:border-amber-500/20 text-xs font-medium text-slate-700 dark:text-[#dedbd0] whitespace-nowrap shrink-0 max-w-[220px]"
+              title={`Foco de estudo atual: ${profile.focoConcurso}`}
+            >
+              <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">Foco:</span>
+              <span className="font-semibold text-slate-800 dark:text-[#f5f0df] truncate">{profile.focoConcurso}</span>
             </div>
           )}
 
@@ -151,14 +122,22 @@ export default function AppNavbar() {
 
           {/* AUTENTICAÇÃO: AVATAR SE LOGADO OU BOTÃO ENTRAR SE VISITANTE */}
           {!mounted ? (
-            <div className="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse" />
+            <div className="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse shrink-0" />
           ) : isAuthenticated ? (
             <Link
               href="/perfil"
-              className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform"
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform overflow-hidden shrink-0 relative group"
               title={`Meu Perfil (${profile.nome || "Aluno"})`}
             >
-              {initials || "AL"}
+              {profile.fotoUrl ? (
+                <img
+                  src={profile.fotoUrl}
+                  alt={profile.nome || "Foto de perfil"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>{initials || "AL"}</span>
+              )}
             </Link>
           ) : (
             <Link
@@ -210,9 +189,15 @@ export default function AppNavbar() {
               <Link
                 href="/perfil"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-1.5"
+                className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-2.5 py-1"
               >
-                <User className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-[11px] flex items-center justify-center border border-amber-400/40 shrink-0">
+                  {profile.fotoUrl ? (
+                    <img src={profile.fotoUrl} alt={profile.nome} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{initials || "AL"}</span>
+                  )}
+                </div>
                 <span>Ver Perfil ({profile.nome || "Aluno"})</span>
               </Link>
             ) : (

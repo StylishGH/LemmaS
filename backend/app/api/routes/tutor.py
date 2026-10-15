@@ -12,6 +12,7 @@ from app.services.mathai.evaluator import cognitive_evaluator
 from app.services.mathai.recommender import cognitive_recommender
 from app.services.mathai.tutor import socratic_tutor
 from app.services.mathai.vision import vision_processor
+from app.services.mathai.gateway import mathai_gateway
 from app.models.student import Student
 
 router = APIRouter(prefix="/tutor", tags=["MathAI Engine (Tutor & Avaliador)"])
@@ -233,3 +234,92 @@ def calculate_next_review(
         "sm2_updated": sm2_res["sm2_updated"],
         "suggested_lemmas": suggested_lemmas,
     }
+
+
+class SecondOpinionModelItem(BaseModel):
+    name: str
+    role: str
+    content: str
+
+
+class SecondOpinionResponse(BaseModel):
+    model_a: SecondOpinionModelItem
+    model_b: SecondOpinionModelItem
+    sintese: str
+    provider: str
+    latency_ms: float
+    model_used: str
+
+
+class SecondOpinionRequest(BaseModel):
+    enunciado: str = Field(..., min_length=5, max_length=1500, description="Dúvida ou problema matemático")
+    contextoQuestao: Optional[str] = Field(None, description="Contexto adicional da questão")
+
+
+@router.post("/compare", response_model=SecondOpinionResponse)
+def compare_pedagogical_models(payload: SecondOpinionRequest):
+    """
+    Painel 'Segunda Opinião': compara duas abordagens cognitivas complementares
+    (Rigor Axiomático Nemotron vs Intuição Heurística) com síntese metacognitiva.
+    """
+    import json
+    prompt = payload.enunciado
+    if payload.contextoQuestao:
+        prompt = f"Contexto: {payload.contextoQuestao}\nProblema: {prompt}"
+
+    system_instruction = (
+        "Você é o motor de Metacognição e Comparação de Lemas do LemmaS.\n"
+        "Sua função é analisar o problema matemático fornecido sob DUAS perspectivas cognitivas complementares e sintetizar o aprendizado:\n"
+        "1. PERSPECTIVA A (Rigor Axiomático & Prova Formal): teoremas, invariantes algébricos e demonstração analítica em LaTeX ($...$ e $$...$$).\n"
+        "2. PERSPECTIVA B (Intuição Heurística & Atalhos): intuição visual, simetrias, casos extremos e raciocínio socrático em LaTeX ($...$).\n"
+        "3. SÍNTESE PEDAGÓGICA (Para o Licenciando em Matemática): reflexão concisa contrastando as duas visões.\n"
+        "Responda EXCLUSIVAMENTE em formato JSON com chaves: model_a (name, role, content), model_b (name, role, content), sintese."
+    )
+
+    res = mathai_gateway.execute_completion(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt=system_instruction,
+        temperature=0.2,
+        max_tokens=1600,
+        json_output=True,
+        task_type="axiomatic_reasoning",
+    )
+
+    content_raw = res.get("content", "{}")
+    data = {}
+    if isinstance(content_raw, dict):
+        data = content_raw
+    else:
+        try:
+            cleaned = content_raw.strip()
+            if cleaned.startswith("```"):
+                import re
+                cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r"\s*```$", "", cleaned)
+            first_b = cleaned.find("{")
+            last_b = cleaned.rfind("}")
+            if first_b != -1 and last_b != -1:
+                cleaned = cleaned[first_b:last_b + 1]
+            data = json.loads(cleaned)
+        except Exception:
+            data = {}
+
+    model_a_data = data.get("model_a", {})
+    model_b_data = data.get("model_b", {})
+
+    return SecondOpinionResponse(
+        model_a=SecondOpinionModelItem(
+            name=model_a_data.get("name", "Rigor Axiomático e Prova Formal"),
+            role=model_a_data.get("role", "Demonstração Analítica & Invariantes"),
+            content=model_a_data.get("content", content_raw if not model_a_data else ""),
+        ),
+        model_b=SecondOpinionModelItem(
+            name=model_b_data.get("name", "Heurística & Atalhos Cognitivos"),
+            role=model_b_data.get("role", "Intuição Heurística & Atalhos Cognitivos"),
+            content=model_b_data.get("content", "Atalho cognitivo baseado em propriedades invariantes e simetrias."),
+        ),
+        sintese=data.get("sintese", "O contraste entre o rigor analítico formal e a intuição geométrica desenvolve a verdadeira maturidade matemática."),
+        provider=res.get("provider", "gateway"),
+        latency_ms=res.get("latency_ms", 0.0),
+        model_used=res.get("model_used", "nemotron"),
+    )
