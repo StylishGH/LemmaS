@@ -29,7 +29,7 @@ import {
   AlertTriangle,
   Flag,
 } from "lucide-react";
-import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
+import { extrairEnunciadoEAlternativas, hasImageAlternatives } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
@@ -1619,8 +1619,8 @@ export default function BancoQuestoesPage() {
                   <MathText text={corpo} />
                 </div>
 
-                {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER */}
-                {q.figura_path && !corpo.includes("![") && (
+                {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER (OCULTA SE AS ALTERNATIVAS JÁ FOREM AS IMAGENS OU SE JÁ ESTIVER NO CORPO) */}
+                {q.figura_path && !corpo.includes("![") && !hasImageAlternatives(alternativas) && (
                   <div className="my-3 flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -1641,21 +1641,41 @@ export default function BancoQuestoesPage() {
 
                 {/* PREVIEW DE ALTERNATIVAS (OBJETIVAS) */}
                 {Object.keys(alternativas).length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 pt-1">
-                    {Object.entries(alternativas).map(([letra, valor]) => (
-                      <div
-                        key={letra}
-                        className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 text-xs text-slate-700 dark:text-zinc-300 flex items-start gap-2"
-                      >
-                        <span className="font-bold text-amber-600 dark:text-[#d9b452] mt-0.5 shrink-0">
-                          ({letra})
-                        </span>
-                        <div className="overflow-x-auto">
-                          <MathText text={valor} className="font-mono" />
+                  hasImageAlternatives(alternativas) ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+                      {Object.entries(alternativas).map(([letra, valor]) => (
+                        <div
+                          key={letra}
+                          className="p-3 rounded-2xl bg-white dark:bg-[#18152a] border border-slate-200/90 dark:border-amber-500/20 shadow-xs flex flex-col items-center gap-2 group hover:border-amber-500/50 transition-all"
+                        >
+                          <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-stone-800/80">
+                            <span className="font-bold text-xs px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/20">
+                              Opção ({letra})
+                            </span>
+                          </div>
+                          <div className="w-full flex items-center justify-center min-h-[110px] max-h-48 overflow-hidden rounded-lg bg-slate-50 dark:bg-stone-900/70 p-2 border border-slate-100 dark:border-stone-800">
+                            <MathText text={valor} />
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 pt-1">
+                      {Object.entries(alternativas).map(([letra, valor]) => (
+                        <div
+                          key={letra}
+                          className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 text-xs text-slate-700 dark:text-zinc-300 flex items-start gap-2"
+                        >
+                          <span className="font-bold text-amber-600 dark:text-[#d9b452] mt-0.5 shrink-0">
+                            ({letra})
+                          </span>
+                          <div className="overflow-x-auto">
+                            <MathText text={valor} className="font-mono" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
                 ) : q.tipo === "discursiva" ? (
                   <div className="px-3 py-2 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-700 dark:text-purple-300 flex items-center gap-2">
                     <FileText className="w-4 h-4 shrink-0 text-purple-500" />
