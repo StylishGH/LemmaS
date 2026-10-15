@@ -82,6 +82,7 @@ flowchart TD
 |---|---|
 | [`01_core_tables.sql`](./01_core_tables.sql) | DDL das tabelas fundamentais: `usuarios`, `questoes`, `conceitos`, `tentativas` e `revisao_espacada` (SM-2). Inclui índices cobrindo chaves estrangeiras e políticas de RLS. |
 | [`02_provenance_and_consent.sql`](./02_provenance_and_consent.sql) | DDL das tabelas de proveniência total: `consentimentos`, `avaliacoes_ia`, `feedback_tentativa` e `validacao_humana`. Inclui índices GIN, verificações de integridade (`CHECK`) e RLS habilitado. |
+| [`06_question_bank_counts.sql`](./06_question_bank_counts.sql) | Função segura de contagem agregada de questões por banca para os filtros do catálogo. |
 
 ---
 

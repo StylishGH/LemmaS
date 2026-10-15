@@ -60,6 +60,23 @@ export async function GET(req: NextRequest) {
 
         if (dbUser?.id) {
           targetAlunoId = dbUser.id;
+        } else {
+          // Provisiona automaticamente o usuário na tabela usuarios
+          const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
+          const { data: novoDbUser } = await supabase
+            .from("usuarios")
+            .insert({
+              nome: nomeUsuario,
+              email: user.email,
+              senha_hash: "supabase_managed",
+              escolaridade: "Ensino Superior",
+            })
+            .select("id")
+            .maybeSingle();
+
+          if (novoDbUser?.id) {
+            targetAlunoId = novoDbUser.id;
+          }
         }
       } else if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
         targetAlunoId = parseInt(alunoIdParam, 10);
@@ -73,14 +90,16 @@ export async function GET(req: NextRequest) {
     queryTentativas = queryTentativas.eq("aluno_id", targetAlunoId);
     queryRevisoes = queryRevisoes.eq("aluno_id", targetAlunoId);
 
-    const [{ data: tentativasRaw }, { data: revisoesRaw }] = await Promise.all([
-      queryTentativas.limit(50),
+    const [{ count: exactTotalResolvidas }, { count: exactTotalAcertos }, { data: tentativasRaw }, { data: revisoesRaw }] = await Promise.all([
+      supabase.from("tentativas").select("*", { count: "exact", head: true }).eq("aluno_id", targetAlunoId),
+      supabase.from("tentativas").select("*", { count: "exact", head: true }).eq("aluno_id", targetAlunoId).eq("acertou", 1),
+      queryTentativas.limit(100),
       queryRevisoes.limit(20),
     ]);
 
     const tentativas = (tentativasRaw as any[]) || [];
-    const totalResolvidas = tentativas.length;
-    const totalAcertos = tentativas.filter((t) => t.acertou === 1).length;
+    const totalResolvidas = exactTotalResolvidas ?? tentativas.length;
+    const totalAcertos = exactTotalAcertos ?? tentativas.filter((t) => t.acertou === 1).length;
     const taxaAcerto = totalResolvidas > 0 
       ? Number(((totalAcertos / totalResolvidas) * 100).toFixed(1)) 
       : 0;
@@ -225,12 +244,42 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    // Cálculo de Streak Consecutivo real baseado em tentativas
+    const datasSet = new Set<string>();
+    tentativas.forEach((t) => {
+      if (t.data_hora) {
+        const d = new Date(t.data_hora);
+        if (!isNaN(d.getTime())) {
+          datasSet.add(d.toISOString().split("T")[0]);
+        }
+      }
+    });
+
+    let streakDias = 0;
+    if (datasSet.size > 0) {
+      const hojeYmd = agora.toISOString().split("T")[0];
+      const ontemYmd = ontemData.toISOString().split("T")[0];
+      if (datasSet.has(hojeYmd) || datasSet.has(ontemYmd)) {
+        let cursor = datasSet.has(hojeYmd) ? new Date(agora) : new Date(ontemData);
+        while (true) {
+          const cYmd = cursor.toISOString().split("T")[0];
+          if (datasSet.has(cYmd)) {
+            streakDias++;
+            cursor.setDate(cursor.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       total_resolvidas: totalResolvidas,
       total_acertos: totalAcertos,
       taxa_acerto: taxaAcerto,
       tempo_medio: tempoMedioStr,
-      total_questoes_banco: totalQuestions ?? 288,
+      streak_dias: streakDias,
+      total_questoes_banco: totalQuestions ?? 20764,
       historico,
       revisoes,
       diagnostico_erros: {
@@ -247,7 +296,8 @@ export async function GET(req: NextRequest) {
       total_acertos: 0,
       taxa_acerto: 0,
       tempo_medio: "0s",
-      total_questoes_banco: 288,
+      streak_dias: 0,
+      total_questoes_banco: 20764,
       historico: [],
       revisoes: [],
       diagnostico_erros: { total_erros: 0, conta: 0, interpretacao: 0, lacuna: 0 },

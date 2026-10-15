@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   Clock, 
   Play, 
@@ -34,13 +34,17 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  Award
+  Award,
+  Compass,
+  PenTool
 } from "lucide-react";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { MathText } from "@/components/math/MathDisplay";
 import { useUserProfile } from "@/lib/use-user";
 import { createClient } from "@/lib/supabase";
 import { resolveFigureUrl } from "@/lib/image-url";
+import MathScratchpad from "@/components/math/MathScratchpad";
+import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 
 interface Question {
   id: number;
@@ -156,6 +160,7 @@ function ConfirmarEntregaModal({
   totalQuestoes,
   respondidasCount,
   emBrancoCount,
+  submitting = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -163,6 +168,7 @@ function ConfirmarEntregaModal({
   totalQuestoes: number;
   respondidasCount: number;
   emBrancoCount: number;
+  submitting?: boolean;
 }) {
   if (!open) return null;
   return (
@@ -198,17 +204,28 @@ function ConfirmarEntregaModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+            disabled={submitting}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
           >
             Continuar Resolvendo
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="lemmas-gold-cta px-5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
+            disabled={submitting}
+            className="lemmas-gold-cta px-5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 disabled:opacity-50"
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Confirmar Entrega</span>
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Gravando resultados...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Confirmar Entrega</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -217,6 +234,7 @@ function ConfirmarEntregaModal({
 }
 
 function ResolverContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryId = searchParams.get("id");
   const sessionQuery = searchParams.get("session"); // "simulado" ou "treino"
@@ -241,6 +259,28 @@ function ResolverContent() {
   const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
   const [jumpValue, setJumpValue] = useState("");
 
+  // Paginação sob demanda de 100 em 100 no Modo Treino Livre
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [treinoFilters, setTreinoFilters] = useState<any>(null);
+  const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
+  const [loadingChunk, setLoadingChunk] = useState<boolean>(false);
+  const [answeredIndices, setAnsweredIndices] = useState<Set<number>>(new Set());
+  const [windowSize, setWindowSize] = useState<number>(20);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (typeof window !== "undefined") {
+        if (window.innerWidth >= 1280) setWindowSize(22);
+        else if (window.innerWidth >= 1024) setWindowSize(20);
+        else if (window.innerWidth >= 768) setWindowSize(14);
+        else setWindowSize(8);
+      }
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
   // Cronômetro
   const [totalTimeInitial, setTotalTimeInitial] = useState(45 * 60);
   const [timeLeft, setTimeLeft] = useState(45 * 60);
@@ -250,6 +290,7 @@ function ResolverContent() {
   const [confianca, setConfianca] = useState<Record<number, number>>({});
   const [justificativas, setJustificativas] = useState<Record<number, string>>({});
   const [showRascunho, setShowRascunho] = useState(false);
+  const [bancadaModo, setBancadaModo] = useState<"lousa" | "geometria" | "texto" | null>(null);
   
   // Dicas Socráticas (Modo Treino)
   const [hintLevel, setHintLevel] = useState<number>(1);
@@ -286,6 +327,7 @@ function ResolverContent() {
           if (!ignore && data && !data.error) {
             const { corpo, alternativas } = extrairEnunciadoEAlternativas(data.enunciado);
             setQuestions([{ ...data, enunciado_limpo: corpo, alternativas }]);
+            setTotalCount(1);
             setSessionType(modeQuery === "treino" ? "treino" : "simulado");
             setSessionMode("active");
             setTotalTimeInitial(30 * 60);
@@ -312,6 +354,7 @@ function ResolverContent() {
                   return { ...q, enunciado_limpo: corpo, alternativas };
                 });
                 setQuestions(parsedList);
+                setTotalCount(parsedList.length);
                 setSessionType("simulado");
                 setSessionMode("active");
                 const totalSec = config.tempoTotalSegundos || 60 * 60;
@@ -324,30 +367,74 @@ function ResolverContent() {
         }
 
         // CASO 3: Sessão de Treino Livre (?session=treino)
-        if (sessionQuery === "treino" && typeof window !== "undefined") {
-          const stored = sessionStorage.getItem("lemmas_active_treino");
-          if (stored) {
-            const config = JSON.parse(stored);
-            if (config.ids && config.ids.length > 0) {
-              const res = await fetch("/api/questions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ids: config.ids }),
-              });
-              const data = await res.json();
-              if (!ignore && data.questoes && data.questoes.length > 0) {
-                const parsedList = data.questoes.map((q: any) => {
-                  const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
-                  return { ...q, enunciado_limpo: corpo, alternativas };
-                });
-                setQuestions(parsedList);
-                setSessionType("treino");
-                setSessionMode("active");
-                setTotalTimeInitial(0);
-                setTimeLeft(0);
-                return;
-              }
+        if (sessionQuery === "treino") {
+          let config: any = null;
+          if (typeof window !== "undefined") {
+            const stored = sessionStorage.getItem("lemmas_active_treino");
+            if (stored) {
+              try { config = JSON.parse(stored); } catch (e) {}
             }
+          }
+
+          // Se forem IDs específicos selecionados manualmente
+          if (config && config.ids && config.ids.length > 0) {
+            const res = await fetch("/api/questions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ids: config.ids }),
+            });
+            const data = await res.json();
+            if (!ignore && data.questoes && data.questoes.length > 0) {
+              const parsedList = data.questoes.map((q: any) => {
+                const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
+                return { ...q, enunciado_limpo: corpo, alternativas };
+              });
+              setQuestions(parsedList);
+              setTotalCount(parsedList.length);
+              setSessionType("treino");
+              setSessionMode("active");
+              setTotalTimeInitial(0);
+              setTimeLeft(0);
+              return;
+            }
+          }
+
+          // Treino Livre com filtros ou acervo completo (sob demanda de 100 em 100)
+          const targetFilters = config?.filters || {};
+          const urlTotal = typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("total")
+            : null;
+          const parsedUrlTotal = urlTotal ? parseInt(urlTotal, 10) : 0;
+          const targetTotal = config?.totalQuestoes || (parsedUrlTotal > 0 ? parsedUrlTotal : 20803);
+
+          setTreinoFilters(targetFilters);
+          setTotalCount(targetTotal);
+          setSessionType("treino");
+          setSessionMode("active");
+          setTotalTimeInitial(0);
+          setTimeLeft(0);
+
+          // Carrega o primeiro lote (página 1, 100 questões)
+          const res = await fetch("/api/questions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filters: targetFilters, limit: 100, page: 1 }),
+          });
+          const data = await res.json();
+          if (!ignore && data.questoes && data.questoes.length > 0) {
+            const realTotal = data.total || targetTotal;
+            setTotalCount(realTotal);
+            const parsedList = data.questoes.map((q: any) => {
+              const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
+              return { ...q, enunciado_limpo: corpo, alternativas };
+            });
+            const initialArr = new Array(realTotal);
+            parsedList.forEach((q: any, i: number) => {
+              initialArr[i] = q;
+            });
+            setQuestions(initialArr);
+            setLoadedPages(new Set([1]));
+            return;
           }
         }
 
@@ -374,6 +461,54 @@ function ResolverContent() {
       ignore = true;
     };
   }, [queryId, sessionQuery, modeQuery]);
+
+  // Carregamento paginado sob demanda (em lotes de 100) quando o aluno avança ou salta
+  useEffect(() => {
+    if (sessionType !== "treino" || !treinoFilters || totalCount <= 0) return;
+    const pageNeeded = Math.floor(currentIndex / 100) + 1;
+    if (loadedPages.has(pageNeeded)) return;
+
+    let ignore = false;
+    setLoadingChunk(true);
+
+    fetch("/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filters: treinoFilters,
+        limit: 100,
+        page: pageNeeded,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        if (data && data.questoes && Array.isArray(data.questoes)) {
+          const parsedBatch = data.questoes.map((q: any) => {
+            const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
+            return { ...q, enunciado_limpo: corpo, alternativas };
+          });
+          const start = (pageNeeded - 1) * 100;
+          setQuestions((prev) => {
+            const next = [...prev];
+            if (next.length < totalCount) next.length = totalCount;
+            parsedBatch.forEach((q: any, i: number) => {
+              next[start + i] = q;
+            });
+            return next;
+          });
+          setLoadedPages((prev) => new Set(prev).add(pageNeeded));
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar lote de questões:", err))
+      .finally(() => {
+        if (!ignore) setLoadingChunk(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentIndex, sessionType, treinoFilters, totalCount, loadedPages]);
 
   // Cronômetro
   useEffect(() => {
@@ -434,7 +569,10 @@ function ResolverContent() {
       setShowAuthModal(true);
       return;
     }
-    setAnswers((prev) => ({ ...prev, [currentIndex]: key }));
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: key }));
+    setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
   };
 
   const toggleBookmark = (idx: number) => {
@@ -445,10 +583,10 @@ function ResolverContent() {
   };
 
   // Submissão da questão atual (apenas no Modo Treino)
-  const handleSubmitCurrent = async () => {
-    const q = questions[currentIndex];
-    const userAns = answers[currentIndex];
-    if (!q || !userAns) return;
+    const handleSubmitCurrent = async () => {
+      const q = questions[currentIndex];
+      const userAns = q ? answers[q.id] : undefined;
+      if (!q || !userAns) return;
 
     setSubmitting(true);
     try {
@@ -567,12 +705,15 @@ function ResolverContent() {
 
     setLoadingResolucaoIa((prev) => ({ ...prev, [q.id]: true }));
     try {
-      const respostaAluno = answers[questions.findIndex((item) => item.id === q.id)] || "Não respondeu (em branco)";
+      const respostaAluno = answers[q.id] || "Não respondeu (em branco)";
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = "Bearer " + session.access_token;
+      }
       const res = await fetch("/api/ai/solve", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+        headers,
         body: JSON.stringify({
           enunciado: q.enunciado,
           gabarito: q.gabarito,
@@ -582,7 +723,37 @@ function ResolverContent() {
       const data = await res.json();
       setResolucoesIa((prev) => ({ ...prev, [q.id]: data }));
     } catch (err) {
-      console.error("Erro ao carregar explicação da IA:", err);
+      console.error("Erro ao carregar explicação da IA pós-simulado:", err);
+    } finally {
+      setLoadingResolucaoIa((prev) => ({ ...prev, [q.id]: false }));
+    }
+  };
+
+  // Solicitar Explicação Imediata no Modo Treino Livre
+  const pedirExplicacaoTreino = async (q: Question, respostaAlunoParam?: string) => {
+    if (resolucoesIa[q.id]) return;
+
+    setLoadingResolucaoIa((prev) => ({ ...prev, [q.id]: true }));
+    try {
+      const respostaAluno = respostaAlunoParam || answers[q.id] || "Dúvida do aluno";
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = "Bearer " + session.access_token;
+      }
+      const res = await fetch("/api/ai/solve", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          enunciado: q.enunciado,
+          gabarito: q.gabarito,
+          justificativa: `O estudante assinalou a alternativa: (${respostaAluno}). Gabarito oficial: (${q.gabarito}). Apresente a resolução axiomática passo a passo, evidencie o lema ou princípio teórico determinante e aponte a pegadinha ou distrator da alternativa assinalada.`,
+        }),
+      });
+      const data = await res.json();
+      setResolucoesIa((prev) => ({ ...prev, [q.id]: data }));
+    } catch (err) {
+      console.error("Erro ao carregar resolução da IA no modo treino:", err);
     } finally {
       setLoadingResolucaoIa((prev) => ({ ...prev, [q.id]: false }));
     }
@@ -662,6 +833,29 @@ function ResolverContent() {
     }
   };
 
+
+  // Função para reportar uma questão
+  const handleReport = async (questionId: number) => {
+    const reason = window.prompt(
+      "Motivo do relatório (formatação LaTeX, resposta errada, imagem incorreta, ilegível, outro):"
+    );
+    if (reason === null) return; // usuário cancelou
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: questionId,
+          reason,
+          description: "", // opcional
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao enviar");
+      alert("Relatório enviado com sucesso!");
+    } catch (e: any) {
+      alert("Erro ao enviar relatório: " + e.message);
+    }
+  };
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-500">
@@ -806,16 +1000,20 @@ function ResolverContent() {
     let erros = 0;
     let emBranco = 0;
 
-    questions.forEach((q, i) => {
-      const resp = answers[i];
-      if (!resp) {
-        emBranco++;
-      } else if (resp.toUpperCase() === q.gabarito.toUpperCase()) {
-        acertos++;
-      } else {
-        erros++;
-      }
-    });
+    questions.forEach((q) => {
+              const resp = answers[q.id];
+              const gabarito = (q.gabarito || "").trim().toUpperCase();
+              if (!resp) {
+                emBranco++;
+              } else if (!gabarito) {
+                // Gabarito ausente: não conta como acerto nem erro, preserva distinção
+                emBranco++;
+              } else if (resp.toUpperCase() === gabarito) {
+                acertos++;
+              } else {
+                erros++;
+              }
+            });
 
     const taxa = Math.round((acertos / (questions.length || 1)) * 100);
     const tempoGastoSegundos = sessionType === "simulado" 
@@ -825,13 +1023,14 @@ function ResolverContent() {
     const tempoSeg = tempoGastoSegundos % 60;
 
     // Filtra questões para exibição na lista de revisão
-    const questoesRevisao = questions.filter((q, i) => {
-      const resp = answers[i];
-      if (reviewFilter === "acertos") return resp && resp.toUpperCase() === q.gabarito.toUpperCase();
-      if (reviewFilter === "erros") return resp && resp.toUpperCase() !== q.gabarito.toUpperCase();
-      if (reviewFilter === "em_branco") return !resp;
-      return true;
-    });
+    const questoesRevisao = questions.filter((q) => {
+          const resp = answers[q.id];
+          const gabarito = (q.gabarito || "").trim().toUpperCase();
+          if (reviewFilter === "acertos") return resp && gabarito && resp.toUpperCase() === gabarito;
+          if (reviewFilter === "erros") return resp && gabarito && resp.toUpperCase() !== gabarito;
+          if (reviewFilter === "em_branco") return !resp || !gabarito;
+          return true;
+        });
 
     return (
       <div className="max-w-4xl mx-auto py-8 space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
@@ -929,7 +1128,7 @@ function ResolverContent() {
                   reviewFilter === "todas" ? "bg-white dark:bg-[#231f38] text-amber-700 dark:text-[#d9b452] shadow-xs" : "text-slate-500"
                 }`}
               >
-                Todas ({questions.length})
+                Todas {(() => { const t = parseInt(searchParams.get("total") || "0", 10); return t || questions.length; })()}
               </button>
               <button
                 type="button"
@@ -964,10 +1163,11 @@ function ResolverContent() {
           {/* LISTA DAS QUESTÕES REVISADAS */}
           <div className="space-y-4">
             {questoesRevisao.map((q) => {
-              const originalIndex = questions.findIndex((item) => item.id === q.id);
-              const alunoResp = answers[originalIndex];
-              const acertou = alunoResp && alunoResp.toUpperCase() === q.gabarito.toUpperCase();
-              const isEmBranco = !alunoResp;
+                          const originalIndex = questions.findIndex((item) => item.id === q.id);
+                          const alunoResp = answers[q.id];
+                          const gabarito = (q.gabarito || "").trim().toUpperCase();
+                          const acertou = alunoResp && gabarito && alunoResp.toUpperCase() === gabarito;
+                          const isEmBranco = !alunoResp;
               const isExpanded = expandedReviewId === q.id;
               const iaResult = resolucoesIa[q.id];
               const isCarregandoIa = loadingResolucaoIa[q.id];
@@ -995,18 +1195,18 @@ function ResolverContent() {
 
                     <div className="flex items-center gap-2">
                       {acertou ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Acertou ({alunoResp})
-                        </span>
-                      ) : isEmBranco ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/30 text-xs font-bold">
-                          <HelpCircle className="w-3.5 h-3.5" /> Em Branco (Correta: {q.gabarito})
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold">
-                          <XCircle className="w-3.5 h-3.5" /> Errou: Marcou ({alunoResp}) · Correta ({q.gabarito})
-                        </span>
-                      )}
+                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold">
+                                                <CheckCircle2 className="w-3.5 h-3.5" /> Acertou ({alunoResp})
+                                              </span>
+                                            ) : isEmBranco ? (
+                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/30 text-xs font-bold">
+                                                <HelpCircle className="w-3.5 h-3.5" /> Em Branco {gabarito ? `(Correta: ${gabarito})` : `(Sem gabarito)`}
+                                              </span>
+                                            ) : (
+                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold">
+                                                <XCircle className="w-3.5 h-3.5" /> Errou: Marcou ({alunoResp}) {gabarito ? `· Correta (${gabarito})` : `· Sem gabarito`}
+                                              </span>
+                                            )}
 
                       <button
                         type="button"
@@ -1032,7 +1232,8 @@ function ResolverContent() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 text-xs">
                           {Object.entries(q.alternativas).map(([letra, valor]) => {
                             const isAluno = alunoResp === letra;
-                            const isGabarito = q.gabarito.toUpperCase() === letra.toUpperCase();
+                            const gabarito = (q.gabarito || "").trim().toUpperCase();
+                            const isGabarito = gabarito && gabarito === letra.toUpperCase();
 
                             return (
                               <div
@@ -1127,6 +1328,19 @@ function ResolverContent() {
   // ==========================================
   // TELA DE RESOLUÇÃO ATIVA (SIMULADO OU TREINO)
   // ==========================================
+  const effectiveTotal = totalCount > 0 ? totalCount : (questions.length || 1);
+
+  if (loadingChunk && !currentQ) {
+    return (
+      <div className="max-w-2xl mx-auto py-24 text-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
+        <p className="text-slate-600 dark:text-zinc-400 text-sm font-medium">
+          Carregando questão #{currentIndex + 1} da MathAI Engine...
+        </p>
+      </div>
+    );
+  }
+
   if (!currentQ || questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
@@ -1144,11 +1358,10 @@ function ResolverContent() {
   const { corpo, alternativas } = extrairEnunciadoEAlternativas(currentQ.enunciado);
   const isSimuladoAtivo = sessionType === "simulado";
 
-  // Navegação de Janela Deslizante (10 botões com questão ativa centralizada)
-  const windowSize = 10;
-  const maxStart = Math.max(0, questions.length - windowSize);
-  const windowStart = Math.max(0, Math.min(currentIndex - 4, maxStart));
-  const endIndex = Math.min(windowStart + windowSize, questions.length);
+  // Navegação de Janela Deslizante (20/22 botões com questão ativa centralizada no desktop)
+  const maxStart = Math.max(0, effectiveTotal - windowSize);
+  const windowStart = Math.max(0, Math.min(currentIndex - Math.floor(windowSize / 2), maxStart));
+  const endIndex = Math.min(windowStart + windowSize, effectiveTotal);
   const visibleQuestionIndices = Array.from(
     { length: Math.max(0, endIndex - windowStart) },
     (_, i) => windowStart + i
@@ -1156,7 +1369,7 @@ function ResolverContent() {
 
   const handleJumpToQuestion = (target?: number) => {
     const val = target !== undefined ? target : parseInt(jumpValue, 10);
-    if (!isNaN(val) && val >= 1 && val <= questions.length) {
+    if (!isNaN(val) && val >= 1 && val <= effectiveTotal) {
       setCurrentIndex(val - 1);
     }
     setJumpValue("");
@@ -1178,7 +1391,7 @@ function ResolverContent() {
               {sessionBannerText}
             </span>
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
-              <span>Questão <strong className="text-slate-900 dark:text-amber-300 font-bold">{currentIndex + 1}</strong> de {questions.length}</span>
+              <span>Questão <strong className="text-slate-900 dark:text-amber-300 font-bold">{currentIndex + 1}</strong> de {effectiveTotal.toLocaleString("pt-BR")}</span>
               <span className="text-slate-300 dark:text-zinc-600">•</span>
               <span className="text-slate-500 dark:text-zinc-400 font-medium">
                 {respondidasCount} respondida{respondidasCount === 1 ? "" : "s"}
@@ -1217,28 +1430,28 @@ function ResolverContent() {
           </div>
         </div>
 
-        {/* LINHA 2: NAVEGAÇÃO DE QUESTÕES (JUMPER DE 10 & IR PARA) */}
+        {/* LINHA 2: NAVEGAÇÃO DE QUESTÕES (JUMPER DE 20 & IR PARA) */}
         <div className="flex items-center justify-between gap-2 sm:gap-4 pt-1 overflow-x-auto flex-nowrap pb-1 sm:pb-0">
-          {/* Faixa com os números da janela de 10 questões */}
+          {/* Faixa com os números da janela de 20/22 questões */}
           <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap shrink-0">
-            {/* Botão para voltar 10 questões */}
+            {/* Botão para voltar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - windowSize))}
+              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 20))}
               disabled={currentIndex === 0}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
                 currentIndex === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
-              title="10 questões anteriores"
+              title="20 questões anteriores"
             >
               <ArrowLeft className="w-3 h-3" />
-              <span>-10</span>
+              <span>-20</span>
             </button>
 
-            {/* Números das questões na janela ativa de 10 */}
+            {/* Números das questões na janela ativa de 20/22 */}
             {visibleQuestionIndices.map((qIndex) => {
               const isCurrent = qIndex === currentIndex;
               const qObj = questions[qIndex];
-              const isAnswered = qObj && answers[qObj.id] !== undefined;
+              const isAnswered = (qObj && answers[qObj.id] !== undefined) || answeredIndices.has(qIndex);
               const isBookmarked = qObj && bookmarks.has(qObj.id);
               return (
                 <button
@@ -1248,12 +1461,15 @@ function ResolverContent() {
                     isCurrent
                       ? "lemmas-gold-cta shadow-md scale-105 z-10"
                       : isAnswered
-                      ? "bg-emerald-500/15 border border-emerald-500/35 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/25"
+                      ? "bg-emerald-500/20 border border-emerald-500/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/30 font-extrabold"
                       : "bg-slate-100 dark:bg-[#1b172e] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]"
                   }`}
                   title={`Questão ${qIndex + 1}${isAnswered ? " (Respondida)" : ""}${isBookmarked ? " [Marcada]" : ""}`}
                 >
                   {qIndex + 1}
+                  {isAnswered && !isCurrent && (
+                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
+                  )}
                   {isBookmarked && (
                     <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-[#141222]" />
                   )}
@@ -1261,16 +1477,16 @@ function ResolverContent() {
               );
             })}
 
-            {/* Botão para avançar 10 questões */}
+            {/* Botão para avançar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + windowSize))}
-              disabled={currentIndex >= questions.length - 1}
+              onClick={() => setCurrentIndex((prev) => Math.min(effectiveTotal - 1, prev + 20))}
+              disabled={currentIndex >= effectiveTotal - 1}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                currentIndex >= questions.length - 1 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+                currentIndex >= effectiveTotal - 1 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
-              title="Próximas 10 questões"
+              title="Próximas 20 questões"
             >
-              <span>+10</span>
+              <span>+20</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
@@ -1284,7 +1500,7 @@ function ResolverContent() {
               id="jump-input"
               type="number"
               min={1}
-              max={questions.length}
+              max={effectiveTotal}
               placeholder="Nº"
               value={jumpValue}
               onChange={(e) => setJumpValue(e.target.value)}
@@ -1347,17 +1563,17 @@ function ResolverContent() {
         )}
 
         {/* CAMADA 1: DADO OBSERVADO — RESPOSTA DO ESTUDANTE */}
-        {answers[currentIndex] && (
-          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
-                <Eye className="w-3.5 h-3.5" />
-                [DADO OBSERVADO]
-              </span>
-              <span className="text-xs font-medium text-slate-800 dark:text-[#f5f0df]">
-                Alternativa Assinalada: <strong className="font-mono text-amber-700 dark:text-[#d9b452] font-bold">({answers[currentIndex]})</strong>
-              </span>
-            </div>
+                {currentQ && answers[currentQ.id] && (
+                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
+                        <Eye className="w-3.5 h-3.5" />
+                        [DADO OBSERVADO]
+                      </span>
+                      <span className="text-xs font-medium text-slate-800 dark:text-[#f5f0df]">
+                        Alternativa Assinalada: <strong className="font-mono text-amber-700 dark:text-[#d9b452] font-bold">({answers[currentQ.id]})</strong>
+                      </span>
+                    </div>
             {isSimuladoAtivo && (
               <span className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-medium">
                 Gabarito oficial oculto até a entrega do simulado
@@ -1396,7 +1612,7 @@ function ResolverContent() {
         {Object.keys(alternativas).length > 0 && (
           <div className="space-y-3 pt-2">
             {Object.entries(alternativas).map(([key, val]) => {
-              const isSelected = answers[currentIndex] === key;
+                          const isSelected = currentQ && answers[currentQ.id] === key;
 
               return (
                 <button
@@ -1427,41 +1643,132 @@ function ResolverContent() {
 
         {/* MODO TREINO: FEEDBACK IMEDIATO DE SUBMISSÃO E GABARITO OFICIAL */}
         {!isSimuladoAtivo && currentResult && (
-          <div className={`p-4 rounded-xl border space-y-2 ${
-            currentResult.acertou 
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
-          }`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
-                  <Eye className="w-3 h-3" />
-                  [DADO OBSERVADO]
-                </span>
-                <span className="font-bold text-xs">
-                  Sua resposta: ({currentResult.resposta_enviada})
+          <div className="space-y-3">
+            <div className={`p-4 rounded-xl border space-y-2 ${
+              currentResult.acertou 
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
+                : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
+            }`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
+                    <Eye className="w-3 h-3" />
+                    [DADO OBSERVADO]
+                  </span>
+                  <span className="font-bold text-xs">
+                    Sua resposta: ({currentResult.resposta_enviada})
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  {currentResult.acertou ? (
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4" /> Dedução Correta!
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
+                      <XCircle className="w-4 h-4" /> Divergência: Gabarito Oficial é ({currentResult.gabarito})
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1 border-t border-slate-200/50 dark:border-white/10">
+                SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
+              </div>
+            </div>
+
+            {/* BOTÃO E PAINEL DE EXPLICAÇÃO DA MATHAI ENGINE (IMEDIATO PÓS-SUBMISSÃO) */}
+            {!resolucoesIa[currentQ.id] ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => pedirExplicacaoTreino(currentQ, currentResult.resposta_enviada)}
+                  disabled={loadingResolucaoIa[currentQ.id]}
+                  className="lemmas-gold-cta px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition hover:scale-[1.01] disabled:opacity-50"
+                >
+                  {loadingResolucaoIa[currentQ.id] ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>MathAI Engine Analisando Dedução...</span>
+                    </>
+                  ) : (
+                    <>
+                      <BrainCircuit className="w-4 h-4" />
+                      <span>Explicar Questão com MathAI Engine</span>
+                    </>
+                  )}
+                </button>
+                <span className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  Resolução axiomática passo a passo, lemas aplicados e análise do distrator.
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 font-bold text-xs">
-                {currentResult.acertou ? (
-                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="w-4 h-4" /> Dedução Correta!
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
-                    <XCircle className="w-4 h-4" /> Divergência: Gabarito Oficial é ({currentResult.gabarito})
-                  </span>
+            ) : (
+              <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-4 text-xs leading-relaxed animate-fadeIn">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-purple-500/20">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
+                      <Sparkles className="w-3 h-3" />
+                      [MATHAI ENGINE]
+                    </span>
+                    <span className="font-bold text-xs text-purple-800 dark:text-purple-200">
+                      Resolução Axiomática & Diagnóstico
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {resolucoesIa[currentQ.id].modelo && (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1a162b] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                        {resolucoesIa[currentQ.id].modelo}
+                      </span>
+                    )}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                      Confiança Alta
+                    </span>
+                  </div>
+                </div>
+
+                {/* DIAGNÓSTICO / PASSO A PASSO COM KATEX */}
+                <div className="text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-2">
+                  <strong className="text-purple-700 dark:text-purple-300 block text-xs">
+                    Demonstração Passo a Passo:
+                  </strong>
+                  <div className="text-xs leading-relaxed whitespace-pre-line">
+                    <MathText text={resolucoesIa[currentQ.id].diagnostico || ""} />
+                  </div>
+                </div>
+
+                {/* LEMA FUNDAMENTAL OU CONCEITO-CHAVE */}
+                {resolucoesIa[currentQ.id].dica_proximo_passo && (
+                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#161327] border border-amber-500/25 space-y-1">
+                    <strong className="text-amber-700 dark:text-[#d9b452] flex items-center gap-1.5 text-xs">
+                      <Zap className="w-3.5 h-3.5" />
+                      Lema Fundamental & Princípio Determinante:
+                    </strong>
+                    <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+                      <MathText text={resolucoesIa[currentQ.id].dica_proximo_passo || ""} />
+                    </div>
+                  </div>
                 )}
+
+                {/* SÍNTESE DO APRENDIZADO (FIXAÇÃO NO SM-2 / ACTIVE RECALL) */}
+                <div className="pt-2 border-t border-purple-500/20 space-y-1.5">
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <span>✍️</span>
+                    <span>Síntese do Aprendizado (Opcional - anote a lição aprendida para fixação na memória):</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={justificativas[currentIndex] || ""}
+                    onChange={(e) => setJustificativas((prev) => ({ ...prev, [currentIndex]: e.target.value }))}
+                    placeholder="Ex: Pegadinha na restrição do denominador; aplicar lema da média harmônica..."
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1a162b] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-amber-500 transition-colors"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1 border-t border-slate-200/50 dark:border-white/10">
-              SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
-            </div>
+            )}
           </div>
         )}
 
         {/* MODO TREINO: BOTÃO DE CONFIRMAR RESPOSTA */}
-        {!isSimuladoAtivo && !currentResult && answers[currentIndex] && (
+                {!isSimuladoAtivo && !currentResult && currentQ && answers[currentQ.id] && (
           <div className="pt-2">
             <button
               onClick={handleSubmitCurrent}
@@ -1540,24 +1847,82 @@ function ResolverContent() {
             )}
           </div>
 
-          {/* ABA DE DEDUÇÃO DIGITADA & OCR MULTIMODAL (MODO TREINO) */}
+          {/* BANCADA DE ESTUDO INTERATIVA & OCR MULTIMODAL (MODO TREINO) */}
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
+                <PenTool className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
                 <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
-                  Dedução Passo a Passo & Caderno (OCR Multimodal)
+                  Bancada de Resolução do Estudante (Lousa, Geometria & OCR)
                 </h4>
               </div>
-              <button
-                onClick={() => setShowRascunho(!showRascunho)}
-                className="text-xs text-amber-600 dark:text-[#d9b452] font-semibold hover:underline"
-              >
-                {showRascunho ? "Ocultar Área de Dedução" : "Abrir Rascunho / Enviar foto do caderno"}
-              </button>
+
+              {/* ABAS RÁPIDAS DA BANCADA */}
+              <div className="flex items-center gap-1.5 overflow-x-auto select-none">
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo(bancadaModo === "lousa" ? null : "lousa")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    bancadaModo === "lousa"
+                      ? "lemmas-gold-cta font-bold shadow-xs scale-105"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                  }`}
+                  title="Lousa com Pointer Events e rejeição de palma para rascunhos"
+                >
+                  <PenTool className="w-3.5 h-3.5" />
+                  <span>Lousa de Rascunho</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo(bancadaModo === "geometria" ? null : "geometria")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    bancadaModo === "geometria"
+                      ? "bg-sky-500 text-white font-bold shadow-xs scale-105"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+                  }`}
+                  title="Quadro Euclidiano com régua, compasso e script de lemas"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Geometria Euclidiana</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo(bancadaModo === "texto" ? null : "texto")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    bancadaModo === "texto"
+                      ? "bg-purple-600 text-white font-bold shadow-xs scale-105"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-purple-500/35"
+                  }`}
+                  title="Dedução digitada em texto ou envio de foto para OCR"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Dedução & OCR</span>
+                </button>
+              </div>
             </div>
 
-            {showRascunho && (
+            {/* CONTEÚDO ATIVO DA BANCADA */}
+            {bancadaModo === "lousa" && (
+              <div className="space-y-3 animate-fadeIn">
+                <MathScratchpad
+                  onExportBase64={(b64) => {
+                    setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+                    alert("Rascunho capturado com sucesso! Você já pode enviar para avaliação da MathAI Engine na aba 'Dedução & OCR'.");
+                  }}
+                  onClose={() => setBancadaModo(null)}
+                />
+              </div>
+            )}
+
+            {bancadaModo === "geometria" && (
+              <div className="space-y-3 animate-fadeIn">
+                <GeometricCompassBoard onClose={() => setBancadaModo(null)} />
+              </div>
+            )}
+
+            {bancadaModo === "texto" && (
               <div className="space-y-4 animate-fadeIn">
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#18152a] space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1583,7 +1948,7 @@ function ResolverContent() {
                 <div className="p-4 rounded-xl border-2 border-dashed border-amber-500/35 bg-amber-500/5 text-center space-y-3">
                   <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
                     <Upload className="w-4 h-4 text-amber-500" />
-                    <span>Upload de Foto do Caderno / Print do Tablet</span>
+                    <span>Upload de Foto do Caderno / Rascunho da Lousa</span>
                   </div>
                   <input
                     type="file"
@@ -1592,7 +1957,7 @@ function ResolverContent() {
                     className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 cursor-pointer"
                   />
                   {currentImage && (
-                    <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho carregada com sucesso!</p>
+                    <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho anexada e pronta para OCR!</p>
                   )}
 
                   <button
@@ -1604,6 +1969,38 @@ function ResolverContent() {
                     <span>Avaliar Raciocínio com MathAI Engine</span>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* SE NENHUM MODO ESTIVER ABERTO: BOTÕES DE CONVITE RÁPIDO */}
+            {!bancadaModo && (
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo("lousa")}
+                  className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold text-amber-700 dark:text-[#d9b452] flex items-center gap-2 transition-all hover:scale-[1.01]"
+                >
+                  <PenTool className="w-3.5 h-3.5" />
+                  <span>📐 Abrir Lousa de Rascunho</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo("geometria")}
+                  className="px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-xs font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-2 transition-all hover:scale-[1.01]"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>🧭 Bancada de Geometria (Régua & Compasso)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBancadaModo("texto")}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-zinc-800/80 hover:bg-slate-200 dark:hover:bg-zinc-800 text-xs font-semibold text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 flex items-center gap-2 transition-all"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>📝 Raciocínio por Escrito / OCR</span>
+                </button>
+              </div>
+            )}
 
                 {currentDiagnostico && (
                   <div className="text-left p-5 rounded-xl bg-white dark:bg-[#141222] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
@@ -1662,10 +2059,8 @@ function ResolverContent() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </>
-      )}
+            </>
+          )}
 
       {/* NAVEGAÇÃO INFERIOR */}
       <div className="flex items-center justify-between pt-2">
@@ -1678,9 +2073,9 @@ function ResolverContent() {
           <span>Anterior</span>
         </button>
 
-        {currentIndex < questions.length - 1 ? (
+        {currentIndex < effectiveTotal - 1 ? (
           <button
-            onClick={() => setCurrentIndex((prev) => prev + 1)}
+            onClick={() => setCurrentIndex((prev) => Math.min(effectiveTotal - 1, prev + 1))}
             className="lemmas-gold-cta px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-transform shadow-sm hover:scale-[1.02]"
           >
             <span>Próxima Questão</span>
@@ -1701,17 +2096,69 @@ function ResolverContent() {
       </div>
 
       {/* MODAL DE CONFIRMAÇÃO DE ENTREGA */}
-      <ConfirmarEntregaModal
-        open={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={() => {
-          setShowConfirmModal(false);
-          setSessionMode("result");
-        }}
-        totalQuestoes={questions.length}
-        respondidasCount={respondidasCount}
-        emBrancoCount={emBrancoCount}
-      />
+            <ConfirmarEntregaModal
+              open={showConfirmModal}
+              onClose={() => setShowConfirmModal(false)}
+              submitting={submitting}
+              onConfirm={async () => {
+                setSubmitting(true);
+
+                let simuladoId: string | null = null;
+                if (typeof window !== "undefined") {
+                  const stored = sessionStorage.getItem("lemmas_active_simulado");
+                  if (stored) {
+                    try {
+                      const config = JSON.parse(stored);
+                      simuladoId = config.simuladoId || null;
+                    } catch {}
+                  }
+                }
+
+                const questionIds = questions.map((q) => q.id);
+                const tempoGasto = sessionType === "simulado"
+                  ? Math.max(0, totalTimeInitial - timeLeft)
+                  : timeLeft;
+
+                try {
+                  const res = await fetch("/api/simulados/enviar", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      simuladoId,
+                      questionIds,
+                      respostasDoUsuario: answers,
+                      tempoGastoSegundos: tempoGasto,
+                    }),
+                  });
+
+                  const data = await res.json();
+                  if (data && data.resultado?.resultados) {
+                    const newSubmitResults: Record<number, SubmitResult> = {};
+                    data.resultado.resultados.forEach((r: any) => {
+                      const qIndex = questions.findIndex((q) => q.id === r.questao_id);
+                      if (qIndex >= 0) {
+                        newSubmitResults[qIndex] = {
+                          acertou: r.acertou,
+                          gabarito: r.gabarito,
+                          resposta_enviada: r.resposta_enviada,
+                          sm2: r.sm2,
+                        };
+                      }
+                    });
+                    setSubmitResults(newSubmitResults);
+                  }
+                } catch (err) {
+                  console.warn("Erro ao enviar simulado para backend:", err);
+                } finally {
+                  setSubmitting(false);
+                  setShowConfirmModal(false);
+                  setSessionMode("result");
+                }
+              }}
+              totalQuestoes={effectiveTotal}
+              respondidasCount={respondidasCount}
+              emBrancoCount={emBrancoCount}
+            />
 
       {/* MODAL DE AVISO: LOGAR PARA RESPONDER */}
       <AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
