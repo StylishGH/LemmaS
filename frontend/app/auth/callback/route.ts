@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { DEFAULT_SUPABASE_URL, getSafeAnonKey } from "@/lib/supabase";
 
 /**
- * Handler de Callback OAuth (PKCE) do Supabase para Next.js App Router.
- * Troca o 'code' retornado pelo Google/Supabase por uma sessão oficial e grava cookies SSR.
+ * Handler de Callback de Autenticação do Supabase para Next.js App Router.
+ * Suporta:
+ * 1. Fluxo OAuth / PKCE via 'code' (exchangeCodeForSession).
+ * 2. Confirmação de e-mail / Magic Link via 'token_hash' e 'type' (verifyOtp).
+ * Atualiza o status 'verificado = 1' na tabela 'usuarios' e grava cookies SSR.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/onboarding";
 
-  if (code) {
+  if (code || (token_hash && type)) {
     try {
       const cookieStore = await cookies();
       const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
@@ -34,15 +40,36 @@ export async function GET(request: Request) {
         },
       });
 
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      let authError: any = null;
 
-      if (!error) {
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        authError = error;
+      } else if (token_hash && type) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash,
+          type,
+        });
+        authError = error;
+      }
+
+      if (!authError) {
         let redirectPath = next;
 
-        // Se next === "/onboarding", verifica se o usuário já tem cadastro completo no banco (pelo EMAIL!)
-        if (redirectPath === "/onboarding") {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.email) {
+        // Recupera o usuário autenticado para sincronizar 'verificado = 1' no banco
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          try {
+            await supabase
+              .from("usuarios")
+              .update({ verificado: 1 })
+              .eq("email", user.email);
+          } catch (dbSyncErr) {
+            console.warn("Aviso ao atualizar verificado=1 em usuarios:", dbSyncErr);
+          }
+
+          // Se next === "/onboarding", verifica se o usuário já tem cadastro completo no banco (pelo EMAIL!)
+          if (redirectPath === "/onboarding") {
             const { data: dbUser } = await supabase
               .from("usuarios")
               .select("cpf, escolaridade")
@@ -74,10 +101,12 @@ export async function GET(request: Request) {
 
         return response;
       } else {
-        console.error("Erro ao trocar código por sessão no Supabase:", error);
+        console.error("Erro ao autenticar no callback Supabase:", authError);
+        return NextResponse.redirect(`${origin}/login?error=verification_failed`);
       }
     } catch (err) {
       console.error("Exceção no auth callback:", err);
+      return NextResponse.redirect(`${origin}/login?error=server_error`);
     }
   }
 

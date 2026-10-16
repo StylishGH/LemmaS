@@ -53,10 +53,11 @@ export function AuthCard() {
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
 
-  // Estados de Verificação de Código OTP
+  // Estados de Verificação de Código e Link
   const [aguardandoCodigo, setAguardandoCodigo] = useState(false);
   const [codigoOtp, setCodigoOtp] = useState("");
   const [reenviando, setReenviando] = useState(false);
+  const [checandoLink, setChecandoLink] = useState(false);
 
   const requisitosSenha = validarRequisitosSenha(senha);
 
@@ -68,6 +69,61 @@ export function AuthCard() {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", novaTab);
     router.replace(`/login?${params.toString()}`);
+  };
+
+  // Polling automático enquanto aguarda confirmação: se o usuário clicar no link em outra aba/celular, detecta e redireciona
+  useEffect(() => {
+    if (!aguardandoCodigo) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email_confirmed_at) {
+          clearInterval(interval);
+          try {
+            await supabase
+              .from("usuarios")
+              .update({ verificado: 1 })
+              .eq("email", user.email);
+          } catch {}
+
+          setMensagemSucesso("E-mail confirmado com sucesso! Redirecionando...");
+          setTimeout(() => {
+            router.push("/onboarding");
+          }, 800);
+        }
+      } catch {}
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [aguardandoCodigo, router, supabase]);
+
+  const handleChecarStatusConfirmacao = async () => {
+    setErro(null);
+    setChecandoLink(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email_confirmed_at) {
+        try {
+          await supabase
+            .from("usuarios")
+            .update({ verificado: 1 })
+            .eq("email", user.email);
+        } catch {}
+
+        setMensagemSucesso("E-mail confirmado com sucesso! Redirecionando...");
+        setTimeout(() => {
+          router.push("/onboarding");
+        }, 800);
+        return;
+      }
+
+      setErro("A confirmação ainda não foi detectada. Verifique se clicou no link recebido no seu e-mail.");
+    } catch {
+      setErro("Não foi possível verificar o status agora. Tente novamente em instantes.");
+    } finally {
+      setChecandoLink(false);
+    }
   };
 
   const handleVerificarOtp = async (e: React.FormEvent) => {
@@ -101,6 +157,16 @@ export function AuthCard() {
 
       if (res.error) throw res.error;
 
+      // Sincroniza verificado = 1 na tabela usuarios do Postgres
+      try {
+        await supabase
+          .from("usuarios")
+          .update({ verificado: 1 })
+          .eq("email", email.trim());
+      } catch (dbErr) {
+        console.warn("Aviso ao atualizar verificado=1:", dbErr);
+      }
+
       if (typeof window !== "undefined") {
         if (nome.trim()) localStorage.setItem("lemmas_user_name", nome.trim());
         localStorage.setItem("lemmas_user_email", email.trim());
@@ -122,14 +188,21 @@ export function AuthCard() {
     setMensagemSucesso(null);
     setReenviando(true);
     try {
+      const redirectUri = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=/onboarding`
+        : "/auth/callback?next=/onboarding";
+
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: email.trim(),
+        options: {
+          emailRedirectTo: redirectUri,
+        },
       });
       if (error) throw error;
-      setMensagemSucesso("Novo código de verificação enviado! Cheque sua caixa de entrada e spam.");
+      setMensagemSucesso("Novo e-mail com link e código de confirmação enviado! Cheque sua caixa de entrada e spam.");
     } catch (err: any) {
-      setErro(err?.message || "Não foi possível reenviar o código agora. Tente novamente em instantes.");
+      setErro(err?.message || "Não foi possível reenviar o e-mail agora. Tente novamente em instantes.");
     } finally {
       setReenviando(false);
     }
@@ -289,9 +362,9 @@ export function AuthCard() {
             router.push("/onboarding");
           }, 800);
         } else {
-          // Confirmação de e-mail ativa: código/link enviado para a caixa de entrada
+          // Confirmação de e-mail ativa: link e código enviados para a caixa de entrada
           setAguardandoCodigo(true);
-          setMensagemSucesso(`Enviamos um código de verificação para ${email.trim()}. Digite os 6 dígitos abaixo:`);
+          setMensagemSucesso(`Enviamos um link de confirmação para ${email.trim()}. Clique nele para ativar sua conta ou use o código:`);
         }
       } catch (err: any) {
         setErro(err?.message || "Erro ao criar conta. Tente novamente.");
@@ -320,7 +393,7 @@ export function AuthCard() {
         }, 600);
       } catch (err: any) {
         if (err?.message?.toLowerCase().includes("email not confirmed")) {
-          setErro("Seu e-mail ainda não foi confirmado. Digite o código de 6 dígitos enviado para sua caixa de entrada.");
+          setErro("Seu e-mail ainda não foi confirmado. Clique no link que enviamos para sua caixa de entrada ou digite o código abaixo.");
           setAguardandoCodigo(true);
         } else {
           setErro(
@@ -359,82 +432,78 @@ export function AuthCard() {
         )}
 
         {aguardandoCodigo ? (
-          /* TELA DE DIGITAÇÃO DO CÓDIGO DE VERIFICAÇÃO */
-          <div className="space-y-5 animate-fadeIn">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto">
-              <ShieldCheck size={24} />
+          /* TELA DE CONFIRMAÇÃO POR LINK DE E-MAIL */
+          <div className="space-y-6 animate-fadeIn text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+              <Mail size={32} className="animate-pulse" />
             </div>
 
-            <div className="text-center space-y-1">
-              <h3 className="text-xl font-serif-math font-bold text-slate-900 dark:text-[#f5f0df]">
-                Confirmar seu E-mail
+            <div className="space-y-2">
+              <h3 className="text-2xl font-serif-math font-bold text-slate-900 dark:text-[#f5f0df]">
+                Confirme seu E-mail
               </h3>
               <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
-                Enviamos um código de verificação de 6 dígitos para:
+                Enviamos um link de ativação para:
               </p>
-              <p className="text-xs font-bold text-amber-600 dark:text-[#d9b452] font-mono">
+              <div className="inline-block px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-mono font-bold text-amber-700 dark:text-[#d9b452] break-all">
                 {email}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-xs space-y-2 text-slate-700 dark:text-zinc-300 text-left">
+              <p className="font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                Basta 1 clique para ativar sua conta:
+              </p>
+              <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+                Abra seu e-mail e clique no botão <strong>Confirm your email</strong>. Sua conta será confirmada na hora e liberará o acesso à plataforma.
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-zinc-500 italic pt-1 border-t border-slate-200/60 dark:border-zinc-800">
+                Não encontrou? Dê uma olhada na pasta de Spam ou Lixo Eletrônico.
               </p>
             </div>
 
-            <form onSubmit={handleVerificarOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="codigo-otp" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center justify-center gap-1.5">
-                  <KeyRound size={14} className="text-amber-500" /> Digite o Código de 6 Dígitos
-                </label>
-                <input
-                  type="text"
-                  id="codigo-otp"
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoFocus
-                  value={codigoOtp}
-                  onChange={(e) => setCodigoOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="000000"
-                  className="w-full text-center tracking-[0.4em] font-mono text-2xl py-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold"
-                  required
-                />
-              </div>
-
+            <div className="space-y-3">
               <button
-                type="submit"
-                disabled={loading || codigoOtp.length < 6}
+                type="button"
+                onClick={handleChecarStatusConfirmacao}
+                disabled={checandoLink}
                 className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-50"
               >
-                {loading ? (
+                {checandoLink ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> Verificando...
+                    <Loader2 size={16} className="animate-spin" /> Verificando ativação...
                   </>
                 ) : (
                   <>
-                    Validar Código e Acessar <ArrowRight size={16} />
+                    Já cliquei no link do e-mail <ArrowRight size={16} />
                   </>
                 )}
               </button>
-            </form>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
-              <button
-                type="button"
-                onClick={handleReenviarCodigo}
-                disabled={reenviando}
-                className="text-slate-600 dark:text-zinc-400 hover:text-amber-500 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <RotateCcw size={13} className={reenviando ? "animate-spin" : ""} />
-                <span>{reenviando ? "Reenviando..." : "Não recebeu? Reenviar código"}</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
+                <button
+                  type="button"
+                  onClick={handleReenviarCodigo}
+                  disabled={reenviando}
+                  className="text-slate-600 dark:text-zinc-400 hover:text-amber-500 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <RotateCcw size={13} className={reenviando ? "animate-spin" : ""} />
+                  <span>{reenviando ? "Reenviando..." : "Não recebeu? Reenviar e-mail"}</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setAguardandoCodigo(false);
-                  setErro(null);
-                  setMensagemSucesso(null);
-                }}
-                className="text-amber-600 dark:text-[#d9b452] font-semibold hover:underline cursor-pointer"
-              >
-                Corrigir e-mail / Voltar
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAguardandoCodigo(false);
+                    setErro(null);
+                    setMensagemSucesso(null);
+                  }}
+                  className="text-amber-600 dark:text-[#d9b452] font-semibold hover:underline cursor-pointer"
+                >
+                  Corrigir e-mail / Voltar
+                </button>
+              </div>
             </div>
           </div>
         ) : (
