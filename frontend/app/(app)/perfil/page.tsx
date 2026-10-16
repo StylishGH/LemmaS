@@ -27,7 +27,8 @@ import {
   Search,
   Compass,
   Award,
-  Binary
+  Binary,
+  AlertTriangle
 } from "lucide-react";
 import { useUserProfile, getInitials } from "@/lib/use-user";
 
@@ -578,9 +579,15 @@ export default function PerfilPage() {
                 <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
                   {nome || "Estudante Convidado"}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Verificado
-                </span>
+                {profile.emailVerificado ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5" /> E-mail Verificado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] text-[11px] font-bold">
+                    <AlertTriangle className="w-3.5 h-3.5" /> E-mail Não Verificado
+                  </span>
+                )}
               </div>
               <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 font-medium">
                 {escolaridade || "Ensino Superior"} • {faculdade || "Universidade"}
