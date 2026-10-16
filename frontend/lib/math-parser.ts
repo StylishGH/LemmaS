@@ -181,6 +181,17 @@ export function autoWrapLatexExpressions(text: string): string {
   // 8. Radicais soltos: \sqrt{...}, \sqrt[3]{...}
   res = res.replace(/(?<!\$)(\\sqrt(?:\[[0-9]+\])?\{[^}]+\})(?!\$)/g, "$$$1$$");
 
+  // 9. Comandos geométricos soltos: \triangle ABC \sim \triangle DEF, \angle ABC
+  res = res.replace(/(?<!\$)(\\triangle\s+[A-Za-z0-9]+(?:\s*\\sim\s*\\triangle\s+[A-Za-z0-9]+)?)(?!\$)/g, "$$$1$$");
+  res = res.replace(/(?<!\$)(\\angle\s+[A-Za-z0-9]+(?:\s*=\s*[^,\n.]+)?)(?!\$)/g, "$$$1$$");
+
+  // 10. Frações e vetores soltos: \frac{a}{b} = \frac{c}{d}, \overrightarrow{AB} + \overrightarrow{CD}
+  res = res.replace(/(?<!\$)(\\frac\{[^{}]*\}\{[^{}]*\}(?:\s*=\s*\\frac\{[^{}]*\}\{[^{}]*\})*)(?!\$)/g, "$$$1$$");
+  res = res.replace(/(?<!\$)(\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)(?!\$)/g, "$$$1$$");
+
+  // 11. Semelhança solta: A \sim B
+  res = res.replace(/(?<!\$)\b([a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+)(?!\$)/g, "$$$1$$");
+
   return res;
 }
 

@@ -5,9 +5,9 @@
  */
 
 const GEMINI_MODELS = [
+  "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
   "gemini-3-flash-preview",
-  "gemini-flash-lite-latest",
 ];
 
 export interface GeminiContentOptions {
@@ -103,7 +103,9 @@ export async function generateGeminiContent(
 
       const data = await res.json();
       const candidate = data.candidates?.[0];
-      const text = candidate?.content?.parts?.[0]?.text || "";
+      const candidateParts = candidate?.content?.parts || [];
+      const textPart = candidateParts.find((p: any) => p.text && !p.thought) || candidateParts[0];
+      const text = textPart?.text || "";
 
       if (!text) {
         throw new Error("Gemini retornou conteúdo vazio.");

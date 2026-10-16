@@ -193,17 +193,22 @@ export async function GET(req: NextRequest) {
 
     // Revisões SM-2 reais enriquecidas com questões
     const revisoesIds = (revisoesRaw || []).map((r: any) => r.item_id).filter(Boolean);
-    const questoesRevisaoMap: Record<number, { materia: string; topico: string }> = {};
+    const questoesRevisaoMap: Record<number, { materia: string; topico: string; lema_id?: number | null; lema_codigo?: string | null }> = {};
 
     if (revisoesIds.length > 0) {
       const { data: questoesRevisao } = await supabase
         .from("questoes")
-        .select("id, materia, topico")
+        .select("id, materia, topico, lema_id, lema_codigo")
         .in("id", revisoesIds);
 
       if (questoesRevisao) {
         questoesRevisao.forEach((q: any) => {
-          questoesRevisaoMap[q.id] = normalizarMateriaETopico(q.materia, q.topico);
+          const norm = normalizarMateriaETopico(q.materia, q.topico);
+          questoesRevisaoMap[q.id] = {
+            ...norm,
+            lema_id: q.lema_id,
+            lema_codigo: q.lema_codigo,
+          };
         });
       }
     }
@@ -214,7 +219,11 @@ export async function GET(req: NextRequest) {
     const amanhaIsoStr = amanha.toISOString().split("T")[0];
 
     const revisoes = ((revisoesRaw as any[]) || []).map((r) => {
-      const qInfo = questoesRevisaoMap[r.item_id] || normalizarMateriaETopico(undefined, undefined);
+      const qInfo = questoesRevisaoMap[r.item_id] || {
+        ...normalizarMateriaETopico(undefined, undefined),
+        lema_id: null,
+        lema_codigo: null,
+      };
       let status = "Hoje";
       let cor = "text-rose-500 bg-rose-500/10 border-rose-500/20";
 
@@ -241,6 +250,8 @@ export async function GET(req: NextRequest) {
         questao_id: r.item_id,
         materia: qInfo.materia,
         topico: qInfo.topico,
+        lema_id: qInfo.lema_id,
+        lema_codigo: qInfo.lema_codigo,
         repeticoes: r.repeticoes || 1,
         intervalo_dias: r.intervalo_dias || 1,
         status,

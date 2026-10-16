@@ -20,6 +20,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useUserProfile } from "@/lib/use-user";
+import LemaBadge from "@/components/math/LemaBadge";
 
 interface HistoricoItem {
   id: number;
@@ -40,6 +41,8 @@ interface RevisaoItem {
   intervalo_dias: number;
   status: string;
   cor: string;
+  lema_id?: number | null;
+  lema_codigo?: string | null;
 }
 
 export default function DashboardPage() {
@@ -527,12 +530,12 @@ export default function DashboardPage() {
                   key={i}
                   className="p-3.5 rounded-xl border border-slate-200/80 dark:border-amber-500/15 bg-slate-50/50 dark:bg-[#161426] flex items-center justify-between gap-3 hover:border-amber-500/35 transition-colors"
                 >
-                  <div>
-                    <div className="font-semibold text-xs text-slate-900 dark:text-[#f5f0df]">
-                      Lema #{r.questao_id} · {r.materia === "Matemática" || r.materia === "Geral" ? "Matemática Básica" : r.materia}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <LemaBadge lemaCodigo={r.lema_codigo} lemaId={r.lema_id || r.questao_id} variant="pill" />
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {r.topico === "Geral" || !r.topico ? "Conceitos Fundamentais" : r.topico} (Ciclo #{r.repeticoes})
+                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 pl-1">
+                      {r.materia === "Matemática" || r.materia === "Geral" ? "Matemática Básica" : r.materia} • {r.topico === "Geral" || !r.topico ? "Conceitos Fundamentais" : r.topico} (Ciclo #{r.repeticoes})
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

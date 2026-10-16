@@ -147,3 +147,7 @@ IMPLEMENTATION_AND_INSTRUCTIONS.md
 RELATORIO*.md
 RELATORIO_*.md
 
+# Supabase CLI e SQL Temporários
+supabase/.temp/
+data/repertorio/temp_sql/
+
