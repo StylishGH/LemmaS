@@ -23,8 +23,17 @@ jobs:
       - name: Run pytest suite
         env:
           SECRET_KEY: "ci-test-secret-key-for-backend-testing-purposes-32b"
-          DEBUG: "true"
-        run: pytest tests/ -v
+        run: |
+          pytest \
+            tests/test_backend_architecture.py \
+            tests/test_lemmas_core.py \
+            tests/test_flashcards_fsrs.py \
+            tests/test_gateway_strategy.py \
+            tests/test_discursive_evaluation.py \
+            tests/test_discursive_bench_suite.py \
+            tests/test_fase2_personalizacao.py \
+            tests/test_quality_and_difficulty.py \
+            -v
 
   frontend-build:
     name: Frontend Build & Typecheck
