@@ -49,6 +49,7 @@ import SpenSmartCanvas from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import ThoughtLine from "@/components/ui/thought-line";
+import LemaBadge from "@/components/math/LemaBadge";
 
 interface Question {
   id: number;
@@ -69,6 +70,8 @@ interface Question {
   pais?: string;
   solucao?: string;
   estrategias_esperadas?: string | string[] | null;
+  lema_id?: number | null;
+  lema_codigo?: string | null;
 }
 
 interface SubmitResult {
@@ -117,6 +120,23 @@ interface DiscursiveEvaluationResult {
   transcricao_latex?: string;
   linha_do_erro?: string;
   dica_proximo_passo?: string;
+}
+
+/**
+ * Detecta se o campo gabarito contém resíduos numéricos, hashes ou decimais espúrios
+ * originados de importações de datasets (ex: 1.062887, hashes hexadecimais ou floats em questões discursivas).
+ */
+function isSpuriousGabarito(gabarito?: string | null, isDiscursiva: boolean = false): boolean {
+  if (!gabarito || typeof gabarito !== "string") return true;
+  const trimmed = gabarito.trim();
+  if (!trimmed) return true;
+  // Decimal puro com 3 ou mais casas decimais (artefatos de importação AoPS/Kaggle ex: 1.062887)
+  if (/^\s*-?\d+\.\d{3,}\s*$/.test(trimmed)) return true;
+  // Hashes hexadecimais ou IDs de dataset
+  if (/^[a-fA-F0-9]{8,}$/.test(trimmed)) return true;
+  // Em questões discursivas de demonstração geométrica, números decimais isolados sem texto explicativo
+  if (isDiscursiva && /^\s*-?\d+(?:\.\d+)?\s*$/.test(trimmed)) return true;
+  return false;
 }
 
 // Modal de Login
@@ -805,7 +825,7 @@ function ResolverContent() {
             resultado_final_correto: false,
             etapas_corretas: [],
             erros_identificados: ["Resolução oficial revelada via 5ª Dica Socrática (Rendição Pedagógica)."],
-            feedback_latex: `\\text{Gabarito Oficial Revelado via 5ª Dica Socrática: } ${resOficial}`,
+            feedback_latex: "Questão encerrada por consulta à Resolução Completa (Nível 5). A resolução comentada passo a passo está disponível no card do Tutor Socrático abaixo.",
             diagnostico: "Resolução oficial revelada via 5ª Dica Socrática. Tentativa computada como incorreta (Nota 0 / SM-2) para fixação pedagógica.",
             precisa_revisao_humana: false,
           };
@@ -1499,13 +1519,16 @@ function ResolverContent() {
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2.5">
                       <span className="font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 font-bold">
                         Questão #{originalIndex + 1}
                       </span>
                       <span className="text-xs text-slate-500 font-semibold">
                         {q.banca} {q.ano} · {q.materia} ({q.topico})
                       </span>
+                      {(q.lema_codigo || q.lema_id) && (
+                        <LemaBadge lemaCodigo={q.lema_codigo} lemaId={q.lema_id} variant="compact" />
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -2249,8 +2272,13 @@ function ResolverContent() {
       {/* CARD DO ENUNCIADO */}
       <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
-            {currentQ?.materia} • <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
+              {currentQ?.materia} • <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
+            </div>
+            {(currentQ?.lema_codigo || currentQ?.lema_id) && (
+              <LemaBadge lemaCodigo={currentQ?.lema_codigo} lemaId={currentQ?.lema_id} />
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -2452,45 +2480,59 @@ function ResolverContent() {
 
             {/* CASO 4: INCORRETO */}
             {!discursiveEval.precisa_revisao_humana && discursiveEval.veredito === "incorreto" && (
-              <div className="p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/10 text-slate-800 dark:text-[#f5f0df] text-xs space-y-3.5 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-500/20">
+              hint5Used[currentIndex] ? (
+                <div className="p-3.5 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-3 shadow-xs">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white shadow-xs">
-                      <XCircle className="w-3.5 h-3.5" />
-                      [DESENVOLVIMENTO INCORRETO]
-                    </span>
-                    <span className="font-bold text-xs text-rose-700 dark:text-rose-400">
-                      ✗ Desenvolvimento Incorreto
+                    <XCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span className="font-bold">
+                      ❌ Questão encerrada por consulta à Resolução Completa (Nível 5)
                     </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 border border-rose-500/40 text-rose-700 dark:text-rose-300">
-                    Demonstração Não Validada
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-rose-600 text-white shrink-0">
+                    Nota 0 · Repetição Diária (SM-2)
                   </span>
                 </div>
-
-                <div className="leading-relaxed space-y-1">
-                  <strong className="text-rose-700 dark:text-rose-400 block text-xs">Parecer da Banca:</strong>
-                  <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
-                    <MathText text={discursiveEval.feedback_latex} />
+              ) : (
+                <div className="p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/10 text-slate-800 dark:text-[#f5f0df] text-xs space-y-3.5 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-500/20">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white shadow-xs">
+                        <XCircle className="w-3.5 h-3.5" />
+                        [DESENVOLVIMENTO INCORRETO]
+                      </span>
+                      <span className="font-bold text-xs text-rose-700 dark:text-rose-400">
+                        ✗ Desenvolvimento Incorreto
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 border border-rose-500/40 text-rose-700 dark:text-rose-300">
+                      Demonstração Não Validada
+                    </span>
                   </div>
+
+                  <div className="leading-relaxed space-y-1">
+                    <strong className="text-rose-700 dark:text-rose-400 block text-xs">Parecer da Banca:</strong>
+                    <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
+                      <MathText text={discursiveEval.feedback_latex} />
+                    </div>
+                  </div>
+
+                  {discursiveEval.erros_identificados.length > 0 && (
+                    <div className="space-y-1 pt-1.5 border-t border-rose-500/20">
+                      <strong className="text-rose-700 dark:text-rose-400 block font-semibold text-[11px]">Erros Identificados no Raciocínio:</strong>
+                      <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
+                        {discursiveEval.erros_identificados.map((erro, idx) => (
+                          <li key={idx}><MathText text={erro} /></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-
-                {discursiveEval.erros_identificados.length > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-rose-500/20">
-                    <strong className="text-rose-700 dark:text-rose-400 block font-semibold text-[11px]">Erros Identificados no Raciocínio:</strong>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
-                      {discursiveEval.erros_identificados.map((erro, idx) => (
-                        <li key={idx}><MathText text={erro} /></li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              )
             )}
 
             {/* GABARITO DE REFERÊNCIA & CRONOGRAMA SM-2 (UNIFICADO NO CONTAINER DISCURSIVO) */}
             <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2 text-xs">
-              {currentQ.gabarito && (
+              {currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex] && (
                 <div className="space-y-1">
                   <span className="font-bold text-slate-700 dark:text-zinc-200 text-xs block">
                     Gabarito / Resolução de Referência Oficial:

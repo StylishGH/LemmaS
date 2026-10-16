@@ -36,6 +36,13 @@ export function cleanLatexForKatex(latex: string): string {
   clean = clean.replace(/\\end\{align\*?\}/g, "\\end{aligned}");
   // Remove cursor pipe | residual comum no final de expressões geradas por LLM
   clean = clean.replace(/(?:\\text\{[^\}]*\}|\d+|\})\s*\|\s*$/g, "$1");
+  // Corrige parênteses angulares desbalanceados (\right\rangle sem \left\langle ou vice-versa)
+  if (clean.includes("\\right\\rangle") && !clean.includes("\\left\\langle")) {
+    clean = clean.replace(/\\right\\rangle/g, "\\rangle");
+  }
+  if (clean.includes("\\left\\langle") && !clean.includes("\\right\\rangle")) {
+    clean = clean.replace(/\\left\\langle/g, "\\langle");
+  }
   // Converte barras invertidas duplas desnecessárias
   clean = clean.replace(/\\\\(?=[a-zA-Z])/g, "\\");
   return clean;
@@ -154,6 +161,14 @@ export function sanitizeMathText(raw: string): string {
   if (!raw || typeof raw !== "string") return "";
 
   let text = raw.replace(/\r\n/g, "\n");
+  // Remove tags <img> HTML com src vazio, nulo ou inválido
+  text = text.replace(/<img[^>]*src=["']\s*(?:null|undefined)?\s*["'][^>]*>/gi, "");
+  text = text.replace(/<img[^>]*src=["']\s*["'][^>]*>/gi, "");
+  // Remove blocos de código Asymptote crus ([asy]...[/asy]) importados de bancos AoPS
+  text = text.replace(/\[asy\][\s\S]*?\[\/asy\]/gi, "");
+  text = text.replace(/\\\[asy\\\][\s\S]*?\\\[\/asy\\\]/gi, "");
+  // Remove placeholders markdown de imagem com url vazia/inválida
+  text = text.replace(/!\[(.*?)\]\(\s*(?:null|undefined)?\s*\)/gi, "");
   // Remove artefatos de \undefined ou undefined gerados por modelos
   text = text.replace(/\\?undefined\s*/gi, "");
   // Normaliza blocos de código markdown com math/latex
@@ -173,7 +188,7 @@ export function sanitizeMathText(raw: string): string {
       return line;
     }
 
-    const hasLatexCmd = /\\(?:frac|sqrt|sum|int|lim|cdot|times|div|pm|le|ge|neq|implies|iff|text|alpha|beta|theta|pi|partial|in|to)\b/.test(l);
+    const hasLatexCmd = /\\(?:triangle|overrightarrow|overline|vec|hat|angle|sim|perp|parallel|cong|circ|frac|sqrt|sum|int|lim|cdot|times|div|pm|mp|le|ge|neq|approx|equiv|implies|iff|text|alpha|beta|gamma|theta|pi|partial|in|to)\b/.test(l);
     const hasEquation = /[a-zA-Z0-9]\s*=\s*[^=]+/.test(l);
 
     if (hasLatexCmd || hasEquation) {
@@ -255,6 +270,17 @@ export function renderMathText(text: string) {
   if (!preprocessed.includes("$")) {
     preprocessed = autoWrapLatexExpressions(preprocessed);
   }
+
+  // Auto-envolve expressões matemáticas com comandos LaTeX soltos que vieram sem delimitadores $ (ex: \triangle OXM \sim \triangle OYN, \frac{XM}{YN} = \frac{OM}{ON})
+  const looseMathRegex = /(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+[A-Za-z0-9]+(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to|\\sim|\\approx|\\perp|\\parallel|\\cong)\s*(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+)?[A-Za-z0-9]+)*|\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to)\s*(?:\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|[a-zA-Z0-9_{}^]+))*|\\(?:sqrt|sum|int|lim)\b(?:\{[^{}]*\}|\[[^\]]*\])*(?:[a-zA-Z0-9_{}^+\-*\/=<>]+)*|\b[a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+|\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)+/g;
+
+  const tempParts = preprocessed.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$)/g);
+  for (let i = 0; i < tempParts.length; i += 2) {
+    if (tempParts[i]) {
+      tempParts[i] = tempParts[i].replace(looseMathRegex, (m) => `$${m.trim()}$`);
+    }
+  }
+  preprocessed = tempParts.join("");
 
   // 2. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
   const stage1Parts: Array<{ type: "text" | "block"; content: string }> = [];
@@ -437,7 +463,10 @@ function FormattedTextChunk({ content }: { content: string }) {
         const imgMatch = imgPart.match(/^!\[(.*?)\]\((.*?)\)$/);
         if (imgMatch) {
           const alt = imgMatch[1];
-          const rawUrl = imgMatch[2];
+          const rawUrl = imgMatch[2]?.trim();
+          if (!rawUrl || rawUrl === "null" || rawUrl === "undefined" || rawUrl.includes("[asy]") || rawUrl.startsWith("asy:")) {
+            return null;
+          }
           return (
             <span key={`img-${imgIdx}`} className="my-3 block text-center clear-both">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -448,9 +477,15 @@ function FormattedTextChunk({ content }: { content: string }) {
                 loading="lazy"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  if (!target.dataset.fallback) {
+                  const fallbackUrl = getFallbackFigureUrl(rawUrl);
+                  if (!target.dataset.fallback && fallbackUrl && fallbackUrl !== target.src) {
                     target.dataset.fallback = "1";
-                    target.src = getFallbackFigureUrl(rawUrl);
+                    target.src = fallbackUrl;
+                  } else {
+                    target.style.display = "none";
+                    if (target.parentElement) {
+                      target.parentElement.style.display = "none";
+                    }
                   }
                 }}
               />

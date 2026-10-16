@@ -199,7 +199,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
           .from("questoes")
           .select(
-            "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas",
+            "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas, lema_id, lema_codigo",
             { count: "exact" }
           );
 
@@ -208,6 +208,19 @@ export async function GET(req: NextRequest) {
     if (categoriaBancaValues.length > 0) {
       const cond = categoriaBancaValues.map((v) => `categoria_banca.ilike.%${esc(v)}%`).join(",");
       query = query.or(cond);
+    }
+
+    // Filtro por Lema (Código ou ID)
+    const lemaParam = searchParams.get("lema") || searchParams.get("lema_codigo");
+    if (lemaParam) {
+      const cleanLema = lemaParam.trim().toUpperCase();
+      if (cleanLema.startsWith("LEMA-")) {
+        query = query.eq("lema_codigo", cleanLema);
+      } else if (!isNaN(Number(cleanLema))) {
+        query = query.or(`lema_id.eq.${cleanLema},lema_codigo.eq.LEMA-${cleanLema.padStart(4, "0")}`);
+      } else {
+        query = query.eq("lema_codigo", cleanLema);
+      }
     }
 
     // Filtro por Tipo de Prova (ex: "Oficial,Seleção e Treinamento")
@@ -767,7 +780,7 @@ export async function POST(req: NextRequest) {
 
     let query = supabase
       .from("questoes")
-      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, gabarito, tipo, edicao, etapa, tipo_material, pais, solucao, categoria_banca, tipo_prova, fase_nivel, estrategias_esperadas", { count: "exact" });
+      .select("id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, gabarito, tipo, edicao, etapa, tipo_material, pais, solucao, categoria_banca, tipo_prova, fase_nivel, estrategias_esperadas, lema_id, lema_codigo", { count: "exact" });
 
     if (Array.isArray(ids) && ids.length > 0) {
       query = query
@@ -865,6 +878,17 @@ export async function POST(req: NextRequest) {
           }
         });
         if (conds.length > 0) query = query.or(conds.join(","));
+      }
+
+      if (filters.lema || filters.lema_codigo) {
+        const cleanLema = String(filters.lema || filters.lema_codigo).trim().toUpperCase();
+        if (cleanLema.startsWith("LEMA-")) {
+          query = query.eq("lema_codigo", cleanLema);
+        } else if (!isNaN(Number(cleanLema))) {
+          query = query.or(`lema_id.eq.${cleanLema},lema_codigo.eq.LEMA-${cleanLema.padStart(4, "0")}`);
+        } else {
+          query = query.eq("lema_codigo", cleanLema);
+        }
       }
 
       query = query
