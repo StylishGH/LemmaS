@@ -5,9 +5,9 @@
  */
 
 const GEMINI_MODELS = [
-  "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
   "gemini-3-flash-preview",
+  "gemini-flash-lite-latest",
 ];
 
 export interface GeminiContentOptions {

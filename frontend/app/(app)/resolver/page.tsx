@@ -682,6 +682,10 @@ function ResolverContent() {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           enunciado: q.enunciado,
+          topico: q.topico || "Matemática",
+          subtopico: q.subtopico || null,
+          gabarito: q.gabarito || null,
+          solucao: q.solucao || null,
           nivel: hintLevel,
           tentativas_anteriores: justificativas[currentIndex] || answers[currentIndex] || null,
           pedagogical_preference: prefPedagogica,
@@ -1565,6 +1569,303 @@ function ResolverContent() {
     setJumpValue("");
   };
 
+  // Renderizador Unificado da Bancada de Resolução (Lousa, Geometria & OCR)
+  const renderBancadaResolucao = () => (
+    <div
+      ref={bancadaRef}
+      id="bancada-resolucao"
+      className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 scroll-mt-6 animate-fadeIn"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {isDiscursiva ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
+              <Sparkles className="w-3 h-3" />
+              QUESTÃO DISCURSIVA
+            </span>
+          ) : (
+            <PenTool className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
+          )}
+          <h4 className="font-serif-math text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
+            {isDiscursiva ? "Bancada de Resolução do Estudante" : "Bancada de Rascunho & Ferramentas"}
+          </h4>
+        </div>
+
+        {/* ABAS RÁPIDAS DA BANCADA */}
+        <div className="flex items-center gap-1.5 overflow-x-auto select-none">
+          <button
+            type="button"
+            onClick={() => {
+              if (bancadaModo === "lousa") {
+                setBancadaModo(null);
+              } else {
+                ativarEIrParaBancada("lousa");
+              }
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              bancadaModo === "lousa"
+                ? "lemmas-gold-cta font-bold shadow-xs scale-105"
+                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+            }`}
+            title="Lousa com Pointer Events e rejeição de palma para rascunhos"
+          >
+            <PenTool className="w-3.5 h-3.5" />
+            <span>Lousa de Rascunho</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (bancadaModo === "geometria") {
+                setBancadaModo(null);
+              } else {
+                ativarEIrParaBancada("geometria");
+              }
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              bancadaModo === "geometria"
+                ? "bg-sky-500 text-white font-bold shadow-xs scale-105"
+                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+            }`}
+            title="Quadro Euclidiano com régua, compasso e script de lemas"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Geometria Euclidiana</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (bancadaModo === "texto") {
+                setBancadaModo(null);
+              } else {
+                ativarEIrParaBancada("texto");
+              }
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              bancadaModo === "texto"
+                ? "bg-purple-600 text-white font-bold shadow-xs scale-105"
+                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-purple-500/35"
+            }`}
+            title="Dedução digitada em texto ou envio de foto para OCR"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Dedução & OCR</span>
+          </button>
+        </div>
+      </div>
+
+      {/* DICA QUANDO NENHUM MODO DA BANCADA ESTÁ ATIVO */}
+      {!bancadaModo && isDiscursiva && (
+        <div className="p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/5 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
+          Esta questão exige desenvolvimento. Escolha acima uma ferramenta: use a <strong>Lousa</strong> para desenhar ou calcular à mão com a caneta/S-Pen, a <strong>Geometria</strong> para traçados com régua e compasso, ou <strong>Dedução & OCR</strong> para digitar ou fotografar seu caderno.
+        </div>
+      )}
+
+      {!bancadaModo && !isDiscursiva && (
+        <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans italic pt-0.5">
+          Selecione uma das ferramentas acima para abrir a Lousa de Rascunho, a Bancada de Geometria ou enviar sua Dedução/OCR para a MathAI Engine.
+        </p>
+      )}
+
+      {/* CONTEÚDO ATIVO DA BANCADA */}
+      {bancadaModo === "lousa" && (
+        <div className="space-y-3 animate-fadeIn">
+          <MathScratchpad
+            onExportBase64={(b64, hasStrokes) => {
+              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
+              setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+            }}
+            onEvaluate={(b64) => {
+              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
+              setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+              submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
+            }}
+            isEvaluating={loadingDiscursive}
+            onClose={() => setBancadaModo(null)}
+          />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
+            <div className="text-xs text-slate-700 dark:text-zinc-300">
+              <strong className="text-amber-700 dark:text-[#d9b452] block">Avaliação do Rascunho da Lousa:</strong>
+              <span>Você pode clicar diretamente em &quot;Avaliar Rascunho&quot; na barra superior da Lousa para processar sua caligrafia com a MathAI Engine.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const img = imageFiles[currentIndex];
+                if (img) {
+                  submeterResolucaoDiscursiva("lousa", { imagemBase64: img });
+                } else {
+                  alert("Por favor, clique em 'Avaliar Rascunho' na barra de ferramentas da Lousa para capturar seu rascunho com o digitalizador.");
+                }
+              }}
+              disabled={loadingDiscursive}
+              className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
+            >
+              {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
+              <span>Avaliar Rascunho da Lousa com MathAI Engine</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bancadaModo === "geometria" && (
+        <div className="space-y-3 animate-fadeIn">
+          <GeometricCompassBoard
+            onCommandsChange={(cmds) => setGeometricCommands((prev) => ({ ...prev, [currentIndex]: cmds }))}
+            onClose={() => setBancadaModo(null)}
+          />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-sky-500/30 bg-sky-500/5">
+            <div className="text-xs text-slate-700 dark:text-zinc-300">
+              <strong className="text-sky-600 dark:text-sky-400 block">Validação da Construção Euclidiana:</strong>
+              <span>Envie os passos e propriedades da sua construção com régua, compasso e lemas para avaliação da MathAI Engine.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const geoCmds = geometricCommands[currentIndex] || [];
+                const desc = geoCmds.length > 0
+                  ? `Construção Euclidiana executada:\n${geoCmds.join("\n")}${justificativas[currentIndex] ? `\n\nNotas do aluno: ${justificativas[currentIndex]}` : ""}`
+                  : (justificativas[currentIndex] || "");
+                submeterResolucaoDiscursiva("geometria", { texto: desc });
+              }}
+              disabled={loadingDiscursive}
+              className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
+            >
+              {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Compass className="w-3.5 h-3.5" />}
+              <span>Avaliar Geometria com MathAI Engine</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bancadaModo === "texto" && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#18152a] space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
+                  <Eye className="w-3 h-3" />
+                  [DADO OBSERVADO]
+                </span>
+                <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                  Raciocínio / Dedução digitada pelo estudante
+                </span>
+              </div>
+            </div>
+            <textarea
+              value={justificativas[currentIndex] || ""}
+              onChange={(e) => setJustificativas({ ...justificativas, [currentIndex]: e.target.value })}
+              placeholder="Descreva seu desenvolvimento matemático passo a passo..."
+              className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[#141222] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono leading-relaxed resize-y"
+              rows={3}
+            />
+          </div>
+
+          <div className="p-4 rounded-xl border-2 border-dashed border-amber-500/35 bg-amber-500/5 text-center space-y-3">
+            <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
+              <Upload className="w-4 h-4 text-amber-500" />
+              <span>Upload de Foto do Caderno / Rascunho da Lousa</span>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 cursor-pointer"
+            />
+            {currentImage && (
+              <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho anexada e pronta para OCR!</p>
+            )}
+
+            <button
+              onClick={() => submeterResolucaoDiscursiva("texto")}
+              disabled={loadingDiscursive || loadingIa || (!currentImage && !justificativas[currentIndex]?.trim())}
+              className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 mx-auto disabled:opacity-40 cursor-pointer shadow-xs"
+            >
+              {loadingDiscursive || loadingIa ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
+              <span>Avaliar Raciocínio com MathAI Engine</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {(loadingDiscursive || loadingIa) && (
+        <div className="p-5 rounded-xl bg-purple-500/5 border border-purple-500/25 text-xs shadow-xs animate-fadeIn">
+          <ThoughtLine
+            working={true}
+            label="MathAI Engine avaliando desenvolvimento…"
+            steps={[
+              "Transcrevendo caligrafia e equações para LaTeX (OCR Multimodal)",
+              "Verificando encadeamento dedutivo e propriedades invariantes",
+              "Confrontando hipóteses e cálculos com o gabarito oficial",
+              "Elaborando diagnóstico pedagógico e lemas recomendados",
+            ]}
+            color="#9333ea"
+            glyphColor="#9333ea"
+            fontSize={13}
+          />
+        </div>
+      )}
+
+      {currentDiagnostico && (
+        <div className="text-left p-5 rounded-xl bg-white dark:bg-[#141222] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-purple-500/20">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
+                <BrainCircuit className="w-3 h-3" />
+                [INFERÊNCIA DA IA]
+              </span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
+                Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
+              </span>
+            </div>
+            {currentDiagnostico.confianca !== undefined && (
+              <div className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+                Confiança: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{typeof currentDiagnostico.confianca === "number" ? `${Math.round(currentDiagnostico.confianca * 100)}%` : currentDiagnostico.confianca}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <div className="font-bold text-amber-600 dark:text-[#d9b452] flex items-center gap-2 text-sm">
+              <span>Diagnóstico: {currentDiagnostico.status_resolucao}</span>
+            </div>
+            <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+              <MathText text={currentDiagnostico.diagnostico} />
+            </div>
+          </div>
+
+          {currentDiagnostico.transcricao_latex && (
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-purple-500/20 space-y-1">
+              <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
+              <div className="text-slate-800 dark:text-zinc-200">
+                <MathText text={currentDiagnostico.transcricao_latex} />
+              </div>
+            </div>
+          )}
+
+          {currentDiagnostico.linha_do_erro && (
+            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 space-y-1">
+              <span className="font-bold text-[11px] uppercase tracking-wider block">Ponto de Desvio / Erro:</span>
+              <div>
+                <MathText text={currentDiagnostico.linha_do_erro} />
+              </div>
+            </div>
+          )}
+
+          {currentDiagnostico.dica_proximo_passo && (
+            <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1c1730] border border-purple-500/20 space-y-1">
+              <span className="font-bold text-[11px] text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Lema / Próximo Passo:</span>
+              <div className="text-slate-800 dark:text-zinc-200">
+                <MathText text={currentDiagnostico.dica_proximo_passo} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto py-6 space-y-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
       {/* BARRA SUPERIOR DO SIMULADOR / TREINO */}
@@ -1801,55 +2102,8 @@ function ResolverContent() {
           </div>
         )}
 
-        {/* BANNER DE QUESTÃO DISCURSIVA (CTA PARA BANCADA DE RESOLUÇÃO) */}
-        {isDiscursiva && (
-          <div className="rounded-2xl border border-amber-500/35 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5 md:p-6 space-y-4 shadow-sm animate-fadeIn">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
-                  <Sparkles className="w-3 h-3" />
-                  QUESTÃO DISCURSIVA
-                </span>
-                <h4 className="font-serif-math text-sm md:text-base font-bold text-slate-900 dark:text-[#f5f0df]">
-                  Resolução Analítica na Bancada
-                </h4>
-              </div>
-              <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
-                Esta questão exige desenvolvimento. Utilize uma das ferramentas da Bancada de Resolução abaixo para construir sua prova, escrever os cálculos ou enviar foto do seu papel.
-              </p>
-            </div>
-
-            {/* TRÊS ATALHOS RÁPIDOS PARA A BANCADA */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => ativarEIrParaBancada("lousa")}
-                className="p-3 rounded-xl border border-amber-500/30 bg-white/70 dark:bg-[#1a162b] hover:bg-amber-500/15 dark:hover:bg-amber-500/20 text-slate-800 dark:text-[#f5f0df] text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-98 shadow-xs cursor-pointer"
-              >
-                <PenTool className="w-4 h-4 text-amber-600 dark:text-[#d9b452] shrink-0" />
-                <span>Resolver na Lousa de Rascunho</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => ativarEIrParaBancada("geometria")}
-                className="p-3 rounded-xl border border-sky-500/30 bg-white/70 dark:bg-[#1a162b] hover:bg-sky-500/15 dark:hover:bg-sky-500/20 text-slate-800 dark:text-[#f5f0df] text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-98 shadow-xs cursor-pointer"
-              >
-                <Compass className="w-4 h-4 text-sky-500 shrink-0" />
-                <span>Construir na Geometria Euclidiana</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => ativarEIrParaBancada("texto")}
-                className="p-3 rounded-xl border border-purple-500/30 bg-white/70 dark:bg-[#1a162b] hover:bg-purple-500/15 dark:hover:bg-purple-500/20 text-slate-800 dark:text-[#f5f0df] text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-98 shadow-xs cursor-pointer"
-              >
-                <Camera className="w-4 h-4 text-purple-500 shrink-0" />
-                <span>Digitar ou Enviar Foto (Dedução & OCR)</span>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* BANCADA DE RESOLUÇÃO INTEGRADA (PARA QUESTÕES DISCURSIVAS) */}
+        {isDiscursiva && renderBancadaResolucao()}
 
         {/* FEEDBACK ESTRUTURADO DA AVALIAÇÃO DISCURSIVA (MATHAI ENGINE) */}
         {isDiscursiva && discursiveEval && (
@@ -2391,268 +2645,11 @@ function ResolverContent() {
               </div>
             )}
           </div>
+        </>
+      )}
 
-          {/* BANCADA DE ESTUDO INTERATIVA & OCR MULTIMODAL (MODO TREINO E SIMULADO) */}
-          <div ref={bancadaRef} id="bancada-resolucao" className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4 scroll-mt-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <PenTool className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
-                <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
-                  Bancada de Resolução do Estudante (Lousa, Geometria & OCR)
-                </h4>
-              </div>
-
-              {/* ABAS RÁPIDAS DA BANCADA */}
-              <div className="flex items-center gap-1.5 overflow-x-auto select-none">
-                <button
-                  type="button"
-                  onClick={() => setBancadaModo(bancadaModo === "lousa" ? null : "lousa")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    bancadaModo === "lousa"
-                      ? "lemmas-gold-cta font-bold shadow-xs scale-105"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
-                  }`}
-                  title="Lousa com Pointer Events e rejeição de palma para rascunhos"
-                >
-                  <PenTool className="w-3.5 h-3.5" />
-                  <span>Lousa de Rascunho</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBancadaModo(bancadaModo === "geometria" ? null : "geometria")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    bancadaModo === "geometria"
-                      ? "bg-sky-500 text-white font-bold shadow-xs scale-105"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
-                  }`}
-                  title="Quadro Euclidiano com régua, compasso e script de lemas"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Geometria Euclidiana</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBancadaModo(bancadaModo === "texto" ? null : "texto")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    bancadaModo === "texto"
-                      ? "bg-purple-600 text-white font-bold shadow-xs scale-105"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-purple-500/35"
-                  }`}
-                  title="Dedução digitada em texto ou envio de foto para OCR"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Dedução & OCR</span>
-                </button>
-              </div>
-            </div>
-
-            {/* CONTEÚDO ATIVO DA BANCADA */}
-            {bancadaModo === "lousa" && (
-              <div className="space-y-3 animate-fadeIn">
-                <MathScratchpad
-                  onExportBase64={(b64, hasStrokes) => {
-                    setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
-                    setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
-                  }}
-                  onEvaluate={(b64) => {
-                    setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
-                    setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
-                    submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
-                  }}
-                  isEvaluating={loadingDiscursive}
-                  onClose={() => setBancadaModo(null)}
-                />
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
-                  <div className="text-xs text-slate-700 dark:text-zinc-300">
-                    <strong className="text-amber-700 dark:text-[#d9b452] block">Avaliação do Rascunho da Lousa:</strong>
-                    <span>Você pode clicar diretamente em "Avaliar Rascunho" na barra superior da Lousa para processar sua caligrafia com a MathAI Engine.</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const img = imageFiles[currentIndex];
-                      if (img) {
-                        submeterResolucaoDiscursiva("lousa", { imagemBase64: img });
-                      } else {
-                        alert("Por favor, clique em 'Avaliar Rascunho' na barra de ferramentas da Lousa para capturar seu rascunho com o digitalizador.");
-                      }
-                    }}
-                    disabled={loadingDiscursive}
-                    className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
-                  >
-                    {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
-                    <span>Avaliar Rascunho da Lousa com MathAI Engine</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {bancadaModo === "geometria" && (
-              <div className="space-y-3 animate-fadeIn">
-                <GeometricCompassBoard
-                  onCommandsChange={(cmds) => setGeometricCommands((prev) => ({ ...prev, [currentIndex]: cmds }))}
-                  onClose={() => setBancadaModo(null)}
-                />
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-sky-500/30 bg-sky-500/5">
-                  <div className="text-xs text-slate-700 dark:text-zinc-300">
-                    <strong className="text-sky-600 dark:text-sky-400 block">Validação da Construção Euclidiana:</strong>
-                    <span>Envie os passos e propriedades da sua construção com régua, compasso e lemas para avaliação da MathAI Engine.</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const geoCmds = geometricCommands[currentIndex] || [];
-                      const desc = geoCmds.length > 0
-                        ? `Construção Euclidiana executada:\n${geoCmds.join("\n")}${justificativas[currentIndex] ? `\n\nNotas do aluno: ${justificativas[currentIndex]}` : ""}`
-                        : (justificativas[currentIndex] || "");
-                      submeterResolucaoDiscursiva("geometria", { texto: desc });
-                    }}
-                    disabled={loadingDiscursive}
-                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
-                  >
-                    {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Compass className="w-3.5 h-3.5" />}
-                    <span>Avaliar Geometria com MathAI Engine</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {bancadaModo === "texto" && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#18152a] space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
-                        <Eye className="w-3 h-3" />
-                        [DADO OBSERVADO]
-                      </span>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                        Raciocínio / Dedução digitada pelo estudante
-                      </span>
-                    </div>
-                  </div>
-                  <textarea
-                    value={justificativas[currentIndex] || ""}
-                    onChange={(e) => setJustificativas({ ...justificativas, [currentIndex]: e.target.value })}
-                    placeholder="Descreva seu desenvolvimento matemático passo a passo..."
-                    className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[#141222] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono leading-relaxed resize-y"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl border-2 border-dashed border-amber-500/35 bg-amber-500/5 text-center space-y-3">
-                  <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                    <Upload className="w-4 h-4 text-amber-500" />
-                    <span>Upload de Foto do Caderno / Rascunho da Lousa</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 cursor-pointer"
-                  />
-                  {currentImage && (
-                    <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho anexada e pronta para OCR!</p>
-                  )}
-
-                  <button
-                    onClick={() => submeterResolucaoDiscursiva("texto")}
-                    disabled={loadingDiscursive || loadingIa || (!currentImage && !justificativas[currentIndex]?.trim())}
-                    className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 mx-auto disabled:opacity-40 cursor-pointer shadow-xs"
-                  >
-                    {loadingDiscursive || loadingIa ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
-                    <span>Avaliar Raciocínio com MathAI Engine</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* DICA QUANDO NENHUM MODO DA BANCADA ESTÁ ATIVO */}
-            {!bancadaModo && (
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans italic pt-0.5">
-                Selecione uma das ferramentas acima para abrir a Lousa de Rascunho, a Bancada de Geometria ou enviar sua Dedução/OCR para a MathAI Engine.
-              </p>
-            )}
-
-            {(loadingDiscursive || loadingIa) && (
-              <div className="p-5 rounded-xl bg-purple-500/5 border border-purple-500/25 text-xs shadow-xs animate-fadeIn">
-                <ThoughtLine
-                  working={true}
-                  label="MathAI Engine avaliando desenvolvimento…"
-                  steps={[
-                    "Transcrevendo caligrafia e equações para LaTeX (OCR Multimodal)",
-                    "Verificando encadeamento dedutivo e propriedades invariantes",
-                    "Confrontando hipóteses e cálculos com o gabarito oficial",
-                    "Elaborando diagnóstico pedagógico e lemas recomendados",
-                  ]}
-                  color="#9333ea"
-                  glyphColor="#9333ea"
-                  fontSize={13}
-                />
-              </div>
-            )}
-
-                {currentDiagnostico && (
-                  <div className="text-left p-5 rounded-xl bg-white dark:bg-[#141222] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
-                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-purple-500/20">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
-                          <BrainCircuit className="w-3 h-3" />
-                          [INFERÊNCIA DA IA]
-                        </span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
-                          Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
-                        </span>
-                      </div>
-                      {currentDiagnostico.confianca !== undefined && (
-                        <div className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
-                          Confiança: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{typeof currentDiagnostico.confianca === "number" ? `${Math.round(currentDiagnostico.confianca * 100)}%` : currentDiagnostico.confianca}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="font-bold text-amber-600 dark:text-[#d9b452] flex items-center gap-2 text-sm">
-                        <span>Diagnóstico: {currentDiagnostico.status_resolucao}</span>
-                      </div>
-                      <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
-                        <MathText text={currentDiagnostico.diagnostico} />
-                      </div>
-                    </div>
-
-                    {currentDiagnostico.transcricao_latex && (
-                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-purple-500/20 space-y-1">
-                        <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
-                        <div className="text-slate-800 dark:text-zinc-200">
-                          <MathText text={currentDiagnostico.transcricao_latex} />
-                        </div>
-                      </div>
-                    )}
-
-                    {currentDiagnostico.linha_do_erro && (
-                      <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 space-y-1">
-                        <span className="font-bold text-[11px] uppercase tracking-wider block">Ponto de Desvio / Erro:</span>
-                        <div>
-                          <MathText text={currentDiagnostico.linha_do_erro} />
-                        </div>
-                      </div>
-                    )}
-
-                    {currentDiagnostico.dica_proximo_passo && (
-                      <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1c1730] border border-purple-500/20 space-y-1">
-                        <span className="font-bold text-[11px] text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Lema / Próximo Passo:</span>
-                        <div className="text-slate-800 dark:text-zinc-200">
-                          <MathText text={currentDiagnostico.dica_proximo_passo} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+      {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
+      {!isDiscursiva && renderBancadaResolucao()}
 
       {/* NAVEGAÇÃO INFERIOR */}
       <div className="flex items-center justify-between pt-2">
