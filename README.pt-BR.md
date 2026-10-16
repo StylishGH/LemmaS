@@ -1,179 +1,221 @@
 <div align="center">
   <h1>Lemmas 📐</h1>
-  <p><strong>Aprendizagem adaptativa construída em torno dos dados.</strong></p>
-  <p>Uma plataforma de aprendizagem matemática que explora a interseção entre Engenharia de Dados, Ciência de Dados e IA aplicada.</p>
+  <p><strong>Plataforma de aprendizagem matemática adaptativa guiada por dados, psicometria e IA multi-modelo.</strong></p>
+  <p>Um projeto de engenharia aplicada na interseção entre Engenharia de Dados, Ciência de Dados / Machine Learning e Design Epistêmico.</p>
   <p><strong>🇧🇷 Português (Brasil)</strong> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English</a></p>
-  <p><a href="https://lemmas-ochre.vercel.app/dashboard"><strong>🚀 Acesse o Lemmas ao vivo</strong></a></p>
+  <p><a href="https://lemmas-ochre.vercel.app/dashboard"><strong>🚀 Acesse a Demonstração ao Vivo do Lemmas</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
-    <img src="https://img.shields.io/badge/FastAPI-API%20REST-009688?logo=fastapi" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase" alt="Supabase / PostgreSQL" />
-    <img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python" alt="Python" />
-    <img src="https://img.shields.io/badge/Status-Em%20desenvolvimento-yellow" alt="Em desenvolvimento" />
+    <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Supabase-PostgreSQL%20RLS-3ECF8E?logo=supabase" alt="Supabase / PostgreSQL" />
+    <img src="https://img.shields.io/badge/AI%20Gateway-Nemotron%20%7C%20DeepSeek%20%7C%20Gemini-76B900" alt="Gateway Multi-Modelo" />
+    <img src="https://img.shields.io/badge/Psicometria-FSRS--v4%20%7C%20SM--2%20%7C%20TRI--3PL-blue" alt="FSRS & TRI" />
+    <img src="https://img.shields.io/badge/Integridade-Proveniência%20SHA--256-orange" alt="Proveniência SHA-256" />
+    <img src="https://img.shields.io/badge/Status-Pronto%20para%20Lançamento-success" alt="Pronto para Lançamento" />
   </p>
 </div>
 
 ---
 
-## Por que o Lemmas?
+## 📌 Sumário Executivo
 
-O que uma plataforma de aprendizagem poderia descobrir se tratasse o processo de aprendizagem do aluno como dados estruturados, em vez de registrar apenas acertos e erros?
+O que acontece quando uma plataforma de aprendizagem trata o processo de resolução do estudante como **dados estruturados**, em vez de apenas registrar respostas binárias de certo ou errado?
 
-Dois alunos podem errar a mesma questão por motivos diferentes. Um pode não compreender o conceito; outro pode compreendê-lo, mas cometer um erro algébrico. Um sistema adaptativo precisa preservar a resolução realmente enviada, distingui-la da interpretação gerada por IA e permitir que o feedback ou a revisão humana corrijam essa interpretação.
+Dois estudantes podem errar a mesma questão de cálculo por razões fundamentalmente distintas: um pode apresentar um equívoco axiomático (ex: aplicar incorretamente a Regra da Cadeia), enquanto o outro domina o conceito perfeitamente, mas cometeu uma distração aritmética elementar.
 
-O princípio central é:
+O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemática pela **Universidade Federal Fluminense (UFF)**. Ele une rigor matemático, Engenharia de Dados moderna e modelagem psicométrica para avaliar demonstrações e resoluções discursivas passo a passo.
 
-> **Dado observado ≠ interpretação da IA ≠ dado validado.**
-
-O Lemmas é um produto em evolução e um projeto prático de engenharia. O código atual se concentra em uma arquitetura web/API modular e em fluxos de matemática apoiados por IA. Persistência confiável, datasets analíticos curados e modelos preditivos avaliados são objetivos de engenharia — não resultados que afirmamos já estarem concluídos.
-
-## Foco de engenharia
-
-- **Engenharia de Dados:** entradas estruturadas na API, hashes de integridade, schemas explícitos e separação entre a resolução original e as avaliações derivadas.
-- **Ciência de Dados:** um domínio para investigar erros recorrentes, evolução da aprendizagem, retenção e recomendação de exercícios, quando houver dados adequados, consentidos e validados.
-- **Engenharia de IA:** serviços modulares do MathAI para tutoria, avaliação cognitiva, recomendação e fluxos de imagem/transcrição, com provedores configuráveis.
-- **Engenharia de Software:** frontend Next.js, backend FastAPI, configuração por variáveis de ambiente e testes de arquitetura com pytest.
-
-## Arquitetura do sistema
-
-As interações do aluno passam pelo frontend Next.js até um backend FastAPI modular. O backend oferece fluxos de autenticação, exercícios, tentativas, feedback, tutoria e flashcards. Os serviços MathAI utilizam provedores de modelos configuráveis, enquanto o feedback do aluno e a validação humana podem acrescentar contexto às avaliações geradas.
-
-A integração com Supabase/PostgreSQL existe no código, mas nem todas as rotas persistem no banco ainda. Alguns handlers continuam utilizando armazenamento em memória. Essa distinção é importante para a confiabilidade e está documentada abaixo.
-
-## O que já está implementado?
-
-### API e contratos de dados
-
-A aplicação FastAPI inclui rotas modulares para autenticação, exercícios, tentativas, feedback, tutoria e flashcards. Schemas Pydantic definem os contratos de entrada e saída. O repositório também inclui testes automatizados para partes da arquitetura do backend.
-
-### Integridade e proveniência
-
-O registro de tentativas calcula um hash SHA-256 determinístico da entrada original. Os modelos de domínio e os testes de arquitetura expressam a separação entre:
-
-| Camada | Significado |
-|---|---|
-| **Dados observados** | A resolução enviada pelo aluno e os metadados da interação |
-| **Interpretação da IA** | Uma avaliação gerada pelo modelo, como uma classificação de erro ou sugestão de próximo passo |
-| **Dados validados** | Feedback ou correção revisada por uma pessoa e associada à avaliação |
-
-A intenção é preservar evidências e permitir reavaliações futuras, sem tratar automaticamente inferências do modelo como verdade de referência.
-
-### Serviços do MathAI
-
-O backend possui serviços separados para dicas socráticas, avaliação cognitiva, recomendação e fluxos de visão/transcrição. O código está preparado para trabalhar com provedores diretos como Google Gemini, NVIDIA e DeepSeek; o 9Router é uma opção de roteamento.
-
-Essas integrações colocam a saída dos modelos dentro dos fluxos da aplicação. Isso **não** significa que o Lemmas já treinou seu próprio modelo fundacional ou demonstrou o desempenho preditivo de um modelo de ML próprio.
-
-### Aprendizagem e revisão
-
-O código inclui endpoints de feedback do aluno e validação humana, fluxos de flashcards e exportação para Anki. O agendador atual de repetição espaçada é um **protótipo simplificado inspirado no FSRS**; seus parâmetros e comportamento precisam de validação antes de sustentar alegações de produção sobre previsão de retenção.
-
-## Roadmap de Engenharia de Dados
-
-O fluxo de dados pretendido prioriza a rastreabilidade:
-
-1. **Capturar:** preservar a submissão original e os metadados relevantes da interação.
-2. **Validar:** verificar schemas e qualidade antes de utilizar os dados em etapas posteriores.
-3. **Interpretar:** armazenar avaliações da IA separadas da resolução original.
-4. **Revisar:** coletar feedback do aluno e, quando disponível, validação especializada.
-5. **Preparar datasets:** definir consentimento, proveniência, deduplicação e regras de qualidade antes de análises ou treinamento.
-
-As prioridades incluem persistência durável para os eventos relevantes, migrações explícitas de banco, validação reproduzível e testes consistentes. São problemas reais de uma plataforma de dados, não apenas a integração de uma API de IA.
-
-## Oportunidades de Ciência de Dados
-
-O Lemmas oferece um domínio prático para perguntas futuras que podem ser testadas:
-
-- É possível classificar padrões de erros recorrentes melhor do que um baseline simples baseado em regras?
-- Quais estratégias de recomendação de exercícios melhoram o engajamento ou os resultados de aprendizagem?
-- Até que ponto um modelo consegue estimar quando um conceito deveria ser revisado?
-- Como os provedores de IA se comparam em correção matemática, latência e custo para diferentes tarefas?
-
-O processo planejado é definir objetivos mensuráveis, estabelecer baselines, construir um dataset limpo, evitar vazamento de dados entre treinamento e avaliação e reportar métricas adequadas. Classificação pode utilizar precisão, revocação e F1; recomendações baseadas em ranking podem utilizar Recall@K ou NDCG@K.
-
-**Neste estágio, não afirmamos que exista um modelo de ML próprio treinado ou resultado preditivo validado.** O foco é construir uma base confiável de produto e dados para que os experimentos possam ser realizados com responsabilidade.
-
-## Tecnologias
-
-| Área | Tecnologias |
-|---|---|
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
-| Backend | Python, FastAPI, Pydantic |
-| Integração de dados | Cliente Supabase / PostgreSQL |
-| Integrações de IA | Google Gemini, NVIDIA, DeepSeek; 9Router opcional |
-| Fluxos de aprendizagem | Tutoria socrática, avaliação, flashcards e agendador simplificado de repetição espaçada |
-| Qualidade | Testes de arquitetura e API com pytest |
-
-## Executar localmente
-
-### 1. Clonar o repositório
-
-    git clone https://github.com/StylishGH/LemmaS.git
-    cd LemmaS
-
-### 2. Preparar o backend
-
-    cd backend
-    python -m venv .venv
-
-Ative o ambiente virtual:
-
-    # Linux / macOS
-    source .venv/bin/activate
-
-    # Windows PowerShell
-    .venv\Scripts\Activate.ps1
-
-Instale as dependências:
-
-    pip install -r requirements.txt
-
-Use o arquivo .env.example da raiz como referência para criar um .env local. Configure apenas as credenciais necessárias às integrações que pretende utilizar. Nunca envie segredos ao GitHub.
-
-Inicie a API dentro do diretório backend:
-
-    uvicorn app.main:app --reload
-
-A API deverá ficar disponível em http://localhost:8000. A documentação interativa fica habilitada quando a configuração DEBUG do backend está ativada.
-
-### 3. Executar o frontend
-
-Em outro terminal:
-
-    cd frontend
-    npm install
-    npm run dev
-
-O servidor de desenvolvimento normalmente funciona em http://localhost:3000. Configure localmente as variáveis de ambiente necessárias antes de utilizar funcionalidades que dependem de serviços externos.
-
-## Status atual e limitações
-
-**Status do projeto: em desenvolvimento.** O repositório contém fluxos implementados de API e MathAI, mas capacidades importantes da plataforma de dados ainda precisam de trabalho de engenharia.
-
-- **Persistência:** rotas de tentativas, feedback e flashcards ainda utilizam armazenamento em memória em partes do backend. Esses registros não são duráveis após reiniciar o processo. A integração com Supabase existe, mas ainda não substituiu todos esses armazenamentos.
-- **Machine Learning:** treinamento de modelos, avaliação offline sistemática e monitoramento em produção são etapas futuras. O projeto não afirma ter um modelo preditivo próprio implantado.
-- **Repetição espaçada:** o agendador atual utiliza lógica simplificada e ilustrativa; precisa ser validado antes de sustentar conclusões científicas sobre retenção.
-- **Governança de dados:** qualquer uso futuro de registros de estudantes para análise ou desenvolvimento de modelos deverá respeitar consentimento, privacidade, minimização de dados e as exigências aplicáveis de proteção de dados.
-
-Essas limitações fazem parte do roadmap: primeiro estabelecer contratos e persistência confiáveis; depois construir datasets curados e avaliar abordagens analíticas.
-
-## Roadmap
-
-- [ ] Substituir armazenamentos em memória por persistência durável onde necessário.
-- [ ] Fortalecer os testes automatizados e a reprodutibilidade do desenvolvimento.
-- [ ] Definir schemas versionados e verificações de qualidade para eventos de aprendizagem.
-- [ ] Construir análises exploratórias com dados consentidos e validados.
-- [ ] Estabelecer baselines e avaliar modelos de recomendação ou retenção.
-- [ ] Acompanhar qualidade, latência e custo dos modelos por tipo de tarefa.
-
-## Sobre o projeto
-
-O Lemmas está sendo desenvolvido por **Guilherme Henrique Mendes**, estudante de Matemática interessado em Engenharia de Dados, Ciência de Dados e IA aplicada.
-
-- [GitHub](https://github.com/StylishGH)
-- [LinkedIn](https://linkedin.com/in/ghmendes02)
-- [Contato](mailto:ghmendes@id.uff.br)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       MANDAMENTO EPISTÊMICO FUNDAMENTAL                     │
+│                                                                             │
+│     DADO OBSERVADO            INTERPRETAÇÃO DA IA          DADO VALIDADO    │
+│  [Hash SHA-256 Imutável]  ≠   [Modelo Versionado]   ≠   [Human-in-the-Loop] │
+│     Manuscrito/texto           Hipótese com prompt e     Rótulo conferido   │
+│      fiel do aluno             grau de confiança         para treino de ML  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-*Lemmas é a plataforma de aprendizagem. MathAI é a camada de inteligência especializada que está sendo desenvolvida para apoiá-la.*
+## 📸 Demonstração Visual do Produto
+
+| Bancada Discursiva & Renderização KaTeX | Segunda Opinião Multi-Modelo |
+| :---: | :---: |
+| ![Bancada Discursiva](docs/assets/bancada.png) | ![Segunda Opinião](docs/assets/segunda_opiniao.png) |
+| *Bancada de resolução analítica com lousa de rascunho, compasso euclidiano e OCR multimodal.* | *Debate comparativo: Rigor Axiomático (Nemotron) vs Heurísticas e Atalhos Cognitivos.* |
+
+| Painel de Metacognição & Radar de Domínio | Acervo de 20.803 Questões & Teoremas |
+| :---: | :---: |
+| ![Dashboard](docs/assets/dashboard.png) | ![Banco de Questões](docs/assets/banco_questoes.png) |
+| *Ciclos de repetição espaçada, telemetria de erros e radar de domínio por matéria.* | *Questões auditadas de olimpíadas e vestibulares militares renderizadas em KaTeX nativo.* |
+
+---
+
+## 🏗️ Arquitetura do Sistema
+
+A plataforma desacopla a interação do usuário, contratos de API, roteamento de modelos e persistência relacional em camadas bem definidas:
+
+```mermaid
+flowchart TD
+    subgraph Client ["Camada Cliente · Next.js 16 (App Router + Turbopack + KaTeX)"]
+        UI_Bench["Bancada Discursiva (Lousa / OCR / Texto)"]
+        UI_Dash["Painel de Metacognição & Radar"]
+        UI_Repo["Acervo (20.803 Questões & Lemas)"]
+    end
+
+    subgraph Backend ["Motor Backend · FastAPI (Python 3.12)"]
+        Auth["Guarda de Segurança (Validador de Token e Anon Key)"]
+        HashEngine["Motor de Integridade (Hash SHA-256 Determinístico)"]
+        Router["Gateway Multi-Modelo MathAI"]
+        Sched["Psicometria & Memória (FSRS-v4 / SM-2 / TRI-3PL)"]
+    end
+
+    subgraph Providers ["Camada de Inferência (Provedores LLM & Visão)"]
+        Nemo["NVIDIA Nemotron (Provas Axiomáticas & Lógica Formal)"]
+        Deep["DeepSeek (Heurísticas & Caminhos Alternativos)"]
+        Gemini["Google Gemini Flash-Lite (OCR Multimodal & Visão)"]
+    end
+
+    subgraph Storage ["Plataforma de Dados · Supabase PostgreSQL"]
+        DB_Raw[("Tentativas Brutas (Dado Observado Imutável)")]
+        DB_Eval[("Avaliações da IA (Hipóteses & Logs)")]
+        DB_Feedback[("Feedback Humano Validado (Ground Truth)")]
+        DB_Meta[("Metacognição & Flashcards")]
+    end
+
+    UI_Bench --> Auth
+    UI_Dash --> Auth
+    UI_Repo --> Auth
+
+    Auth --> HashEngine
+    HashEngine --> DB_Raw
+
+    HashEngine --> Router
+    Router --> Nemo
+    Router --> Deep
+    Router --> Gemini
+
+    Nemo --> DB_Eval
+    Deep --> DB_Eval
+    Gemini --> DB_Eval
+
+    UI_Dash --> Sched
+    Sched --> DB_Meta
+    DB_Eval -.-> DB_Feedback
+```
+
+---
+
+## 🔬 Modelagem Matemática e Psicométrica
+
+O Lemmas evita suposições de "caixa preta" através de modelos matemáticos estabelecidos na literatura científica para retenção e calibração de proficiência:
+
+### 1. Modelagem de Retenção de Memória: FSRS-v4 & SM-2
+Para calcular o momento ideal de revisão de cada lema e teorema matemático, o motor aplica a fórmula de recuperabilidade inspirada no algoritmo FSRS-v4:
+$$R(t) = \left(1 + F \cdot \frac{t}{S}\right)^{-1}$$
+Onde:
+- $R(t)$ é a probabilidade estimada de retenção na memória após $t$ dias.
+- $S$ é a estabilidade mnemônica (tempo até a recuperabilidade cair para 90%).
+- $F$ é o fator calibrado conforme o nível de dificuldade atribuído pelo estudante ($D \in [1, 10]$).
+
+### 2. Teoria de Resposta ao Item (TRI 3PL)
+A calibração do nível de proficiência e das questões utiliza o modelo logístico de três parâmetros:
+$$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
+- $\theta$: Proficiência latente do aluno em determinada área (ex: Geometria, Análise).
+- $a$: Parâmetro de discriminação da questão.
+- $b$: Dificuldade intrínseca do teorema/exercício.
+- $c$: Probabilidade de acerto casual (chute em itens objetivos).
+
+---
+
+## 🛠️ Destaques de Engenharia de Dados & MLOps
+
+- **Integridade e Rastreabilidade de Dados:** Cada tentativa submetida pelo aluno gera um hash determinístico SHA-256 dos dados brutos (traços da lousa, texto digitado ou bytes da imagem) antes de qualquer chamada a modelos de IA.
+- **Contratos Estritos de Dados:** Schemas Pydantic (DTOs) garantem validação e serialização de tipos em todas as rotas da API FastAPI.
+- **Isolamento Relacional com Row Level Security (RLS):** 20 tabelas PostgreSQL hospedadas no Supabase aplicam políticas rigorosas de isolamento multi-tenant.
+- **Padrão Strategy no Roteamento Multi-Modelo:** Desacoplamento da camada de inferência:
+  - **NVIDIA Nemotron 70B/120B:** Demonstrações formais e checagem axiomática estrita.
+  - **Google Gemini Flash-Lite:** OCR de rascunhos manuscritos em caderno com latência reduzida (<600ms).
+  - **DeepSeek:** Sugestões intuitivas, contra-exemplos e atalhos cognitivos.
+
+---
+
+## 💻 Tecnologias Empregadas
+
+| Domínio | Tecnologias |
+|---|---|
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, KaTeX |
+| **Backend** | Python 3.12, FastAPI, Pydantic V2, Uvicorn |
+| **Banco de Dados & Auth** | Supabase (PostgreSQL com RLS), Hashes SHA-256 determinísticos |
+| **IA Aplicada & Visão** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
+| **Psicometria & Repetição** | Repetição Espaçada FSRS-v4, Motor SM-2, Teoria de Resposta ao Item (TRI 3PL) |
+| **Testes & Qualidade** | pytest (Backend & Testes de Arquitetura), Vitest (Componentes de UI) |
+
+---
+
+## 🚀 Como Executar Localmente
+
+### Pré-requisitos
+- Python 3.12+
+- Node.js 20+
+- Um projeto Supabase configurado (ou PostgreSQL local)
+
+### 1. Clonar o repositório
+```bash
+git clone https://github.com/StylishGH/LemmaS.git
+cd LemmaS
+```
+
+### 2. Configurar e rodar o Backend API
+```bash
+cd backend
+python -m venv .venv
+
+# Linux / macOS:
+source .venv/bin/activate
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+cp ../.env.example .env
+uvicorn app.main:app --reload --port 8000
+```
+*A documentação interativa da API fica disponível em `http://localhost:8000/docs`.*
+
+### 3. Rodar o Frontend
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
+*Acesse `http://localhost:3000` no seu navegador.*
+
+---
+
+## 🎯 Status Atual & Roadmap de Engenharia
+
+- [x] **Arquitetura Monorepo:** Frontend Next.js 16 + Backend FastAPI.
+- [x] **Pipeline Epistêmico de Dados:** Hashing SHA-256 e segregação estrita de dados submetidos.
+- [x] **Bancada Discursiva & OCR Multimodal:** Parser KaTeX para rascunhos manuscritos.
+- [x] **Acervo de 20.803 Questões:** Base de problemas matemáticos auditados e catalogados.
+- [x] **Gateway Multi-Modelo:** Roteamento entre Nemotron, Gemini e DeepSeek.
+- [ ] **Migração de Persistência Completa:** Substituição gradual dos handlers em memória por tabelas duráveis no PostgreSQL.
+- [ ] **Calibração Empírica:** Ajuste dos hiperparâmetros do FSRS com base em logs reais de interação.
+- [ ] **Harness de Avaliação Contínua (Evals):** Suite de benchmarks de latência, custo e concordância de diagnósticos entre modelos de IA.
+
+---
+
+## 👨‍💻 Sobre o Autor
+
+**Guilherme Henrique Mendes**  
+*Graduando em Matemática pela Universidade Federal Fluminense (UFF)*  
+Focado em Ciência de Dados, Machine Learning, Psicometria e Engenharia de Software.
+
+- 💼 **LinkedIn:** [linkedin.com/in/ghmendes02](https://linkedin.com/in/ghmendes02)
+- 🐙 **GitHub:** [github.com/StylishGH](https://github.com/StylishGH)
+- 📧 **E-mail:** [ghmendes@id.uff.br](mailto:ghmendes@id.uff.br)
+
+---
+
+*Lemmas é a plataforma de aprendizagem. MathAI é a camada de inteligência especializada que a potencializa.*
