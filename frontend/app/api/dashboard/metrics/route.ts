@@ -104,10 +104,15 @@ export async function GET(req: NextRequest) {
       ? Number(((totalAcertos / totalResolvidas) * 100).toFixed(1)) 
       : 0;
 
-    // Tempo médio real
+    // 1. Tempo médio real com proteção contra outliers (teto de 900s / 15 min por questão)
     let tempoMedioStr = "0s";
     if (totalResolvidas > 0) {
-      const somaTempo = tentativas.reduce((acc, t) => acc + (t.tempo_segundos || 0), 0);
+      const somaTempo = tentativas.reduce((acc, t) => {
+        const rawSec = t.tempo_segundos || 0;
+        // Aplica teto de 900s (15 min) para evitar distorções causadas por abas esquecidas abertas
+        const cappedSec = Math.min(Math.max(0, rawSec), 900);
+        return acc + cappedSec;
+      }, 0);
       const mediaSegundos = Math.round(somaTempo / totalResolvidas);
       const minutos = Math.floor(mediaSegundos / 60);
       const segundos = mediaSegundos % 60;
@@ -151,6 +156,41 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // Função para normalizar matéria e tópico (evita rótulos genéricos como 'Matemática / Geral')
+    const normalizarMateriaETopico = (materiaRaw?: string, topicoRaw?: string): { materia: string; topico: string } => {
+      let m = (materiaRaw || "").trim();
+      let t = (topicoRaw || "").trim();
+
+      const mNorm = m.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const tNorm = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+      // Normaliza matéria genérica
+      if (!m || mNorm === "matematica" || mNorm === "geral" || mNorm === "matematica geral") {
+        if (tNorm.includes("funcao") || tNorm.includes("algebra") || tNorm.includes("polinomio")) {
+          m = "Álgebra";
+        } else if (tNorm.includes("geometria") || tNorm.includes("triangulo") || tNorm.includes("circulo")) {
+          m = "Geometria";
+        } else if (tNorm.includes("trigonometria")) {
+          m = "Trigonometria";
+        } else if (tNorm.includes("calculo") || tNorm.includes("integral") || tNorm.includes("derivada") || tNorm.includes("linear")) {
+          m = "Cálculo";
+        } else if (tNorm.includes("combinatoria") || tNorm.includes("probabilidade") || tNorm.includes("logica")) {
+          m = "Probabilidade e Combinatória";
+        } else if (tNorm.includes("fracao") || tNorm.includes("fracoes") || tNorm.includes("numero") || tNorm.includes("aritmetica")) {
+          m = "Matemática Básica";
+        } else {
+          m = "Matemática Básica";
+        }
+      }
+
+      // Normaliza tópico genérico
+      if (!t || tNorm === "geral" || tNorm === mNorm || tNorm === "matematica") {
+        t = "Conceitos Fundamentais";
+      }
+
+      return { materia: m, topico: t };
+    };
+
     // Revisões SM-2 reais enriquecidas com questões
     const revisoesIds = (revisoesRaw || []).map((r: any) => r.item_id).filter(Boolean);
     const questoesRevisaoMap: Record<number, { materia: string; topico: string }> = {};
@@ -163,7 +203,7 @@ export async function GET(req: NextRequest) {
 
       if (questoesRevisao) {
         questoesRevisao.forEach((q: any) => {
-          questoesRevisaoMap[q.id] = { materia: q.materia, topico: q.topico };
+          questoesRevisaoMap[q.id] = normalizarMateriaETopico(q.materia, q.topico);
         });
       }
     }
@@ -174,7 +214,7 @@ export async function GET(req: NextRequest) {
     const amanhaIsoStr = amanha.toISOString().split("T")[0];
 
     const revisoes = ((revisoesRaw as any[]) || []).map((r) => {
-      const qInfo = questoesRevisaoMap[r.item_id] || { materia: "Matemática", topico: "Geral" };
+      const qInfo = questoesRevisaoMap[r.item_id] || normalizarMateriaETopico(undefined, undefined);
       let status = "Hoje";
       let cor = "text-rose-500 bg-rose-500/10 border-rose-500/20";
 
@@ -208,41 +248,150 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Padrões de erro reais (baseados em tentativas com erro)
+    // 2. Padrões de erro reais (distribuídos pelo tempo e natureza do erro)
     const erros = tentativas.filter((t) => t.acertou === 0);
     let pConta = 0;
     let pInterpretacao = 0;
     let pLacuna = 0;
 
     if (erros.length > 0) {
-      const nConta = erros.filter((e) => /conta|algebra|sinal|aritm/i.test(e.tipo_erro || "")).length;
-      const nInterp = erros.filter((e) => /interp|leitura|enunc/i.test(e.tipo_erro || "")).length;
-      const nLacuna = erros.length - nConta - nInterp;
+      let nConta = 0;
+      let nInterp = 0;
+      let nLacuna = 0;
+
+      erros.forEach((e) => {
+        const tSec = e.tempo_segundos || 0;
+        const tipoErroExpl = (e.tipo_erro || "").toLowerCase();
+
+        // 1. Prioriza classificação explícita se houver
+        if (tipoErroExpl === "conta_sinal" || tipoErroExpl.includes("calculo") || tipoErroExpl.includes("algebra") || tipoErroExpl.includes("sinal")) {
+          nConta++;
+        } else if (tipoErroExpl === "interpretacao" || tipoErroExpl.includes("enunciado") || tipoErroExpl.includes("leitura")) {
+          nInterp++;
+        } else if (tipoErroExpl === "conceitual" || tipoErroExpl.includes("axioma") || tipoErroExpl.includes("teorema") || tipoErroExpl.includes("lacuna")) {
+          nLacuna++;
+        } else {
+          // 2. Distribuição comportamental temporal estrita:
+          // Se errou rápido (< 35s): Interpretação do Enunciado (resposta precipitada)
+          if (tSec < 35) {
+            nInterp++;
+          }
+          // Se errou após muito tempo (> 180s): Conta, Álgebra & Sinal (muito cálculo, desvio aritmético)
+          else if (tSec > 180) {
+            nConta++;
+          }
+          // Caso intermediário (35s a 180s): Lacuna Conceitual / Teorema
+          else {
+            nLacuna++;
+          }
+        }
+      });
+
       pConta = Math.round((nConta / erros.length) * 100);
       pInterpretacao = Math.round((nInterp / erros.length) * 100);
       pLacuna = Math.max(0, 100 - pConta - pInterpretacao);
     }
 
-    // Radar por matéria
-    const materiasAlvo = ["Álgebra", "Geometria", "Trigonometria", "Cálculo", "Combinatória", "Aritmética"];
+    // 3. Radar de Domínio Matemático (6 eixos canônicos com agrupamento de matérias do banco)
+    const mapearMateriaParaEixo = (materiaRaw?: string, topicoRaw?: string): "Álgebra" | "Geometria" | "Trigonometria" | "Cálculo" | "Combinatória" | "Aritmética" => {
+      const norm = (str?: string) => (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const m = norm(materiaRaw);
+      const t = norm(topicoRaw);
+
+      // Cálculo & Álgebra Linear: Cálculo, Álgebra Linear, Cálculo 1, Cálculo 3, Limites, Derivadas, Integrais
+      if (
+        m.includes("calculo") || m.includes("algebra linear") || m.includes("limite") || m.includes("derivada") || m.includes("integral") ||
+        t.includes("calculo") || t.includes("algebra linear") || t.includes("integral") || t.includes("derivada")
+      ) {
+        return "Cálculo";
+      }
+
+      // Trigonometria: Trigonometria
+      if (m.includes("trigonometria") || t.includes("trigono")) {
+        return "Trigonometria";
+      }
+
+      // Geometria: Geometria Plana, Geometria Espacial, Geometria Analítica, Geometria
+      if (m.includes("geometria") || t.includes("geometria") || m.includes("analitica")) {
+        return "Geometria";
+      }
+
+      // Combinatória: Probabilidade e Combinatória, Análise Combinatória, Probabilidade, Estatística, Lógica
+      if (
+        m.includes("combinatoria") || m.includes("probabilidade") || m.includes("estatistica") || m.includes("logica") ||
+        t.includes("combinatoria") || t.includes("probabilidade") || t.includes("estatistica") || t.includes("logica")
+      ) {
+        return "Combinatória";
+      }
+
+      // Álgebra: Álgebra, Funções, Polinômios e Complexos
+      if (
+        m.includes("algebra") || m.includes("funcoes") || m.includes("polinomios") || m.includes("complexos") ||
+        t.includes("funcao") || t.includes("polinomio") || t.includes("complexo")
+      ) {
+        return "Álgebra";
+      }
+
+      // Aritmética: Matemática Básica, Teoria dos Números, Aritmética, Geral, Matemática
+      if (
+        m.includes("matematica basica") || m.includes("teoria dos numeros") || m.includes("aritmetica") ||
+        m === "geral" || m === "matematica" || m === "matematica geral" ||
+        t.includes("fracao") || t.includes("fracoes") || t.includes("aritmetica") || t.includes("numero")
+      ) {
+        return "Aritmética";
+      }
+
+      return "Aritmética";
+    };
+
+    const materiasAlvo = ["Álgebra", "Geometria", "Trigonometria", "Cálculo", "Combinatória", "Aritmética"] as const;
     const radarData: Record<string, number> = {};
 
-    materiasAlvo.forEach((mat) => {
-      const matNormalizada = mat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    materiasAlvo.forEach((eixo) => {
       const matsTentativas = tentativas.filter((t) => {
         const q = Array.isArray(t.questoes) ? t.questoes[0] : t.questoes;
-        const materiaNome = (q?.materia || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        return materiaNome.includes(matNormalizada);
+        return mapearMateriaParaEixo(q?.materia, q?.topico) === eixo;
       });
 
       if (matsTentativas.length > 0) {
         const acertosMat = matsTentativas.filter((t) => t.acertou === 1).length;
-        radarData[mat] = Math.round((acertosMat / matsTentativas.length) * 100);
+        radarData[eixo] = Math.round((acertosMat / matsTentativas.length) * 100);
       } else {
-        // Se ainda não resolveu dessa matéria, marca 0
-        radarData[mat] = 0;
+        radarData[eixo] = 0;
       }
     });
+
+    // 4. Conselho da MathAI Engine adaptativo e coerente com a taxa de acerto
+    let conselhoIa = "Comece seu treino com questões da EFOMM, CEDERJ ou ESA para calibrar seu nível inicial no LEMMAS Core.";
+    if (totalResolvidas > 0) {
+      if (taxaAcerto <= 60) {
+        // Encontra o eixo com mais dificuldades entre os que tiveram tentativas
+        let piorEixo = "";
+        let menorTaxa = 101;
+        materiasAlvo.forEach((eixo) => {
+          const mats = tentativas.filter((t) => {
+            const q = Array.isArray(t.questoes) ? t.questoes[0] : t.questoes;
+            return mapearMateriaParaEixo(q?.materia, q?.topico) === eixo;
+          });
+          if (mats.length > 0) {
+            const tx = (mats.filter((t) => t.acertou === 1).length / mats.length) * 100;
+            if (tx < menorTaxa) {
+              menorTaxa = tx;
+              piorEixo = eixo;
+            }
+          }
+        });
+
+        const pendentesCount = revisoes.length;
+        const pendentesMsg = pendentesCount > 0 
+          ? ` e priorize os ${pendentesCount} lema(s) pendente(s) na Fila SM-2.` 
+          : ".";
+
+        conselhoIa = `Aproveitamento em fase de calibração (${taxaAcerto}%). Recomendamos focar em ${piorEixo || "fundamentos"} com rascunho passo a passo na Lousa antes de assinalar${pendentesMsg}`;
+      } else {
+        conselhoIa = `Sua precisão atual está consolidada (${taxaAcerto}%). Mantenha o rigor axiomático no passo a passo e resolva os lemas agendados no SM-2 para sustentar a curva de retenção.`;
+      }
+    }
 
     // Cálculo de Streak Consecutivo real baseado em tentativas
     const datasSet = new Set<string>();
@@ -279,7 +428,7 @@ export async function GET(req: NextRequest) {
       taxa_acerto: taxaAcerto,
       tempo_medio: tempoMedioStr,
       streak_dias: streakDias,
-      total_questoes_banco: totalQuestions ?? 20764,
+      total_questoes_banco: totalQuestions ?? 20803,
       historico,
       revisoes,
       diagnostico_erros: {
@@ -289,6 +438,7 @@ export async function GET(req: NextRequest) {
         lacuna: pLacuna,
       },
       radar: radarData,
+      conselho_ia: conselhoIa,
     });
   } catch (err: unknown) {
     return NextResponse.json({
@@ -297,11 +447,12 @@ export async function GET(req: NextRequest) {
       taxa_acerto: 0,
       tempo_medio: "0s",
       streak_dias: 0,
-      total_questoes_banco: 20764,
+      total_questoes_banco: 20803,
       historico: [],
       revisoes: [],
       diagnostico_erros: { total_erros: 0, conta: 0, interpretacao: 0, lacuna: 0 },
-      radar: { "Álgebra": 0, "Geometria": 0, "Trigonometria": 0, "Cálculo": 0, "Combinatória": 0, "Aritmética": 0 }
+      radar: { "Álgebra": 0, "Geometria": 0, "Trigonometria": 0, "Cálculo": 0, "Combinatória": 0, "Aritmética": 0 },
+      conselho_ia: "Comece seu treino com questões da EFOMM, CEDERJ ou ESA para calibrar seu nível inicial no LEMMAS Core.",
     });
   }
 }
