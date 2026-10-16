@@ -26,6 +26,14 @@ export function cleanLatexForKatex(latex: string): string {
   clean = clean.replace(/\\?\$/g, "");
   // Remove artefatos de \undefined ou undefined gerados por templates ou alucinações
   clean = clean.replace(/\\?undefined\b/gi, "");
+  // Converte macros comuns de lógica matemática que quebram o KaTeX
+  clean = clean.replace(/\\or\b/g, "\\lor");
+  clean = clean.replace(/\\and\b/g, "\\land");
+  clean = clean.replace(/\\not\b/g, "\\neg");
+  clean = clean.replace(/\\xor\b/g, "\\oplus");
+  // Converte ambientes align para aligned (compatível com KaTeX inline/math-mode)
+  clean = clean.replace(/\\begin\{align\*?\}/g, "\\begin{aligned}");
+  clean = clean.replace(/\\end\{align\*?\}/g, "\\end{aligned}");
   // Remove cursor pipe | residual comum no final de expressões geradas por LLM
   clean = clean.replace(/(?:\\text\{[^\}]*\}|\d+|\})\s*\|\s*$/g, "$1");
   // Converte barras invertidas duplas desnecessárias
@@ -60,6 +68,12 @@ export function MathDisplay({
         trust: true,
         macros: {
           "\\undefined": "",
+          "\\or": "\\lor",
+          "\\and": "\\land",
+          "\\not": "\\neg",
+          "\\xor": "\\oplus",
+          "\\implies": "\\Longrightarrow",
+          "\\iff": "\\Longleftrightarrow",
           "\\RR": "\\mathbb{R}",
           "\\NN": "\\mathbb{N}",
           "\\ZZ": "\\mathbb{Z}",

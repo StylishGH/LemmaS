@@ -131,11 +131,11 @@ Responda diretamente com o texto da dica socrática, usando KaTeX com $...$ e $$
 
     // 3. Fallback Determinístico Pedagógico Estruturado (Uptime 100% garantido sem erro de timeout)
     const fallbackHints: Record<number, string> = {
-      1: "💡 **Nível 1 (Intuição e Dados):** Releia com atenção o enunciado. Isole quais são os dados conhecidos e quais são as incógnitas pedidas. O que cada termo ou figura representa intuitivamente antes de aplicar fórmulas?",
-      2: "💡 **Nível 2 (Conceito & Lema):** Pense em qual teorema ou propriedade fundamental rege as grandezas envolvidas. Existe alguma relação de conservação, simetria ou lema clássico aplicável a este caso?",
-      3: "💡 **Nível 3 (Primeiro Passo):** Escreva no papel a primeira relação algébrica ou geométrica fundamental que conecta as hipóteses do problema com a incógnita procurada.",
-      4: "💡 **Nível 4 (Passos Intermediários):** Desenvolva as operações algébricas substituindo os valores dados e simplificando os termos comuns. Deixe a equação na forma mais reduzida antes de isolar a resposta final.",
-      5: "💡 **Nível 5 (Resolução Completa):** Conclua a dedução formal substituindo os coeficientes e conferindo as hipóteses de validade e consistência dimensional do resultado.",
+      1: "💡 **Nível 1 (Intuição e Dados):** Releia com atenção o enunciado. Isole quais são as hipóteses e dados conhecidos e qual é a tese ou incógnita pedida. O que cada termo ou símbolo representa antes de tentar aplicar regras prontas?",
+      2: "💡 **Nível 2 (Conceito & Lema):** Pense em qual teorema, lema ou equivalência fundamental rege as propriedades do problema. Existe alguma equivalência lógica, simetria geométrica ou invariante aplicável a este caso?",
+      3: "💡 **Nível 3 (Primeiro Passo):** Escreva no papel a primeira relação estruturada (algébrica, lógica com conectivos ou geométrica) que traduz diretamente as hipóteses do problema.",
+      4: "💡 **Nível 4 (Passos Intermediários):** Desenvolva as etapas intermediárias simplificando os termos comuns e aplicando as propriedades operatórias cabíveis, deixando a estrutura pronta para a conclusão.",
+      5: "💡 **Nível 5 (Resolução Completa):** Conclua a dedução formal justificando cada passagem lógica e confirmando se o resultado satisfaz todas as condições e restrições iniciais do problema.",
     };
 
     return NextResponse.json({

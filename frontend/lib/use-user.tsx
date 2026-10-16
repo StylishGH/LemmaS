@@ -19,6 +19,7 @@ export interface UserProfile {
   pedagogicalPreference?: string;
   fotoUrl?: string | null;
   isGuest: boolean;
+  emailVerificado: boolean;
 }
 
 export const DEFAULT_GUEST_PROFILE: UserProfile = {
@@ -36,6 +37,7 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   pedagogicalPreference: "conceitual",
   fotoUrl: null,
   isGuest: true,
+  emailVerificado: false,
 };
 
 export function getInitials(name?: string): string {
@@ -125,6 +127,8 @@ export interface UserContextType {
   saveProfile: (updated: Partial<UserProfile>) => Promise<void>;
   logout: () => Promise<void>;
   refresh: (providedUser?: any) => Promise<void>;
+  reenviarEmailVerificacao: () => Promise<{ success: boolean; error?: string }>;
+  validarCodigoVerificacao: (codigo: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -156,6 +160,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
 
         const cached = getCachedProfile();
+        const emailConfirmadoNoAuth = Boolean(user.email_confirmed_at);
 
         let loadedProfile: UserProfile = {
           ...DEFAULT_GUEST_PROFILE,
@@ -165,16 +170,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           email: user.email,
           fotoUrl: googleAvatar || cached?.fotoUrl || null,
           isGuest: false,
+          emailVerificado: emailConfirmadoNoAuth,
         };
 
         try {
           const { data: dbUser } = await supabase
             .from("usuarios")
-            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, motivos")
+            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, motivos, verificado")
             .eq("email", user.email)
             .maybeSingle();
 
           let targetId = dbUser?.id;
+          const estaVerificado = emailConfirmadoNoAuth || Boolean(dbUser?.verificado === 1);
+          loadedProfile.emailVerificado = estaVerificado;
+
+          // Se o email está confirmado no Auth mas a tabela usuarios ainda tem verificado=0, sincroniza
+          if (emailConfirmadoNoAuth && dbUser && dbUser.verificado !== 1) {
+            try {
+              await supabase
+                .from("usuarios")
+                .update({ verificado: 1 })
+                .eq("email", user.email);
+            } catch (syncErr) {
+              console.warn("Aviso ao sincronizar verificado=1 no Postgres:", syncErr);
+            }
+          }
 
           if (dbUser) {
             let fotoDoBanco: string | null = null;
@@ -206,6 +226,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               motivacoesSelecionadas: motivacoesSalvas.length > 0 ? motivacoesSalvas : (loadedProfile.motivacoesSelecionadas || []),
               conceitosSelecionados: conceitosSalvos.length > 0 ? conceitosSalvos : (loadedProfile.conceitosSelecionados || []),
               pedagogicalPreference: pedPrefSalva || loadedProfile.pedagogicalPreference || "conceitual",
+              emailVerificado: estaVerificado,
             };
           } else if (user.email) {
             const { data: novoDbUser } = await supabase
@@ -215,8 +236,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 email: user.email,
                 senha_hash: "supabase_managed",
                 escolaridade: "Ensino Superior",
+                verificado: emailConfirmadoNoAuth ? 1 : 0,
               })
-              .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco")
+              .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, verificado")
               .maybeSingle();
 
             if (novoDbUser) {
@@ -228,6 +250,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 escolaridade: novoDbUser.escolaridade || loadedProfile.escolaridade,
                 faculdade: novoDbUser.faculdade || loadedProfile.faculdade,
                 focoConcurso: novoDbUser.concursos_foco || loadedProfile.focoConcurso,
+                emailVerificado: estaVerificado,
               };
             }
           }
@@ -415,6 +438,77 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setProfile(DEFAULT_GUEST_PROFILE);
   };
 
+  const reenviarEmailVerificacao = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!profile.email) {
+      return { success: false, error: "Nenhum e-mail vinculado à sessão atual." };
+    }
+    try {
+      const redirectUri = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=/questoes`
+        : "/auth/callback?next=/questoes";
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: profile.email.trim(),
+        options: {
+          emailRedirectTo: redirectUri,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Erro ao reenviar e-mail de confirmação." };
+    }
+  };
+
+  const validarCodigoVerificacao = async (codigo: string): Promise<{ success: boolean; error?: string }> => {
+    const tokenLimpo = codigo.trim();
+    if (!tokenLimpo || tokenLimpo.length < 6) {
+      return { success: false, error: "Digite o código de 6 dígitos recebido no seu e-mail." };
+    }
+    if (!profile.email) {
+      return { success: false, error: "Nenhum e-mail vinculado para validação." };
+    }
+
+    try {
+      let res = await supabase.auth.verifyOtp({
+        email: profile.email.trim(),
+        token: tokenLimpo,
+        type: "signup",
+      });
+
+      if (res.error) {
+        res = await supabase.auth.verifyOtp({
+          email: profile.email.trim(),
+          token: tokenLimpo,
+          type: "email",
+        });
+      }
+
+      if (res.error) {
+        return { success: false, error: res.error.message };
+      }
+
+      // Sincroniza verificado = 1 no Postgres
+      try {
+        await supabase
+          .from("usuarios")
+          .update({ verificado: 1 })
+          .eq("email", profile.email.trim());
+      } catch (dbErr) {
+        console.warn("Aviso ao atualizar verificado=1 pós-OTP:", dbErr);
+      }
+
+      await fetchProfile(res.data?.user);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Código inválido ou expirado." };
+    }
+  };
+
   const value = {
     profile,
     isAuthenticated: !profile.isGuest && Boolean(profile.email),
@@ -423,10 +517,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     saveProfile,
     logout,
     refresh: fetchProfile,
+    reenviarEmailVerificacao,
+    validarCodigoVerificacao,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
-}export function useUserProfile() {
+}
+
+export function useUserProfile() {
   const context = useContext(UserContext);
   if (!context) {
     return {
@@ -437,6 +535,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       saveProfile: async () => {},
       logout: async () => {},
       refresh: async () => {},
+      reenviarEmailVerificacao: async () => ({ success: false, error: "Contexto indisponível." }),
+      validarCodigoVerificacao: async () => ({ success: false, error: "Contexto indisponível." }),
     };
   }
   return context;
