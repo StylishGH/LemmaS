@@ -11,7 +11,16 @@ export async function POST(
     const { id } = await params;
     const qId = parseInt(id, 10);
     const body = await req.json();
-    const { resposta, tempo_segundos = 0, confianca = 4, aluno_id } = body;
+    const {
+      resposta,
+      tempo_segundos = 0,
+      confianca = 4,
+      aluno_id,
+      dica_socratica_usada = false,
+      nivel_max_dica = 0,
+      total_dicas_solicitadas = 0,
+      rendicao_nivel_5 = false,
+    } = body;
     // 1. Resolve o ID real do aluno a partir da sessão Supabase (cookies)
     let validAlunoId = 9999;
     try {
@@ -67,14 +76,18 @@ export async function POST(
       return NextResponse.json({ error: "Questão não encontrada" }, { status: 404 });
     }
 
-    // Identifica se é questão discursiva avaliada pela IA
-    const isDiscursiva = body.tipo_questao === "discursiva" || Boolean(body.veredito);
+    // Identifica se é questão discursiva avaliada pela IA ou rendição do Nível 5
+    const isRendicaoNivel5 = Boolean(rendicao_nivel_5 || resposta === "DICA_5_REVELADA");
+    const isDiscursiva = !isRendicaoNivel5 && (body.tipo_questao === "discursiva" || Boolean(body.veredito));
     const gabaritoOficial = (questao.gabarito || "").trim();
     const respostaAluno = String(resposta ?? body.veredito ?? "").trim();
     let acertou = false;
     let tipoErro = body.tipo_erro || "outro";
 
-    if (isDiscursiva) {
+    if (isRendicaoNivel5) {
+      acertou = false;
+      tipoErro = "conceitual";
+    } else if (isDiscursiva) {
       const veredito = body.veredito;
       if (body.precisa_revisao_humana) {
         return NextResponse.json(
@@ -122,14 +135,42 @@ export async function POST(
       // Ignora erro na verificação prévia de duplicata
     }
 
-    // Preservação do veredito discursivo sem exigir migração destrutiva no banco
-    const estrategiaFormatada = isDiscursiva
-      ? (body.estrategia_usada ? `${body.estrategia_usada} [veredito=${body.veredito}]` : `Discursiva [veredito=${body.veredito}]`)
-      : (body.estrategia_usada || null);
+    // Formatação de estratégia usada com telemetria socrática explícita
+    let estrategiaFormatada = body.estrategia_usada || null;
+    if (isRendicaoNivel5) {
+      estrategiaFormatada = "Dica Socrática Nível 5 (Resolução Revelada / Rendição)";
+    } else if (isDiscursiva) {
+      estrategiaFormatada = body.estrategia_usada
+        ? `${body.estrategia_usada} [veredito=${body.veredito}]`
+        : `Discursiva [veredito=${body.veredito}]`;
+      if (dica_socratica_usada) {
+        estrategiaFormatada += ` [Dica Socrática Nível ${nivel_max_dica || 1}]`;
+      }
+    } else if (dica_socratica_usada) {
+      const n = nivel_max_dica || 1;
+      if (acertou) {
+        estrategiaFormatada = body.estrategia_usada
+          ? `${body.estrategia_usada} [Acerto c/ Dica Nível ${n}]`
+          : `Acerto com Dica Socrática Nível ${n}`;
+      } else {
+        estrategiaFormatada = body.estrategia_usada
+          ? `${body.estrategia_usada} [Dica Nível ${n} - Revisão]`
+          : `Dica Socrática Nível ${n} (Revisão Necessária / Lacuna Conceitual)`;
+      }
+    }
+
+    // Telemetria estruturada nos logs e anotações para recuperação de dados
+    const nivelFinalDica = isRendicaoNivel5 ? 5 : (Number(nivel_max_dica) || 0);
+    const usouDicaFinal = Boolean(dica_socratica_usada || isRendicaoNivel5 || nivelFinalDica > 0);
+    const totalDicasFinal = Number(total_dicas_solicitadas) || (isRendicaoNivel5 ? 1 : usouDicaFinal ? 1 : 0);
+
+    const telemetriaTag = usouDicaFinal
+      ? `[TELEMETRIA_SOCRATICA: usou_dica=true, nivel_max=${nivelFinalDica}, acertou=${acertou}, total_dicas=${totalDicasFinal}${isRendicaoNivel5 ? ', rendicao=true' : ''}]`
+      : `[TELEMETRIA_SOCRATICA: usou_dica=false, acertou=${acertou}]`;
 
     const anotacoesFormatadas = isDiscursiva
-      ? `[VEREDITO:${body.veredito}] ${body.anotacoes || body.feedback_latex || ""}`.trim()
-      : (body.anotacoes || null);
+      ? `${telemetriaTag} [VEREDITO:${body.veredito}] ${body.anotacoes || body.feedback_latex || ""}`.trim()
+      : (body.anotacoes ? `${telemetriaTag} ${body.anotacoes}`.trim() : telemetriaTag);
 
     let tentativaId: any = null;
     try {
@@ -140,7 +181,7 @@ export async function POST(
         acertou: acertou ? 1 : 0,
         estrategia_usada: estrategiaFormatada,
         tipo_erro: tipoErro,
-        confianca_aluno: confianca,
+        confianca_aluno: isRendicaoNivel5 ? 1 : confianca,
         anotacoes: anotacoesFormatadas,
       }).select("id").single();
 
@@ -149,6 +190,34 @@ export async function POST(
       }
     } catch (saveErr) {
       console.warn("[Submit Route] Falha ao gravar em public.tentativas:", saveErr);
+    }
+
+    // Registro na tabela pública de telemetria de inferência de IA (ai_inference_logs)
+    if (usouDicaFinal) {
+      try {
+        await supabase.from("ai_inference_logs").insert({
+          evaluation_id: `hint_outcome_${qId}_${Date.now()}`,
+          tentativa_id: tentativaId,
+          task_type: "socratic_outcome",
+          provider: "mathai_tutor",
+          model_used: "socratic-stepper-polya",
+          latency_ms: 0,
+          status_code: 200,
+          success: true,
+          raw_usage: {
+            usou_dica_socratica: true,
+            nivel_max_dica: nivelFinalDica,
+            acertou_com_dica: acertou,
+            total_dicas: totalDicasFinal,
+            rendicao_nivel_5: isRendicaoNivel5,
+            questao_id: qId,
+            aluno_id: validAlunoId,
+            tipo_questao: isDiscursiva ? "discursiva" : "objetiva",
+          },
+        });
+      } catch (logErr) {
+        console.warn("[Submit Route] Aviso ao gravar em ai_inference_logs:", logErr);
+      }
     }
 
     // Busca ciclo SM-2 anterior do aluno para esta questão
@@ -174,14 +243,16 @@ export async function POST(
       // Fallback para valores padrão
     }
 
-    // Regra explícita de SM-2 para questões discursivas:
-    // - aprovado: nota 4 (ou confianca 3-5), incrementa repeticoes e expande intervalo
-    // - parcial: nota 2 (falha leve por conta/sinal/etapa, repeticoes=0, intervalo=1 dia para consolidação)
-    // - incorreto: nota 1 (erro conceitual, repeticoes=0, intervalo=1 dia)
-    // - ELO: estritamente inativo/não calibrado
-    const notaSm2 = isDiscursiva
+    // Regra explícita de SM-2 para repetição espaçada:
+    // - rendição nível 5: nota 1 (penalidade pedagógica, repeticoes=0, intervalo=1 dia para consolidação prioritária)
+    // - aprovado / acerto: nota 3 a 5 (incrementa repeticoes e expande intervalo)
+    // - parcial: nota 2 (repeticoes=0, intervalo=1 dia)
+    // - incorreto: nota 1 (repeticoes=0, intervalo=1 dia)
+    const notaSm2 = isRendicaoNivel5
+      ? 1
+      : isDiscursiva
       ? (body.veredito === "aprovado" ? Math.max(3, Math.min(5, confianca)) : body.veredito === "parcial" ? 2 : 1)
-      : confianca;
+      : (acertou ? Math.max(3, Math.min(5, confianca)) : 1);
 
     const novoSm2 = calcularProximoIntervaloSM2(
       repeticoesAnt,
