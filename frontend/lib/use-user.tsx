@@ -126,12 +126,24 @@ export interface UserContextType {
   initials: string;
   saveProfile: (updated: Partial<UserProfile>) => Promise<void>;
   logout: () => Promise<void>;
-  refresh: (providedUser?: any) => Promise<void>;
+  refresh: (providedUser?: any) => Promise<UserProfile | null>;
   reenviarEmailVerificacao: () => Promise<{ success: boolean; error?: string }>;
   validarCodigoVerificacao: (codigo: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
+
+export function isUserEmailVerified(user: any): boolean {
+  if (!user) return false;
+  if (user.email_confirmed_at || user.confirmed_at) return true;
+  const isGoogleOrOAuth = Boolean(
+    user.app_metadata?.provider === "google" ||
+    (Array.isArray(user.app_metadata?.providers) && user.app_metadata.providers.includes("google")) ||
+    user.user_metadata?.email_verified === true ||
+    (Array.isArray(user.identities) && user.identities.some((id: any) => id.provider === "google" || id.identity_data?.email_verified === true))
+  );
+  return isGoogleOrOAuth;
+}
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
@@ -140,7 +152,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_GUEST_PROFILE);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchProfile = useCallback(async (providedUser?: any) => {
+  const fetchProfile = useCallback(async (providedUser?: any): Promise<UserProfile | null> => {
     try {
       let user = providedUser;
       if (!user) {
@@ -160,13 +172,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
 
         const cached = getCachedProfile();
-        const emailConfirmadoNoAuth = Boolean(user.email_confirmed_at);
+        const emailConfirmadoNoAuth = isUserEmailVerified(user);
 
         let loadedProfile: UserProfile = {
           ...DEFAULT_GUEST_PROFILE,
           ...(cached || {}),
           id: user.id,
-          nome: user.user_metadata?.full_name || cached?.nome || user.email.split("@")[0] || "Aluno LEMMAS",
+          nome: user.user_metadata?.full_name || user.user_metadata?.name || cached?.nome || user.email.split("@")[0] || "Aluno LEMMAS",
           email: user.email,
           fotoUrl: googleAvatar || cached?.fotoUrl || null,
           isGuest: false,
@@ -184,8 +196,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const estaVerificado = emailConfirmadoNoAuth || Boolean(dbUser?.verificado === 1);
           loadedProfile.emailVerificado = estaVerificado;
 
-          // Se o email está confirmado no Auth mas a tabela usuarios ainda tem verificado=0, sincroniza
-          if (emailConfirmadoNoAuth && dbUser && dbUser.verificado !== 1) {
+          // Se o email está confirmado no Auth/Google mas a tabela usuarios ainda tem verificado=0, sincroniza
+          if (estaVerificado && dbUser && dbUser.verificado !== 1) {
             try {
               await supabase
                 .from("usuarios")
@@ -236,7 +248,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 email: user.email,
                 senha_hash: "supabase_managed",
                 escolaridade: "Ensino Superior",
-                verificado: emailConfirmadoNoAuth ? 1 : 0,
+                verificado: estaVerificado ? 1 : 0,
               })
               .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, verificado")
               .maybeSingle();
@@ -277,7 +289,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedProfile));
         }
         setLoading(false);
-        return;
+        return loadedProfile;
       }
 
       // Sessão sem usuário autenticado (modo local/visitante)
@@ -297,17 +309,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
+    return null;
   }, [supabase]);
 
   useEffect(() => {
-    // Check for cached profile on mount
+    // Carrega cache imediatamente para UX instantânea sem piscar tela
     const cached = getCachedProfile();
     if (cached) {
       setProfile(cached);
       setLoading(false);
-    } else {
-      fetchProfile();
     }
+    // SEMPRE dispara revalidação em segundo plano (SWR) para garantir sincronização com Supabase Auth e Postgres
+    fetchProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
