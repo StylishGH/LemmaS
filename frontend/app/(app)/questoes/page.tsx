@@ -34,6 +34,7 @@ import { MathText } from "@/components/math/MathDisplay";
 import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
+import LemaBadge from "@/components/math/LemaBadge";
 
 interface Question {
   id: number;
@@ -56,6 +57,8 @@ interface Question {
   fase_nivel?: string;
   solucao?: string | null;
   estrategias_esperadas?: string | string[] | null;
+  lema_id?: number | null;
+  lema_codigo?: string | null;
 }
 
 
@@ -159,6 +162,18 @@ export default function BancoQuestoesPage() {
   const [tipoFiltro, setTipoFiltro] = useState<string[]>([VAL_TODOS]);
   const [dificuldadeFiltro, setDificuldadeFiltro] = useState<string[]>([VAL_TODAS]);
   const [busca, setBusca] = useState<string>("");
+  const [lemaFiltro, setLemaFiltro] = useState<string | null>(null);
+
+  // Lê parâmetro de URL inicial (?lema=LEMA-0042)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const urlLema = sp.get("lema") || sp.get("lema_codigo");
+      if (urlLema) {
+        setLemaFiltro(urlLema.trim().toUpperCase());
+      }
+    }
+  }, []);
 
   const [gabaritosRevelados, setGabaritosRevelados] = useState<Set<number>>(new Set());
 
@@ -360,6 +375,7 @@ export default function BancoQuestoesPage() {
     setTipoFiltro([VAL_TODOS]);
     setDificuldadeFiltro([VAL_TODAS]);
     setBusca("");
+    setLemaFiltro(null);
     setPage(1);
   };
 
@@ -394,6 +410,7 @@ export default function BancoQuestoesPage() {
     const dificuldadeParam = paramFromFiltro(dificuldadeFiltro);
     if (dificuldadeParam) params.set("dificuldade", dificuldadeParam);
     if (busca.trim()) params.set("search", busca.trim());
+    if (lemaFiltro) params.set("lema", lemaFiltro);
 
     fetch(`/api/questions?${params.toString()}`)
       .then((res) => res.json())
@@ -476,6 +493,7 @@ export default function BancoQuestoesPage() {
     tipoFiltro,
     dificuldadeFiltro,
     busca,
+    lemaFiltro,
     page,
   ]);
 
@@ -528,6 +546,7 @@ export default function BancoQuestoesPage() {
             ano: paramFromFiltro(anoFiltro) || VAL_TODOS,
             tipo: paramFromFiltro(tipoFiltro) || VAL_TODOS,
             dificuldade: paramFromFiltro(dificuldadeFiltro) || VAL_TODAS,
+            lema: lemaFiltro || undefined,
           },
           limit: 100,
         }),
@@ -613,6 +632,7 @@ export default function BancoQuestoesPage() {
     numTipos > 0,
     numDificuldades > 0,
     busca.trim() !== "",
+    lemaFiltro !== null,
   ].filter(Boolean).length;
 
   const resumoFiltrosTexto = `${numBancas > 0 ? `Bancas: ${joinSelecionados(bancaFiltro, VAL_TODAS)}` : "Todas as bancas"}${
@@ -1455,6 +1475,17 @@ export default function BancoQuestoesPage() {
             </button>
           )}
 
+          {lemaFiltro && (
+            <button
+              onClick={() => setLemaFiltro(null)}
+              className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-[#d9b452] hover:bg-amber-500/25 transition-colors shadow-2xs"
+              title="Remover filtro de lema"
+            >
+              <span>Lema: {lemaFiltro}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
           {filtrosAtivosCount > 0 && (
             <button
               onClick={limparFiltros}
@@ -1701,9 +1732,7 @@ export default function BancoQuestoesPage() {
                       <Flag className="w-3.5 h-3.5" />
                       <span>Reportar</span>
                     </button>
-                    <span className="font-mono text-xs text-slate-400 dark:text-zinc-500 font-semibold">
-                      Lema #{q.id.toString().padStart(3, "0")}
-                    </span>
+                    <LemaBadge lemaCodigo={q.lema_codigo} lemaId={q.lema_id} />
                   </div>
                 </div>
 

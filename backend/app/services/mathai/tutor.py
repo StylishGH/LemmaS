@@ -8,6 +8,7 @@ Implementa a pedagogia socrática progressiva para conduzir o estudante à refle
 - Nível 5 (Resolução Completa): Demonstração integral passo a passo até o gabarito.
 """
 
+import re
 from typing import Any, Dict, List, Optional
 from app.services.mathai.gateway import mathai_gateway
 
@@ -258,7 +259,12 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
 
     def _get_fallback_hint(self, exercise: Dict[str, Any], level: int, pref: str = "conceitual") -> str:
         """Dicas pedagógicas determinísticas de contingência adaptadas por preferência."""
-        topico = exercise.get("topico", "este tema")
+        raw_topico = exercise.get("topico", "")
+        # Remove nomes de autores, competições ou países salvos indevidamente no campo tópico
+        if not raw_topico or re.search(r"mold[aá]via|denis|sidorov|olympiad|author|contest|[a-z]+,\s*[a-z]+", str(raw_topico), re.IGNORECASE):
+            topico = exercise.get("materia", "Matemática")
+        else:
+            topico = raw_topico
         gabarito = exercise.get("gabarito", "")
         solucao = exercise.get("solucao", "")
         res_oficial = solucao or gabarito or "A resolução formal completa demonstra que a tese se sustenta diretamente a partir das hipóteses."
