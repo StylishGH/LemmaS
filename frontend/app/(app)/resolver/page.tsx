@@ -45,6 +45,7 @@ import { useUserProfile } from "@/lib/use-user";
 import { createClient } from "@/lib/supabase";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 import MathScratchpad from "@/components/math/MathScratchpad";
+import SpenSmartCanvas from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import ThoughtLine from "@/components/ui/thought-line";
@@ -313,12 +314,18 @@ function ResolverContent() {
   const [showRascunho, setShowRascunho] = useState(false);
   const [bancadaModo, setBancadaModo] = useState<"lousa" | "geometria" | "texto" | null>(null);
   
-  // Dicas Socráticas (Modo Treino)
-  const [hintLevel, setHintLevel] = useState<number>(1);
+  // Dicas Socráticas (Modo Treino com 5 Níveis Pedagógicos por Questão)
+  const [hintLevels, setHintLevels] = useState<Record<number, number>>({});
+  const [hint5Used, setHint5Used] = useState<Record<number, boolean>>({});
+  const [showHint5ConfirmModal, setShowHint5ConfirmModal] = useState<boolean>(false);
   const [hints, setHints] = useState<Record<number, string>>({});
+  const [hintsHistory, setHintsHistory] = useState<Record<number, Array<{ nivel: number; dica: string; modelo?: string; confianca?: number }>>>({});
   const [hintMeta, setHintMeta] = useState<Record<number, { modelo?: string; confianca?: number }>>({});
   const [loadingHint, setLoadingHint] = useState<boolean>(false);
   const [hintError, setHintError] = useState<string | null>(null);
+
+  // Motor ativo da Lousa de Rascunho (S-Pen 120Hz Dual-Canvas vs Lousa Giz)
+  const [lousaEngine, setLousaEngine] = useState<"spen-dual" | "classic">("spen-dual");
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -651,8 +658,31 @@ function ResolverContent() {
     }
   };
 
-  // Solicitar Dica Socrática (Modo Treino)
+  const currentHintLevel = hintLevels[currentIndex] || 1;
+
+  // Solicitar Dica Socrática (Modo Treino com 5 Níveis Pedagógicos Progressivos)
   const pedirDicaSocratica = async () => {
+    const q = questions[currentIndex];
+    if (!q) return;
+
+    // Se a 5ª dica já foi revelada nesta questão, nada mais a solicitar
+    if (hint5Used[currentIndex]) return;
+
+    // Se o próximo nível for o Nível 5 (Gabarito Oficial), exige confirmação explícita
+    if (currentHintLevel === 5) {
+      setShowHint5ConfirmModal(true);
+      return;
+    }
+
+    await executarRequisicaoDica(currentHintLevel, false);
+  };
+
+  const confirmarEDesbloquearDica5 = async () => {
+    setShowHint5ConfirmModal(false);
+    await executarRequisicaoDica(5, true);
+  };
+
+  const executarRequisicaoDica = async (targetLevel: number, isLevel5Penalty: boolean) => {
     const q = questions[currentIndex];
     if (!q) return;
 
@@ -661,7 +691,7 @@ function ResolverContent() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
-      // Mapeamento automático de preferência pedagógica a partir do perfil do estudante
+
       let prefPedagogica = profile?.pedagogicalPreference || "conceitual";
       const motivacoes = profile?.motivacoesSelecionadas || [];
       const foco = (profile?.focoConcurso || "").toUpperCase();
@@ -686,7 +716,7 @@ function ResolverContent() {
           subtopico: q.subtopico || null,
           gabarito: q.gabarito || null,
           solucao: q.solucao || null,
-          nivel: hintLevel,
+          nivel: targetLevel,
           tentativas_anteriores: justificativas[currentIndex] || answers[currentIndex] || null,
           pedagogical_preference: prefPedagogica,
           pedagogicalPreference: prefPedagogica,
@@ -694,20 +724,92 @@ function ResolverContent() {
           motivacoes: motivacoes,
         }),
       });
+
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || `Erro ${res.status} ao conectar com MathAI Engine`);
       }
+
       if (data.dica) {
+        const novaDica = {
+          nivel: targetLevel,
+          dica: data.dica,
+          modelo: data.modelo || (data.provedor === "nvidia" ? "NVIDIA Nemotron" : data.provedor === "openrouter" ? "OpenRouter" : "MathAI Engine"),
+          confianca: typeof data.confianca === "number" ? data.confianca : 0.95,
+        };
+
         setHints((prev) => ({ ...prev, [currentIndex]: data.dica }));
         setHintMeta((prev) => ({
           ...prev,
           [currentIndex]: {
-            modelo: data.modelo || (data.provedor === "nvidia" ? "NVIDIA Nemotron" : data.provedor === "openrouter" ? "OpenRouter" : "MathAI Engine"),
-            confianca: typeof data.confianca === "number" ? data.confianca : 0.95,
+            modelo: novaDica.modelo,
+            confianca: novaDica.confianca,
           },
         }));
-        setHintLevel((prev) => Math.min(5, prev + 1));
+
+        setHintsHistory((prev) => {
+          const list = prev[currentIndex] || [];
+          const filtered = list.filter((h) => h.nivel !== targetLevel);
+          return { ...prev, [currentIndex]: [...filtered, novaDica].sort((a, b) => a.nivel - b.nivel) };
+        });
+
+        if (targetLevel < 5) {
+          setHintLevels((prev) => ({ ...prev, [currentIndex]: Math.min(5, targetLevel + 1) }));
+        } else {
+          setHintLevels((prev) => ({ ...prev, [currentIndex]: 5 }));
+        }
+
+        // Se a Dica 5 foi solicitada: penalidade pedagógica (computa como incorreta no SM-2)
+        if (isLevel5Penalty || targetLevel === 5) {
+          setHint5Used((prev) => ({ ...prev, [currentIndex]: true }));
+
+          const resOficial = q.solucao || q.gabarito || "Gabarito Oficial";
+
+          // 1. Marca tentativa de múltipla escolha como incorreta com nota 0
+          setSubmitResults((prev) => ({
+            ...prev,
+            [currentIndex]: {
+              acertou: false,
+              gabarito: resOficial,
+              resposta_enviada: "Resolução Revelada (Dica 5)",
+              sm2: {
+                repeticoes: 1,
+                fator_facilidade: 1.3,
+                intervalo_dias: 1,
+                proxima_revisao_data: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+              },
+            },
+          }));
+
+          // 2. Se for questão discursiva, zera a pontuação e registra veredito incorreto
+          setDiscursiveEvaluations((prev) => ({
+            ...prev,
+            [currentIndex]: {
+              veredito: "incorreto",
+              desenvolvimento_presente: false,
+              resultado_final_correto: false,
+              etapas_corretas: [],
+              erros_identificados: ["Resolução oficial revelada via 5ª Dica Socrática."],
+              feedback_latex: `\\text{Gabarito Oficial Revelado via 5ª Dica Socrática: } ${resOficial}`,
+              diagnostico: "Resolução oficial revelada via 5ª Dica Socrática. Tentativa computada como incorreta para consolidação via repetição espaçada.",
+              precisa_revisao_humana: false,
+            },
+          }));
+
+          // 3. Persistência assíncrona da submissão no Postgres com qualidade de revisão zero
+          fetch(`/api/questions/${q.id}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              resposta: "DICA_5_REVELADA",
+              aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
+              tempo_segundos: timeLeft,
+              confianca: 1,
+              estrategia_usada: "Dica Socrática Nível 5 (Resolução Revelada)",
+              anotacoes: "Gabarito revelado via 5ª Dica Socrática. Tentativa zerada no SM-2.",
+            }),
+          }).catch((e) => console.warn("Erro ao registrar submissão de Dica 5:", e));
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar dica";
@@ -1673,41 +1775,83 @@ function ResolverContent() {
       {/* CONTEÚDO ATIVO DA BANCADA */}
       {bancadaModo === "lousa" && (
         <div className="space-y-3 animate-fadeIn">
-          <MathScratchpad
-            onExportBase64={(b64, hasStrokes) => {
-              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
-              setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
-            }}
-            onEvaluate={(b64) => {
-              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
-              setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
-              submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
-            }}
-            isEvaluating={loadingDiscursive}
-            onClose={() => setBancadaModo(null)}
-          />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
-            <div className="text-xs text-slate-700 dark:text-zinc-300">
-              <strong className="text-amber-700 dark:text-[#d9b452] block">Avaliação do Rascunho da Lousa:</strong>
-              <span>Você pode clicar diretamente em &quot;Avaliar Rascunho&quot; na barra superior da Lousa para processar sua caligrafia com a MathAI Engine.</span>
+          {/* Seletor de Motor da Lousa: S-Pen 120Hz (Dual-Canvas) vs Lousa Giz LemmaS */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">Motor de Escrita Digital:</span>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900/80 p-0.5 rounded-lg border border-amber-500/20 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setLousaEngine("spen-dual")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                  lousaEngine === "spen-dual"
+                    ? "bg-amber-500 text-black shadow-xs font-bold"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                }`}
+              >
+                ⚡ S-Pen 120Hz (Dual-Canvas)
+              </button>
+              <button
+                type="button"
+                onClick={() => setLousaEngine("classic")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                  lousaEngine === "classic"
+                    ? "bg-amber-500 text-black shadow-xs font-bold"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                }`}
+              >
+                🎨 Lousa Giz LemmaS
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                const img = imageFiles[currentIndex];
-                if (img) {
-                  submeterResolucaoDiscursiva("lousa", { imagemBase64: img });
-                } else {
-                  alert("Por favor, clique em 'Avaliar Rascunho' na barra de ferramentas da Lousa para capturar seu rascunho com o digitalizador.");
-                }
-              }}
-              disabled={loadingDiscursive}
-              className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
-            >
-              {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
-              <span>Avaliar Rascunho da Lousa com MathAI Engine</span>
-            </button>
           </div>
+
+          {lousaEngine === "spen-dual" ? (
+            <SpenSmartCanvas
+              onEvaluateOcr={async (b64) => {
+                setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
+                setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+                await submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
+              }}
+              isEvaluating={loadingDiscursive}
+            />
+          ) : (
+            <>
+              <MathScratchpad
+                onExportBase64={(b64, hasStrokes) => {
+                  setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
+                  setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+                }}
+                onEvaluate={(b64) => {
+                  setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
+                  setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+                  submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
+                }}
+                isEvaluating={loadingDiscursive}
+                onClose={() => setBancadaModo(null)}
+              />
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
+                <div className="text-xs text-slate-700 dark:text-zinc-300">
+                  <strong className="text-amber-700 dark:text-[#d9b452] block">Avaliação do Rascunho da Lousa:</strong>
+                  <span>Você pode clicar diretamente em &quot;Avaliar Rascunho&quot; na barra superior da Lousa para processar sua caligrafia com a MathAI Engine.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const img = imageFiles[currentIndex];
+                    if (img) {
+                      submeterResolucaoDiscursiva("lousa", { imagemBase64: img });
+                    } else {
+                      alert("Por favor, clique em 'Avaliar Rascunho' na barra de ferramentas da Lousa para capturar seu rascunho com o digitalizador.");
+                    }
+                  }}
+                  disabled={loadingDiscursive}
+                  className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
+                >
+                  {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
+                  <span>Avaliar Rascunho da Lousa com MathAI Engine</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -2599,7 +2743,7 @@ function ResolverContent() {
         <>
           {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO) */}
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500" />
                 <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
@@ -2608,11 +2752,27 @@ function ResolverContent() {
               </div>
               <button
                 onClick={pedirDicaSocratica}
-                disabled={loadingHint}
-                className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-[#d9b452] font-semibold hover:underline disabled:opacity-50"
+                disabled={loadingHint || !!hint5Used[currentIndex]}
+                className={`flex items-center gap-1.5 text-xs font-semibold rounded-lg px-2.5 py-1.5 transition ${
+                  hint5Used[currentIndex]
+                    ? "bg-zinc-800/50 text-zinc-500 cursor-not-allowed border border-zinc-700/50"
+                    : currentHintLevel === 5
+                    ? "bg-amber-500/15 border border-amber-500 text-amber-600 dark:text-[#d9b452] hover:bg-amber-500/25 animate-pulse cursor-pointer font-bold"
+                    : "text-amber-600 dark:text-[#d9b452] hover:bg-amber-500/10 cursor-pointer"
+                }`}
               >
-                {loadingHint ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                <span>Solicitar Dica Socrática (Nível {hintLevel})</span>
+                {loadingHint ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span>
+                  {hint5Used[currentIndex]
+                    ? "Resolução Oficial Revelada (Nível 5)"
+                    : currentHintLevel === 5
+                    ? "🔓 Revelar Resolução Oficial (Dica 5 - Penalidade)"
+                    : `Solicitar Dica Socrática (Nível ${currentHintLevel})`}
+                </span>
               </button>
             </div>
 
@@ -2630,7 +2790,7 @@ function ResolverContent() {
                   steps={[
                     "Analisando dados do enunciado e incógnitas",
                     "Mapeando invariantes matemáticos e lemas",
-                    `Modulando intervenção pedagógica (Nível ${hintLevel})`,
+                    `Modulando intervenção pedagógica (Nível ${currentHintLevel})`,
                   ]}
                   color="#9333ea"
                   glyphColor="#9333ea"
@@ -2639,34 +2799,72 @@ function ResolverContent() {
               </div>
             )}
 
-            {hints[currentIndex] && (
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25 text-xs text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-3 animate-fadeIn">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-purple-500/20">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
-                      <Sparkles className="w-3 h-3" />
-                      [INFERÊNCIA DA IA]
-                    </span>
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
-                      Modelo: <strong>{hintMeta[currentIndex]?.modelo || "MathAI Engine"}</strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
-                    <span>Nível de Confiança:</span>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                      {Math.round((hintMeta[currentIndex]?.confianca ?? 0.95) * 100)}%
-                    </span>
-                  </div>
-                </div>
-
+            {/* AVISO DE PENALIDADE DA 5ª DICA QUANDO ACIONADA */}
+            {hint5Used[currentIndex] && (
+              <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2.5 shadow-xs">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
                 <div>
-                  <strong className="text-purple-700 dark:text-purple-300 block mb-1">Dica Reflexiva Socrática:</strong>
-                  <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
-                    <MathText text={hints[currentIndex]} />
-                  </div>
+                  <strong className="block font-bold mb-0.5">Tentativa computada como incorreta (Nota 0 / SM-2):</strong>
+                  <span>
+                    A resolução oficial completa e o gabarito foram revelados pela 5ª Dica Socrática. A questão foi agendada para repetição espaçada amanhã para fixação pedagógica do conteúdo.
+                  </span>
                 </div>
               </div>
             )}
+
+            {/* HISTÓRICO DE DICAS ACUMULADAS DA QUESTÃO (PROGRESSÃO MAIÊUTICA) */}
+            {hintsHistory[currentIndex] && hintsHistory[currentIndex].length > 0 ? (
+              <div className="space-y-3">
+                {hintsHistory[currentIndex].map((item, idx) => {
+                  const nivelTitulos: Record<number, string> = {
+                    1: "Nível 1 · Simbologia & Notação",
+                    2: "Nível 2 · Primeiro Passo no Papel",
+                    3: "Nível 3 · Encadeamento Intermediário",
+                    4: "Nível 4 · Pulo do Gato & Pegadinha",
+                    5: "Nível 5 · Resolução Oficial Definitiva",
+                  };
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-xl border text-xs leading-relaxed space-y-2.5 animate-fadeIn ${
+                        item.nivel === 5
+                          ? "bg-amber-500/10 border-amber-500/30 text-slate-900 dark:text-[#f5f0df]"
+                          : "bg-purple-500/10 border-purple-500/25 text-slate-800 dark:text-[#f5f0df]"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-purple-500/20 dark:border-purple-500/20">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase text-white shadow-xs ${
+                              item.nivel === 5 ? "bg-amber-600 font-bold" : "bg-purple-600"
+                            }`}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            {item.nivel === 5 ? "[GABARITO OFICIAL]" : "[INFERÊNCIA DA IA]"}
+                          </span>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                            {nivelTitulos[item.nivel] || `Nível ${item.nivel}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                          <span>Modelo: <strong>{item.modelo || "MathAI Engine"}</strong></span>
+                        </div>
+                      </div>
+
+                      <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
+                        <MathText text={item.dica} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : hints[currentIndex] ? (
+              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25 text-xs text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-3 animate-fadeIn">
+                <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
+                  <MathText text={hints[currentIndex]} />
+                </div>
+              </div>
+            ) : null}
           </div>
         </>
       )}
@@ -2706,6 +2904,48 @@ function ResolverContent() {
           </button>
         )}
       </div>
+
+      {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (REVELA GABARITO & MARCA INCORRETO) */}
+      {showHint5ConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#141222] border border-amber-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 font-serif-math">
+                  Revelar Resolução Oficial e Gabarito?
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                  A <strong>5ª Dica Socrática</strong> apresentará a resolução oficial completa passo a passo e o gabarito definitivo desta questão.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+              ⚠️ <strong>Regra de Integridade Pedagógica:</strong> Ao solicitar esta dica, esta tentativa será <strong>computada como incorreta (nota zero no algoritmo de repetição espaçada SM-2)</strong> para registrar que o exercício precisará de revisão futura.
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+              <button
+                type="button"
+                onClick={() => setShowHint5ConfirmModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Cancelar (Tentar Sozinho)
+              </button>
+              <button
+                type="button"
+                onClick={confirmarEDesbloquearDica5}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Sim, Revelar Resolução Oficial</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE CONFIRMAÇÃO DE ENTREGA */}
             <ConfirmarEntregaModal

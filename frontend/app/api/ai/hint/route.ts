@@ -3,15 +3,15 @@ import { generateGeminiContent } from "@/lib/gemini";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
-const PROMPT_SISTEMA_SOCRATICO = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado em conduzir estudantes de matemática pelo método maiêutico (reflexão socrática progressiva) sem entregar respostas prontas.
+const PROMPT_SISTEMA_SOCRATICO = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado em conduzir estudantes de matemática pelo método maiêutico progressivo, prático e rigoroso.
 
-DIRETRIZES FUNDAMENTAIS:
-- NUNCA entregue a resposta final nem conclua os cálculos nos níveis 1 a 4.
-- Nível 1 (Dados & Foco): Chame a atenção para as grandezas do problema, o que representam intuitivamente e as hipóteses do enunciado, sem fórmulas prontas.
-- Nível 2 (Conceito & Lema): Sugira o teorema, lema ou propriedade matemática chave que conecta as informações (ex: Teorema de Pitágoras, Relações de Girard, Semelhança, Invariantes).
-- Nível 3 (Primeiro Passo): Oriente a montagem da primeira equação ou representação visual estruturada a ser escrita no papel.
-- Nível 4 (Passos Intermediários): Desenvolva manipulações intermediárias do cálculo, deixando estritamente o passo conclusivo para o estudante deduzir.
-- Nível 5 (Resolução & Síntese): Demonstre a resolução completa passo a passo até o gabarito oficial, sintetizando o aprendizado.
+DIRETRIZES FUNDAMENTAIS DOS 5 NÍVEIS PEDAGÓGICOS:
+- NUNCA entregue a resposta final nos níveis 1 a 4.
+- Nível 1 (Identificação de Notação & Simbologia): Chame a atenção para os símbolos, notações e conectivos específicos desta questão (ex: quantificadores $\\forall, \\exists$, pertinência $\\in$, inclusão $\\subseteq$, conectivos $\\implies, \\iff, \\land, \\lor$, notações de funções, matrizes, cálculo, etc.). Pergunte socraticamente se o estudante conhece essas simbologias e o que significam no problema.
+- Nível 2 (Primeiro Passo Prático no Papel): Ajude o estudante a COMEÇAR A ESCREVER de fato! Diga com clareza como ele deve iniciar a primeira linha de dedução, hipótese ou equação no rascunho (ex: "No seu rascunho, comece escrevendo a primeira linha: 'Seja $n \\in \\mathbb{N}$ tal que...'").
+- Nível 3 (Encadeamento Dedutivo Intermediário): Indique a próxima conexão lógica ou manipulação intermediária (ex: expansão, negação, substituição ou simetria), relacionando a hipótese inicial ao próximo termo em LaTeX ($...$).
+- Nível 4 (O Pulo do Gato & Alerta de Pegadinha): Aponte a sacada decisiva, o lema chave ou a armadilha de prova da banca que destrava a questão, deixando apenas a última linha de arremate para o estudante concluir.
+- Nível 5 (Resolução Oficial Completa & Gabarito): Apresente a resolução passo a passo integral e rigorosa até o gabarito oficial definitivo em KaTeX ($...$ e $$...$$), demonstrando a solução completa da questão.
 
 DIRETRIZES DE FORMATAÇÃO E LATEX (MANDATÓRIO):
 - Toda e qualquer expressão, incógnita, número algébrico ou fórmula DEVE estar rigorosamente delimitada por $...$ (para matemática em linha) ou $$...$$ (para equações destacadas em bloco).
@@ -114,14 +114,14 @@ MODO PEDAGÓGICO: ${pref}${contextoStr}
 Diretriz específica para o Nível ${level}:
 ${
   level === 1
-    ? "Faça perguntas socráticas que ajudem o aluno a identificar os dados, hipóteses e conectivos específicos desta questão. NÃO apresente equações prontas."
+    ? "Identifique a simbologia, notação matemática e conectivos específicos desta questão (ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, implicação $\\implies$, funções ou conjuntos). Pergunte socraticamente se o aluno conhece essas simbologias e o que cada uma exige para iniciar."
     : level === 2
-    ? "Aponte o lema, teorema, conectivos lógicos ou propriedade algébrica/geométrica que rege este tipo de problema com notação LaTeX ($...$), sem resolver."
+    ? "Instrua o aluno a COMEÇAR A ESCREVER de fato no papel! Indique com precisão qual é a primeira linha, hipótese ou relação formal que ele deve anotar no rascunho para dar o primeiro passo prático."
     : level === 3
-    ? "Escreva a primeira igualdade, equivalência lógica ou representação estruturada a ser anotada no papel para iniciar o desenvolvimento desta questão."
+    ? "Apresente o encadeamento dedutivo intermediário em LaTeX ($...$), mostrando como manipular a relação do Nível 2 e avançar para o próximo passo lógico."
     : level === 4
-    ? "Apresente as manipulações e passagens intermediárias em LaTeX ($...$), deixando o arremate final para o aluno concluir."
-    : "Apresente a DEMONSTRAÇÃO COMPLETA passo a passo de cada item ou etapa desta questão em LaTeX ($...$ e $$...$$), demonstrando a resolução integral."
+    ? "Aponte o pulo do gato / lema crucial e alerte sobre pegadinhas típicas da banca, deixando estritamente a última linha de arremate para o estudante concluir."
+    : "Apresente a RESOLUÇÃO OFICIAL COMPLETA passo a passo de ponta a ponta com rigor formal em KaTeX ($...$ e $$...$$), demonstrando a dedução integral e concluindo com o gabarito oficial definitivo."
 }
 
 IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUNCA dê uma resposta vazia ou genérica. Responda diretamente com o texto da dica em KaTeX.`;
@@ -151,7 +151,7 @@ IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUN
     if (level === 5 && (solucao || gabarito)) {
       return NextResponse.json({
         nivel: 5,
-        dica: `💡 **Nível 5 (Resolução Completa):**\n\n${solucao || gabarito}`,
+        dica: `💡 **Nível 5 (Resolução Oficial Definitiva):**\n\n${solucao || gabarito}`,
         modelo: "LEMMAS Gabarito Oficial",
         provedor: "lemmas-knowledge-base",
         confianca: 1.0,
@@ -159,11 +159,11 @@ IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUN
     }
 
     const fallbackHints: Record<number, string> = {
-      1: `💡 **Nível 1 (Intuição e Dados):** Releia com atenção o enunciado de **${topico}**. Isole quais são as hipóteses e dados conhecidos e qual é a tese ou incógnita pedida. O que cada termo ou símbolo representa antes de tentar aplicar regras prontas?`,
-      2: `💡 **Nível 2 (Conceito & Lema):** Pense em qual teorema, lema ou equivalência fundamental rege as propriedades de **${topico}**. Existe alguma equivalência lógica, simetria geométrica ou invariante aplicável a este caso?`,
-      3: `💡 **Nível 3 (Primeiro Passo):** Escreva no papel a primeira relação estruturada (algébrica, lógica com conectivos ou geométrica) que traduz diretamente as hipóteses de **${topico}**.`,
-      4: `💡 **Nível 4 (Passos Intermediários):** Desenvolva as etapas intermediárias simplificando os termos comuns e aplicando as propriedades operatórias cabíveis, deixando a estrutura pronta para a conclusão.`,
-      5: `💡 **Nível 5 (Resolução Completa):** Conclua a dedução formal justificando cada passagem lógica e confirmando se o resultado satisfaz todas as condições e restrições de **${topico}**.`,
+      1: `💡 **Nível 1 (Simbologia & Notação):** Você identificou quais são as simbologias e conectivos essenciais desta questão de **${topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos lógicos como $\\implies$). O que cada um deles exige antes de começar a calcular?`,
+      2: `💡 **Nível 2 (Primeiro Passo no Papel):** Vamos começar a escrever no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **${topico}** (ex: comece com 'Seja $x \\in ...$' ou defina a variável principal).`,
+      3: `💡 **Nível 3 (Encadeamento Intermediário):** Agora relacione a primeira hipótese ao próximo passo dedutivo. Que propriedade ou manipulação operatória de **${topico}** conecta o ponto de partida à tese pedida?`,
+      4: `💡 **Nível 4 (Pulo do Gato & Pegadinha):** Atente para a simplificação crítica ou lema decisivo de **${topico}** que destrava a conclusão, cuidando para não cair em divisões por zero ou casos particulares.`,
+      5: `💡 **Nível 5 (Resolução Oficial Definitiva):**\n\n${solucao || gabarito || "A dedução formal demonstra rigorosamente o resultado pelo encadeamento direto das hipóteses."}`,
     };
 
     return NextResponse.json({
