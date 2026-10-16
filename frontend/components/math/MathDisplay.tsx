@@ -168,8 +168,8 @@ export function sanitizeMathText(raw: string): string {
     const l = line.trim();
     if (!l) return line;
 
-    // Pula títulos markdown, blockquotes ou marcadores de lista
-    if (/^(?:#{1,6}\s+|>\s+|\*\s+|-\s+|\+\s+|\d+\.\s+)/.test(l)) {
+    // Pula títulos markdown, blockquotes ou marcadores de lista (incluindo bullets unicode)
+    if (/^(?:#{1,6}\s+|>\s+|\*\s+|-\s+|\+\s+|\d+\.\s+|[•·-]\s*)/.test(l)) {
       return line;
     }
 
@@ -180,21 +180,34 @@ export function sanitizeMathText(raw: string): string {
       if (l.startsWith("$$") && l.endsWith("$$")) return line;
       if (l.startsWith("$") && l.endsWith("$") && l.indexOf("$", 1) === l.length - 1) return line;
 
-      // Caso 1: Fórmula terminando com $ sem abrir $ (ex: `r = \frac{a+b-c}{2}$`)
+      // Palavras de texto em linguagem natural (excluindo comandos LaTeX)
+      const words = l.replace(/\\[a-zA-Z]+(?:\{[^}]*\})?/g, "").match(/[a-zA-ZÀ-ÿ]{3,}/g) || [];
+
+      // Se a linha contém palavras de texto (não é uma equação isolada), NUNCA envelopa a linha inteira em $$!
+      if (words.length > 0) {
+        return line;
+      }
+
+      const dollarCount = (l.match(/\$/g) || []).length;
+      if (dollarCount % 2 === 0 && dollarCount > 0) {
+        // Já possui delimitadores matemáticos balanceados
+        return line;
+      }
+
+      // Caso 1: Fórmula isolada terminando com $ sem abrir $ (ex: `r = \frac{a+b-c}{2}$`)
       if (!l.startsWith("$") && l.endsWith("$")) {
         const clean = l.slice(0, -1).trim();
         return `$$${clean}$$`;
       }
 
-      // Caso 2: Fórmula abrindo com $ sem fechar $
+      // Caso 2: Fórmula isolada abrindo com $ sem fechar $
       if (l.startsWith("$") && !l.endsWith("$")) {
         const clean = l.slice(1).trim();
         return `$$${clean}$$`;
       }
 
-      // Caso 3: Linha que é puramente uma fórmula (sem palavras em português longas)
-      const words = l.replace(/\\[a-zA-Z]+(?:\{[^}]*\})?/g, "").match(/[a-zA-ZÀ-ÿ]{4,}/g) || [];
-      if (words.length === 0 && (hasLatexCmd || l.includes("="))) {
+      // Caso 3: Linha que é puramente uma fórmula isolada sem $
+      if (dollarCount === 0 && (hasLatexCmd || l.includes("="))) {
         return `$$${l}$$`;
       }
     }
@@ -213,7 +226,8 @@ export function sanitizeMathText(raw: string): string {
     const dollarMatches = parts[i].match(/\$/g);
     if (dollarMatches && dollarMatches.length % 2 !== 0) {
       parts[i] = parts[i].replace(/([^$\n]+)\$\s*(?=\n|$)/, (m, p1) => {
-        if (/\\(?:frac|sqrt|cdot|times|text|implies)\b/.test(p1)) {
+        const p1Words = p1.replace(/\\[a-zA-Z]+(?:\{[^}]*\})?/g, "").match(/[a-zA-ZÀ-ÿ]{3,}/g) || [];
+        if (p1Words.length === 0 && /\\(?:frac|sqrt|cdot|times|text|implies)\b/.test(p1)) {
           return `$$${p1.trim()}$$`;
         }
         return p1;
