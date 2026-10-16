@@ -47,6 +47,7 @@ import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 import MathScratchpad from "@/components/math/MathScratchpad";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
+import ThoughtLine from "@/components/ui/thought-line";
 
 interface Question {
   id: number;
@@ -1418,7 +1419,7 @@ function ResolverContent() {
 
                       {/* BOTÃO PARA PEDIR EXPLICAÇÃO À IA */}
                       {!iaResult && (
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-2">
                           <button
                             type="button"
                             onClick={() => pedirExplicacaoPosSimulado(q)}
@@ -1434,6 +1435,23 @@ function ResolverContent() {
                               {isCarregandoIa ? "MathAI Engine Analisando..." : "Explicar Resolução com MathAI Engine"}
                             </span>
                           </button>
+
+                          {isCarregandoIa && (
+                            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+                              <ThoughtLine
+                                working={true}
+                                label="MathAI Engine estruturando demonstração…"
+                                steps={[
+                                  "Recuperando teoremas e lemas fundamentais da questão",
+                                  "Construindo encadeamento dedutivo passo a passo",
+                                  "Formatando fórmulas matemáticas e equações em KaTeX",
+                                ]}
+                                color="#9333ea"
+                                glyphColor="#9333ea"
+                                fontSize={12}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -2193,6 +2211,23 @@ function ResolverContent() {
                 <span className="text-[11px] text-slate-500 dark:text-zinc-400">
                   Resolução axiomática passo a passo, lemas aplicados e análise do distrator.
                 </span>
+
+                {loadingResolucaoIa[currentQ.id] && (
+                  <div className="w-full p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+                    <ThoughtLine
+                      working={true}
+                      label="MathAI Engine estruturando demonstração…"
+                      steps={[
+                        "Recuperando teoremas e lemas fundamentais da questão",
+                        "Construindo encadeamento dedutivo passo a passo",
+                        "Formatando fórmulas matemáticas e equações em KaTeX",
+                      ]}
+                      color="#9333ea"
+                      glyphColor="#9333ea"
+                      fontSize={12}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-4 text-xs leading-relaxed animate-fadeIn">
@@ -2307,6 +2342,23 @@ function ResolverContent() {
             {hintError && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300">
                 ⚠️ {hintError}
+              </div>
+            )}
+
+            {loadingHint && (
+              <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+                <ThoughtLine
+                  working={true}
+                  label="Tutor Socrático pensando…"
+                  steps={[
+                    "Analisando dados do enunciado e incógnitas",
+                    "Mapeando invariantes matemáticos e lemas",
+                    `Modulando intervenção pedagógica (Nível ${hintLevel})`,
+                  ]}
+                  color="#9333ea"
+                  glyphColor="#9333ea"
+                  fontSize={13}
+                />
               </div>
             )}
 
@@ -2517,6 +2569,24 @@ function ResolverContent() {
               <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans italic pt-0.5">
                 Selecione uma das ferramentas acima para abrir a Lousa de Rascunho, a Bancada de Geometria ou enviar sua Dedução/OCR para a MathAI Engine.
               </p>
+            )}
+
+            {(loadingDiscursive || loadingIa) && (
+              <div className="p-5 rounded-xl bg-purple-500/5 border border-purple-500/25 text-xs shadow-xs animate-fadeIn">
+                <ThoughtLine
+                  working={true}
+                  label="MathAI Engine avaliando desenvolvimento…"
+                  steps={[
+                    "Transcrevendo caligrafia e equações para LaTeX (OCR Multimodal)",
+                    "Verificando encadeamento dedutivo e propriedades invariantes",
+                    "Confrontando hipóteses e cálculos com o gabarito oficial",
+                    "Elaborando diagnóstico pedagógico e lemas recomendados",
+                  ]}
+                  color="#9333ea"
+                  glyphColor="#9333ea"
+                  fontSize={13}
+                />
+              </div>
             )}
 
                 {currentDiagnostico && (

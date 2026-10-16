@@ -35,10 +35,9 @@ GEMINI_MODELS_CASCADE = [
     "gemini-3.6-flash",
 ]
 
-# Modelos validados da NVIDIA NIM (prioridade: lightning 30b ultra-rápido ~7s -> super 120b -> ultra 550b)
+# Modelos validados da NVIDIA NIM (prioridade: nano-omni 30b reasoning ~2s -> ultra 550b ~2.7s)
 NVIDIA_NIM_MODELS = [
-    "nvidia/nemotron-3.5-lightning-30b-a3b",
-    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     "nvidia/nemotron-3-ultra-550b-a55b",
 ]
 

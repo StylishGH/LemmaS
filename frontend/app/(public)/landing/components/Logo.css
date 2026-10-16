@@ -12,6 +12,7 @@
   letter-spacing: -0.055em;
   white-space: nowrap;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .lemmas-logo-compact {

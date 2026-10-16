@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       ? `Contexto da questão: ${contextoQuestao}\n\nDúvida do estudante: ${enunciado}`
       : enunciado;
 
-    // 1. Autoridade Única: Backend FastAPI (/api/tutor/compare) com tolerância a cold start (45s)
+    // 1. Tenta o Backend FastAPI se estiver acordado (timeout de 3.5s para evitar travamento)
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
           enunciado: fullPrompt,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(45000), // Tolerância a cold-start
+        signal: AbortSignal.timeout(3500),
         cache: "no-store",
       });
 
@@ -122,11 +122,74 @@ export async function POST(req: NextRequest) {
           });
         }
       }
-    } catch (backendErr) {
-      console.warn("[Segunda Opinião Proxy] Backend FastAPI indisponível ou timeout, acionando contingência determinística:", backendErr);
+    } catch {
+      // Backend em cold-start ou offline, aciona inferência resiliente local/Gemini
     }
 
-    // 2. Contingência Autônoma Determinística LEMMAS (Zero chamadas diretas a APIs externas)
+    // 2. Inferência Direta de Alta Performance via Gemini (Latência ~1s com KaTeX real)
+    try {
+      const { generateGeminiContent } = await import("@/lib/gemini");
+      const systemInstruction = `Você é o motor de Segunda Opinião do LEMMAS (MathAI Engine), especializado em resolver problemas matemáticos comparando duas correntes pedagógicas consagradas:
+
+REGRAS ESTRITAS DE LATEX E FORMATAÇÃO:
+- TODA e qualquer expressão, equação ou símbolo matemático DEVE estar rigorosamente delimitado por $...$ (para inline, ex: $r = 2\\text{ cm}$, $a=6$) ou $$...$$ (para fórmulas em destaque em linha própria, ex: $$r = \\frac{a + b - c}{2}$$).
+- NUNCA escreva comandos LaTeX como \\frac, \\sqrt, \\implies, \\text ou fórmulas soltas sem os delimitadores $ ou $$.
+- NUNCA deixe delimitadores desbalanceados ou abertos (como $... sem fechar).
+- Utilize cabeçalhos markdown ### limpos para cada etapa.
+
+1. MODEL_A ("Rigor Axiomático e Prova Formal"):
+- Inicie identificando explicitamente o Teorema Fundamental Aplicável.
+- Demonstre a dedução dos invariantes e equações a partir das hipóteses iniciais.
+- Apresente a Solução Axiomática detalhada com contas e fórmulas em LaTeX ($...$ para inline e $$...$$ para blocos).
+- Adicione uma nota de "Atenção a Singularidades" / hipóteses de validade.
+
+2. MODEL_B ("Heurística & Atalhos Cognitivos"):
+- Explore a intuição visual, geométrica ou numérica (ex: homotetia, simetria, decomposição de áreas, propriedades globais conservadas).
+- Apresente o cálculo direto com fórmulas em LaTeX ($...$ e $$...$$) com foco em velocidade de prova e clareza mental.
+- Destaque a Igualdade Heurística em bloco ($$...$$).
+- Finalize obrigatoriamente com uma "Dica Socrática" reflexiva destacando o "pulo do gato" que permite resolver quase sem contas.
+
+3. SINTESE:
+- Breve conexão metacognitiva mostrando como o rigor analítico formal e a intuição geométrica heurística se complementam.
+
+Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
+{
+  "model_a": {
+    "name": "Rigor Axiomático e Prova Formal",
+    "role": "Demonstração Analítica & Invariantes",
+    "content": "texto em markdown com fórmulas LaTeX devidamente delimitadas ($...$ e $$...$$)"
+  },
+  "model_b": {
+    "name": "Heurística & Atalhos Cognitivos",
+    "role": "Intuição Heurística & Atalhos Cognitivos",
+    "content": "texto em markdown com fórmulas LaTeX devidamente delimitadas ($...$ e $$...$$)"
+  },
+  "sintese": "reflexão metacognitiva sobre as duas abordagens com fórmulas em LaTeX delimitadas"
+}`;
+
+      const geminiRes = await generateGeminiContent({
+        prompt: `Problema / Enunciado:\n${fullPrompt}`,
+        systemInstruction,
+        jsonOutput: true,
+        temperature: 0.2,
+        timeoutMs: 12000,
+      });
+
+      const parsed = JSON.parse(geminiRes.text);
+      if (parsed.model_a && parsed.model_b) {
+        return NextResponse.json({
+          model_a: parsed.model_a,
+          model_b: parsed.model_b,
+          sintese: parsed.sintese || "",
+          provider: "gemini-cascade",
+          model_used: geminiRes.model,
+        });
+      }
+    } catch (geminiErr) {
+      console.warn("[Segunda Opinião] Fallback Gemini falhou:", geminiErr);
+    }
+
+    // 3. Contingência Autônoma Determinística LEMMAS (Garantia de Uptime 100%)
     return NextResponse.json({
       model_a: {
         name: "Rigor Axiomático e Prova Formal (LEMMAS Core)",

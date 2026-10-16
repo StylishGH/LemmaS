@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, Cpu, Lightbulb, CheckCheck, RefreshCw, Send } from "lucide-react";
 import { MathText } from "@/components/math/MathDisplay";
+import ThoughtLine from "@/components/ui/thought-line";
 
 interface AIModelOpinion {
   name: string;
@@ -123,6 +124,23 @@ export default function OpinioesPage() {
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 animate-fadeIn">
               <span>⚠️</span>
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {loading && (
+            <div className="p-4 md:p-5 rounded-2xl bg-amber-500/5 border border-amber-500/25 text-xs shadow-xs animate-fadeIn">
+              <ThoughtLine
+                working={true}
+                label="MathAI Engine orquestrando Segunda Opinião…"
+                steps={[
+                  "Modelo A: deduzindo invariantes e demonstração axiomática formal",
+                  "Modelo B: investigando intuição heurística e atalhos de Gauss",
+                  "Síntese: consolidando conexão metacognitiva e valor didático",
+                ]}
+                color="#d97706"
+                glyphColor="#d97706"
+                fontSize={13}
+              />
             </div>
           )}
         </div>
