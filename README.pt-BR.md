@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
     <img src="https://img.shields.io/badge/Supabase-PostgreSQL%20RLS-3ECF8E?logo=supabase" alt="Supabase / PostgreSQL" />
     <img src="https://img.shields.io/badge/AI%20Gateway-Nemotron%20%7C%20DeepSeek%20%7C%20Gemini-76B900" alt="Gateway Multi-Modelo" />
-    <img src="https://img.shields.io/badge/Psicometria-FSRS--v4%20%7C%20SM--2%20%7C%20TRI--3PL-blue" alt="FSRS & TRI" />
+    <img src="https://img.shields.io/badge/Psicometria-SM--2%20(Ativo)%20%7C%20FSRS--v4%20%26%20TRI%20(Roadmap)-blue" alt="SM-2 & Psicometria" />
     <img src="https://img.shields.io/badge/Integridade-Proveniência%20SHA--256-orange" alt="Proveniência SHA-256" />
     <img src="https://img.shields.io/badge/Status-Pronto%20para%20Lançamento-success" alt="Pronto para Lançamento" />
   </p>
@@ -107,25 +107,31 @@ flowchart TD
 
 ---
 
-## 🔬 Modelagem Matemática e Psicométrica
+## 🔬 Fundamentação Matemática & Modelagem Psicométrica
 
-O Lemmas evita suposições de "caixa preta" através de modelos matemáticos estabelecidos na literatura científica para retenção e calibração de proficiência:
+O Lemmas aborda a aprendizagem através de modelagem matemática formal em vez de heurísticas opacas, separando de forma estrita **o que roda em produção hoje** da **pesquisa exploratória**:
 
-### 1. Modelagem de Retenção de Memória: FSRS-v4 & SM-2
-Para calcular o momento ideal de revisão de cada lema e teorema matemático, o motor aplica a fórmula de recuperabilidade inspirada no algoritmo FSRS-v4:
+### 1. Repetição Espaçada em Produção: SuperMemo-2 (SM-2)
+No deploy em produção, os ciclos de retenção de questões e lemas são calculados e persistidos ativamente através do algoritmo determinístico **SuperMemo-2 (SM-2)**:
+- Cada submissão avaliada recalcula o Fator de Facilidade ($EF \in [1.3, 2.5]$) e o intervalo em dias $I(n)$:
+  $$EF' = \max\left(1.3, \; EF + (0.1 - (5 - q) \cdot (0.08 + (5 - q) \cdot 0.02))\right)$$
+  Onde $q \in [0, 5]$ é a nota qualitativa mapeada a partir dos 4 vereditos cognitivos da plataforma.
+- O estado de retenção é gravado imediatamente na tabela `public.revisao_espacada` do Supabase PostgreSQL.
+
+### 2. Protótipo Algorítmico: FSRS-v4 (Free Spaced Repetition Scheduler)
+Para a modelagem da curva de esquecimento em flashcards e lemas, o backend possui uma implementação inicial inspirada na formulação moderna do FSRS:
 $$R(t) = \left(1 + F \cdot \frac{t}{S}\right)^{-1}$$
-Onde:
-- $R(t)$ é a probabilidade estimada de retenção na memória após $t$ dias.
-- $S$ é a estabilidade mnemônica (tempo até a recuperabilidade cair para 90%).
-- $F$ é o fator calibrado conforme o nível de dificuldade atribuído pelo estudante ($D \in [1, 10]$).
+- Os contratos de estabilidade mnemônica ($S$) e dificuldade intrínseca ($D$) estão definidos em `app/services/mathai/flashcards.py`.
+- *Status:* Operacional em modo protótipo com constantes aproximadas; a calibração empírica dos hiperparâmetros via estimativa de máxima verossimilhança está planejada para a Fase 2 conforme o volume de interações crescer.
 
-### 2. Teoria de Resposta ao Item (TRI 3PL)
-A calibração do nível de proficiência e das questões utiliza o modelo logístico de três parâmetros:
+### 3. Alvo de Pesquisa Científica: Teoria de Resposta ao Item (TRI 3PL)
+Para evoluir da dificuldade ordinal (1 a 5) das bancas para uma métrica psicométrica contínua, os experimentos futuros de ciência de dados calibrarão as questões via Modelo Logístico de Três Parâmetros:
 $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
-- $\theta$: Proficiência latente do aluno em determinada área (ex: Geometria, Análise).
-- $a$: Parâmetro de discriminação da questão.
-- $b$: Dificuldade intrínseca do teorema/exercício.
+- $\theta$: Proficiência matemática latente do estudante.
+- $a$: Parâmetro de discriminação do item.
+- $b$: Parâmetro de dificuldade intrínseca do teorema/exercício.
 - $c$: Probabilidade de acerto casual (chute em itens objetivos).
+- *Status:* Roadmap de pesquisa formal. Nenhum estimador de traço latente personalizado é reivindicado como operando em produção hoje.
 
 ---
 
@@ -149,7 +155,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **Backend** | Python 3.12, FastAPI, Pydantic V2, Uvicorn |
 | **Banco de Dados & Auth** | Supabase (PostgreSQL com RLS), Hashes SHA-256 determinísticos |
 | **IA Aplicada & Visão** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
-| **Psicometria & Repetição** | Repetição Espaçada FSRS-v4, Motor SM-2, Teoria de Resposta ao Item (TRI 3PL) |
+| **Psicometria & Repetição** | Motor SM-2 (Ativo em produção), FSRS-v4 (Protótipo), TRI 3PL (Roadmap de Pesquisa) |
 | **Testes & Qualidade** | pytest (Backend & Testes de Arquitetura), Vitest (Componentes de UI) |
 
 ---
