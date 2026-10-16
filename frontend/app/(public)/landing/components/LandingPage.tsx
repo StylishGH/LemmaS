@@ -27,6 +27,9 @@ import { BackgroundAnimation } from "./BackgroundAnimation";
 import { BoardFrame } from "./BoardFrame";
 import { Logo } from "./Logo";
 import { AboutTeacher } from "./AboutTeacher";
+import { ContactLoop } from "./ContactLoop";
+import { BancadaShowcase } from "./BancadaShowcase";
+import { SegundaOpiniaoShowcase } from "./SegundaOpiniaoShowcase";
 import { useTheme } from "@/components/theme-provider";
 import Link from "next/link";
 import PixelCard from "@/components/PixelCard";
@@ -114,19 +117,25 @@ export function LandingPage() {
           <Logo compact />
           <div className="lemmas-nav-links">
             <a href="#metodo" onClick={(e) => scrollToSection(e, "metodo")}>
-              O Método
+              Método
             </a>
             <a href="#bancada" onClick={(e) => scrollToSection(e, "bancada")}>
-              Bancada Discursiva
+              Bancada
+            </a>
+            <a href="#segunda-opiniao" onClick={(e) => scrollToSection(e, "segunda-opiniao")}>
+              Segunda Opinião
             </a>
             <a href="#arquitetura" onClick={(e) => scrollToSection(e, "arquitetura")}>
               Arquitetura
             </a>
             <a href="#questoes-amostra" onClick={(e) => scrollToSection(e, "questoes-amostra")}>
-              Banco de Lemas
+              Acervo
             </a>
             <a href="#roadmap" onClick={(e) => scrollToSection(e, "roadmap")}>
-              O Que Vem Por Aí
+              Roadmap
+            </a>
+            <a href="#contato" onClick={(e) => scrollToSection(e, "contato")}>
+              Vamos Conversar
             </a>
           </div>
           <div className="lemmas-nav-actions">
@@ -145,8 +154,8 @@ export function LandingPage() {
           </div>
         </nav>
         
-        {/* HERO SECTION EDITORIAL */}
-        <section className="lemmas-hero">
+        {/* HERO SECTION EDITORIAL LIMPO & ALINHADO */}
+        <section className="lemmas-section lemmas-hero">
           <div className="lemmas-hero-copy">
             <span className="lemmas-eyebrow">PLATAFORMA COGNITIVA · POWERED BY MATHAI ENGINE · V1 OFICIAL</span>
             <h1>Aprenda como<br /><em>você pensa.</em></h1>
@@ -154,15 +163,12 @@ export function LandingPage() {
               Diferente dos bancos de questões convencionais que apenas conferem alternativas, a plataforma <strong>LEMMAS</strong> investiga o seu <strong>desenvolvimento matemático passo a passo</strong> na nova <strong>Bancada Discursiva</strong>, personaliza a tutoria para sua meta real (Licenciatura, Concursos Militares ou Ciência de Dados) e cataloga <strong>20.803 questões</strong> com estética minimalista e rigor conceitual.
             </p>
             <div className="lemmas-hero-actions">
-              <Link className="lemmas-cta lemmas-cta-primary" href="/questoes">
-                Acessar Acervo de Elite <ArrowRight size={17} />
+              <Link className="lemmas-cta lemmas-cta-primary" href="/login">
+                Começar Gratuitamente <ArrowRight size={17} />
               </Link>
-              <a className="lemmas-cta lemmas-cta-secondary" href="#bancada" onClick={(e) => scrollToSection(e, "bancada")}>
-                Conhecer a Bancada Discursiva
-              </a>
-              <a className="lemmas-cta lemmas-cta-secondary" href="#questoes-amostra" onClick={(e) => scrollToSection(e, "questoes-amostra")}>
-                Ver Questões em Ação
-              </a>
+              <Link className="lemmas-cta lemmas-cta-secondary" href="/questoes">
+                Explorar Questões
+              </Link>
             </div>
             <div className="lemmas-hero-note">
               <span /> 20.803 questões auditadas · 138 lemas matemáticos · Avaliação analítica com 4 vereditos.
@@ -210,44 +216,18 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SEÇÃO NOVA: A BANCADA DISCURSIVA */}
+        {/* SEÇÃO: A BANCADA DISCURSIVA (DEMONSTRAÇÃO VISUAL & VEREDITOS) */}
         <section id="bancada" className="lemmas-section lemmas-magic-section">
           <div className="lemmas-section-heading">
             <span className="lemmas-eyebrow">NOVIDADE V1 · O CORAÇÃO DO MATHAI ENGINE</span>
             <h2>A Nova Bancada Discursiva</h2>
-            <p>Três ferramentas integradas para você expressar seu raciocínio como um verdadeiro matemático.</p>
+            <p>Três ferramentas integradas para você expressar seu raciocínio como um verdadeiro matemático com salvaguarda epistêmica.</p>
           </div>
-          <div className="lemmas-magic-steps">
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number">1</div>
-                <div>
-                  <strong>Lousa de Rascunho Digital</strong>
-                  <p>Área de rascunho com suporte a escrita livre, equações em KaTeX e manipulações algébricas sem perder o foco do enunciado.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number">2</div>
-                <div>
-                  <strong>Compasso & Geometria Euclidiana</strong>
-                  <p>Mesa geométrica interativa com régua e compasso para traçar arcos, retas tangentes, circunferências e bissetrizes com precisão analítica.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>3</div>
-                <div>
-                  <strong>Dedução & OCR Multimodal</strong>
-                  <p>Envie foto do rascunho em papel ou do seu tablet. O motor multimodal transcreve os passos e analisa o encadeamento dedutivo da sua resposta.</p>
-                </div>
-             </div>
-             <div className="lemmas-magic-step">
-                <div className="lemmas-magic-number" style={{ background: isLight ? '#2d6da1' : '#d9b452', color: isLight ? '#fff' : '#18150f' }}>4</div>
-                <div>
-                  <strong>Avaliação com 4 Vereditos Auditáveis</strong>
-                  <p>Classificação transparente entre <em>Aprovado</em>, <em>Parcial</em>, <em>Sem Desenvolvimento</em> e <em>Incorreto</em>, com salvaguarda estrita contra conclusões precipitadas.</p>
-                </div>
-             </div>
-          </div>
+          <BancadaShowcase />
         </section>
+
+        {/* SEÇÃO: SEGUNDA OPINIÃO DO MATHAI (COGNIÇÃO MULTI-MODELO) */}
+        <SegundaOpiniaoShowcase />
 
         {/* SEÇÃO 2: ARQUITETURA EM 2 CAMADAS (MANIFESTO) */}
         <section id="arquitetura" className="lemmas-section">
@@ -373,12 +353,12 @@ export function LandingPage() {
             <span className="lemmas-eyebrow">O QUE VEM POR AÍ · ROADMAP TÉCNICO V1.X / V2</span>
             <h2>As Próximas Fronteiras da Plataforma</h2>
             <p>
-              Com a V1 no ar e a Bancada Discursiva em pleno funcionamento, conheça as inovações psicométricas, preditivas e de IA que estamos desenvolvendo para os próximos ciclos.
+              Com a V1 no ar e a Bancada Discursiva em pleno funcionamento, conheça as 3 inovações psicométricas, preditivas e de IA prioritárias que estamos desenvolvendo para os próximos ciclos.
             </p>
           </div>
 
           <div className="lemmas-roadmap-grid">
-            {/* CARD 1 */}
+            {/* CARD 1: TRI 3PL */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
@@ -393,52 +373,7 @@ export function LandingPage() {
               <div className="lemmas-roadmap-tech">Item Response Theory (IRT) · Modelo Logístico 3PL · Calibração Estatística</div>
             </div>
 
-            {/* CARD 2 */}
-            <div className="lemmas-roadmap-card">
-              <div className="lemmas-roadmap-header">
-                <div className="lemmas-roadmap-icon">
-                  <Compass size={22} />
-                </div>
-                <span className="lemmas-roadmap-tag tag-upcoming">Em Modelagem</span>
-              </div>
-              <h3>Caçador de Gatilhos & Grafo de Lemas</h3>
-              <p>
-                Treino cognitivo focado em reconhecer *qual estratégia destrava a questão* antes de ver as alternativas. Um radar heurístico que ensina você a enxergar padrões geométricos e algébricos em segundos.
-              </p>
-              <div className="lemmas-roadmap-tech">Reconhecimento Heurístico · Grafo de Conceitos · Dicas Axiomáticas</div>
-            </div>
-
-            {/* CARD 3 */}
-            <div className="lemmas-roadmap-card">
-              <div className="lemmas-roadmap-header">
-                <div className="lemmas-roadmap-icon">
-                  <Cpu size={22} />
-                </div>
-                <span className="lemmas-roadmap-tag tag-research">Pesquisa Ativa</span>
-              </div>
-              <h3>Fine-Tuning de SLM Especialista Local (Qwen2.5-Math)</h3>
-              <p>
-                Execução local de Small Language Models especializados em demonstrações axiomáticas, permitindo avaliação de provas com altíssimo rigor matemático, latência zero e custo nulo de inferência na GPU.
-              </p>
-              <div className="lemmas-roadmap-tech">Qwen2.5-Math-7B · vLLM / Ollama · Inferência Submétrica Local</div>
-            </div>
-
-            {/* CARD 4 */}
-            <div className="lemmas-roadmap-card">
-              <div className="lemmas-roadmap-header">
-                <div className="lemmas-roadmap-icon">
-                  <Sparkles size={22} />
-                </div>
-                <span className="lemmas-roadmap-tag tag-upcoming">Comunidade</span>
-              </div>
-              <h3>Comunidade de Demonstrações Elegantes</h3>
-              <p>
-                Um repositório colaborativo onde professores e estudantes compartilham múltiplos caminhos de prova para a mesma questão, com ranking por concisão, elegância e clareza matemática.
-              </p>
-              <div className="lemmas-roadmap-tech">Provas Alternativas · Avaliação de Elegância · Peer Review</div>
-            </div>
-
-            {/* CARD 5 */}
+            {/* CARD 2: SIMULADOS EM PDF */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
@@ -453,7 +388,7 @@ export function LandingPage() {
               <div className="lemmas-roadmap-tech">Layout Editorial · Tipografia KaTeX · PDF Vetorial em 2 Colunas</div>
             </div>
 
-            {/* CARD 6 */}
+            {/* CARD 3: KNOWLEDGE TRACING */}
             <div className="lemmas-roadmap-card">
               <div className="lemmas-roadmap-header">
                 <div className="lemmas-roadmap-icon">
@@ -472,7 +407,10 @@ export function LandingPage() {
         
         {/* SEÇÃO 5: SOBRE O CRIADOR & UFF (RODAPÉ INFORMATIVO) */}
         <AboutTeacher />
-        
+
+        {/* SEÇÃO 6: CONTATO & PORTFÓLIO (LOGO LOOP) */}
+        <ContactLoop />
+
         {/* RODAPÉ */}
         <footer className="lemmas-footer">
           <Logo compact />

@@ -307,9 +307,14 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
 
     system_instruction = (
         "Você é o motor de Metacognição e Comparação de Lemas do LemmaS.\n"
+        "REGRAS ESTRITAS DE LATEX E FORMATAÇÃO:\n"
+        "- TODA e qualquer expressão, equação ou símbolo matemático DEVE estar rigorosamente delimitado por $...$ (para inline, ex: $r = 2\\text{ cm}$, $a=6$) ou $$...$$ (para fórmulas em destaque em linha própria, ex: $$r = \\frac{a + b - c}{2}$$).\n"
+        "- NUNCA escreva comandos LaTeX como \\frac, \\sqrt, \\implies, \\text ou fórmulas soltas sem os delimitadores $ ou $$.\n"
+        "- NUNCA deixe delimitadores desbalanceados ou abertos (como $... sem fechar).\n"
+        "- Utilize cabeçalhos markdown ### limpos para estruturar as etapas.\n\n"
         "Sua função é analisar o problema matemático fornecido sob DUAS perspectivas cognitivas complementares e sintetizar o aprendizado:\n"
         "1. PERSPECTIVA A (Rigor Axiomático & Prova Formal): teoremas, invariantes algébricos e demonstração analítica em LaTeX ($...$ e $$...$$).\n"
-        "2. PERSPECTIVA B (Intuição Heurística & Atalhos): intuição visual, simetrias, casos extremos e raciocínio socrático em LaTeX ($...$).\n"
+        "2. PERSPECTIVA B (Intuição Heurística & Atalhos): intuição visual, simetrias, casos extremos e raciocínio socrático em LaTeX ($...$ e $$...$$).\n"
         "3. SÍNTESE PEDAGÓGICA (Para o Licenciando em Matemática): reflexão concisa contrastando as duas visões.\n"
         "Responda EXCLUSIVAMENTE em formato JSON com chaves: model_a (name, role, content), model_b (name, role, content), sintese."
     )

@@ -21,10 +21,10 @@ export function AboutTeacher() {
         </div>
 
         <div className="lemmas-authority-copy">
-          <span className="lemmas-eyebrow">CRIADOR & ENGENHEIRO</span>
+          <span className="lemmas-eyebrow">CRIADOR & PROFESSOR</span>
           <h3>Guilherme Henrique (GH)</h3>
           <p>
-            Desenvolvedor com foco em Dados e IA. Criei o LEMMAS para resolver um problema real de aprendizado através de pipelines de dados, modelos LLM e algoritmos de recomendação.
+            Professor de Matemática e estudante de Licenciatura, apaixonado por tecnologia e didática. Criei o LEMMAS para resolver um problema real de aprendizado, unindo os meus estudos em Dados e IA à experiência de quem ensina todos os dias.
           </p>
 
           <div className="lemmas-badges" style={{ flexWrap: 'wrap' }}>

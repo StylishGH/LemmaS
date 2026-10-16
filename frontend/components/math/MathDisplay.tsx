@@ -13,6 +13,26 @@ interface MathDisplayProps {
   errorColor?: string;
 }
 
+/**
+ * Sanitiza expressões LaTeX antes de enviar ao KaTeX:
+ * Remove delimitadores $ externos indevidos, pipes de cursor |, literais \undefined e caracteres estranhos.
+ */
+export function cleanLatexForKatex(latex: string): string {
+  if (!latex || typeof latex !== "string") return "";
+  let clean = latex.trim();
+  // Remove $ ou $$ externos se por acaso foram passados como filhos diretos
+  clean = clean.replace(/^\${1,2}/, "").replace(/\${1,2}$/, "").trim();
+  // Remove $ soltos internos que quebram o parser do KaTeX
+  clean = clean.replace(/\\?\$/g, "");
+  // Remove artefatos de \undefined ou undefined gerados por templates ou alucinações
+  clean = clean.replace(/\\?undefined\b/gi, "");
+  // Remove cursor pipe | residual comum no final de expressões geradas por LLM
+  clean = clean.replace(/(?:\\text\{[^\}]*\}|\d+|\})\s*\|\s*$/g, "$1");
+  // Converte barras invertidas duplas desnecessárias
+  clean = clean.replace(/\\\\(?=[a-zA-Z])/g, "\\");
+  return clean;
+}
+
 export function MathDisplay({ 
   children, 
   displayMode = false, 
@@ -25,13 +45,21 @@ export function MathDisplay({
   useEffect(() => {
     if (!ref.current) return;
     
+    const sanitizedInput = cleanLatexForKatex(children);
+    if (!sanitizedInput) {
+      ref.current.innerHTML = "";
+      setRenderError(null);
+      return;
+    }
+
     try {
-      katex.render(children, ref.current, {
+      katex.render(sanitizedInput, ref.current, {
         displayMode,
         throwOnError: false,
         strict: "warn",
         trust: true,
         macros: {
+          "\\undefined": "",
           "\\RR": "\\mathbb{R}",
           "\\NN": "\\mathbb{N}",
           "\\ZZ": "\\mathbb{Z}",
@@ -51,6 +79,24 @@ export function MathDisplay({
           "\\cotgh": "\\operatorname{cotgh}",
         },
       });
+
+      // Se o KaTeX gerou span de erro interno (.katex-error), tenta uma limpeza agressiva de fallback
+      const errorNode = ref.current.querySelector(".katex-error");
+      if (errorNode) {
+        // Tenta remover comandos desconhecidos ou balancear chaves
+        const fallback = sanitizedInput
+          .replace(/\\[a-zA-Z]+\b(?![{a-zA-Z])/g, "")
+          .replace(/[{}]/g, "")
+          .trim();
+        if (fallback) {
+          try {
+            katex.render(fallback, ref.current, { displayMode, throwOnError: false });
+          } catch {
+            // Mantém renderização do KaTeX
+          }
+        }
+      }
+
       setRenderError(null);
     } catch (err) {
       setRenderError(err instanceof Error ? err.message : "Erro ao renderizar LaTeX");
@@ -87,30 +133,102 @@ export function MathBlock({ latex, className = "" }: MathBlockProps) {
 }
 
 /**
- * Renderiza texto misto (markdown simples + LaTeX inline $...$ e blocos $$...$$)
+ * Sanitizador profundo de markdown matemático para evitar desbalanceamento de delimitadores $
+ * e isolar fórmulas soltas que modelos LLM escrevem sem delimitação explícita.
+ */
+export function sanitizeMathText(raw: string): string {
+  if (!raw || typeof raw !== "string") return "";
+
+  let text = raw.replace(/\r\n/g, "\n");
+  // Remove artefatos de \undefined ou undefined gerados por modelos
+  text = text.replace(/\\?undefined\s*/gi, "");
+  // Normaliza blocos de código markdown com math/latex
+  text = text.replace(/```(?:latex|math)\s*([\s\S]+?)\s*```/gi, (_, math) => `$$${math.trim()}$$`);
+  // Converte delimitadores canônicos \[ \] e \( \)
+  text = text.replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math.trim()}$$`);
+  text = text.replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math.trim()}$`);
+
+  // Processa linha a linha identificando fórmulas isoladas sem delimitadores
+  const lines = text.split("\n");
+  const processedLines = lines.map((line) => {
+    const l = line.trim();
+    if (!l) return line;
+
+    // Pula títulos markdown, blockquotes ou marcadores de lista
+    if (/^(?:#{1,6}\s+|>\s+|\*\s+|-\s+|\+\s+|\d+\.\s+)/.test(l)) {
+      return line;
+    }
+
+    const hasLatexCmd = /\\(?:frac|sqrt|sum|int|lim|cdot|times|div|pm|le|ge|neq|implies|iff|text|alpha|beta|theta|pi|partial|in|to)\b/.test(l);
+    const hasEquation = /[a-zA-Z0-9]\s*=\s*[^=]+/.test(l);
+
+    if (hasLatexCmd || hasEquation) {
+      if (l.startsWith("$$") && l.endsWith("$$")) return line;
+      if (l.startsWith("$") && l.endsWith("$") && l.indexOf("$", 1) === l.length - 1) return line;
+
+      // Caso 1: Fórmula terminando com $ sem abrir $ (ex: `r = \frac{a+b-c}{2}$`)
+      if (!l.startsWith("$") && l.endsWith("$")) {
+        const clean = l.slice(0, -1).trim();
+        return `$$${clean}$$`;
+      }
+
+      // Caso 2: Fórmula abrindo com $ sem fechar $
+      if (l.startsWith("$") && !l.endsWith("$")) {
+        const clean = l.slice(1).trim();
+        return `$$${clean}$$`;
+      }
+
+      // Caso 3: Linha que é puramente uma fórmula (sem palavras em português longas)
+      const words = l.replace(/\\[a-zA-Z]+(?:\{[^}]*\})?/g, "").match(/[a-zA-ZÀ-ÿ]{4,}/g) || [];
+      if (words.length === 0 && (hasLatexCmd || l.includes("="))) {
+        return `$$${l}$$`;
+      }
+    }
+    return line;
+  });
+
+  text = processedLines.join("\n");
+
+  // Corrige linhas onde a fórmula termina com $ e emenda imediatamente em texto: `... 2 \text{ cm}$ (pois...`
+  text = text.replace(/(\b\d+\s*\\text\{[a-zA-Z]+\})\$\s*(\(?\s*[a-zA-ZÀ-ÿ])/g, "$1$$ $2");
+
+  // Balanceia $ ímpares soltos em trechos fora de blocos $$...$$
+  const parts = text.split(/(\$\$[\s\S]+?\$\$)/g);
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].startsWith("$$") && parts[i].endsWith("$$")) continue;
+    const dollarMatches = parts[i].match(/\$/g);
+    if (dollarMatches && dollarMatches.length % 2 !== 0) {
+      parts[i] = parts[i].replace(/([^$\n]+)\$\s*(?=\n|$)/, (m, p1) => {
+        if (/\\(?:frac|sqrt|cdot|times|text|implies)\b/.test(p1)) {
+          return `$$${p1.trim()}$$`;
+        }
+        return p1;
+      });
+    }
+  }
+
+  return parts.join("");
+}
+
+/**
+ * Renderiza texto misto (markdown editorial + LaTeX inline $...$ e blocos $$...$$)
  */
 export function renderMathText(text: string) {
   if (!text || typeof text !== "string") return [];
 
   // Protege a moeda brasileira "R$" e variações para não conflitar com delimitador matemático $
-  // Exemplo: "R$ 150.000,00" não deve abrir nem fechar ambiente LaTeX!
   const TOKEN_REAL = "___LEMMAS_MOEDA_BRL___";
-  // Normaliza caracteres matemáticos Unicode, traços e radicais
-  let preprocessed = normalizarMatematica(text)
-    .replace(/R\$/g, TOKEN_REAL)
-    // Converte blocos markdown com tags ```latex ou ```math para display math $$ ... $$
-    .replace(/```(?:latex|math)\s*([\s\S]+?)\s*```/gi, (_, math) => `$$${math.trim()}$$`)
-    // Converte display math canônico \[ ... \] ou duplo escape \\[ ... \\] para $$ ... $$
-    .replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math}$$`)
-    // Converte inline math canônico \( ... \) ou duplo escape \\( ... \\) para $ ... $
-    .replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math}$`);
+  
+  // 1. Sanitização profunda de delimitadores e caracteres matemáticos
+  let preprocessed = sanitizeMathText(text);
+  preprocessed = normalizarMatematica(preprocessed).replace(/R\$/g, TOKEN_REAL);
 
   // Se o texto não possui nenhum delimitador matemático, aplica autoWrap em expressões óbvias
   if (!preprocessed.includes("$")) {
     preprocessed = autoWrapLatexExpressions(preprocessed);
   }
 
-  // 1. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
+  // 2. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
   const stage1Parts: Array<{ type: "text" | "block"; content: string }> = [];
   const blockRegex = /\$\$([\s\S]+?)\$\$/g;
   let lastIndex = 0;
@@ -128,7 +246,7 @@ export function renderMathText(text: string) {
     stage1Parts.push({ type: "text", content: preprocessed.slice(lastIndex) });
   }
   
-  // 2. Nos trechos de texto que estão fora de $$, extrai ambientes matemáticos isolados (\begin{...}...\end{...})
+  // 3. Nos trechos de texto que estão fora de $$, extrai ambientes matemáticos isolados (\begin{...}...\end{...})
   const envRegex = /(\\begin\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\}[\s\S]+?\\end\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\})/g;
   const stage2Parts: Array<{ type: "text" | "block"; content: string }> = [];
 
@@ -155,7 +273,7 @@ export function renderMathText(text: string) {
     }
   }
 
-  // 3. Processa matemática em linha $...$ nos trechos de texto restantes
+  // 4. Processa matemática em linha $...$ nos trechos de texto restantes
   const finalParts: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
   const inlineRegex = /\$([^\$]+)\$/g;
 
@@ -197,6 +315,88 @@ export function renderMathText(text: string) {
   return finalParts;
 }
 
+function FormattedInlineLine({ content }: { content: string }) {
+  if (!content) return null;
+
+  // Headings markdown: ### H3, ## H2, # H1
+  const h3Match = content.match(/^###\s+(.+)$/);
+  if (h3Match) {
+    return (
+      <span className="block font-serif-math font-bold text-amber-900 dark:text-[#f5f0df] text-sm mt-3.5 mb-1 tracking-tight border-b border-amber-500/15 pb-1">
+        {h3Match[1]}
+      </span>
+    );
+  }
+
+  const h2Match = content.match(/^##\s+(.+)$/);
+  if (h2Match) {
+    return (
+      <span className="block font-serif-math font-bold text-slate-900 dark:text-[#f5f0df] text-base mt-4 mb-1.5 tracking-tight">
+        {h2Match[1]}
+      </span>
+    );
+  }
+
+  const h1Match = content.match(/^#\s+(.+)$/);
+  if (h1Match) {
+    return (
+      <span className="block font-serif-math font-bold text-slate-900 dark:text-[#f5f0df] text-lg mt-5 mb-2 tracking-tight">
+        {h1Match[1]}
+      </span>
+    );
+  }
+
+  // Divide por blocos de código inline `...`
+  const codeParts = content.split(/(`[^`]+?`)/g);
+  return (
+    <span>
+      {codeParts.map((part, i) => {
+        if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
+          return (
+            <code
+              key={`c-${i}`}
+              className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
+            >
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        // Divide por negrito **...**
+        const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
+        return (
+          <span key={`cp-${i}`}>
+            {boldParts.map((sub, j) => {
+              if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
+                return (
+                  <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
+                    {sub.slice(2, -2)}
+                  </strong>
+                );
+              }
+              // Divide por itálico *...* (asterisco simples)
+              const italicParts = sub.split(/(\*[^\*]+?\*)/g);
+              return (
+                <span key={`nb-${j}`}>
+                  {italicParts.map((it, k) => {
+                    if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
+                      return (
+                        <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
+                          {it.slice(1, -1)}
+                        </em>
+                      );
+                    }
+                    return it;
+                  })}
+                </span>
+              );
+            })}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 function FormattedTextChunk({ content }: { content: string }) {
   if (!content) return null;
 
@@ -235,53 +435,16 @@ function FormattedTextChunk({ content }: { content: string }) {
           );
         }
 
-        // Divide por blocos de código inline `...`
-        const codeParts = imgPart.split(/(`[^`]+?`)/g);
+        // Divide por linhas para processar cabeçalhos markdown sem colidir com LaTeX
+        const lines = imgPart.split("\n");
         return (
           <span key={`txt-${imgIdx}`}>
-            {codeParts.map((part, i) => {
-              if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
-                return (
-                  <code
-                    key={`c-${i}`}
-                    className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
-                  >
-                    {part.slice(1, -1)}
-                  </code>
-                );
-              }
-              // Divide por negrito **...**
-              const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
-              return (
-                <span key={`cp-${i}`}>
-                  {boldParts.map((sub, j) => {
-                    if (sub.startsWith("**") && sub.endsWith("**") && sub.length >= 4) {
-                      return (
-                        <strong key={`b-${j}`} className="font-bold text-slate-900 dark:text-[#f5f0df]">
-                          {sub.slice(2, -2)}
-                        </strong>
-                      );
-                    }
-                    // Divide por itálico *...* (asterisco simples)
-                    const italicParts = sub.split(/(\*[^\*]+?\*)/g);
-                    return (
-                      <span key={`nb-${j}`}>
-                        {italicParts.map((it, k) => {
-                          if (it.startsWith("*") && it.endsWith("*") && it.length >= 2 && !it.startsWith("**")) {
-                            return (
-                              <em key={`i-${k}`} className="italic text-slate-800 dark:text-zinc-200">
-                                {it.slice(1, -1)}
-                              </em>
-                            );
-                          }
-                          return it;
-                        })}
-                      </span>
-                    );
-                  })}
-                </span>
-              );
-            })}
+            {lines.map((l, lIdx) => (
+              <span key={`line-${lIdx}`}>
+                {lIdx > 0 && "\n"}
+                <FormattedInlineLine content={l} />
+              </span>
+            ))}
           </span>
         );
       })}
