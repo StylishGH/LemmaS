@@ -59,26 +59,50 @@ export async function GET(request: Request) {
         // Recupera o usuário autenticado para sincronizar 'verificado = 1' no banco
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
-          try {
-            await supabase
-              .from("usuarios")
-              .update({ verificado: 1 })
-              .eq("email", user.email);
-          } catch (dbSyncErr) {
-            console.warn("Aviso ao atualizar verificado=1 em usuarios:", dbSyncErr);
-          }
+          const isGoogleUser = Boolean(
+            user.app_metadata?.provider === "google" ||
+            (Array.isArray(user.app_metadata?.providers) && user.app_metadata.providers.includes("google")) ||
+            user.user_metadata?.email_verified === true ||
+            (Array.isArray(user.identities) && user.identities.some((id: any) => id.provider === "google" || id.identity_data?.email_verified === true))
+          );
+          const isVerified = Boolean(user.email_confirmed_at || user.confirmed_at || isGoogleUser);
 
-          // Se next === "/onboarding", verifica se o usuário já tem cadastro completo no banco (pelo EMAIL!)
-          if (redirectPath === "/onboarding") {
-            const { data: dbUser } = await supabase
+          try {
+            const { data: existingUser } = await supabase
               .from("usuarios")
-              .select("cpf, escolaridade")
+              .select("id, verificado, cpf, escolaridade")
               .eq("email", user.email)
               .maybeSingle();
 
-            if (dbUser && (dbUser.cpf || dbUser.escolaridade)) {
-              redirectPath = "/questoes";
+            if (existingUser) {
+              if (isVerified && existingUser.verificado !== 1) {
+                await supabase
+                  .from("usuarios")
+                  .update({ verificado: 1 })
+                  .eq("email", user.email);
+              }
+              if (redirectPath === "/onboarding" && (existingUser.cpf || existingUser.escolaridade)) {
+                redirectPath = "/questoes";
+              }
+            } else {
+              const nomeUsuario =
+                user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email.split("@")[0] ||
+                "Aluno LEMMAS";
+
+              await supabase
+                .from("usuarios")
+                .insert({
+                  nome: nomeUsuario,
+                  email: user.email,
+                  senha_hash: "supabase_managed",
+                  escolaridade: "Ensino Superior",
+                  verificado: isVerified ? 1 : 0,
+                });
             }
+          } catch (dbSyncErr) {
+            console.warn("Aviso ao sincronizar usuarios no callback:", dbSyncErr);
           }
         }
 
