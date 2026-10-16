@@ -234,40 +234,42 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
         """Dicas pedagógicas determinísticas de contingência adaptadas por preferência."""
         topico = exercise.get("topico", "este tema")
         gabarito = exercise.get("gabarito", "")
+        solucao = exercise.get("solucao", "")
+        res_oficial = solucao or gabarito or "A resolução formal completa demonstra que a tese se sustenta diretamente a partir das hipóteses."
 
         fallback_by_pref = {
             "conceitual": {
-                1: f"💡 **Nível 1 (Intuição e Dados)**: Observe o que a questão descreve em **{topico}**. O que cada número ou grandeza representa antes de aplicar qualquer fórmula?",
-                2: f"💡 **Nível 2 (Conceito Chave)**: Pense na intuição do lema fundamental que rege **{topico}**. Por que essa propriedade se mantém verdadeira?",
-                3: "💡 **Nível 3 (Primeiro Passo)**: Escreva a primeira igualdade traduzindo a intuição para a linguagem matemática.",
-                4: "💡 **Nível 4 (Passos Intermediários)**: Simplifique os termos conhecidos, mantendo o foco no significado de cada membro da equação.",
-                5: f"💡 **Nível 5 (Resolução Completa)**: A dedução converge para **{gabarito}**. Verifique a solução completa desenvolvendo cada membro da equação com clareza conceitual.",
+                1: f"💡 **Nível 1 (Simbologia, Intuição e Dados)**: Você identificou quais são os símbolos, conectivos e notações essenciais desta questão de **{topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos como $\\implies$). O que cada um deles expressa intuitivamente antes de calcular?",
+                2: f"💡 **Nível 2 (Primeiro Passo no Papel)**: Vamos começar a escrever no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **{topico}** (ex: comece com 'Seja $x \\in ...$' ou defina a variável principal).",
+                3: f"💡 **Nível 3 (Encadeamento Intermediário)**: Agora relacione a primeira hipótese ao próximo passo dedutivo. Que propriedade ou manipulação operatória de **{topico}** conecta o ponto de partida à tese pedida?",
+                4: f"💡 **Nível 4 (Pulo do Gato & Pegadinha)**: Atente para a simplificação crítica ou lema decisivo de **{topico}** que destrava a conclusão, cuidando para não cair em divisões por zero ou casos particulares.",
+                5: f"💡 **Nível 5 (Resolução Oficial Definitiva)**:\n\n{res_oficial}",
             },
             "rigor_formal": {
-                1: f"💡 **Nível 1 (Hipóteses e Domínio)**: Enuncie com precisão as hipóteses dadas e as restrições de domínio das variáveis em **{topico}**.",
-                2: f"💡 **Nível 2 (Teorema Axiomático)**: Identifique qual axioma ou teorema formal de **{topico}** possui hipóteses compatíveis com o problema.",
-                3: "💡 **Nível 3 (Relação Dedutiva Inicial)**: Escreva a primeira igualdade formal fundamentada diretamente nas hipóteses.",
-                4: "💡 **Nível 4 (Manipulação Axiomática)**: Desenvolva as passagens algébricas aplicando as propriedades de corpos e anéis matemáticos.",
-                5: f"💡 **Nível 5 (Demonstração Completa)**: A tese culmina formalmente em **{gabarito}**. Cada passo decorre dos axiomas fundamentais.",
+                1: f"💡 **Nível 1 (Simbologia, Hipóteses e Domínio)**: Identifique os quantificadores formais e notações de corpos/anéis envolvidos em **{topico}**. Como formalizar o domínio e as hipóteses do enunciado?",
+                2: f"💡 **Nível 2 (Primeiro Passo Axiomático)**: Escreva no papel a primeira linha da dedução formal: declare o elemento genérico 'Seja $x \\in \\mathbb{{R}}$...' e estabeleça a premissa $P(x)$.",
+                3: f"💡 **Nível 3 (Manipulação Dedutiva)**: Aplique a implicação lógica ou equivalência formal, explicitando cada axioma de passagem em **{topico}**.",
+                4: f"💡 **Nível 4 (Lema Decisivo & Restrições)**: Enuncie o lema fundamental ou critério de irredutibilidade/ortogonalidade que viabiliza o encadeamento conclusivo.",
+                5: f"💡 **Nível 5 (Demonstração Axiomática Completa)**:\n\n{res_oficial}",
             },
             "aplicado_ml": {
-                1: f"💡 **Nível 1 (Variáveis e Entradas)**: Interprete as grandezas dadas em **{topico}** como variáveis de entrada e parâmetros estruturais do sistema.",
-                2: f"💡 **Nível 2 (Fundamento Estrutural)**: Identifique a propriedade matemática de **{topico}** que rege transformações ou restrições em espaços de dados.",
-                3: "💡 **Nível 3 (Formulação Algébrica)**: Formule a equação matricial ou analítica inicial para expressar o problema.",
-                4: "💡 **Nível 4 (Passos Analíticos)**: Execute as operações intermediárias explorando propriedades de simetria ou ortogonalidade.",
-                5: f"💡 **Nível 5 (Resolução e Modelagem)**: A solução analítica converge para **{gabarito}**, validando a consistência dos parâmetros.",
+                1: f"💡 **Nível 1 (Notação Vetorial, Variáveis e Entradas)**: Mapeie as variáveis, entradas e matrizes do enunciado de **{topico}**, associando cada símbolo à sua dimensão e papel funcional no sistema.",
+                2: f"💡 **Nível 2 (Primeiro Passo da Modelagem)**: Escreva a formulação matemática inicial no papel, expressando a função objetivo ou relação analítica que modela as hipóteses.",
+                3: f"💡 **Nível 3 (Passos Intermediários do Cálculo)**: Desenvolva as operações analíticas intermediárias explorando propriedades de simetria, posto ou ortogonalidade.",
+                4: f"💡 **Nível 4 (Otimização & Pulo do Gato)**: Identifique o ponto crítico ou fatoração matricial que simplifica a solução sem perda de generalidade.",
+                5: f"💡 **Nível 5 (Resolução Analítica Completa)**:\n\n{res_oficial}",
             },
             "competitivo": {
-                1: f"💡 **Nível 1 (Observação Crítica de Prova)**: Destaque a restrição ou valor-chave do enunciado em **{topico}** que elimina caminhos trabalhosos.",
-                2: f"💡 **Nível 2 (Gatilho Estratégico)**: Lembre-se do lema ou padrão clássico de prova que resolve problemas de **{topico}** em poucas linhas.",
-                3: "💡 **Nível 3 (Equação Direta)**: Monte a equação na forma mais simplificada, cortando etapas intermediárias redundantes.",
-                4: "💡 **Nível 4 (Simplificação Ágil)**: Simplifique os coeficientes e descarte termos nulos para acelerar a conclusão.",
-                5: f"💡 **Nível 5 (Resolução Definitiva)**: O gabarito oficial é **{gabarito}**. Faça uma verificação rápida por análise dimensional ou caso extremo.",
+                1: f"💡 **Nível 1 (Simbologia Crítica & Observação Crítica de Prova)**: Destaque a notação-chave e a restrição oculta do enunciado em **{topico}** que elimina de cara os caminhos prolixos.",
+                2: f"💡 **Nível 2 (Primeiro Passo Rápido no Rascunho)**: Escreva a primeira igualdade na forma mais simplificada e direta possível para ganhar tempo de prova.",
+                3: f"💡 **Nível 3 (Encadeamento Otimizado)**: Aplique o gatilho clássico da banca para avançar direto à relação dos coeficientes sem passos redundantes.",
+                4: f"💡 **Nível 4 (Pulo do Gato da Banca)**: Use o atalho de resolução que desmonta a questão e verifique rapidamente contra os distratores da prova.",
+                5: f"💡 **Nível 5 (Resolução Definitiva & Conferência)**:\n\n{res_oficial}",
             },
         }
 
         modo_dict = fallback_by_pref.get(pref, fallback_by_pref["conceitual"])
-        return modo_dict.get(level, "Revise os axiomas fundamentais da questão.")
+        return modo_dict.get(level, f"💡 **Nível {level}**: Desenvolva o raciocínio formal a partir das hipóteses da questão.")
 
 
 # Instância global do tutor
