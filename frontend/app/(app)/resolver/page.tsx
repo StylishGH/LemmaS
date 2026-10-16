@@ -870,6 +870,7 @@ function ResolverContent() {
           enunciado: q.enunciado,
           gabarito: q.gabarito,
           justificativa: `O estudante assinalou a alternativa: (${respostaAluno}). Explique o passo a passo completo da questão e diagnostique a pegadinha ou raciocínio por trás da alternativa assinalada.`,
+          modo: "explicar",
         }),
       });
       const data = await res.json();
@@ -900,6 +901,7 @@ function ResolverContent() {
           enunciado: q.enunciado,
           gabarito: q.gabarito,
           justificativa: `O estudante assinalou a alternativa: (${respostaAluno}). Gabarito oficial: (${q.gabarito}). Apresente a resolução axiomática passo a passo, evidencie o lema ou princípio teórico determinante e aponte a pegadinha ou distrator da alternativa assinalada.`,
+          modo: "explicar",
         }),
       });
       const data = await res.json();
@@ -2285,6 +2287,25 @@ function ResolverContent() {
                 )}
               </div>
             )}
+
+            {/* GABARITO DE REFERÊNCIA & CRONOGRAMA SM-2 (UNIFICADO NO CONTAINER DISCURSIVO) */}
+            <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2 text-xs">
+              {currentQ.gabarito && (
+                <div className="space-y-1">
+                  <span className="font-bold text-slate-700 dark:text-zinc-200 text-xs block">
+                    Gabarito / Resolução de Referência Oficial:
+                  </span>
+                  <div className="text-slate-800 dark:text-zinc-300 leading-relaxed text-xs p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
+                    <MathText text={currentQ.gabarito} />
+                  </div>
+                </div>
+              )}
+              {currentResult?.sm2 && (
+                <div className="text-xs text-slate-600 dark:text-zinc-400 pt-1.5 border-t border-slate-200/50 dark:border-white/10">
+                  SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -2409,37 +2430,39 @@ function ResolverContent() {
         {/* MODO TREINO: FEEDBACK IMEDIATO DE SUBMISSÃO E GABARITO OFICIAL */}
         {!isSimuladoAtivo && currentResult && (
           <div className="space-y-3">
-            <div className={`p-4 rounded-xl border space-y-2 ${
-              currentResult.acertou 
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
-                : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
-            }`}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
-                    <Eye className="w-3 h-3" />
-                    [DADO OBSERVADO]
-                  </span>
-                  <span className="font-bold text-xs">
-                    Sua resposta: ({currentResult.resposta_enviada})
-                  </span>
+            {!isDiscursiva && (
+              <div className={`p-4 rounded-xl border space-y-2 ${
+                currentResult.acertou 
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
+                  : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
+              }`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
+                      <Eye className="w-3 h-3" />
+                      [DADO OBSERVADO]
+                    </span>
+                    <span className="font-bold text-xs">
+                      Sua resposta: ({currentResult.resposta_enviada})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-bold text-xs">
+                    {currentResult.acertou ? (
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-4 h-4" /> Dedução Correta!
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
+                        <XCircle className="w-4 h-4" /> Divergência: Gabarito Oficial é <span className="font-bold ml-1"><MathText text={currentResult.gabarito} /></span>
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 font-bold text-xs">
-                  {currentResult.acertou ? (
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="w-4 h-4" /> Dedução Correta!
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
-                      <XCircle className="w-4 h-4" /> Divergência: Gabarito Oficial é ({currentResult.gabarito})
-                    </span>
-                  )}
+                <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1 border-t border-slate-200/50 dark:border-white/10">
+                  SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
                 </div>
               </div>
-              <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1 border-t border-slate-200/50 dark:border-white/10">
-                SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
-              </div>
-            </div>
+            )}
 
             {/* BOTÃO E PAINEL DE EXPLICAÇÃO DA MATHAI ENGINE (IMEDIATO PÓS-SUBMISSÃO) */}
             {!resolucoesIa[currentQ.id] ? (
