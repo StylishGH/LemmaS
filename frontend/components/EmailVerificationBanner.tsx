@@ -70,9 +70,9 @@ export default function EmailVerificationBanner() {
     setMensagemSucesso(null);
     setLoadingRefresh(true);
     try {
-      await refresh();
+      const updatedProfile = await refresh();
       // O hook recalcula profile.emailVerificado e sincroniza verificado=1
-      if (profile.emailVerificado) {
+      if (updatedProfile?.emailVerificado) {
         setMensagemSucesso("E-mail verificado com sucesso! Conta 100% ativa.");
       } else {
         setMensagemErro("Ainda não detectamos a confirmação. Clique no link que enviamos para o seu e-mail.");
