@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -58,6 +58,13 @@ interface Question {
   estrategias_esperadas?: string | string[] | null;
 }
 
+
+const PRIORITIZED_BANCAS = [
+  "ITA", "IME", "AFA", "EFOMM", "Escola Naval", "EsPCEx", "Colégio Naval",
+  "EPCAR", "ESA", "EEAR", "OBM", "FUVEST", "UNICAMP", "CEDERJ", "ENEM", "IMO", "HMMT"
+];
+
+// Prioritized bancas for initial display
 // ============================================================
 // HELPERS DE FILTRO MULTI-SELECT
 // Todos os filtros são string[] contendo os valores selecionados.
@@ -84,6 +91,9 @@ const paramFromFiltro = (arr: string[]) => {
 // Cores semânticas por grande área matemática para visualização editorial limpa
 function getMateriaBadgeColor(materia?: string) {
   const m = (materia || "").toLowerCase();
+  if (m.includes("funç") || m.includes("func")) {
+    return "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/25";
+  }
   if (m.includes("cálculo")) {
     return "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25";
   }
@@ -150,7 +160,6 @@ export default function BancoQuestoesPage() {
   const [dificuldadeFiltro, setDificuldadeFiltro] = useState<string[]>([VAL_TODAS]);
   const [busca, setBusca] = useState<string>("");
 
-  const [mostrarFiltrosAvancados, setMostrarFiltrosAvancados] = useState<boolean>(true);
   const [gabaritosRevelados, setGabaritosRevelados] = useState<Set<number>>(new Set());
 
   // Estado de Seleção em Lote de Questões para Treino / Simulado
@@ -214,29 +223,75 @@ export default function BancoQuestoesPage() {
   const [anosDisponiveis, setAnosDisponiveis] = useState<{ ano: number; label?: string; count: number }[]>([]);
   const [anoMin, setAnoMin] = useState<number>(1979);
   const [anoMax, setAnoMax] = useState<number>(2026);
-  const [anoDropdownOpen, setAnoDropdownOpen] = useState<boolean>(false);
-  const anoDropdownRef = useRef<HTMLDivElement>(null);
-
-  const [topicoDropdownOpen, setTopicoDropdownOpen] = useState<boolean>(false);
-  const [buscaTopicoInterna, setBuscaTopicoInterna] = useState<string>("");
-  const topicoDropdownRef = useRef<HTMLDivElement>(null);
-
   const [tiposDisponiveis, setTiposDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
   const [dificuldadesDisponiveis, setDificuldadesDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
-  // Fecha os dropdowns de ano e tópicos ao clicar fora
+  // Estados dos Popovers da Barra de Comando Horizontal
+  const [activePopover, setActivePopover] = useState<"banca" | "materia" | "dificuldade" | "ano" | "formato" | null>(null);
+  const [buscaBancaInterna, setBuscaBancaInterna] = useState<string>("");
+  const [abaBancaPopover, setAbaBancaPopover] = useState<string>("Todas");
+  const [buscaTopicoInterna, setBuscaTopicoInterna] = useState<string>("");
+  const commandBarRef = useRef<HTMLDivElement>(null);
+
+  // Fecha qualquer popover aberto ao clicar fora da Barra de Comando
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (anoDropdownRef.current && !anoDropdownRef.current.contains(event.target as Node)) {
-        setAnoDropdownOpen(false);
-      }
-      if (topicoDropdownRef.current && !topicoDropdownRef.current.contains(event.target as Node)) {
-        setTopicoDropdownOpen(false);
+      if (commandBarRef.current && !commandBarRef.current.contains(event.target as Node)) {
+        setActivePopover(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Ordenação de Relevância Mandatória das Bancas (ITA, IME, AFA... no topo)
+  const bancasOrdenadas = useMemo(() => {
+    const rawList = bancasDisponiveis.filter((b) => {
+      if (b.name === VAL_TODAS) return false;
+      const nomeLower = b.name.toLowerCase();
+      if (nomeLower.includes("nível") || nomeLower.includes("nivel")) return false;
+      if (abaBancaPopover === "Militares") return b.categoria === "Concurso Militar";
+      if (abaBancaPopover === "Vestibulares") return b.categoria === "Vestibular & Superior";
+      if (abaBancaPopover === "Olimpíadas") return b.categoria === "Olimpíadas";
+      return true;
+    });
+
+    const filtradas = buscaBancaInterna.trim() === ""
+      ? rawList
+      : rawList.filter((b) => b.name.toLowerCase().includes(buscaBancaInterna.toLowerCase().trim()));
+
+    return filtradas.sort((a, b) => {
+      const idxA = PRIORITIZED_BANCAS.indexOf(a.name);
+      const idxB = PRIORITIZED_BANCAS.indexOf(b.name);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return b.count - a.count;
+    });
+  }, [bancasDisponiveis, abaBancaPopover, buscaBancaInterna]);
+
+  // Aplicar Trilhas Rápidas de 1 Clique
+  const aplicarTrilhaRapida = (tipoTrilha: string) => {
+    setPage(1);
+    if (tipoTrilha === "todas") {
+      limparFiltros();
+    } else if (tipoTrilha === "militares") {
+      limparFiltros();
+      setCategoriaBancaFiltro("Concurso Militar");
+    } else if (tipoTrilha === "geometria") {
+      limparFiltros();
+      setMateriaFiltro(["Geometria Plana"]);
+    } else if (tipoTrilha === "calculo") {
+      limparFiltros();
+      setMateriaFiltro(["Cálculo"]);
+    } else if (tipoTrilha === "olimpiadas") {
+      limparFiltros();
+      setCategoriaBancaFiltro("Olimpíadas");
+    } else if (tipoTrilha === "vestibulares") {
+      limparFiltros();
+      setCategoriaBancaFiltro("Vestibular & Superior");
+    }
+  };
 
   const toggleExpandMateria = (nome: string) => {
     setExpandedMaterias((prev) => {
@@ -591,46 +646,106 @@ export default function BancoQuestoesPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto py-2">
       {/* 1. HEADER EDITORIAL NO ESTILO LEMMAS */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-2">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{total > 0 ? total.toLocaleString("pt-BR") : "20.764"} Questões Auditadas no Supabase · MathAI Engine</span>
+            <span>{total > 0 ? total.toLocaleString("pt-BR") : "20.764"} Questões Auditadas · MathAI Engine</span>
           </div>
-          <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
+          <h1 className="font-serif-math text-2xl sm:text-3xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
             Banco de <em className="italic text-amber-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
           </h1>
-          <p className="text-xs md:text-sm text-slate-600 dark:text-[#a9aaa1] max-w-2xl leading-relaxed">
-            Consulte o acervo de problemas militares, vestibulares e olimpíadas com filtros por categoria, banca, tipo de prova, tópicos e dificuldade auditada.
-          </p>
-        </div>
-
-        <div className="flex flex-nowrap items-center gap-3">
-          <button
-            type="button"
-            onClick={handleTreinarListaEstudo}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/25 hover:bg-slate-100 dark:hover:bg-[#1a172c] text-slate-800 dark:text-[#f5f0df] font-semibold text-xs transition-all flex items-center gap-2 shadow-xs"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
-            <span>Treinar Lista Livre ({selectedIds.size > 0 ? `${selectedIds.size} selecionadas` : `${total} filtradas`})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setModalSimuladoAberto(true)}
-            className="lemmas-gold-cta inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02]"
-          >
-            <Timer className="w-3.5 h-3.5" />
-            <span>Criar Simulado ({selectedIds.size > 0 ? `${selectedIds.size} questões` : `${total} questões`})</span>
-          </button>
         </div>
       </div>
 
-      {/* 2. PAINEL DE CONTROLE DE FILTROS (TODAS AS DIMENSÕES MULTI-SELECT) */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-sm space-y-5">
-        {/* BUSCA DE PROBLEMAS */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 dark:text-[#a9aaa1] absolute left-3.5 top-1/2 -translate-y-1/2" />
+      {/* LINHA 1: TRILHAS RÁPIDAS DE 1 CLIQUE */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("todas")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border ${
+            filtrosAtivosCount === 0 && categoriaBancaFiltro === "Todas"
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          Todas as Questões
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("militares")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            categoriaBancaFiltro === "Concurso Militar"
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          <span>🎖️</span>
+          <span>Militares de Elite (ITA · IME · AFA · EFOMM · EN)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("geometria")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            materiaFiltro.includes("Geometria Plana")
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          <span>📐</span>
+          <span>Geometria & Construções</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("calculo")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            materiaFiltro.includes("Cálculo")
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          <span>∫</span>
+          <span>Cálculo & Álgebra Linear</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("olimpiadas")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            categoriaBancaFiltro === "Olimpíadas"
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          <span>🏆</span>
+          <span>Olimpíadas (OBM · IMO · HMMT)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("vestibulares")}
+          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            categoriaBancaFiltro === "Vestibular & Superior"
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          }`}
+        >
+          <span>🎓</span>
+          <span>Vestibulares & CEDERJ</span>
+        </button>
+      </div>
+
+      {/* LINHA 2: BARRA DE COMANDO HORIZONTAL ÚNICA (ESTILO LEETCODE / LINEAR) */}
+      <div
+        ref={commandBarRef}
+        className="flex flex-wrap items-center gap-2 p-2 rounded-2xl border border-slate-200/90 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/70 backdrop-blur-md shadow-xs relative z-30"
+      >
+        {/* INPUT DE BUSCA COMPACTO */}
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={busca}
@@ -638,8 +753,8 @@ export default function BancoQuestoesPage() {
               setBusca(e.target.value);
               setPage(1);
             }}
-            placeholder="Buscar por termo, fórmula, Teorema de Stokes, matrizes, etc..."
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 text-sm text-slate-900 dark:text-[#f5f0df] outline-none focus:border-amber-500/50 dark:focus:border-[#d9b452] transition-colors"
+            placeholder="Buscar teorema, lema, matrizes, Stokes..."
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 dark:placeholder-zinc-500 outline-none focus:border-amber-500/50 dark:focus:border-[#d9b452] transition-colors"
           />
           {busca && (
             <button
@@ -647,316 +762,133 @@ export default function BancoQuestoesPage() {
                 setBusca("");
                 setPage(1);
               }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* DIMENSÃO 1: BANCA / CONCURSO COM TABS DE CATEGORIA */}
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-[#d9b452] uppercase tracking-wider flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-amber-500" />
-              Bancas & Instituições{numBancas > 0 ? ` (${numBancas} selecionada${numBancas > 1 ? "s" : ""})` : ""}:
-            </span>
-            {numBancas > 0 && (
-              <button
-                onClick={() => handleSelectBanca(VAL_TODAS)}
-                className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-              >
-                Limpar bancas ({numBancas})
-              </button>
-            )}
-          </div>
-
-          {/* TABS EDITORIAL DE CATEGORIA DA BANCA */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800">
-            {categoriasBancaDisponiveis.map((cat) => {
-              const isCatActive = categoriaBancaFiltro === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => {
-                    setCategoriaBancaFiltro(cat.id);
-                    setPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    isCatActive
-                      ? "bg-white dark:bg-[#1e1b34] text-slate-900 dark:text-[#f5f0df] shadow-xs border border-slate-200/90 dark:border-amber-500/35 font-bold"
-                      : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                  }`}
-                >
-                  <span>{cat.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isCatActive
-                      ? "bg-amber-500/15 text-amber-700 dark:text-[#d9b452] font-bold"
-                      : "bg-slate-200/60 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                  }`}>
-                    {cat.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* CHIPS DE BANCAS FILTRADOS PELA CATEGORIA ATIVA */}
-          <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
-            {bancasDisponiveis
-              .filter((b) => {
-                if (b.name === VAL_TODAS) return true;
-                const nomeLower = b.name.toLowerCase();
-                if (nomeLower.includes("nível") || nomeLower.includes("nivel")) return false;
-                if (categoriaBancaFiltro === "Todas") return true;
-                return b.categoria === categoriaBancaFiltro;
-              })
-              .map((b) => {
-                              const isSelected = bancaFiltro.includes(b.name);
-                              const bancaKey = b.categoria ? `${b.name}::${b.categoria}` : b.name;
-                              return (
-                                <button
-                                  key={bancaKey}
-                                  onClick={() => handleSelectBanca(b.name)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      isSelected
-                        ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold shadow-sm"
-                        : "bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-[#dedbd0] hover:bg-slate-200 dark:hover:bg-zinc-800"
-                    }`}
-                  >
-                    <span>{b.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isSelected
-                        ? "bg-slate-900/20 text-slate-950 font-bold"
-                        : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                    }`}>
-                      {b.count}
-                    </span>
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-
-        {/* DIMENSÃO 2: GRANDE ÁREA / MATÉRIA (PÍLULAS COMPACTAS LADO A LADO) */}
-        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-zinc-800/60">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-violet-500" />
-              <span className="text-xs font-bold text-slate-700 dark:text-[#d9b452] uppercase tracking-wider">
-                Grande Área / Matéria:
-              </span>
-              {numMaterias > 0 && (
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-300 font-bold">
-                  {numMaterias} {numMaterias === 1 ? "selecionada" : "selecionadas"}
-                </span>
-              )}
-            </div>
-
-            {numMaterias > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMateriaFiltro([VAL_TODAS]);
-                  setPage(1);
-                }}
-                className="text-xs text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-              >
-                Limpar matérias
-              </button>
-            )}
-          </div>
-
-          {/* Botões / Pílulas lado a lado */}
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {materiasDisponiveis.map((m) => {
-              const isSelected = materiaFiltro.includes(m.name);
-              return (
-                <button
-                  key={m.name}
-                  type="button"
-                  onClick={() => handleSelectMateria(m.name)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-violet-600 text-white font-bold shadow-sm"
-                      : "bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-[#dedbd0] hover:bg-slate-200 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  <span>{m.name}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isSelected
-                        ? "bg-white/20 text-white font-bold"
-                        : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                    }`}
-                  >
-                    {m.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* DIMENSÃO 3: TÓPICOS ESPECÍFICOS (DROPDOWN SUSPENSO COM SELEÇÃO MÚLTIPLA) */}
-        <div className="relative pt-2" ref={topicoDropdownRef}>
-          <div className="flex items-center justify-between pb-1.5">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider">
-                Tópicos Específicos:
-              </span>
-              {numTopicos > 0 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 font-bold">
-                  {numTopicos} ativo(s)
-                </span>
-              )}
-            </div>
-
-            {numTopicos > 0 && (
-              <button
-                type="button"
-                onClick={() => handleSelectTopico(VAL_TODOS)}
-                className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-              >
-                Limpar tópicos ({numTopicos})
-              </button>
-            )}
-          </div>
-
-          {/* Trigger do Dropdown de Tópicos */}
+        {/* POPOVER 1: BANCA */}
+        <div className="relative">
           <button
             type="button"
-            onClick={() => setTopicoDropdownOpen(!topicoDropdownOpen)}
-            className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-between gap-2 border ${
-              numTopicos > 0
-                ? "bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs"
-                : "bg-white dark:bg-zinc-900/90 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 hover:border-amber-500/40"
+            onClick={() => setActivePopover(activePopover === "banca" ? null : "banca")}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              numBancas > 0
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
-            <div className="flex items-center gap-2 truncate">
-              <BookOpen className="w-4 h-4 shrink-0" />
-              <span className="truncate">
-                {numTopicos === 0
-                  ? numMaterias > 0
-                    ? `Todos os Tópicos das Matérias Selecionadas (${topicosBaseDropdown.length} disponíveis)`
-                    : `Todos os Tópicos Específicos (${topicosDisponiveis.filter((t) => t.name !== VAL_TODOS).length} disponíveis)`
-                  : numTopicos === 1
-                  ? `Tópico: ${joinSelecionados(topicoFiltro, VAL_TODOS)}`
-                  : `${numTopicos} tópicos selecionados (${joinSelecionados(topicoFiltro, VAL_TODOS)})`}
-              </span>
-            </div>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
-                topicoDropdownOpen ? "rotate-180" : ""
-              }`}
-            />
+            <Filter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>{numBancas === 0 ? "Banca" : numBancas === 1 ? bancaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numBancas} Bancas`}</span>
+            {numBancas > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "banca" ? "rotate-180" : ""}`} />
           </button>
 
-          {/* Popover Flutuante do Dropdown de Tópicos */}
-          {topicoDropdownOpen && (
-            <div className="absolute top-full left-0 mt-1.5 z-50 w-full sm:w-[500px] md:w-[620px] p-4 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md animate-fadeIn space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-                <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-[#f5f0df] block">
-                    Filtrar por Tópicos Específicos
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {numMaterias > 0
-                      ? `Exibindo tópicos das matérias: ${joinSelecionados(materiaFiltro, VAL_TODAS)}`
-                      : "Marque múltiplos tópicos ou busque pelo nome"}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTopicoDropdownOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Campo de Busca Rápida de Tópicos */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={buscaTopicoInterna}
-                  onChange={(e) => setBuscaTopicoInterna(e.target.value)}
-                  placeholder="Buscar tópico (ex: derivadas, matrizes, poliedros, limites)..."
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-                />
-                {buscaTopicoInterna && (
+          {activePopover === "banca" && (
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-80 sm:w-96 max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+              {/* Header do Popover */}
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+                  Filtrar por Banca
+                </span>
+                {numBancas > 0 && (
                   <button
                     type="button"
-                    onClick={() => setBuscaTopicoInterna("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                    onClick={() => handleSelectBanca(VAL_TODAS)}
+                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                  >
+                    Limpar ({numBancas})
+                  </button>
+                )}
+              </div>
+
+              {/* Mini-input de busca interna */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={buscaBancaInterna}
+                  onChange={(e) => setBuscaBancaInterna(e.target.value)}
+                  placeholder="Filtrar banca (ex: ITA, OBM, Harvard)..."
+                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                />
+                {buscaBancaInterna && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaBancaInterna("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
                   >
                     ×
                   </button>
                 )}
               </div>
 
-              {/* Atalhos Rápidos */}
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => handleSelectTopico(VAL_TODOS)}
-                  className={`px-2 py-0.5 rounded-md font-semibold transition-colors ${
-                    numTopicos === 0
-                      ? "bg-emerald-600 text-white"
-                      : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200"
-                  }`}
-                >
-                  Todos os Tópicos
-                </button>
-                {numTopicos > 0 && (
+              {/* Abas Rápidas */}
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-[11px]">
+                {(["Todas", "Militares", "Vestibulares", "Olimpíadas"] as const).map((aba) => (
                   <button
+                    key={aba}
                     type="button"
-                    onClick={() => handleSelectTopico(VAL_TODOS)}
-                    className="px-2 py-0.5 rounded-md text-amber-600 dark:text-[#d9b452] hover:underline font-semibold ml-auto"
+                    onClick={() => setAbaBancaPopover(aba)}
+                    className={`flex-1 py-1 rounded-md font-semibold transition-all ${
+                      abaBancaPopover === aba
+                        ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-[#f5f0df] shadow-2xs font-bold"
+                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
+                    }`}
                   >
-                    Limpar Seleção ({numTopicos})
+                    {aba}
                   </button>
-                )}
+                ))}
               </div>
 
-              {/* Grade de Checkboxes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-60 overflow-y-auto pr-1">
-                {topicosFiltradosDropdown.map((topico) => {
-                  const isSelected = topicoFiltro.includes(topico.name);
+              {/* Lista de Bancas Ordenadas */}
+              <div className="overflow-y-auto max-h-56 pr-1 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => handleSelectBanca(VAL_TODAS)}
+                  className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
+                    numBancas === 0
+                      ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                      : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                  }`}
+                >
+                  <span>Todas as Bancas</span>
+                  <span className="text-[10px] font-mono text-slate-400">({total.toLocaleString("pt-BR")})</span>
+                </button>
+
+                {bancasOrdenadas.map((b) => {
+                  const isSelected = bancaFiltro.includes(b.name);
+                  const isPrioritaria = PRIORITIZED_BANCAS.includes(b.name);
                   return (
                     <button
-                      key={topico.name}
+                      key={b.name}
                       type="button"
-                      onClick={() => handleSelectTopico(topico.name)}
-                      className={`p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between gap-2 border ${
+                      onClick={() => handleSelectBanca(b.name)}
+                      className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
                         isSelected
-                          ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-800 dark:text-emerald-300 font-bold"
-                          : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+                          ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                          : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                       }`}
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        <span
-                          className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors shrink-0 ${
-                            isSelected
-                              ? "bg-emerald-600 border-emerald-600 text-white"
-                              : "border-slate-300 dark:border-zinc-600"
-                          }`}
-                        >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[10px] shrink-0 ${
+                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-600"
+                        }`}>
                           {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </span>
-                        <span className="truncate">{topico.name}</span>
+                        <span className="truncate">{b.name}</span>
+                        {isPrioritaria && (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-[#d9b452] font-semibold">
+                            BR
+                          </span>
+                        )}
                       </div>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                          isSelected
-                            ? "bg-emerald-600/20 text-emerald-900 dark:text-emerald-200 font-bold"
-                            : "bg-slate-200/80 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                        }`}
-                      >
-                        {topico.count}
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                        ({b.count})
                       </span>
                     </button>
                   );
@@ -964,14 +896,14 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* Rodapé */}
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-medium">
-                  {numTopicos > 0 ? `${numTopicos} selecionado(s)` : "Nenhum tópico selecionado"}
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400 font-mono">
+                  {numBancas === 0 ? "Todas ativas" : `${numBancas} marcada(s)`}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setTopicoDropdownOpen(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold text-xs hover:opacity-90 transition-opacity"
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -980,401 +912,615 @@ export default function BancoQuestoesPage() {
           )}
         </div>
 
-        {/* DIMENSÕES 4, 5, 6: ANO (DROPDOWN), TIPO (COMPACTO) E DIFICULDADE (CENTRALIZADO) */}
-        <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/60">
-          <div className="flex items-center justify-between pb-3">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-[#d9b452] uppercase tracking-wider flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500" />
-              Refinamento Adicional (Ano · Tipo · Dificuldade):
+        {/* POPOVER 2: MATÉRIA & TÓPICO */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setActivePopover(activePopover === "materia" ? null : "materia")}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              numMaterias > 0 || numTopicos > 0
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+            <span>
+              {numMaterias === 0 && numTopicos === 0
+                ? "Matéria & Tópico"
+                : numMaterias > 0 && numTopicos === 0
+                ? numMaterias === 1 ? materiaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numMaterias} Matérias`
+                : `${numMaterias} Mat., ${numTopicos} Tóp.`}
             </span>
-            <button
-              type="button"
-              onClick={() => setMostrarFiltrosAvancados(!mostrarFiltrosAvancados)}
-              className="text-xs text-amber-600 dark:text-[#d9b452] font-semibold hover:underline"
-            >
-              {mostrarFiltrosAvancados ? "Ocultar detalhes" : "Expandir opções"}
-            </button>
-          </div>
+            {(numMaterias > 0 || numTopicos > 0) && (
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "materia" ? "rotate-180" : ""}`} />
+          </button>
 
-          {mostrarFiltrosAvancados && (
-            <div className="space-y-4 pt-1">
-              {/* LINHA 1: DROPDOWN DE ANO DA PROVA + TIPO DE RESOLUÇÃO COMPACTO */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                {/* 2. SELEÇÃO DE ANO DA PROVA (DROPDOWN SUSPENSO COM SELEÇÃO MÚLTIPLA) */}
-                <div className="relative p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2" ref={anoDropdownRef}>
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                      Ano da Prova:
-                    </label>
-                    {numAnos > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectAno(VAL_TODOS)}
-                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-                      >
-                        Limpar anos ({numAnos})
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Trigger do Dropdown */}
+          {activePopover === "materia" && (
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-84 sm:w-[480px] max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+                  Grandes Áreas & Tópicos
+                </span>
+                {(numMaterias > 0 || numTopicos > 0) && (
                   <button
                     type="button"
-                    onClick={() => setAnoDropdownOpen(!anoDropdownOpen)}
-                    className={`w-full px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-between gap-2 border ${
-                      numAnos > 0
-                        ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs"
-                        : "bg-white dark:bg-zinc-900/90 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 hover:border-amber-500/40"
-                    }`}
+                    onClick={() => {
+                      setMateriaFiltro([VAL_TODAS]);
+                      setTopicoFiltro([VAL_TODOS]);
+                      setPage(1);
+                    }}
+                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <Calendar className="w-4 h-4 shrink-0" />
-                      <span className="truncate">
-                        {numAnos === 0
-                          ? `Todos os Anos da Prova (${anoMin}–${anoMax})`
-                          : numAnos === 1
-                          ? `Ano: ${joinSelecionados(anoFiltro, VAL_TODOS)}`
-                          : `${numAnos} anos selecionados (${joinSelecionados(anoFiltro, VAL_TODOS)})`}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
-                        anoDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
+                    Limpar tudo
                   </button>
-
-                  {/* Popover Flutuante do Dropdown de Anos */}
-                  {anoDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1.5 z-40 w-full sm:w-88 p-3.5 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-xl backdrop-blur-md animate-fadeIn space-y-3">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-                        <div>
-                          <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df] block">
-                            Filtrar por Anos da Prova
-                          </span>
-                          <span className="text-[10px] text-slate-400">Marque múltiplos anos</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setAnoDropdownOpen(false)}
-                          className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Atalhos Rápidos */}
-                      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectAno(VAL_TODOS)}
-                          className={`px-2 py-0.5 rounded-md font-semibold transition-colors ${
-                            numAnos === 0
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200"
-                          }`}
-                        >
-                          Todos os Anos
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAnoFiltro(["2026", "2025", "2024"]);
-                            setPage(1);
-                          }}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 font-semibold"
-                        >
-                          Recentes (24–26)
-                        </button>
-                        {numAnos > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => handleSelectAno(VAL_TODOS)}
-                            className="px-2 py-0.5 rounded-md text-amber-600 dark:text-[#d9b452] hover:underline font-semibold ml-auto"
-                          >
-                            Limpar
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Grade de Botões com Checkbox */}
-                      <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
-                        {anosDisponiveis
-                          .filter((a) => a.ano > 0)
-                          .map((a) => {
-                            const anoStr = a.ano.toString();
-                            const isSelected = anoFiltro.includes(anoStr);
-                            return (
-                              <button
-                                key={a.ano}
-                                type="button"
-                                onClick={() => handleSelectAno(anoStr)}
-                                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-between gap-1 border ${
-                                  isSelected
-                                    ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs"
-                                    : "bg-slate-50 dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border-slate-200/80 dark:border-zinc-800 hover:bg-slate-100"
-                                }`}
-                              >
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
-                                    isSelected ? "bg-white text-blue-600 font-bold" : "border border-slate-300 dark:border-zinc-600"
-                                  }`}>
-                                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                                  </span>
-                                  <span>{a.ano}</span>
-                                </div>
-                                <span
-                                  className={`text-[9px] px-1 rounded-full font-mono ${
-                                    isSelected
-                                      ? "bg-white/20 text-white font-bold"
-                                      : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                                  }`}
-                                >
-                                  {a.count}
-                                </span>
-                              </button>
-                            );
-                          })}
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500 font-mono">
-                          {numAnos === 0 ? "Exibindo todos" : `${numAnos} ano(s) marcado(s)`}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setAnoDropdownOpen(false)}
-                          className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs"
-                        >
-                          Concluir
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. TIPO DE RESOLUÇÃO (LARGURA REDUZIDA E CENTRALIZADO) */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-blue-500" />
-                      Tipo de Resolução:
-                    </label>
-                    {numTipos > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTipo(VAL_TODOS)}
-                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-                      >
-                        Todos
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Contêiner de largura reduzida, comportando exatamente as 3 opções proporcionais */}
-                  <div className="grid grid-cols-3 gap-1.5 w-full max-w-sm mx-auto">
-                    {tiposDisponiveis.map((t) => {
-                      const isSelected = tipoFiltro.includes(t.id);
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => handleSelectTipo(t.id)}
-                          className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-0.5 ${
-                            isSelected
-                              ? "bg-blue-600 text-white font-bold shadow-xs"
-                              : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100"
-                          }`}
-                        >
-                          <span className="truncate">{t.label}</span>
-                          <span className="text-[10px] opacity-75 font-mono">({t.count})</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* LINHA 2: TIPO DE PROVA E FASE / NÍVEL DA COMPETIÇÃO */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                {/* TIPO DE PROVA (OFICIAL / SELEÇÃO) */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                      Tipo de Prova{numTiposProva > 0 ? ` (${numTiposProva})` : ""}:
-                    </label>
-                    {numTiposProva > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTipoProva(VAL_TODOS)}
-                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-                      >
-                        Todos
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tiposProvaDisponiveis.map((tp) => {
-                      const isSelected = tipoProvaFiltro.includes(tp.id);
-                      return (
-                        <button
-                          key={tp.id}
-                          type="button"
-                          onClick={() => handleSelectTipoProva(tp.id)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                            isSelected
-                              ? "bg-indigo-600 text-white font-bold shadow-xs"
-                              : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                          }`}
-                        >
-                          <span>{tp.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                            isSelected
-                              ? "bg-white/20 text-white font-bold"
-                              : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                          }`}>
-                            {tp.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* FASE / NÍVEL OLÍMPICO */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                      Fase / Nível Olímpico{numFases > 0 ? ` (${numFases})` : ""}:
-                    </label>
-                    {numFases > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectFaseNivel(VAL_TODAS)}
-                        className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-                      >
-                        Todas
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {fasesDisponiveis.map((f) => {
-                      const isSelected = faseNivelFiltro.includes(f.id);
-                      return (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => handleSelectFaseNivel(f.id)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                            isSelected
-                              ? "bg-emerald-600 text-white font-bold shadow-xs"
-                              : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                          }`}
-                        >
-                          <span>{f.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                            isSelected
-                              ? "bg-white/20 text-white font-bold"
-                              : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400"
-                          }`}>
-                            {f.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* LINHA 3: NÍVEL DE DIFICULDADE (DISTRIBUIÇÃO CENTRALIZADA E CORRIGIDA) */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-                    Nível de Dificuldade{numDificuldades > 0 ? ` (${numDificuldades} selecionada${numDificuldades > 1 ? "s" : ""})` : ""}:
-                  </label>
-                  {numDificuldades > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleSelectDificuldade(VAL_TODAS)}
-                      className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
-                    >
-                      Todas as dificuldades
-                    </button>
-                  )}
-                </div>
-
-                {/* Grade centralizada de 5 itens simétricos — Não Classificada não fica mais deslocada */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 max-w-4xl mx-auto w-full">
-                  {dificuldadesDisponiveis.map((d) => {
-                    const isSelected = dificuldadeFiltro.includes(d.id);
-                    const isNaoClassificada = d.id === "nao_classificada";
-                    const dotColor = 
-                      d.id === "facil" ? "bg-emerald-500" :
-                      d.id === "media" ? "bg-amber-500" :
-                      d.id === "dificil" ? "bg-rose-500" :
-                      d.id === "nao_classificada" ? "bg-slate-400" :
-                      "bg-blue-500";
-
+              {/* Seletor de Matérias Canônicas */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  Grandes Áreas:
+                </span>
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto pr-1">
+                  {materiasDisponiveis.map((m) => {
+                    const isSelected = materiaFiltro.includes(m.name);
                     return (
                       <button
-                        key={d.id}
+                        key={m.name}
                         type="button"
-                        onClick={() => handleSelectDificuldade(d.id)}
-                        className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-1 min-h-[56px] ${
-                          isNaoClassificada ? "col-span-2 sm:col-span-1" : ""
-                        } ${
+                        onClick={() => handleSelectMateria(m.name)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border ${
                           isSelected
-                            ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 font-bold shadow-xs border border-amber-500 dark:border-[#d9b452]"
-                            : "bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200/90 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 justify-center max-w-full">
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? "bg-slate-900" : dotColor}`} />
-                          <span className="truncate">{d.label}</span>
-                        </div>
-                        <span className={`text-[10px] font-mono ${isSelected ? "text-slate-950 font-bold opacity-90" : "text-slate-500 dark:text-zinc-400"}`}>
-                          ({d.count})
-                        </span>
+                        <span>{m.name}</span>
+                        <span className="text-[10px] font-mono text-slate-400">({m.count})</span>
                       </button>
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Tópicos com mini-busca */}
+              <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    Tópicos Específicos:
+                  </span>
+                  {numTopicos > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTopico(VAL_TODOS)}
+                      className="text-[10px] text-amber-600 dark:text-[#d9b452] hover:underline"
+                    >
+                      Limpar tópicos
+                    </button>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3 h-3 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={buscaTopicoInterna}
+                    onChange={(e) => setBuscaTopicoInterna(e.target.value)}
+                    placeholder="Buscar tópico (ex: derivadas, matrizes, poliedros)..."
+                    className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                  />
+                  {buscaTopicoInterna && (
+                    <button
+                      type="button"
+                      onClick={() => setBuscaTopicoInterna("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-1 max-h-36 overflow-y-auto pr-1">
+                  {topicosFiltradosDropdown.map((topico) => {
+                    const isSelected = topicoFiltro.includes(topico.name);
+                    return (
+                      <button
+                        key={topico.name}
+                        type="button"
+                        onClick={() => handleSelectTopico(topico.name)}
+                        className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        }`}
+                      >
+                        <span className="truncate">{topico.name}</span>
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0">({topico.count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Rodapé */}
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                >
+                  Concluir
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* POPOVER 3: DIFICULDADE */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setActivePopover(activePopover === "dificuldade" ? null : "dificuldade")}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              numDificuldades > 0
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+            }`}
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>{numDificuldades === 0 ? "Dificuldade" : `${numDificuldades} Níveis`}</span>
+            {numDificuldades > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "dificuldade" ? "rotate-180" : ""}`} />
+          </button>
+
+          {activePopover === "dificuldade" && (
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-64 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+                  Nível de Dificuldade
+                </span>
+                {numDificuldades > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDificuldade(VAL_TODAS)}
+                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                  >
+                    Todas
+                  </button>
+                )}
+              </div>
+
+              {dificuldadesDisponiveis.map((d) => {
+                const isSelected = dificuldadeFiltro.includes(d.id);
+                const dotColor =
+                  d.id === "facil" ? "bg-emerald-500" :
+                  d.id === "media" ? "bg-amber-500" :
+                  d.id === "dificil" ? "bg-rose-500" :
+                  d.id === "nao_classificada" ? "bg-slate-400" : "bg-blue-500";
+
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => handleSelectDificuldade(d.id)}
+                    className={`w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
+                      isSelected
+                        ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                        : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+                      <span>{d.label}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400">({d.count})</span>
+                  </button>
+                );
+              })}
+
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                >
+                  Concluir
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* POPOVER 4: ANO */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setActivePopover(activePopover === "ano" ? null : "ano")}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              numAnos > 0
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>{numAnos === 0 ? "Ano" : numAnos === 1 ? anoFiltro.filter((v) => v !== VAL_TODOS)[0] : `${numAnos} Anos`}</span>
+            {numAnos > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "ano" ? "rotate-180" : ""}`} />
+          </button>
+
+          {activePopover === "ano" && (
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-76 sm:w-84 max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+                  Anos da Prova ({anoMin}–{anoMax})
+                </span>
+                {numAnos > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectAno(VAL_TODOS)}
+                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                  >
+                    Todos
+                  </button>
+                )}
+              </div>
+
+              {/* Atalhos Rápidos */}
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => handleSelectAno(VAL_TODOS)}
+                  className={`flex-1 py-1 rounded-md font-semibold transition-colors border ${
+                    numAnos === 0
+                      ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                      : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAnoFiltro(["2026", "2025", "2024"]);
+                    setPage(1);
+                  }}
+                  className="flex-1 py-1 rounded-md bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 font-semibold hover:border-slate-300"
+                >
+                  2024–2026
+                </button>
+              </div>
+
+              {/* Grade de Anos */}
+              <div className="grid grid-cols-3 gap-1 max-h-52 overflow-y-auto pr-1">
+                {anosDisponiveis
+                  .filter((a) => a.ano > 0 && a.count > 0)
+                  .map((a) => {
+                    const anoStr = a.ano.toString();
+                    const isSelected = anoFiltro.includes(anoStr);
+                    return (
+                      <button
+                        key={a.ano}
+                        type="button"
+                        onClick={() => handleSelectAno(anoStr)}
+                        className={`p-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-between border ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        }`}
+                      >
+                        <span>{a.ano}</span>
+                        <span className="text-[9px] font-mono text-slate-400">({a.count})</span>
+                      </button>
+                    );
+                  })}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                >
+                  Concluir
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* POPOVER 5: FORMATO & FASE */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setActivePopover(activePopover === "formato" ? null : "formato")}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              numTipos > 0 || numTiposProva > 0 || numFases > 0
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span>Formato & Fase</span>
+            {(numTipos > 0 || numTiposProva > 0 || numFases > 0) && (
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "formato" ? "rotate-180" : ""}`} />
+          </button>
+
+          {activePopover === "formato" && (
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-80 sm:w-88 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+                  Formato, Prova & Fase
+                </span>
+                {(numTipos > 0 || numTiposProva > 0 || numFases > 0) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTipoFiltro([VAL_TODOS]);
+                      setTipoProvaFiltro([VAL_TODOS]);
+                      setFaseNivelFiltro([VAL_TODAS]);
+                      setPage(1);
+                    }}
+                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                  >
+                    Resetar
+                  </button>
+                )}
+              </div>
+
+              {/* 1. Tipo de Resolução (Objetiva / Discursiva) */}
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  Tipo de Resolução:
+                </span>
+                <div className="grid grid-cols-3 gap-1">
+                  {tiposDisponiveis.map((t) => {
+                    const isSelected = tipoFiltro.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectTipo(t.id)}
+                        className={`p-1.5 rounded-lg text-xs font-medium text-center border ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        }`}
+                      >
+                        <span className="block truncate">{t.label}</span>
+                        <span className="text-[9px] font-mono text-slate-400">({t.count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Tipo de Prova (Oficial / Treinamento) */}
+              <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  Tipo de Prova:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {tiposProvaDisponiveis.map((tp) => {
+                    const isSelected = tipoProvaFiltro.includes(tp.id);
+                    return (
+                      <button
+                        key={tp.id}
+                        type="button"
+                        onClick={() => handleSelectTipoProva(tp.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        }`}
+                      >
+                        <span>{tp.label}</span>
+                        <span className="text-[10px] font-mono text-slate-400 ml-1">({tp.count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Fase / Nível Olímpico */}
+              <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  Fase / Nível Olímpico:
+                </span>
+                <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto pr-1">
+                  {fasesDisponiveis.map((f) => {
+                    const isSelected = faseNivelFiltro.includes(f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleSelectFaseNivel(f.id)}
+                        className={`px-2 py-1 rounded-lg text-xs font-medium border ${
+                          isSelected
+                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        }`}
+                      >
+                        <span>{f.label}</span>
+                        <span className="text-[9px] font-mono text-slate-400 ml-1">({f.count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                >
+                  Concluir
+                </button>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* 3. LISTA DE QUESTÕES */}
-      <div className="space-y-4">
-        {/* BARRA DE STATUS DOS FILTROS & PAGINAÇÃO SUPERIOR */}
-        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-[#a9aaa1] font-medium px-1 gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>
-              Mostrando página <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{page}</strong> de <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{totalPages || 1}</strong> ({total} questões encontradas)
-            </span>
+      {/* LINHA 3: STATUS + CHIPS DE FILTROS ATIVOS + AÇÕES PRINCIPAIS */}
+      <div className="flex flex-wrap items-center justify-between gap-3 py-1.5 px-0.5 text-xs">
+        {/* LADO ESQUERDO: CONTADOR & CHIPS DE FILTROS ATIVOS */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-slate-600 dark:text-[#a9aaa1]">
+            Mostrando <strong className="text-slate-900 dark:text-[#f5f0df] font-mono">{questoes.length}</strong> de <strong className="text-slate-900 dark:text-[#f5f0df] font-mono">{total.toLocaleString("pt-BR")}</strong> questões
+          </span>
 
-            {filtrosAtivosCount > 0 && (
-              <div className="flex items-center gap-2 ml-1">
-                <span className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-[#d9b452] px-2 py-0.5 rounded-full font-bold">
-                  {filtrosAtivosCount} {filtrosAtivosCount === 1 ? "filtro ativo" : "filtros ativos"}
-                </span>
-                <button
-                  onClick={limparFiltros}
-                  className="text-amber-600 dark:text-[#d9b452] hover:underline flex items-center gap-1 font-semibold"
-                >
-                  <RotateCcw className="w-3 h-3" /> Limpar filtros
-                </button>
-              </div>
+          {/* Chips de Filtros Ativos */}
+          {busca.trim() !== "" && (
+            <button
+              onClick={() => {
+                setBusca("");
+                setPage(1);
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Busca: "{busca.trim()}"</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {numBancas > 0 && (
+            <button
+              onClick={() => handleSelectBanca(VAL_TODAS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Banca: {joinSelecionados(bancaFiltro, VAL_TODAS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {categoriaBancaFiltro !== "Todas" && (
+            <button
+              onClick={() => {
+                setCategoriaBancaFiltro("Todas");
+                setPage(1);
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Trilha: {categoriaBancaFiltro}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {numMaterias > 0 && (
+            <button
+              onClick={() => handleSelectMateria(VAL_TODAS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Matéria: {joinSelecionados(materiaFiltro, VAL_TODAS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {numTopicos > 0 && (
+            <button
+              onClick={() => handleSelectTopico(VAL_TODOS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Tópico: {joinSelecionados(topicoFiltro, VAL_TODOS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {numAnos > 0 && (
+            <button
+              onClick={() => handleSelectAno(VAL_TODOS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Ano: {joinSelecionados(anoFiltro, VAL_TODOS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {numDificuldades > 0 && (
+            <button
+              onClick={() => handleSelectDificuldade(VAL_TODAS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Dificuldade: {joinSelecionados(dificuldadeFiltro, VAL_TODAS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
+          {filtrosAtivosCount > 0 && (
+            <button
+              onClick={limparFiltros}
+              className="text-amber-600 dark:text-[#d9b452] hover:underline flex items-center gap-1 font-semibold text-[11px] ml-1"
+            >
+              <RotateCcw className="w-3 h-3" /> Limpar filtros
+            </button>
+          )}
+        </div>
+
+        {/* LADO DIREITO: SELEÇÃO EM LOTE + AÇÕES PRINCIPAIS */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleSelectAllPage}
+              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors text-xs"
+            >
+              {questoes.length > 0 && questoes.every((q) => selectedIds.has(q.id)) ? (
+                <CheckSquare className="w-4 h-4 text-amber-500" />
+              ) : (
+                <Square className="w-4 h-4 text-slate-400" />
+              )}
+              <span className="hidden sm:inline">Selecionar página</span>
+            </button>
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold ml-1"
+                title="Limpar seleção"
+              >
+                ({selectedIds.size}) Limpar
+              </button>
             )}
           </div>
 
-          {/* CONTROLE DE PAGINAÇÃO SUPERIOR (ANTERIOR / PRÓXIMA) */}
-          {totalPages > 1 && (
+          <button
+            type="button"
+            onClick={handleTreinarListaEstudo}
+            className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-[#f5f0df] font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+            <span>Treinar Lista ({selectedIds.size > 0 ? selectedIds.size : total})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalSimuladoAberto(true)}
+            className="lemmas-gold-cta inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02]"
+          >
+            <Timer className="w-3.5 h-3.5" />
+            <span>Criar Simulado</span>
+          </button>
+        </div>
+      </div>
+
+
+      {/* 3. LISTA DE QUESTÕES */}
+      <div className="space-y-4">
+        {/* PAGINAÇÃO SUPERIOR COMPACTA */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-[#a9aaa1] font-medium px-1">
+            <span>
+              Página <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{page}</strong> de <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{totalPages}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -1386,9 +1532,6 @@ export default function BancoQuestoesPage() {
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Anterior</span>
               </button>
-              <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono px-1">
-                {page} de {totalPages}
-              </span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -1400,61 +1543,8 @@ export default function BancoQuestoesPage() {
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
-          )}
-        </div>
-
-        {/* BARRA DE AÇÃO EM LOTE E SELEÇÃO */}
-        <div className="p-3.5 rounded-xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleSelectAllPage}
-              className="flex items-center gap-2 font-semibold text-slate-700 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
-            >
-              {questoes.length > 0 && questoes.every((q) => selectedIds.has(q.id)) ? (
-                <CheckSquare className="w-4 h-4 text-amber-500" />
-              ) : (
-                <Square className="w-4 h-4 text-slate-400" />
-              )}
-              <span>Selecionar todas desta página</span>
-            </button>
-
-            {selectedIds.size > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-[#d9b452] font-bold font-mono">
-                  {selectedIds.size} selecionada{selectedIds.size > 1 ? "s" : ""}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleClearSelection}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 underline text-[11px]"
-                >
-                  Limpar
-                </button>
-              </div>
-            )}
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleTreinarListaEstudo}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-[11px] flex items-center gap-1.5 transition-colors"
-            >
-              <BookOpen className="w-3 h-3 text-amber-500" />
-              <span>Treinar Lista Livre ({selectedIds.size > 0 ? selectedIds.size : total})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setModalSimuladoAberto(true)}
-              className="lemmas-gold-cta px-3.5 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-transform hover:scale-105"
-            >
-              <Timer className="w-3 h-3" />
-              <span>Simulado com Tempo</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {loading ? (
           <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#141222] rounded-2xl border border-slate-200/80 dark:border-zinc-800">
@@ -1485,7 +1575,8 @@ export default function BancoQuestoesPage() {
         ) : (
           questoes.map((q) => {
             const revelado = gabaritosRevelados.has(q.id);
-            const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
+            const isDiscursiva = q.tipo?.toLowerCase() === "discursiva" || q.gabarito?.toLowerCase().includes("discursiv");
+            const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado, isDiscursiva);
             const badgeColor = getMateriaBadgeColor(q.materia);
 
             return (
@@ -1678,27 +1769,36 @@ export default function BancoQuestoesPage() {
                       ))}
                     </div>
                   )
-                ) : q.tipo === "discursiva" ? (
-                  <div className="px-3 py-2 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                ) : isDiscursiva ? (
+                  <div className="px-3.5 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/25 text-xs text-purple-700 dark:text-purple-300 flex items-center gap-2">
                     <FileText className="w-4 h-4 shrink-0 text-purple-500" />
-                    <span>Problema discursivo analítico. Escreva sua demonstração ou raciocínio no simulador para avaliação passo a passo.</span>
+                    <span>Problema discursivo analítico. Escreva sua demonstração ou raciocínio no simulador para avaliação passo a passo com IA.</span>
                   </div>
                 ) : null}
 
                 {/* RODAPÉ DO CARD */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800/60">
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => toggleGabarito(q.id)}
-                      className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
-                    >
-                      {revelado ? `Gabarito: [${q.gabarito}] (Ocultar)` : "Revelar Gabarito"}
-                    </button>
-                    {revelado && (
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Alternativa Oficial:
-                        <MathText text={q.gabarito} className="font-mono" />
+                    {isDiscursiva ? (
+                      <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Demonstração Analítica</span>
                       </span>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleGabarito(q.id)}
+                          className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
+                        >
+                          {revelado ? `Gabarito: [${q.gabarito}] (Ocultar)` : "Revelar Gabarito"}
+                        </button>
+                        {revelado && (
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Alternativa Oficial:
+                            <MathText text={q.gabarito} className="font-mono" />
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
 

@@ -141,3 +141,89 @@ Nenhum modelo treinado substitui o modelo em produção sem antes passar por um 
 1. **Pass@1 Matemático:** O novo modelo deve acertar a resolução independente de um conjunto de teste fixo de 500 questões desafiadoras de concursos (ITA, IME, EFOMM).
 2. **SymPy / CAS Validation:** Soluções numéricas e algébricas são validadas computacionalmente por sistemas de álgebra simbólica (SymPy).
 3. **Índice Socrático:** Análise automatizada para garantir que o modelo não entrega o gabarito final prematuramente nas primeiras etapas de ajuda.
+
+---
+
+## 6. Arquitetura de Inferência e Gateway Desacoplado (Padrão Strategy & Telemetria N:1)
+
+Implementado em outubro de 2026 para eliminar o acoplamento proprietário e preparar o LemmaS para operar com SLMs matemáticos locais (*Qwen2.5-Math*) em co-existência com provedores de nuvem.
+
+### 6.1. Topologia de Autoridade Única (Fim do Split-Brain)
+
+Anteriormente, o frontend Next.js continha rotas serverless (`/api/ai/solve` e `/api/ai/compare`) que realizavam chamadas diretas a SDKs externos (Gemini e NVIDIA NIM), duplicando prompts, regras de contingência e gerando desvios na contagem de tokens e telemetria.
+
+Essa duplicação foi 100% eliminada: o **FastAPI é a autoridade única de cognição matemática**.
+
+```mermaid
+flowchart TD
+    subgraph Frontend["LEMMAS Frontend (Next.js 16)"]
+        UI[Interface do Estudante / Resolver] --> API_Next[Route Handlers /api/ai/*]
+        API_Next -->|Proxy com Timeout 45s| HTTP_Gateway[Chamada REST HTTP]
+    end
+
+    subgraph Backend["LEMMAS Backend (FastAPI - Python 3.12)"]
+        HTTP_Gateway --> Routes[Rotas: /api/tutor/*]
+        Routes --> Gateway[MathAiGateway (Padrão Strategy)]
+
+        subgraph Providers["Provedores Plugáveis (BaseLLMProvider)"]
+            P1[LocalLLMProvider\nvLLM / Ollama\nQwen2.5-Math-7B]
+            P2[NvidiaNimProvider\nNemotron 3.5 Lightning]
+            P3[DeepSeekProvider\nDeepSeek Reasoner R1]
+            P4[GeminiProvider\nGemini Flash Lite]
+            P5[DeterministicAutonomousProvider\nSymPy & Heurística Local]
+        end
+
+        Gateway -->|1. Provedor Primário Configurado| P1
+        P1 -.->|Timeout / 404 / 503| P2
+        P2 -.->|Quota / Erro de JSON| P3
+        P3 -.->|Indisponibilidade| P4
+        P4 -.->|Contingência Final| P5
+
+        Gateway -->|Gravação N:1 em cada tentativa| TelemetryDB[(Supabase: ai_inference_logs)]
+    end
+```
+
+### 6.2. O Contrato do Padrão Strategy (`BaseLLMProvider`)
+
+Cada provedor implementa a interface abstrata:
+
+```python
+class BaseLLMProvider(ABC):
+    @abstractmethod
+    def complete(
+        self,
+        messages: List[Dict[str, str]],
+        system_prompt: str,
+        temperature: float = 0.2,
+        max_tokens: int = 2048,
+        response_format: Optional[Dict[str, Any]] = None,
+        timeout: float = 30.0,
+    ) -> Dict[str, Any]:
+        """
+        Retorna dicionário canônico normalizado:
+        {
+            "content": str,
+            "model_used": str,
+            "provider": str,
+            "status": "completed" | "failed",
+            "prompt_tokens": int,
+            "completion_tokens": int,
+            "total_tokens": int,
+            "error": Optional[str]
+        }
+        """
+        pass
+```
+
+### 6.3. Validação e Descarte de Saída Corrompida
+O gateway aplica validação estrutural pré-entrega:
+1. **JSON Sintático:** Se a inferência retornar Markdown desbalanceado ou JSON truncado, o resultado é **descartado imediatamente**.
+2. **KaTeX Sanitization:** Fórmulas são verificadas contra delimitadores válidos.
+3. **Fallback Automático:** Respostas corrompidas acionam instantaneamente o próximo provedor da cascata sem propagar erros para o estudante.
+
+### 6.4. Schema de Telemetria N:1 (`ai_inference_logs`)
+Localizado em `data/schemas/11_ai_inference_telemetry.sql`:
+- **Cardinalidade N:1:** Uma avaliação (`evaluation_id`) pode conter múltiplas tentativas (`attempt_number`), registrando qual provedor falhou (com código HTTP e latência) e qual obteve êxito.
+- **Rastreabilidade de Custo:** Rastreia `prompt_tokens`, `completion_tokens`, `total_tokens` e `estimated_cost_usd` por inferência individual.
+- **Auditoria de Treinamento:** Permite correlacionar saídas de SLMs locais versus LLMs comerciais para benchmarks contínuos de Pass@1 e aderência axiomática.
+

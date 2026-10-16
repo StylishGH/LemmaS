@@ -188,14 +188,26 @@ export function autoWrapLatexExpressions(text: string): string {
  * Extrai o corpo do enunciado e as alternativas (A)-(E), garantindo normalização matemática
  * e blindagem contra encapsulamento de imagens markdown em delimitadores LaTeX $...$.
  */
-export function extrairEnunciadoEAlternativas(texto: string): ParsedQuestion {
+export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boolean = false): ParsedQuestion {
   if (!texto) return { corpo: "", alternativas: {} };
 
+  // Se for declaradamente discursiva, nunca tenta extrair alternativas de múltipla escolha
+  if (isDiscursiva) {
+    let corpoDiscursiva = normalizarMatematica(texto.trim());
+    if (!corpoDiscursiva.includes("$")) {
+      corpoDiscursiva = autoWrapLatexExpressions(corpoDiscursiva);
+    }
+    return { corpo: corpoDiscursiva, alternativas: {} };
+  }
+
   // Busca linhas ou padrões do tipo (A) texto, (B) texto, etc.
-  const regex = /\(([A-E])\)\s*([^\n\r]+)/g;
+  // Rigor matemático: Alternativas reais NÃO devem ser precedidas por caracteres de função (ex: \max(A), f(A), P(A), $m(B)$)
+  // Devem estar precedidas por início de linha, quebra de linha ou pontuação/espaço claro.
+  const regex = /(?:^|[\n\r]|\s{2,}|(?<=[.;:\n]))\s*\(([A-E])\)\s+([^\n\r]+)/g;
   const matches = [...texto.matchAll(regex)];
 
-  if (matches.length >= 2) {
+  // Alternativas legítimas de vestibular/concurso devem ter ao menos 2 opções e começar em (A)
+  if (matches.length >= 2 && matches[0][1] === "A") {
     const primeiroIndex = matches[0].index ?? texto.length;
     let corpo = texto.slice(0, primeiroIndex).trim();
 

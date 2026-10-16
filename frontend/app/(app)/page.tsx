@@ -44,12 +44,13 @@ interface RevisaoItem {
 
 export default function DashboardPage() {
   const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
-  const [totalQuestions, setTotalQuestions] = useState<number>(20764);
+  const [totalQuestions, setTotalQuestions] = useState<number>(20803);
   const [metricas, setMetricas] = useState({
     total_resolvidas: 0,
     taxa_acerto: 0,
     tempo_medio: "0s",
-    total_acertos: 0
+    total_acertos: 0,
+    conselho_ia: "",
   });
 
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
@@ -89,6 +90,7 @@ export default function DashboardPage() {
             taxa_acerto: data.taxa_acerto,
             tempo_medio: data.tempo_medio,
             total_acertos: data.total_acertos ?? 0,
+            conselho_ia: data.conselho_ia || "",
           });
 
           if (Array.isArray(data.historico)) {
@@ -487,9 +489,11 @@ export default function DashboardPage() {
                 Conselho da MathAI Engine:
               </div>
               <p className="text-slate-600 dark:text-zinc-400 leading-relaxed text-[11px]">
-                {hasAnyData
-                  ? "Sua precisão atual está consolidada. Revise o passo a passo com rigor axiomático antes de assinalar alternativas para manter o streak ativo."
-                  : "Comece seu treino com questões da EFOMM, CEDERJ ou ESA para calibrar seu nível inicial no LEMMAS Core."}
+                {metricas.conselho_ia || (hasAnyData
+                  ? (metricas.taxa_acerto <= 60
+                      ? `Aproveitamento em fase de calibração (${metricas.taxa_acerto}%). Recomendamos revisar com calma o passo a passo na Lousa de Rascunho antes de assinalar as alternativas.`
+                      : "Sua precisão atual está consolidada. Revise o passo a passo com rigor axiomático antes de assinalar alternativas para manter o streak ativo.")
+                  : "Comece seu treino com questões da EFOMM, CEDERJ ou ESA para calibrar seu nível inicial no LEMMAS Core.")}
               </p>
             </div>
           </div>
@@ -525,10 +529,10 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="font-semibold text-xs text-slate-900 dark:text-[#f5f0df]">
-                      Lema #{r.questao_id} · {r.materia}
+                      Lema #{r.questao_id} · {r.materia === "Matemática" || r.materia === "Geral" ? "Matemática Básica" : r.materia}
                     </div>
                     <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {r.topico} (Ciclo #{r.repeticoes})
+                      {r.topico === "Geral" || !r.topico ? "Conceitos Fundamentais" : r.topico} (Ciclo #{r.repeticoes})
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

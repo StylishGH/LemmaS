@@ -17,7 +17,7 @@ import {
 
 interface MathScratchpadProps {
   onClose?: () => void;
-  onExportBase64?: (base64: string) => void;
+  onExportBase64?: (base64: string, hasStrokes?: boolean) => void;
   className?: string;
 }
 
@@ -59,6 +59,7 @@ export default function MathScratchpad({
   const [currentWidth, setCurrentWidth] = useState<number>(3);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [strokeCount, setStrokeCount] = useState<number>(0);
 
   // Pilhas de Undo / Redo
   const undoStackRef = useRef<ImageData[]>([]);
@@ -152,6 +153,7 @@ export default function MathScratchpad({
 
     canvas.setPointerCapture(e.pointerId);
     saveState();
+    setStrokeCount((c) => c + 1);
 
     const { x, y } = getCoordinates(e);
     lastPointRef.current = { x, y };
@@ -268,6 +270,7 @@ export default function MathScratchpad({
 
     saveState();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setStrokeCount(0);
   };
 
   // Exportar como PNG com fundo sólido
@@ -308,7 +311,7 @@ export default function MathScratchpad({
     const dataUrl = exportCanvas.toDataURL("image/png");
 
     if (onExportBase64) {
-      onExportBase64(dataUrl);
+      onExportBase64(dataUrl, strokeCount > 0);
     }
 
     const a = document.createElement("a");

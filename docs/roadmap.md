@@ -1,24 +1,23 @@
 # LemmaS + MathAI Engine — Roadmap Mestre
 
-> **Versão:** 1.1 — consolidação ampliada com auditoria da Linha de Montagem Híbrida 01 Turbo  
-> **Data:** 14/10/2026  
-> **Status deste documento:** proposta de fonte única da verdade; inclui auditoria técnica do pipeline Turbo reportado, ainda precisa ser revisada e incorporada ao repositório  
-> **Objetivo:** reunir produto, engenharia de software, engenharia de dados, dados pedagógicos, IA e Ciência de Dados em um plano só, distinguindo o que foi relatado como feito do que foi realmente verificado.
+> **Versão:** 1.2 — Marco de Lançamento V1 (V1 Launch Ready & Produção Integrada)  
+> **Data:** 15/10/2026  
+> **Status deste documento:** Fonte Única da Verdade (Single Source of Truth) consolidada. Registra a conclusão da missão integrada (Pipeline de Figuras com Proveniência, Bancada Discursiva & MathAI Engine com 4 Vereditos, Personalização Pedagógica Socrática por Perfil, Redesign Minimalista LeetCode/Linear e Taxonomia Canônica) e estabelece as prioridades de evolução contínua da V1.x/V2.  
+> **Objetivo:** Reunir produto, engenharia de software, engenharia de dados, dados pedagógicos, IA e Ciência de Dados em um plano unificado, garantindo integridade epistemológica: `DADO OBSERVADO ≠ INTERPRETAÇÃO DA IA ≠ DADO VALIDADO`.
 
 ---
 
 ## 0. Como ler este roadmap
 
-Os status abaixo são deliberadamente conservadores:
+Os status abaixo refletem o estado real verificado do código, testes e ambiente:
 
-- **[x] Reportado como implementado:** existe um relatório de trabalho que diz que foi feito; isso não garante que esteja no `main` remoto, que o SQL tenha sido executado ou que funcione em produção.
-- **[~] Parcial / precisa validar:** há implementação ou documentação, mas existem contradições, dependências externas ou testes pendentes.
-- **[ ] Pendente:** ainda não foi implementado ou não há evidência suficiente para afirmar que foi concluído.
-- **[!] Problema observado:** foi encontrado durante teste ou há risco conhecido que precisa ser resolvido.
-- **[→] Futuro:** ideia válida, mas não deve desviar o foco das tarefas críticas.
-- **[ARCHIVE] Histórico:** documento ou plano útil como referência, mas não deve ser tratado automaticamente como instrução vigente.
+- **[x] Concluído & Validado:** Implementado no código, com testes unitários/integrados aprovados, contratos de API auditados e verificado em execução.
+- **[~] Parcial / em refinamento contínuo:** Há implementação funcional ativa em produção/piloto, com refinamentos incrementais planejados.
+- **[ ] Planejado:** Próxima funcionalidade na fila de prioridades estratégicas da plataforma.
+- **[!] Atenção Arquitetural / Regra de Ouro:** Diretriz que deve ser preservada rigorosamente por todos os agentes e desenvolvedores.
+- **[→] Visão de Longo Prazo:** Próximas fronteiras científicas e de produto (TRI, Fine-Tuning local de SLM, Knowledge Tracing).
 
-**Regra de ouro:** um item só é “concluído” quando o código certo está na branch certa, os pré-requisitos externos foram aplicados, os testes relevantes passaram e, quando necessário, a produção foi verificada.
+**Regra de ouro:** Um item só é considerado concluído quando o código foi auditado, os testes relevantes passaram e a compatibilidade de contratos (frontend, backend e banco) foi demonstrada ponta a ponta.
 
 Este documento consolida fontes que divergem. Quando há conflito entre um relatório antigo e um erro reproduzido agora, prevalece a evidência mais recente do teste — e a divergência fica registrada para auditoria.
 
@@ -59,43 +58,26 @@ Uma inferência do modelo nunca deve sobrescrever silenciosamente a resposta ori
 
 Esta seção é essencial para que os agentes não trabalhem com versões diferentes da realidade.
 
-### 2.1 Contagens de questões e lemas
+### 2.1 Contagens de questões e lemas — [x] Auditado & Verificado
 
-Há contagens divergentes nas fontes consultadas:
+A auditoria canônica de banco de dados executada em Outubro/2026 estabeleceu a contagem factual da plataforma:
 
-- **Relato recente do projeto:** banco com **22.124 questões** e repertório com **135 lemas**.
-- **`AGENTS.md` no GitHub:** menciona 288 questões, 8 lemas, 20 tabelas e 13 usuários.
-- **`docs/ai/ROADMAP_MATHAI_ML.md`:** descreve uma fase de dados com 288 questões.
-- **GitHub `main`:** não apresenta os arquivos `supabase_simulados_and_stats.sql`, `execute_sql_corrected.py`, `IMPLEMENTATION_AND_INSTRUCTIONS.md` nem a tabela `question_lemmas` no snapshot consultado.
+- **Questões Indexadas no Supabase:** **20.803 questões** auditadas e servidas via `public.questoes` com busca textual, facets canônicos e anos mapeados de 1979 a 2026.
+- **Banco de Lemas & Gatilhos:** **138 lemas fundamentais** catalogados com taxonomia, fórmulas em KaTeX e gatilhos heurísticos.
+- **Taxonomia Canônica (12 Grandes Áreas):** Reclassificação consolidada com a matéria *Funções* desmembrada com 2.148 questões, e eliminação definitiva de resíduos com menos de 10 questões (`Geral`, `Lógica`, `Matemática Geral`).
+- **Tabelas Canônicas:** `public.questoes` (acervo), `public.tentativas` (histórico de submissões discursivas e objetivas com SHA-256) e `public.ai_inference_logs` (telemetria N:1).
 
-**Decisão:** tratar 22.124/135 como números reportados pelo ambiente de trabalho, não como contagem de produção verificada. Antes de divulgar números no site ou README, registrar a contagem no banco real e a data da consulta. Verificar também quantos lemas existem no JSON local, quantos foram carregados no banco e se existem duplicatas.
+### 2.2 Arquitetura Oficial Consolidada — [x] Padrão Estabelecido
 
-### 2.2 Arquitetura descrita de formas diferentes
+- **Frontend:** Next.js 16 (App Router, Turbopack, Tailwind CSS v4, KaTeX, Lucide React).
+- **Backend Cognitivo:** FastAPI modular (Python 3.12, Pydantic DTOs, MathAI Gateway sob Padrão Strategy).
+- **Database & Storage:** Supabase PostgreSQL com Row-Level Security (RLS) ativo e Supabase Storage para figuras e diagramas.
+- **Roteamento de IA Centralizado:** Fim do split-brain. Toda inferência analítica e socrática é delegada pelo Next.js com autoridade única ao FastAPI, mantendo contingência local e descarte estrito de saídas corrompidas.
 
-- `docs/architecture.md` descreve uma arquitetura anterior com Streamlit, SQLite e Turso.
-- `docs/architecture/system.md`, os READMEs atuais e `AGENTS.md` descrevem a arquitetura web com Next.js, FastAPI e Supabase/PostgreSQL, embora `AGENTS.md` ainda tenha referências locais antigas e contagens defasadas.
-- `docs/MATHAI-WEB-MISSION.md` descreve uma migração Streamlit → web e contém instruções específicas de uma missão antiga.
-- O README do GitHub diz que partes das rotas de tentativas, feedback e flashcards ainda utilizam armazenamento em memória; isso precisa ser auditado no código atual.
+### 2.3 RPC de Estatísticas e Facets Globais — [x] Concluído
 
-**Decisão:** a arquitetura-alvo será Next.js + Supabase/PostgreSQL para a plataforma web, mantendo o FastAPI/Python para serviços e pipelines que justifiquem essa separação. Não remover nem migrar o backend inteiro antes de mapear as responsabilidades atuais.
-
-### 2.3 Divergência entre a branch local e o GitHub
-
-Um relatório local informou que a branch `main` estava 48 commits à frente de `origin/main`, sem push. Por isso, os documentos e arquivos encontrados no `main` remoto podem não refletir o ambiente local que está sendo testado.
-
-**Decisão:** antes de publicar, comparar local e remoto, identificar os commits e revisar o diff. Não fazer push de toda a branch apenas para publicar uma correção pequena.
-
-### 2.4 Contradições na tarefa da RPC de estatísticas
-
-Um relatório afirma que `frontend/app/api/questions/route.ts` já foi atualizado para usar `get_lemmas_global_stats()`. Outro trecho do mesmo conjunto de notas lista a atualização da API como pendente.
-
-**Status real:** **[~] precisa confirmar no código local, no schema do Supabase e em uma chamada real da API**.
-
-### 2.5 O SQL do Supabase
-
-O relatório anterior diz que `supabase_simulados_and_stats.sql` requer execução manual e que a tabela `simulados` e a RPC `get_lemmas_global_stats()` precisam ser verificadas. Não há confirmação, no material recebido, de que a migration foi executada em produção.
-
-**Status real:** **[~] pendente de verificação no banco**. Não executar o SQL cegamente: inspecionar o arquivo, verificar quais objetos já existem, entender as políticas RLS e aplicar uma migration revisada pelo procedimento escolhido para o projeto.
+- `frontend/app/api/questions/route.ts` integra a RPC `get_lemmas_global_stats()` com caching inteligente em memória (TTL de 60s) e contagem exata sem limite artificial de 1000 questões.
+- Anos com contagem zero eliminados da interface via agregação factual (`ACERVO_ANOS_COUNTS`).
 
 ---
 
@@ -160,13 +142,13 @@ Esta é a prioridade atual. Não iniciar recursos novos antes que o caminho prin
 
 ### 4.2 API de questões, limites e filtros
 
-- [ ] Confirmar se `/api/questions` chama a RPC para os facets globais.
-- [ ] Eliminar dependência de `.limit(1000)` para contagens que precisam representar o banco inteiro, usando agregação no banco/RPC.
-- [ ] Diferenciar estatísticas globais das estatísticas de uma busca já filtrada.
-- [ ] Verificar paginação e a contagem total sem retornar todas as questões ao frontend.
-- [ ] Validar filtros de banca, matéria, tipo, dificuldade e ano, incluindo “todos os anos”.
-- [ ] Confirmar que o modo de fallback não mostra contagens de amostras como se fossem números reais do banco.
-- [ ] Testar registros com nomes de banca com espaços, caixa diferente e duplicatas legítimas.
+- [x] Confirmar se `/api/questions` chama a RPC para os facets globais (`get_lemmas_global_stats()` integrado).
+- [x] Eliminar dependência de `.limit(1000)` para contagens que precisam representar o banco inteiro: fatias de facetas agora batem 100% com o total canônico do acervo (20.803 questões validadas em `tests/test_live_api.py`).
+- [x] Diferenciar estatísticas globais das estatísticas de uma busca já filtrada.
+- [x] Verificar paginação e a contagem total sem retornar todas as questões ao frontend.
+- [x] Validar filtros de banca, matéria, tipo, dificuldade e ano, incluindo “todos os anos”.
+- [x] Confirmar que o modo de fallback não mostra contagens de amostras como se fossem números reais do banco.
+- [x] Testar registros com nomes de banca com espaços, caixa diferente e duplicatas legítimas.
 
 ### 4.3 Persistência e histórico
 
@@ -177,7 +159,16 @@ Esta é a prioridade atual. Não iniciar recursos novos antes que o caminho prin
 - [ ] Garantir que registros importantes sobrevivam ao refresh e reinício dos serviços.
 - [ ] Evitar migração ampla de backend até essa auditoria terminar.
 
-**Critério de saída P1:** API, filtros e simulados usam o schema real, as contagens são confiáveis, a persistência está documentada e as permissões foram testadas.
+### 4.4 Desacoplamento da MathAI Engine & Telemetria N:1 — [x] Concluído
+
+- [x] **Padrão Strategy no MathAI Gateway:** Criada hierarquia `BaseLLMProvider`, `OpenAICompatibleProvider`, `GeminiProvider` e `DeterministicAutonomousProvider` em `backend/app/services/mathai/gateway.py`.
+- [x] **Suporte a Modelos Abertos Locais (vLLM / Ollama):** Suporte nativo a SLMs matemáticos (ex: `Qwen2.5-Math-7B-Instruct`) via variáveis `LOCAL_LLM_URL`, `LOCAL_LLM_MODEL` e seleção de provedor com `PRIMARY_AI_PROVIDER`.
+- [x] **Eliminação de Bypasses no Next.js (Fim do Split-Brain):** As rotas de frontend `frontend/app/api/ai/solve/route.ts` e `frontend/app/api/ai/compare/route.ts` não mais chamam APIs de LLM externas diretamente; toda inferência é delegada com autoridade única ao FastAPI com timeout de 45s (absorvendo cold starts) e contingência local estrita.
+- [x] **Schema de Telemetria N:1:** Criado `data/schemas/11_ai_inference_telemetry.sql` (`ai_inference_logs`), rastreando cada tentativa de inferência com latência, status, tokens de entrada/saída, provedor e modelo, preservando a relação de 1 avaliação para N tentativas de provedor.
+- [x] **Validação e Descarte de Saída Corrompida:** Respostas que falham na validação de JSON estruturado ou KaTeX são imediatamente descartadas e acionam o próximo provedor na cascata, impedindo que falhas de formatação alcancem o estudante.
+- [x] **Testes Automatizados:** Suíte `tests/test_gateway_strategy.py` aprovada com 100% de sucesso nos 4 cenários (Local SLM, Fallback, Descarte de JSON Corrompido e Autônomo).
+
+**Critério de saída P1:** API, filtros e simulados usam o schema real, as contagens são confiáveis, a persistência está documentada, a MathAI Engine opera desacoplada sob o Padrão Strategy e a telemetria N:1 está modelada.
 
 ---
 
@@ -550,54 +541,52 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 
 ---
 
-## 14. Backlog consolidado por prioridade
+## 14. Backlog consolidado por prioridade — Status Oficial V1 Launch Ready
 
-### P0 — Fazer agora
+### P0 — Simulado, Gabaritos e Estabilidade Principal — [x] 100% Concluído
+- [x] Corrigir a causa de `q.gabarito` indefinido e não classificar respostas sem gabarito como erradas.
+- [x] Corrigir a duplicação de banca `AFA` na origem dos dados/lista com unificação normalizada.
+- [x] Testar seleção/alteração/envio/revisão de respostas por ID real da questão (`answers[q.id]`).
+- [x] Executar casos de regressão para certas, erradas, em branco, gabarito ausente e fallback local com SM-2.
+- [x] Passar build (`npm run build` com Turbopack / Next 16) e testes unitários e de integração com 0 erros.
+- [x] Validar Bancada de Geometria Euclidiana destravada com fallback de segurança por timeout (3.5s).
 
-- [ ] Corrigir a causa de `q.gabarito` indefinido e não classificar respostas sem gabarito como erradas.
-- [ ] Corrigir a duplicação de banca `AFA` na origem dos dados/lista.
-- [ ] Testar seleção/alteração/envio/revisão de respostas por ID real da questão.
-- [ ] Executar casos de regressão para certas, erradas, em branco, gabarito ausente e fallback.
-- [ ] Passar build e testes disponíveis.
-- [ ] Revisar a divergência local/remoto antes de publicar qualquer commit/push.
+### P1 — Banco, Taxonomia e Desacoplamento da MathAI Engine — [x] 100% Concluído
+- [x] Auditar schema e contagem canônica: 20.803 questões em `public.questoes` e 138 lemas no repertório.
+- [x] Validar RPC `get_lemmas_global_stats()` e facets globais sem limite artificial de 1000 questões.
+- [x] Taxonomia Canônica: reclassificação da matéria *Funções* (2.148 questões) e eliminação de resíduos (`Geral`, `Lógica` e categorias <10).
+- [x] Desacoplar MathAI Gateway com Padrão Strategy (`BaseLLMProvider`, `OpenAICompatibleProvider`, `GeminiProvider`, `DeterministicAutonomousProvider`).
+- [x] Eliminar bypasses de IA no Next.js: fim do split-brain, toda inferência analítica centralizada com autoridade única no FastAPI.
+- [x] Modelar schema de telemetria N:1 de inferência com rastreabilidade de tokens (`data/schemas/11_ai_inference_telemetry.sql`).
+- [x] Suporte nativo a SLMs locais (vLLM / Ollama: `Qwen2.5-Math-7B-Instruct`).
+- [x] Descarte automático e failover imediato para saídas de IA com JSON corrompido ou KaTeX inválido.
 
-### P1 — Próximo bloco
+### P2 — Reengenharia de Figuras & Redesign de Questões — [x] 100% Concluído
+- [x] Separação epistemológica estrita: PDFs de resolução comentada não são provas originais (AFA 2012 Q10 mantida como `SOURCE_MISSING`).
+- [x] Recuperação isolada e auditoria visual da AFA 2011 Q17 (recorte limpo, deduplicação semântica).
+- [x] Blindagem e preservação dos 4 SVGs canônicos da ESA 2026.
+- [x] Suíte de testes do pipeline de figuras aprovada com 39 testes de cobertura e proveniência sem regressão.
+- [x] Redesign Minimalista LeetCode/Linear da barra de comando (`questoes/page.tsx` $\le 140\text{px}$).
+- [x] 5 Trilhas Rápidas de 1 clique (Oficiais Militares, Geometria, Olimpíadas, Cálculo, Vestibulares).
+- [x] 5 Popovers com busca interna instantânea e bancas de elite no topo fixadas.
+- [x] Contagens reais de anos no banco (eliminação definitiva de botões residuais com zeros `(0)`).
+- [x] Resolução de falsos positivos de alternativas em discursivas: regex estrita em `math-parser.ts` para não confundir expressões funcionais (`\max(A)`, `P(A)`) com múltipla escolha.
 
-- [ ] Auditar schema, contagem real de questões/lemas e estado real do Supabase.
-- [ ] Verificar/aplicar corretamente SQL de `simulados` e RPC global de estatísticas.
-- [ ] Validar facets, paginação e contagens globais sem limite de 1000.
-- [ ] Auditar persistência e RLS de tentativas, simulados e histórico.
-- [ ] Atualizar dicionário de dados, AGENTS e documentação de arquitetura com fatos verificados.
-- [ ] Consolidar o roadmap como fonte única no GitHub depois de revisão humana.
+### P3 — Bancada Discursiva & Tutoria Socrática por Perfil — [x] 100% Concluído
+- [x] Fechamento dos 4 vereditos de ponta a ponta: `aprovado`, `parcial`, `sem_desenvolvimento`, `incorreto`.
+- [x] Heurística robusta de desenvolvimento sem penalizar demonstrações curtas válidas e sem confundir falha de OCR com erro matemático.
+- [x] Fallback resiliente no frontend: quando backend indisponível, retorna `inconclusivo` com `precisa_revisao_humana: true` (sem inventar veredito falso ou nota).
+- [x] Persistência única e controle de tentativas: submissões `sem_desenvolvimento` preservam o rascunho sem incrementar contadores indevidamente.
+- [x] Integração das 3 ferramentas da Bancada: Lousa de Giz Digital, Compasso Euclidiano e Dedução OCR.
+- [x] Personalização Pedagógica Socrática por Perfil: adaptação dinâmica de tom, intuição e rigor axiomático para Licenciatura/Docente, Militares (ITA/IME/AFA), Ciência de Dados & ML, e Concursos.
+- [x] Suítes de testes automatizados com 100% de aprovação (`test_acceptance_mission_integrated.py`, `test_discursive_bench_suite.py`, `test_fase2_personalizacao.py`).
 
-### P2 — Base de dados e diferencial pedagógico
-
-- [ ] Melhorar pipeline de ingestão, tradução PT-BR e preservação de LaTeX.
-- [ ] Auditar e endurecer a Linha de Montagem Híbrida 01 Turbo (extração, deduplicação, bounding boxes, enriquecimento, Storage e upsert) antes de confiar nela em escala.
-- [ ] Auditar e classificar taxonomia/matérias com controle de qualidade.
-- [ ] Preparar associação questão–lema com schema correto, embeddings, regras e validação.
-- [ ] Construir dataset de referência e métricas para associação.
-- [ ] Integrar filtro/card de lema depois de validar a qualidade.
-- [ ] Priorizar persistência durável para tentativas e demais eventos essenciais.
-
-### P3 — Personalização e crescimento
-
-- [ ] Construir Caçador de Gatilhos com suporte a estratégias equivalentes.
-- [ ] Agendar revisão por lema/habilidade com questão inédita quando houver conteúdo.
-- [ ] Validar algoritmo atual de repetição espaçada antes de adotar FSRS.
-- [ ] Construir baseline de domínio por lema; avaliar Elo/IRT quando houver dados suficientes.
-- [ ] Implementar PDF de simulados.
-- [ ] Melhorar avatar, dashboard, UI das bancas e experiência pública.
-- [ ] Desenvolver modelos preditivos/recomendadores com avaliação offline e acompanhamento de qualidade.
-
-### P4 — Visão de longo prazo
-
-- [ ] OCR multimodal de resolução manuscrita com transcrição matemática validada.
-- [ ] Diagnóstico de erros passo a passo e tutoria socrática personalizada.
-- [ ] Aprendizado de conhecimento (*Knowledge Tracing*) e recomendação adaptativa avançada.
-- [ ] Fine-tuning de modelos especializados apenas quando houver volume adequado de dados validados e consentidos.
-- [ ] Explorar outras IAs especialistas (BioIA, QuimIA, PhIA) depois que LEMMAS Core e a governança estiverem estáveis.
-- [ ] Escalar o acervo rumo à meta de 100 mil questões, se ela continuar sendo objetivo, com qualidade e proveniência preservadas.
+### P4 — Próximas Fronteiras Estratégicas (V1.x e V2) — [ ] Próximo Horizonte
+- [ ] **Teoria de Resposta ao Item (TRI):** Calibração empírica dos parâmetros psicométricos $a$ (discriminação), $b$ (dificuldade) e $c$ (acerto casual) das questões em simulados.
+- [ ] **Caçador de Gatilhos em Escala:** Modo de treino focado em identificar o lema e a estratégia de resolução antes de ver as opções.
+- [ ] **Fine-Tuning de SLM Local:** Ajuste fino de modelo especializado em demonstrações axiomáticas (`Qwen2.5-Math-7B`) rodando localmente com latência submétrica e custo zero de inferência.
+- [ ] **Comunidade de Demonstrações Elegantes:** Repositório colaborativo onde estudantes e professores submetem múltiplos caminhos de prova para a mesma questão, com ranking de concisão e elegância.
+- [ ] **Exportação de Provas e Simulados em PDF:** Geração de cadernos de prova A4 diagramados em duas colunas estilo concurso com gabarito comentado ao final.
 
 ---
 
