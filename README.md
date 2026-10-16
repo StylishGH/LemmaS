@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
     <img src="https://img.shields.io/badge/Supabase-PostgreSQL%20RLS-3ECF8E?logo=supabase" alt="Supabase / PostgreSQL" />
     <img src="https://img.shields.io/badge/AI%20Gateway-Nemotron%20%7C%20DeepSeek%20%7C%20Gemini-76B900" alt="Multi-Model Gateway" />
-    <img src="https://img.shields.io/badge/Psychometrics-FSRS--v4%20%7C%20SM--2%20%7C%20IRT--3PL-blue" alt="FSRS & IRT" />
+    <img src="https://img.shields.io/badge/Psychometrics-SM--2%20(Live)%20%7C%20FSRS--v4%20%26%20IRT%20(Roadmap)-blue" alt="SM-2 & Psychometrics" />
     <img src="https://img.shields.io/badge/Data%20Integrity-SHA--256%20Provenance-orange" alt="SHA-256 Provenance" />
     <img src="https://img.shields.io/badge/Status-V1%20Launch%20Ready-success" alt="V1 Launch Ready" />
   </p>
@@ -107,25 +107,31 @@ flowchart TD
 
 ---
 
-## 🔬 Mathematical & Psychometric Modeling
+## 🔬 Mathematical & Psychometric Foundations
 
-Lemmas avoids opaque "black-box" guessing by implementing proven mathematical models for knowledge retention and student ability:
+Lemmas approaches learning through formal mathematical modeling rather than opaque heuristic guessing, strictly distinguishing between **what runs in production today** and **exploratory research**:
 
-### 1. Retention Modeling: FSRS-v4 & SM-2
-To predict the optimal moment for reviewing mathematical lemmata, the engine implements a spaced-repetition scheduler inspired by the Free Spaced Repetition Scheduler (FSRS-v4):
+### 1. Spaced Repetition in Production: SuperMemo-2 (SM-2)
+In the current live deployment, retention schedules for questions and lemmata are actively computed and persisted using the deterministic **SuperMemo-2 (SM-2)** algorithm:
+- Every evaluated submission updates the student's Ease Factor ($EF \in [1.3, 2.5]$) and interval $I(n)$:
+  $$EF' = \max\left(1.3, \; EF + (0.1 - (5 - q) \cdot (0.08 + (5 - q) \cdot 0.02))\right)$$
+  Where $q \in [0, 5]$ is the performance grade mapped from the four qualitative verdicts.
+- Persistent state is written immediately to `public.revisao_espacada` on Supabase PostgreSQL.
+
+### 2. Algorithmic Prototype: FSRS-v4 (Free Spaced Repetition Scheduler)
+For flashcard and lemmata decay modeling, the backend provides an initial implementation inspired by the modern FSRS formulation:
 $$R(t) = \left(1 + F \cdot \frac{t}{S}\right)^{-1}$$
-Where:
-- $R(t)$ is the probability of retrievability at day $t$.
-- $S$ is memory stability (days until retrievability drops to 90%).
-- $F$ is a factor calibrated against student difficulty ratings ($D \in [1, 10]$).
+- Memory stability ($S$) and difficulty ($D$) data contracts are implemented in `app/services/mathai/flashcards.py`.
+- *Status:* Operational in prototype mode with heuristic constants; empirical parameter optimization via maximum likelihood estimation is planned once user interaction volume increases.
 
-### 2. Item Response Theory (IRT / TRI 3PL)
-Question calibration uses the Three-Parameter Logistic Model:
+### 3. Scientific Research Target: Item Response Theory (IRT / TRI 3PL)
+To evolve beyond ordinal difficulty tags (1 to 5) into continuous psychometrics, future offline data science experiments will calibrate items using the Three-Parameter Logistic Model:
 $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
-- $\theta$: Student latent ability level.
-- $a$: Discrimination parameter of the question.
-- $b$: Difficulty parameter of the theorem/exercise.
-- $c$: Pseudo-chance (guessing probability for multiple-choice items).
+- $\theta$: Latent mathematical proficiency of the student.
+- $a$: Item discrimination power.
+- $b$: Item intrinsic difficulty parameter.
+- $c$: Pseudo-guessing parameter for multiple-choice questions.
+- *Status:* Formal research roadmap. No custom latent trait estimator is claimed as deployed today.
 
 ---
 
@@ -149,7 +155,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **Backend** | Python 3.12, FastAPI, Pydantic V2, Uvicorn |
 | **Database & Auth** | Supabase (PostgreSQL with RLS), deterministic SHA-256 hashing |
 | **Applied AI & Vision** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
-| **Psychometrics & Memory**| FSRS-v4 Spaced Repetition, SM-2 Engine, Item Response Theory (3PL) |
+| **Psychometrics & Memory**| SM-2 Engine (Active in production), FSRS-v4 (Prototype), IRT 3PL (Research Roadmap) |
 | **Testing & Quality** | pytest (Backend & Core architecture), Vitest (Frontend components) |
 
 ---
