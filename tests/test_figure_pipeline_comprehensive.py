@@ -26,8 +26,11 @@ import hashlib
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-import numpy as np
 import pytest
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 try:
     import cv2
@@ -172,6 +175,8 @@ def test_cenario_05_separated_option_figures():
 # CENÁRIO 6: Figura Próxima à Margem da Página
 # ==============================================================================
 def test_cenario_06_near_page_margin_adaptive_padding():
+    if np is None or cv2 is None:
+        pytest.skip("numpy ou cv2 não disponíveis")
     # Cria imagem de página 1000x800
     page_img = np.ones((1000, 800, 3), dtype=np.uint8) * 255
     # Desenha figura encostada na margem esquerda (x=5) e topo (y=10)
@@ -189,6 +194,8 @@ def test_cenario_06_near_page_margin_adaptive_padding():
 # CENÁRIO 7: Figura em Página Escaneada
 # ==============================================================================
 def test_cenario_07_scanned_page_ink_detection(tmp_path):
+    if np is None or cv2 is None:
+        pytest.skip("numpy ou cv2 não disponíveis")
     # Simula página escaneada ruidosa com figura geométrica no centro
     scanned_page = np.ones((800, 600, 3), dtype=np.uint8) * 250
     # Adiciona ruído leve
@@ -285,6 +292,8 @@ def test_cenario_12_esa_2026_protected_svgs_intact():
 # CENÁRIO 13: Detecção de Clipping Evita Corte de Notações Matemáticas
 # ==============================================================================
 def test_cenario_13_clipping_detection_prevents_math_loss():
+    if np is None or cv2 is None:
+        pytest.skip("numpy ou cv2 não disponíveis")
     # Cria canvas onde uma curva matemática contínua ultrapassa a proposta inicial
     canvas = np.ones((400, 400, 3), dtype=np.uint8) * 255
     # Traço contínuo de curva de função que vai de x=100 até x=230
@@ -323,6 +332,8 @@ def test_cenario_14_resolution_only_figure_rejected_as_stem():
 # CENÁRIO 15: Figuras Pequenas Preservadas sem Descarte Arbitrário
 # ==============================================================================
 def test_cenario_15_small_area_figure_preserved(tmp_path):
+    if np is None or cv2 is None:
+        pytest.skip("numpy ou cv2 não disponíveis")
     # Figura matemática pequena (ex.: 25x25 px, como um símbolo ou micro-diagrama vetorial)
     small_img = np.ones((28, 28, 3), dtype=np.uint8) * 255
     cv2.circle(small_img, (14, 14), 10, (0, 0, 0), 2)

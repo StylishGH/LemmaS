@@ -144,4 +144,6 @@ client_secret*.json
 # Relatórios temporários de scratch
 *_SUMMARY.md
 IMPLEMENTATION_AND_INSTRUCTIONS.md
+RELATORIO*.md
+RELATORIO_*.md
 

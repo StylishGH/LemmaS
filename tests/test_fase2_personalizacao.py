@@ -15,7 +15,7 @@ Testa:
 
 import json
 import sys
-if sys.platform == "win32" and hasattr(sys.stdout, "buffer"):
+if sys.platform == "win32" and hasattr(sys.stdout, "buffer") and "pytest" not in sys.modules:
     import io
     try:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
