@@ -28,7 +28,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { enunciado, nivel = 1, pedagogicalPreference, pedagogical_preference, foco_concurso, motivacoes } = body;
+    const {
+      enunciado,
+      topico = "Matemática",
+      subtopico,
+      gabarito,
+      solucao,
+      nivel = 1,
+      pedagogicalPreference,
+      pedagogical_preference,
+      foco_concurso,
+      motivacoes,
+    } = body;
     if (!enunciado || typeof enunciado !== "string") {
       return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
     }
@@ -44,7 +55,9 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           enunciado,
           level,
-          topico: "Matemática",
+          topico: topico || "Matemática",
+          gabarito: gabarito || "",
+          solucao: solucao || "",
           estrategias_esperadas: [],
           pedagogical_preference: pref,
           pedagogicalPreference: pref,
@@ -80,33 +93,38 @@ export async function POST(req: NextRequest) {
     // 2. Inferência Direta de Alta Performance via Gemini REST API (Latência ~1s com KaTeX real)
     try {
       const contextoPartes: string[] = [];
+      if (topico) contextoPartes.push(`Tópico da Matéria: ${topico}${subtopico ? ` > ${subtopico}` : ""}`);
       if (foco_concurso) contextoPartes.push(`Foco do aluno / Banca: ${foco_concurso}`);
       if (Array.isArray(motivacoes) && motivacoes.length > 0) {
         contextoPartes.push(`Objetivos: ${motivacoes.join(", ")}`);
       }
-      const contextoStr = contextoPartes.length > 0 ? `\nContexto do Aluno:\n${contextoPartes.join("\n")}` : "";
+      const contextoStr = contextoPartes.length > 0 ? `\nContexto:\n${contextoPartes.join("\n")}` : "";
 
-      const userPrompt = `Gere uma DICA SOCRÁTICA DE NÍVEL ${level} (de 1 a 5) para a seguinte questão:
+      const gabaritoRef = solucao || gabarito ? `\nGABARITO / SOLUÇÃO DE REFERÊNCIA:\n${solucao || gabarito}` : "";
+
+      const userPrompt = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine).
+Gere uma DICA SOCRÁTICA DE NÍVEL ${level} (de 1 a 5) focada estritamente na questão abaixo:
 
 ENUNCIADO DA QUESTÃO:
 ${enunciado}
+${gabaritoRef}
 
 MODO PEDAGÓGICO: ${pref}${contextoStr}
 
 Diretriz específica para o Nível ${level}:
 ${
   level === 1
-    ? "Faça perguntas que ajudem o aluno a identificar os dados e o que cada grandeza representa intuitivamente. NÃO apresente equações prontas."
+    ? "Faça perguntas socráticas que ajudem o aluno a identificar os dados, hipóteses e conectivos específicos desta questão. NÃO apresente equações prontas."
     : level === 2
-    ? "Aponte o lema, teorema ou propriedade geométrica/algébrica que rege este tipo de problema com notação LaTeX ($...$), sem montar a conta final."
+    ? "Aponte o lema, teorema, conectivos lógicos ou propriedade algébrica/geométrica que rege este tipo de problema com notação LaTeX ($...$), sem resolver."
     : level === 3
-    ? "Escreva a primeira igualdade ou representação algébrica estruturada a ser anotada no papel para iniciar o desenvolvimento."
+    ? "Escreva a primeira igualdade, equivalência lógica ou representação estruturada a ser anotada no papel para iniciar o desenvolvimento desta questão."
     : level === 4
-    ? "Apresente as manipulações e simplificações algébricas intermediárias em LaTeX ($...$), deixando o arremate final para o aluno concluir."
-    : "Apresente a demonstração matemática completa passo a passo em LaTeX ($...$ e $$...$$), sintetizando o método de resolução."
+    ? "Apresente as manipulações e passagens intermediárias em LaTeX ($...$), deixando o arremate final para o aluno concluir."
+    : "Apresente a DEMONSTRAÇÃO COMPLETA passo a passo de cada item ou etapa desta questão em LaTeX ($...$ e $$...$$), demonstrando a resolução integral."
 }
 
-Responda diretamente com o texto da dica socrática, usando KaTeX com $...$ e $$...$$ rigorosamente.`;
+IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUNCA dê uma resposta vazia ou genérica. Responda diretamente com o texto da dica em KaTeX.`;
 
       const geminiRes = await generateGeminiContent({
         prompt: userPrompt,
@@ -130,12 +148,22 @@ Responda diretamente com o texto da dica socrática, usando KaTeX com $...$ e $$
     }
 
     // 3. Fallback Determinístico Pedagógico Estruturado (Uptime 100% garantido sem erro de timeout)
+    if (level === 5 && (solucao || gabarito)) {
+      return NextResponse.json({
+        nivel: 5,
+        dica: `💡 **Nível 5 (Resolução Completa):**\n\n${solucao || gabarito}`,
+        modelo: "LEMMAS Gabarito Oficial",
+        provedor: "lemmas-knowledge-base",
+        confianca: 1.0,
+      });
+    }
+
     const fallbackHints: Record<number, string> = {
-      1: "💡 **Nível 1 (Intuição e Dados):** Releia com atenção o enunciado. Isole quais são as hipóteses e dados conhecidos e qual é a tese ou incógnita pedida. O que cada termo ou símbolo representa antes de tentar aplicar regras prontas?",
-      2: "💡 **Nível 2 (Conceito & Lema):** Pense em qual teorema, lema ou equivalência fundamental rege as propriedades do problema. Existe alguma equivalência lógica, simetria geométrica ou invariante aplicável a este caso?",
-      3: "💡 **Nível 3 (Primeiro Passo):** Escreva no papel a primeira relação estruturada (algébrica, lógica com conectivos ou geométrica) que traduz diretamente as hipóteses do problema.",
-      4: "💡 **Nível 4 (Passos Intermediários):** Desenvolva as etapas intermediárias simplificando os termos comuns e aplicando as propriedades operatórias cabíveis, deixando a estrutura pronta para a conclusão.",
-      5: "💡 **Nível 5 (Resolução Completa):** Conclua a dedução formal justificando cada passagem lógica e confirmando se o resultado satisfaz todas as condições e restrições iniciais do problema.",
+      1: `💡 **Nível 1 (Intuição e Dados):** Releia com atenção o enunciado de **${topico}**. Isole quais são as hipóteses e dados conhecidos e qual é a tese ou incógnita pedida. O que cada termo ou símbolo representa antes de tentar aplicar regras prontas?`,
+      2: `💡 **Nível 2 (Conceito & Lema):** Pense em qual teorema, lema ou equivalência fundamental rege as propriedades de **${topico}**. Existe alguma equivalência lógica, simetria geométrica ou invariante aplicável a este caso?`,
+      3: `💡 **Nível 3 (Primeiro Passo):** Escreva no papel a primeira relação estruturada (algébrica, lógica com conectivos ou geométrica) que traduz diretamente as hipóteses de **${topico}**.`,
+      4: `💡 **Nível 4 (Passos Intermediários):** Desenvolva as etapas intermediárias simplificando os termos comuns e aplicando as propriedades operatórias cabíveis, deixando a estrutura pronta para a conclusão.`,
+      5: `💡 **Nível 5 (Resolução Completa):** Conclua a dedução formal justificando cada passagem lógica e confirmando se o resultado satisfaz todas as condições e restrições de **${topico}**.`,
     };
 
     return NextResponse.json({
