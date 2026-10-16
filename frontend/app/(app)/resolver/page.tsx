@@ -2035,7 +2035,7 @@ function ResolverContent() {
         )}
 
         {/* CAMADA 1: DADO OBSERVADO — RESPOSTA DO ESTUDANTE */}
-                {currentQ && answers[currentQ.id] && (
+        {currentQ && answers[currentQ.id] && (isSimuladoAtivo || !currentResult) && (
                   <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
@@ -2455,14 +2455,19 @@ function ResolverContent() {
                   onExportBase64={(b64, hasStrokes) => {
                     setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
                     setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
+                  }}
+                  onEvaluate={(b64) => {
+                    setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
+                    setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
                     submeterResolucaoDiscursiva("lousa", { imagemBase64: b64 });
                   }}
+                  isEvaluating={loadingDiscursive}
                   onClose={() => setBancadaModo(null)}
                 />
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
                   <div className="text-xs text-slate-700 dark:text-zinc-300">
                     <strong className="text-amber-700 dark:text-[#d9b452] block">Avaliação do Rascunho da Lousa:</strong>
-                    <span>Ao clicar em "Exportar PNG" na Lousa, seu rascunho visual é automaticamente submetido para avaliação da MathAI Engine.</span>
+                    <span>Você pode clicar diretamente em "Avaliar Rascunho" na barra superior da Lousa para processar sua caligrafia com a MathAI Engine.</span>
                   </div>
                   <button
                     type="button"
@@ -2471,7 +2476,7 @@ function ResolverContent() {
                       if (img) {
                         submeterResolucaoDiscursiva("lousa", { imagemBase64: img });
                       } else {
-                        alert("Por favor, clique em 'Exportar PNG' na barra de ferramentas da Lousa para capturar seu rascunho antes de avaliar.");
+                        alert("Por favor, clique em 'Avaliar Rascunho' na barra de ferramentas da Lousa para capturar seu rascunho com o digitalizador.");
                       }
                     }}
                     disabled={loadingDiscursive}

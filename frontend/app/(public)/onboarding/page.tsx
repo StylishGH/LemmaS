@@ -169,6 +169,8 @@ export default function OnboardingPage() {
           .eq("email", user.email)
           .maybeSingle();
 
+        const estaVerificado = Boolean(user.email_confirmed_at);
+
         if (existente) {
           await supabase
             .from("usuarios")
@@ -179,6 +181,7 @@ export default function OnboardingPage() {
               curso: cursoGraduacao || null,
               concursos_foco: focoConcursoFormatado,
               motivos: JSON.stringify(perfilData),
+              ...(estaVerificado ? { verificado: 1 } : {}),
             })
             .eq("email", user.email);
         } else {
@@ -193,7 +196,7 @@ export default function OnboardingPage() {
               curso: cursoGraduacao || null,
               concursos_foco: focoConcursoFormatado,
               motivos: JSON.stringify(perfilData),
-              verificado: 1,
+              verificado: estaVerificado ? 1 : 0,
             });
         }
       }

@@ -17,10 +17,17 @@ export async function POST(req: NextRequest) {
       metadados = {},
     } = body;
 
-    // Garante que pelo menos uma avaliação foi enviada
-    if (util === undefined && concorda_diagnostico === undefined) {
+    // Garante que pelo menos uma avaliação ou relato foi enviado
+    const isReportOrComment =
+      tipo === "report_erro" ||
+      tipo === "inconsistencia" ||
+      tipo === "sugestao" ||
+      Boolean(comentario && String(comentario).trim().length > 0) ||
+      tipo !== "diagnostico_ia";
+
+    if (!isReportOrComment && util === undefined && concorda_diagnostico === undefined) {
       return NextResponse.json(
-        { error: "É necessário informar ao menos um parâmetro de avaliação ('util' ou 'concorda_diagnostico')." },
+        { error: "É necessário informar ao menos um parâmetro de avaliação ('util' ou 'concorda_diagnostico') ou um relato/comentário." },
         { status: 400 }
       );
     }
