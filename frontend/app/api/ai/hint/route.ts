@@ -3,15 +3,15 @@ import { generateGeminiContent } from "@/lib/gemini";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
-const PROMPT_SISTEMA_SOCRATICO = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado em conduzir estudantes de matemática pelo método maiêutico progressivo, prático e rigoroso.
+const PROMPT_SISTEMA_SOCRATICO = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado no Método de Pólya para conduzir estudantes de matemática (nível superior e concursos militares) a raciocinar por conta própria.
 
-DIRETRIZES FUNDAMENTAIS DOS 5 NÍVEIS PEDAGÓGICOS:
-- NUNCA entregue a resposta final nos níveis 1 a 4.
-- Nível 1 (Identificação de Notação & Simbologia): Chame a atenção para os símbolos, notações e conectivos específicos desta questão (ex: quantificadores $\\forall, \\exists$, pertinência $\\in$, inclusão $\\subseteq$, conectivos $\\implies, \\iff, \\land, \\lor$, notações de funções, matrizes, cálculo, etc.). Pergunte socraticamente se o estudante conhece essas simbologias e o que significam no problema.
-- Nível 2 (Primeiro Passo Prático no Papel): Ajude o estudante a COMEÇAR A ESCREVER de fato! Diga com clareza como ele deve iniciar a primeira linha de dedução, hipótese ou equação no rascunho (ex: "No seu rascunho, comece escrevendo a primeira linha: 'Seja $n \\in \\mathbb{N}$ tal que...'").
-- Nível 3 (Encadeamento Dedutivo Intermediário): Indique a próxima conexão lógica ou manipulação intermediária (ex: expansão, negação, substituição ou simetria), relacionando a hipótese inicial ao próximo termo em LaTeX ($...$).
-- Nível 4 (O Pulo do Gato & Alerta de Pegadinha): Aponte a sacada decisiva, o lema chave ou a armadilha de prova da banca que destrava a questão, deixando apenas a última linha de arremate para o estudante concluir.
-- Nível 5 (Resolução Oficial Completa & Gabarito): Apresente a resolução passo a passo integral e rigorosa até o gabarito oficial definitivo em KaTeX ($...$ e $$...$$), demonstrando a solução completa da questão.
+GUARDRAIL ESTRITO DE RESTRIÇÃO NEGATIVA (NÍVEIS 1 A 4):
+- É ESTRITAMENTE PROIBIDO revelar a alternativa correta (A, B, C, D, E) ou vazar o valor numérico/algébrico final do gabarito nos Níveis 1, 2, 3 e 4. O estudante deve construir a dedução ativamente.
+- Nível 1: PROIBIDO citar fórmulas, nomes de teoremas ou fazer contas. Máximo de 2 a 3 frases, termina obrigatoriamente com pergunta.
+- Nível 2: PROIBIDO substituir números na fórmula ou montar a equação pronta. Termina obrigatoriamente com pergunta.
+- Nível 3: PROIBIDO resolver a equação ou passar da metade do problema. Apenas ensine a largada.
+- Nível 4: PROIBIDO calcular o resultado final ou indicar a alternativa certa. Pare antes do arremate final.
+- Nível 5 (Rendição Pedagógica): Apresente a resolução completa, rigorosa e passo a passo em LaTeX, destacando o Lema central e chegando na resposta final.
 
 DIRETRIZES DE FORMATAÇÃO E LATEX (MANDATÓRIO):
 - Toda e qualquer expressão, incógnita, número algébrico ou fórmula DEVE estar rigorosamente delimitada por $...$ (para matemática em linha) ou $$...$$ (para equações destacadas em bloco).
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       enunciado,
+      materia,
       topico = "Matemática",
       subtopico,
       gabarito,
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           enunciado,
           level,
+          materia: materia || "Matemática",
           topico: topico || "Matemática",
           gabarito: gabarito || "",
           solucao: solucao || "",
@@ -93,6 +95,7 @@ export async function POST(req: NextRequest) {
     // 2. Inferência Direta de Alta Performance via Gemini REST API (Latência ~1s com KaTeX real)
     try {
       const contextoPartes: string[] = [];
+      if (materia) contextoPartes.push(`Grande Área / Matéria: ${materia}`);
       if (topico) contextoPartes.push(`Tópico da Matéria: ${topico}${subtopico ? ` > ${subtopico}` : ""}`);
       if (foco_concurso) contextoPartes.push(`Foco do aluno / Banca: ${foco_concurso}`);
       if (Array.isArray(motivacoes) && motivacoes.length > 0) {
@@ -101,6 +104,17 @@ export async function POST(req: NextRequest) {
       const contextoStr = contextoPartes.length > 0 ? `\nContexto:\n${contextoPartes.join("\n")}` : "";
 
       const gabaritoRef = solucao || gabarito ? `\nGABARITO / SOLUÇÃO DE REFERÊNCIA:\n${solucao || gabarito}` : "";
+
+      const diretrizNivel =
+        level === 1
+          ? "NÍVEL 1 — Intuição & Leitura de Hipóteses:\n- Instrução: Faça o aluno perceber um detalhe crucial do enunciado (uma simetria, uma condição de existência, uma propriedade da figura) através de uma pergunta instigante sobre o significado dos dados. Máximo de 2 a 3 frases, terminando OBRIGATORIAMENTE com uma pergunta reflexiva.\n- Guardrail: É ESTRITAMENTE PROIBIDO citar fórmulas, nomes de teoremas, fazer qualquer conta ou vazar o gabarito."
+          : level === 2
+          ? "NÍVEL 2 — Identificação do Lema / Teorema Chave:\n- Instrução: Indique qual área/teorema ou lema matemático destrava esse tipo de problema e pergunte ao aluno como ele enunciaria essa relação para os elementos da questão. Termine OBRIGATORIAMENTE com uma pergunta reflexiva.\n- Guardrail: É ESTRITAMENTE PROIBIDO substituir os números do enunciado na fórmula, montar a equação pronta ou vazar o gabarito."
+          : level === 3
+          ? "NÍVEL 3 — O Primeiro Passo / Construção Auxiliar:\n- Instrução: Ensine apenas como dar a largada (qual traço auxiliar desenhar na geometria, qual substituição de variável fazer na álgebra ou como armar a primeira linha do raciocínio no rascunho) e peça para o aluno desenvolver a partir daí.\n- Guardrail: É ESTRITAMENTE PROIBIDO resolver a equação, passar da metade do problema ou vazar o gabarito."
+          : level === 4
+          ? "NÍVEL 4 — Destravamento do Gargalo (Quase lá, falta o arremate):\n- Instrução: Mostre a relação algébrica/geométrica intermediária que resolve o gargalo principal da questão, mas pare ANTES do cálculo final. Deixe o arremate numérico/algébrico exclusivamente para o aluno.\n- Guardrail: É ESTRITAMENTE PROIBIDO mencionar o resultado final (gabarito) ou dizer qual alternativa (A, B, C, D, E) está certa."
+          : "NÍVEL 5 — Resolução Completa (Rendição Pedagógica):\n- Instrução: Como o aluno desistiu da tentativa e solicitou o Nível 5, apresente a resolução completa, rigorosa, didática e passo a passo em LaTeX impecável ($...$ e $$...$$), destacando o Lema central utilizado e chegando claramente na resposta final.";
 
       const userPrompt = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine).
 Gere uma DICA SOCRÁTICA DE NÍVEL ${level} (de 1 a 5) focada estritamente na questão abaixo:
@@ -111,20 +125,10 @@ ${gabaritoRef}
 
 MODO PEDAGÓGICO: ${pref}${contextoStr}
 
-Diretriz específica para o Nível ${level}:
-${
-  level === 1
-    ? "Identifique a simbologia, notação matemática e conectivos específicos desta questão (ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, implicação $\\implies$, funções ou conjuntos). Pergunte socraticamente se o aluno conhece essas simbologias e o que cada uma exige para iniciar."
-    : level === 2
-    ? "Instrua o aluno a COMEÇAR A ESCREVER de fato no papel! Indique com precisão qual é a primeira linha, hipótese ou relação formal que ele deve anotar no rascunho para dar o primeiro passo prático."
-    : level === 3
-    ? "Apresente o encadeamento dedutivo intermediário em LaTeX ($...$), mostrando como manipular a relação do Nível 2 e avançar para o próximo passo lógico."
-    : level === 4
-    ? "Aponte o pulo do gato / lema crucial e alerte sobre pegadinhas típicas da banca, deixando estritamente a última linha de arremate para o estudante concluir."
-    : "Apresente a RESOLUÇÃO OFICIAL COMPLETA passo a passo de ponta a ponta com rigor formal em KaTeX ($...$ e $$...$$), demonstrando a dedução integral e concluindo com o gabarito oficial definitivo."
-}
+DIRETRIZ ESPECÍFICA DO NÍVEL ${level}:
+${diretrizNivel}
 
-IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUNCA dê uma resposta vazia ou genérica. Responda diretamente com o texto da dica em KaTeX.`;
+IMPORTANTE: Seja direto, encorajador, rigoroso e cite as variáveis e itens do enunciado. NUNCA dê uma resposta vazia ou genérica. Responda diretamente com o texto da dica em KaTeX.`;
 
       const geminiRes = await generateGeminiContent({
         prompt: userPrompt,
@@ -151,7 +155,7 @@ IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUN
     if (level === 5 && (solucao || gabarito)) {
       return NextResponse.json({
         nivel: 5,
-        dica: `💡 **Nível 5 (Resolução Oficial Definitiva):**\n\n${solucao || gabarito}`,
+        dica: `💡 **Nível 5 — Resolução Completa (Rendição Pedagógica):**\n\n${solucao || gabarito}`,
         modelo: "LEMMAS Gabarito Oficial",
         provedor: "lemmas-knowledge-base",
         confianca: 1.0,
@@ -159,11 +163,11 @@ IMPORTANTE: Seja direto, rigoroso e cite as variáveis e itens do enunciado. NUN
     }
 
     const fallbackHints: Record<number, string> = {
-      1: `💡 **Nível 1 (Simbologia & Notação):** Você identificou quais são as simbologias e conectivos essenciais desta questão de **${topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos lógicos como $\\implies$). O que cada um deles exige antes de começar a calcular?`,
-      2: `💡 **Nível 2 (Primeiro Passo no Papel):** Vamos começar a escrever no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **${topico}** (ex: comece com 'Seja $x \\in ...$' ou defina a variável principal).`,
-      3: `💡 **Nível 3 (Encadeamento Intermediário):** Agora relacione a primeira hipótese ao próximo passo dedutivo. Que propriedade ou manipulação operatória de **${topico}** conecta o ponto de partida à tese pedida?`,
-      4: `💡 **Nível 4 (Pulo do Gato & Pegadinha):** Atente para a simplificação crítica ou lema decisivo de **${topico}** que destrava a conclusão, cuidando para não cair em divisões por zero ou casos particulares.`,
-      5: `💡 **Nível 5 (Resolução Oficial Definitiva):**\n\n${solucao || gabarito || "A dedução formal demonstra rigorosamente o resultado pelo encadeamento direto das hipóteses."}`,
+      1: `💡 **Nível 1 — Intuição & Leitura de Hipóteses:** Você identificou quais são os dados, simetrias e restrições essenciais desta questão de **${topico}**? Como cada grandeza se relaciona antes mesmo de começar qualquer conta?`,
+      2: `💡 **Nível 2 — Identificação do Lema / Teorema Chave:** Qual lema ou teorema fundamental conecta os termos de **${topico}** presentes no enunciado? Como você enunciaria essa propriedade para os elementos desta questão?`,
+      3: `💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar:** Vamos começar no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **${topico}** (ex: comece definindo a variável ou relação inicial) e desenvolva a partir daí.`,
+      4: `💡 **Nível 4 — Destravamento do Gargalo:** Atente para a relação algébrica/geométrica intermediária que resolve o gargalo principal em **${topico}**, deixando apenas a linha final de arremate para você fechar a conta.`,
+      5: `💡 **Nível 5 — Resolução Completa (Rendição Pedagógica):**\n\n${solucao || gabarito || "A dedução formal demonstra rigorosamente o resultado pelo encadeamento direto das hipóteses."}`,
     };
 
     return NextResponse.json({

@@ -23,8 +23,10 @@ class SocraticHintRequest(BaseModel):
 
     exercise_id: Optional[str] = Field(None, description="ID do exercício cadastrado")
     enunciado: Optional[str] = Field(None, description="Enunciado da questão caso avulsa")
+    materia: Optional[str] = Field("Matemática", description="Grande área ou matéria da questão")
     topico: Optional[str] = Field("Matemática", description="Tópico da questão")
     gabarito: Optional[str] = Field("", description="Gabarito oficial")
+    solucao: Optional[str] = Field("", description="Solução ou resolução oficial comentada")
     estrategias_esperadas: List[str] = Field(default_factory=list)
     level: int = Field(default=1, ge=1, le=5, description="Nível de 1 a 5 da dica socrática")
     pedagogical_preference: Optional[str] = Field(
@@ -105,8 +107,10 @@ def get_socratic_hint(
         exercise_dict = {
             "id": ex.id,
             "enunciado": ex.enunciado,
+            "materia": getattr(ex, "materia", payload.materia or "Matemática"),
             "topico": ex.topico,
             "gabarito": ex.gabarito,
+            "solucao": getattr(ex, "solucao", payload.solucao or ""),
             "estrategias_esperadas": ex.estrategias_esperadas,
             "lemas_associados": ex.lemas_associados,
         }
@@ -114,8 +118,10 @@ def get_socratic_hint(
         exercise_dict = {
             "id": payload.exercise_id or "adhoc-exercise",
             "enunciado": payload.enunciado or "Problema matemático geral",
+            "materia": payload.materia or "Matemática",
             "topico": payload.topico,
             "gabarito": payload.gabarito,
+            "solucao": payload.solucao or "",
             "estrategias_esperadas": payload.estrategias_esperadas,
         }
 

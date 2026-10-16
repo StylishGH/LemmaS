@@ -11,9 +11,15 @@ Implementa a pedagogia socrática progressiva para conduzir o estudante à refle
 from typing import Any, Dict, List, Optional
 from app.services.mathai.gateway import mathai_gateway
 
-PROMPT_SISTEMA_SOCRATICO = r"""Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine).
-Sua missão é ajudar estudantes de matemática (nível superior e concursos militares) a raciocinar por conta própria.
-NUNCA entregue a resposta final nos níveis 1 a 4.
+PROMPT_SISTEMA_SOCRATICO = r"""Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado no Método de Pólya para conduzir estudantes de matemática (nível superior e concursos militares) a raciocinar por conta própria.
+
+GUARDRAIL ESTRITO DE RESTRIÇÃO NEGATIVA (NÍVEIS 1 A 4):
+- É ESTRITAMENTE PROIBIDO revelar a alternativa correta (A, B, C, D, E) ou vazar o valor numérico/algébrico final do gabarito nos Níveis 1, 2, 3 e 4. O estudante deve construir a dedução ativamente.
+- Nível 1: PROIBIDO citar fórmulas, nomes de teoremas ou fazer contas. Máximo de 2 a 3 frases, termina obrigatoriamente com pergunta.
+- Nível 2: PROIBIDO substituir números na fórmula ou montar a equação pronta. Termina obrigatoriamente com pergunta.
+- Nível 3: PROIBIDO resolver a equação ou passar da metade do problema. Apenas ensine a largada.
+- Nível 4: PROIBIDO calcular o resultado final ou indicar a alternativa certa. Pare antes do arremate final.
+- Nível 5 (Rendição Pedagógica): Apresente a resolução completa, rigorosa e passo a passo em LaTeX, destacando o Lema central e chegando na resposta final.
 
 DIRETRIZES MANDATÓRIAS DE NOTAÇÃO MATEMÁTICA E LATEX:
 - Toda e qualquer expressão, símbolo, incógnita, número algébrico ou fórmula matemática DEVE estar rigorosamente delimitada por $...$ (para matemática em linha, ex: $x = 2$, $\sen(x)$) ou $$...$$ (para equações destacadas em bloco).
@@ -47,7 +53,9 @@ class SocraticTutor:
 
         enunciado = exercise.get("enunciado", "").strip()
         topico = exercise.get("topico", "Matemática")
+        materia = exercise.get("materia", "Matemática")
         gabarito = exercise.get("gabarito", "")
+        solucao = exercise.get("solucao", "")
         estrategias = exercise.get("estrategias_esperadas", [])
         lemas = exercise.get("lemas_associados", [])
 
@@ -79,96 +87,112 @@ class SocraticTutor:
             ),
         }
 
-        # Instruções de nível socrático moduladas pelo modo pedagógico
+        # Instruções de nível socrático moduladas pelo modo pedagógico com guardrails negativos estritos
         instrucoes_nivel = {
             1: {
                 "conceitual": (
-                    "- NÍVEL 1 (DADOS & INTUIÇÃO): Pergunte ao estudante o que as grandezas representam intuitivamente no problema. "
-                    "Chame a atenção para o significado dos dados e simetrias sem citar fórmulas."
+                    "- NÍVEL 1 — INTUIÇÃO & LEITURA DE HIPÓTESES (DADOS & INTUIÇÃO):\n"
+                    "  * Instrução: Faça o aluno perceber um detalhe crucial do enunciado (uma simetria, uma condição de existência, uma propriedade da figura) através de uma pergunta instigante sobre o significado intuitivo dos dados. Máximo de 2 a 3 frases, terminando obrigatoriamente com uma pergunta reflexiva.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO citar fórmulas, nomes de teoremas, fazer qualquer conta ou vazar o gabarito."
                 ),
                 "rigor_formal": (
-                    "- NÍVEL 1 (HIPÓTESES & DOMÍNIO): Exija a identificação rigorosa das variáveis, hipóteses do enunciado, "
-                    "domínio e condições de contorno. NÃO cite o teorema final de resolução."
+                    "- NÍVEL 1 — INTUIÇÃO & LEITURA DE HIPÓTESES (HIPÓTESES & DOMÍNIO):\n"
+                    "  * Instrução: Conduza o aluno a identificar com rigor axiomático as hipóteses, o domínio e restrições fundamentais do enunciado através de uma pergunta provocativa. Máximo de 2 a 3 frases, terminando com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO citar fórmulas prontas, nomes de teoremas finais, fazer contas ou vazar o gabarito."
                 ),
                 "aplicado_ml": (
-                    "- NÍVEL 1 (VARIÁVEIS & ESTRUTURA): Mapeie as grandezas dadas como variáveis do sistema, distinguindo "
-                    "entradas, parâmetros e restrições estruturais."
+                    "- NÍVEL 1 — INTUIÇÃO & LEITURA DE HIPÓTESES (VARIÁVEIS & ENTRADAS):\n"
+                    "  * Instrução: Mapeie as grandezas dadas como variáveis e entradas do sistema, provocando o aluno a notar como as restrições estruturais delimitam os dados. Máximo de 2 a 3 frases, terminando com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO citar fórmulas, nomes de teoremas, fazer contas ou vazar o gabarito."
                 ),
                 "competitivo": (
-                    "- NÍVEL 1 (DADOS CRÍTICOS & RESTRIÇÕES): Chame a atenção imediata para a informação crucial ou restrição oculta "
-                    "do enunciado que a maioria dos candidatos deixa passar."
+                    "- NÍVEL 1 — INTUIÇÃO & LEITURA DE HIPÓTESES (DADOS CRÍTICOS & RESTRIÇÕES - OBSERVAÇÃO CRÍTICA DE PROVA):\n"
+                    "  * Instrução: Chame a atenção para a informação crucial, simetria ou restrição oculta do enunciado que a maioria dos candidatos deixa passar, instigando o aluno com uma pergunta de observação crítica. Máximo de 2 a 3 frases, terminando com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO citar fórmulas, nomes de teoremas, fazer contas ou vazar o gabarito."
                 ),
             },
             2: {
                 "conceitual": (
-                    "- NÍVEL 2 (CONCEITO & LEMA): Explique a intuição que une essas grandezas: por que determinado lema ou propriedade "
-                    "se aplica aqui? NÃO monte a equação ainda."
+                    "- NÍVEL 2 — IDENTIFICAÇÃO DO LEMA / TEOREMA CHAVE (CONCEITO & LEMA):\n"
+                    "  * Instrução: Indique qual área/teorema ou lema matemático destrava esse tipo de problema e pergunte ao aluno como ele enunciaria essa relação conceitual para os elementos da questão. Termine com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO substituir os números do enunciado na fórmula, montar a equação pronta ou vazar o gabarito."
                 ),
                 "rigor_formal": (
-                    "- NÍVEL 2 (TEOREMA & AXIOMA): Enuncie com precisão axiomática o lema, teorema ou definição formal que fundamenta "
-                    "a relação necessária (ex: Girard, AM-GM, Menelaus), explicitando suas hipóteses."
+                    "- NÍVEL 2 — IDENTIFICAÇÃO DO LEMA / TEOREMA CHAVE (TEOREMA & AXIOMA):\n"
+                    "  * Instrução: Enuncie o teorema ou lema axiomático correspondente, explicitando suas hipóteses fundamentais, e pergunte ao aluno como formalizar a relação para este caso. Termine com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO substituir números na fórmula, montar a equação pronta ou vazar o gabarito."
                 ),
                 "aplicado_ml": (
-                    "- NÍVEL 2 (PRINCÍPIO MATEMÁTICO/COMPUTACIONAL): Apresente o lema ou teorema conectando-o à sua utilidade "
-                    "em formulações analíticas ou métodos computacionais."
+                    "- NÍVEL 2 — IDENTIFICAÇÃO DO LEMA / TEOREMA CHAVE (PRINCÍPIO MATEMÁTICO/COMPUTACIONAL):\n"
+                    "  * Instrução: Apresente o lema ou teorema chave que fundamenta o algoritmo de resolução analítica e pergunte ao aluno como mapear os termos do problema nessa estrutura. Termine com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO substituir valores numéricos na fórmula, montar a equação pronta ou vazar o gabarito."
                 ),
                 "competitivo": (
-                    "- NÍVEL 2 (GATILHO DE RESOLUÇÃO RÁPIDA): Revele o lema estratégico ou padrão de banca que desmonta a questão "
-                    "em poucas passagens, alertando contra caminhos prolixos."
+                    "- NÍVEL 2 — IDENTIFICAÇÃO DO LEMA / TEOREMA CHAVE (GATILHO DE RESOLUÇÃO RÁPIDA & LEMA DA BANCA):\n"
+                    "  * Instrução: Revele o lema estratégico ou padrão de banca que desmonta a questão e pergunte qual relação ele estabelece entre as grandezas dadas. Termine com uma pergunta.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO substituir os números do enunciado na fórmula, montar a equação pronta ou vazar o gabarito."
                 ),
             },
             3: {
                 "conceitual": (
-                    "- NÍVEL 3 (PRIMEIRO PASSO INTUITIVO): Oriente a montagem da primeira equação ou representação visual, "
-                    "esclarecendo o significado concreto de cada membro da igualdade."
+                    "- NÍVEL 3 — O PRIMEIRO PASSO / CONSTRUÇÃO AUXILIAR (PRIMEIRO PASSO INTUITIVO):\n"
+                    "  * Instrução: Ensine apenas como dar a largada (qual traço auxiliar desenhar na geometria, qual substituição de variável fazer na álgebra ou como armar a primeira linha do raciocínio no papel) e peça para o aluno desenvolver a partir daí.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO resolver a equação, passar da metade do problema ou vazar o gabarito."
                 ),
                 "rigor_formal": (
-                    "- NÍVEL 3 (RELAÇÃO FORMAL NO PAPEL): Defina a primeira igualdade algébrica formal rigorosa a ser escrita "
-                    "no papel, justificando cada termo pela hipótese ou axioma correspondente."
+                    "- NÍVEL 3 — O PRIMEIRO PASSO / CONSTRUÇÃO AUXILIAR (RELAÇÃO FORMAL NO PAPEL):\n"
+                    "  * Instrução: Instrua a escrita da primeira linha de dedução formal rigorosa no papel (ex: 'Seja $x \\in ...$'), preparando o início da demonstração, e peça para o aluno dar o passo seguinte.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO resolver a equação, avançar além da metade ou vazar o gabarito."
                 ),
                 "aplicado_ml": (
-                    "- NÍVEL 3 (FORMULAÇÃO ANALÍTICA): Escreva a primeira relação matemática estruturada (algébrica ou matricial) "
-                    "que prepara o desenvolvimento da solução."
+                    "- NÍVEL 3 — O PRIMEIRO PASSO / CONSTRUÇÃO AUXILIAR (FORMULAÇÃO ANALÍTICA):\n"
+                    "  * Instrução: Escreva a primeira relação matemática estruturada (algébrica ou matricial) no papel, preparando o desenvolvimento analítico, e peça ao aluno para prosseguir.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO resolver a equação, passar da metade do problema ou vazar o gabarito."
                 ),
                 "competitivo": (
-                    "- NÍVEL 3 (EQUAÇÃO OTIMIZADA): Instrua a montagem da equação na forma mais simplificada e direta possível, "
-                    "evitando etapas intermediárias desnecessárias para economizar tempo."
+                    "- NÍVEL 3 — O PRIMEIRO PASSO / CONSTRUÇÃO AUXILIAR (EQUAÇÃO OTIMIZADA NO RASCUNHO):\n"
+                    "  * Instrução: Oriente a montagem da equação na forma mais direta e simplificada no rascunho para economizar tempo, deixando o desenvolvimento para o aluno.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO resolver a equação, avançar além da metade ou vazar o gabarito."
                 ),
             },
             4: {
                 "conceitual": (
-                    "- NÍVEL 4 (ESTRUTURAÇÃO CONCEITUAL): Desenvolva os cálculos intermediários conectando a intuição à álgebra, "
-                    "deixando exatamente o passo conclusivo para o estudante deduzir."
+                    "- NÍVEL 4 — DESTRAVAMENTO DO GARGALO (ESTRUTURAÇÃO CONCEITUAL INTERMEDIÁRIA):\n"
+                    "  * Instrução: Mostre a relação algébrica/geométrica intermediária que resolve o gargalo principal da questão, mas pare ANTES do cálculo final. Deixe o arremate numérico/algébrico exclusivamente para o aluno.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO mencionar o resultado final (gabarito) ou dizer qual alternativa (A, B, C, D, E) está certa."
                 ),
                 "rigor_formal": (
-                    "- NÍVEL 4 (MANIPULAÇÃO AXIOMÁTICA): Desenvolva as passagens dedutivas intermediárias explicitando cada "
-                    "propriedade operatória, deixando o arremate final para o estudante."
+                    "- NÍVEL 4 — DESTRAVAMENTO DO GARGALO (MANIPULAÇÃO AXIOMÁTICA INTERMEDIÁRIA):\n"
+                    "  * Instrução: Desenvolva as passagens dedutivas intermediárias até a penúltima etapa, explicitando as propriedades de passagem e deixando o arremate final para o aluno.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO mencionar o resultado final (gabarito) ou dizer qual alternativa (A, B, C, D, E) está certa."
                 ),
                 "aplicado_ml": (
-                    "- NÍVEL 4 (DESENVOLVIMENTO ANALÍTICO): Desenvolva os passos intermediários do cálculo, evidenciando propriedades "
-                    "de simetria, ortogonalidade ou simplificação matricial."
+                    "- NÍVEL 4 — DESTRAVAMENTO DO GARGALO (DESENVOLVIMENTO ANALÍTICO INTERMEDIÁRIO):\n"
+                    "  * Instrução: Desenvolva os passos intermediários do cálculo, evidenciando propriedades de simplificação ou ortogonalidade, parando exatamente antes da conclusão numérica.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO mencionar o resultado final (gabarito) ou dizer qual alternativa (A, B, C, D, E) está certa."
                 ),
                 "competitivo": (
-                    "- NÍVEL 4 (SIMPLIFICAÇÃO ÁGIL): Execute a simplificação dos coeficientes com atalhos operatórios seguros, "
-                    "deixando apenas o cálculo final do gabarito para o aluno fechar."
+                    "- NÍVEL 4 — DESTRAVAMENTO DO GARGALO (SIMPLIFICAÇÃO ÁGIL & PULO DO GATO):\n"
+                    "  * Instrução: Mostre a simplificação crítica intermediária que quebra a pegadinha da banca, mas pare antes da conta final. Deixe a última linha para o aluno fechar.\n"
+                    "  * Guardrail: É ESTRITAMENTE PROIBIDO mencionar o resultado final (gabarito) ou dizer qual alternativa (A, B, C, D, E) está certa."
                 ),
             },
             5: {
                 "conceitual": (
-                    f"- NÍVEL 5 (DEMONSTRAÇÃO INTEGRAL & SÍNTESE): Apresente a resolução completa passo a passo até o "
-                    f"gabarito oficial ({gabarito}), sintetizando a harmonia conceitual e o significado do resultado."
+                    f"- NÍVEL 5 — RESOLUÇÃO COMPLETA (RENDIÇÃO PEDAGÓGICA):\n"
+                    f"  * Instrução: Como o aluno desistiu da tentativa e solicitou o Nível 5, apresente a resolução completa, rigorosa, didática e passo a passo em LaTeX impecável ($...$ e $$...$$), destacando o Lema central utilizado e chegando claramente na resposta final ({gabarito}). Sintetize a harmonia conceitual e o significado do resultado."
                 ),
                 "rigor_formal": (
-                    f"- NÍVEL 5 (DEMONSTRAÇÃO AXIOMÁTICA COMPLETA): Apresente a demonstração rigorosa e integral passo a passo "
-                    f"até o gabarito oficial ({gabarito}), justificando formalmente cada passagem dedutiva."
+                    f"- NÍVEL 5 — RESOLUÇÃO COMPLETA (RENDIÇÃO PEDAGÓGICA - DEMONSTRAÇÃO AXIOMÁTICA):\n"
+                    f"  * Instrução: Como o aluno desistiu da tentativa e solicitou o Nível 5, apresente a demonstração rigorosa e integral passo a passo até o gabarito oficial ({gabarito}) em LaTeX impecável, justificando formalmente cada passagem dedutiva e o Lema central utilizado."
                 ),
                 "aplicado_ml": (
-                    f"- NÍVEL 5 (RESOLUÇÃO & PERSPECTIVA APLICADA): Apresente a dedução formal completa até o gabarito ({gabarito}), "
-                    f"comentando brevemente a relevância do método na modelagem matemática."
+                    f"- NÍVEL 5 — RESOLUÇÃO COMPLETA (RENDIÇÃO PEDAGÓGICA - PERSPECTIVA ANALÍTICA):\n"
+                    f"  * Instrução: Como o aluno desistiu da tentativa e solicitou o Nível 5, apresente a dedução formal completa em LaTeX impecável até o gabarito ({gabarito}), destacando o Lema central e comentando a relevância do método na modelagem matemática."
                 ),
                 "competitivo": (
-                    f"- NÍVEL 5 (RESOLUÇÃO EFICIENTE & CONFERÊNCIA): Apresente a resolução definitiva e limpa até o gabarito ({gabarito}), "
-                    f"acrescentando uma rápida conferência de coerência de prova (ex: análise dimensional ou caso particular)."
+                    f"- NÍVEL 5 — RESOLUÇÃO COMPLETA (RENDIÇÃO PEDAGÓGICA - RESOLUÇÃO DEFINITIVA & CONFERÊNCIA):\n"
+                    f"  * Instrução: Como o aluno desistiu da tentativa e solicitou o Nível 5, apresente a resolução definitiva, limpa e ágil até o gabarito ({gabarito}) em LaTeX impecável, destacando o Lema central e acrescentando uma rápida conferência de prova contra os distratores."
                 ),
             },
         }
@@ -186,11 +210,13 @@ class SocraticTutor:
                 + "\nAdapte o vocabulário, o tom didático e a motivação das reflexões socráticas para preparar o estudante diretamente para esse objetivo (ex: se o objetivo for docência/Licenciatura, destaque o rigor da justificativa didática; se for ITA/militar, destaque a disciplina dedutiva e a visão estratégica)."
             )
 
+        solucao_prompt = f"SOLUÇÃO OFICIAL DE REFERÊNCIA: {solucao}\n" if solucao else ""
         user_prompt = f"""Gere uma DICA SOCRÁTICA DE NÍVEL {level} DE 5 para a seguinte questão:
 
+MATÉRIA: {materia}
 TÓPICO: {topico}
 GABARITO OFICIAL: {gabarito}
-MODO PEDAGÓGICO: {pref}
+{solucao_prompt}MODO PEDAGÓGICO: {pref}
 ESTRATÉGIAS/LEMAS: {estrategias} {lemas}
 
 ENUNCIADO DA QUESTÃO:
@@ -239,32 +265,32 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
 
         fallback_by_pref = {
             "conceitual": {
-                1: f"💡 **Nível 1 (Simbologia, Intuição e Dados)**: Você identificou quais são os símbolos, conectivos e notações essenciais desta questão de **{topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos como $\\implies$). O que cada um deles expressa intuitivamente antes de calcular?",
-                2: f"💡 **Nível 2 (Primeiro Passo no Papel)**: Vamos começar a escrever no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **{topico}** (ex: comece com 'Seja $x \\in ...$' ou defina a variável principal).",
-                3: f"💡 **Nível 3 (Encadeamento Intermediário)**: Agora relacione a primeira hipótese ao próximo passo dedutivo. Que propriedade ou manipulação operatória de **{topico}** conecta o ponto de partida à tese pedida?",
-                4: f"💡 **Nível 4 (Pulo do Gato & Pegadinha)**: Atente para a simplificação crítica ou lema decisivo de **{topico}** que destrava a conclusão, cuidando para não cair em divisões por zero ou casos particulares.",
-                5: f"💡 **Nível 5 (Resolução Oficial Definitiva)**:\n\n{res_oficial}",
+                1: f"💡 **Nível 1 — Intuição & Leitura de Hipóteses (Intuição e Dados)**: Você identificou quais são os símbolos, conectivos e notações essenciais desta questão de **{topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos como $\\implies$). O que cada um deles expressa intuitivamente antes de calcular?",
+                2: f"💡 **Nível 2 — Identificação do Lema / Teorema Chave**: Qual teorema ou lema clássico conecta as grandezas dadas em **{topico}**? Como você enunciaria essa propriedade para os elementos do enunciado antes de armar as equações?",
+                3: f"💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar**: Vamos começar a escrever no rascunho! Escreva a primeira proposição formal ou equação inicial traduzindo as hipóteses de **{topico}** (ex: comece com 'Seja $x \\in ...$' ou trace o elemento auxiliar inicial).",
+                4: f"💡 **Nível 4 — Destravamento do Gargalo**: Atente para a relação intermediária crucial que resolve o gargalo em **{topico}**, deixando apenas a linha final de cálculo para você concluir.",
+                5: f"💡 **Nível 5 — Resolução Completa (Rendição Pedagógica)**:\n\n{res_oficial}",
             },
             "rigor_formal": {
-                1: f"💡 **Nível 1 (Simbologia, Hipóteses e Domínio)**: Identifique os quantificadores formais e notações de corpos/anéis envolvidos em **{topico}**. Como formalizar o domínio e as hipóteses do enunciado?",
-                2: f"💡 **Nível 2 (Primeiro Passo Axiomático)**: Escreva no papel a primeira linha da dedução formal: declare o elemento genérico 'Seja $x \\in \\mathbb{{R}}$...' e estabeleça a premissa $P(x)$.",
-                3: f"💡 **Nível 3 (Manipulação Dedutiva)**: Aplique a implicação lógica ou equivalência formal, explicitando cada axioma de passagem em **{topico}**.",
-                4: f"💡 **Nível 4 (Lema Decisivo & Restrições)**: Enuncie o lema fundamental ou critério de irredutibilidade/ortogonalidade que viabiliza o encadeamento conclusivo.",
-                5: f"💡 **Nível 5 (Demonstração Axiomática Completa)**:\n\n{res_oficial}",
+                1: f"💡 **Nível 1 — Intuição & Leitura de Hipóteses (Hipóteses e Domínio)**: Identifique os quantificadores formais e notações de corpos/anéis envolvidos em **{topico}**. Como formalizar o domínio e as hipóteses do enunciado?",
+                2: f"💡 **Nível 2 — Identificação do Lema / Teorema Chave (Teorema & Axioma)**: Enuncie o lema fundamental ou critério axiomático aplicável a **{topico}**, explicitando suas hipóteses necessárias.",
+                3: f"💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar (Primeiro Passo Axiomático)**: Escreva no papel a primeira linha da dedução formal: declare o elemento genérico 'Seja $x \\in \\mathbb{{R}}$...' e estabeleça a premissa $P(x)$.",
+                4: f"💡 **Nível 4 — Destravamento do Gargalo (Manipulação Dedutiva Intermediária)**: Desenvolva a implicação formal intermediária, explicitando cada axioma de passagem em **{topico}** antes do passo conclusivo.",
+                5: f"💡 **Nível 5 — Resolução Completa (Rendição Pedagógica - Demonstração Axiomática)**:\n\n{res_oficial}",
             },
             "aplicado_ml": {
-                1: f"💡 **Nível 1 (Notação Vetorial, Variáveis e Entradas)**: Mapeie as variáveis, entradas e matrizes do enunciado de **{topico}**, associando cada símbolo à sua dimensão e papel funcional no sistema.",
-                2: f"💡 **Nível 2 (Primeiro Passo da Modelagem)**: Escreva a formulação matemática inicial no papel, expressando a função objetivo ou relação analítica que modela as hipóteses.",
-                3: f"💡 **Nível 3 (Passos Intermediários do Cálculo)**: Desenvolva as operações analíticas intermediárias explorando propriedades de simetria, posto ou ortogonalidade.",
-                4: f"💡 **Nível 4 (Otimização & Pulo do Gato)**: Identifique o ponto crítico ou fatoração matricial que simplifica a solução sem perda de generalidade.",
-                5: f"💡 **Nível 5 (Resolução Analítica Completa)**:\n\n{res_oficial}",
+                1: f"💡 **Nível 1 — Intuição & Leitura de Hipóteses (Variáveis e Entradas)**: Mapeie as variáveis, entradas e matrizes do enunciado de **{topico}**, associando cada símbolo à sua dimensão e papel funcional no sistema.",
+                2: f"💡 **Nível 2 — Identificação do Lema / Teorema Chave (Princípio Analítico)**: Qual princípio estrutural (ex: ortogonalidade, convexidade, fatoração) viabiliza a solução computacional deste problema de **{topico}**?",
+                3: f"💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar (Modelagem Inicial)**: Escreva a formulação matemática inicial no papel, expressando a função objetivo ou relação analítica que modela as hipóteses.",
+                4: f"💡 **Nível 4 — Destravamento do Gargalo (Passos Intermediários do Cálculo)**: Desenvolva as operações analíticas intermediárias explorando propriedades de simetria ou posto, preparando o arremate.",
+                5: f"💡 **Nível 5 — Resolução Completa (Rendição Pedagógica - Perspectiva Analítica)**:\n\n{res_oficial}",
             },
             "competitivo": {
-                1: f"💡 **Nível 1 (Simbologia Crítica & Observação Crítica de Prova)**: Destaque a notação-chave e a restrição oculta do enunciado em **{topico}** que elimina de cara os caminhos prolixos.",
-                2: f"💡 **Nível 2 (Primeiro Passo Rápido no Rascunho)**: Escreva a primeira igualdade na forma mais simplificada e direta possível para ganhar tempo de prova.",
-                3: f"💡 **Nível 3 (Encadeamento Otimizado)**: Aplique o gatilho clássico da banca para avançar direto à relação dos coeficientes sem passos redundantes.",
-                4: f"💡 **Nível 4 (Pulo do Gato da Banca)**: Use o atalho de resolução que desmonta a questão e verifique rapidamente contra os distratores da prova.",
-                5: f"💡 **Nível 5 (Resolução Definitiva & Conferência)**:\n\n{res_oficial}",
+                1: f"💡 **Nível 1 — Intuição & Leitura de Hipóteses (Observação Crítica de Prova)**: Destaque a notação-chave e a restrição oculta do enunciado em **{topico}** que elimina de cara os caminhos prolixos.",
+                2: f"💡 **Nível 2 — Identificação do Lema / Teorema Chave (Gatilho da Banca)**: Identifique o lema estratégico da banca que desmonta a questão e verifique qual relação direta ele impõe aos termos.",
+                3: f"💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar (Largada Otimizada)**: Escreva a primeira igualdade na forma mais simplificada e direta possível para ganhar tempo de prova.",
+                4: f"💡 **Nível 4 — Destravamento do Gargalo (Pulo do Gato da Banca)**: Use o atalho de resolução que quebra a pegadinha e verifique rapidamente contra os distratores da prova.",
+                5: f"💡 **Nível 5 — Resolução Completa (Rendição Pedagógica - Resolução Definitiva)**:\n\n{res_oficial}",
             },
         }
 

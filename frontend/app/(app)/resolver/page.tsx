@@ -610,6 +610,8 @@ function ResolverContent() {
   };
 
   const handleSelectOption = (key: string) => {
+    // Bloqueia alteração/tentativa de acerto caso a questão já tenha sido rendida no Nível 5
+    if (hint5Used[currentIndex]) return;
     if (!isAuthenticated && !userLoading) {
       setShowAuthModal(true);
       return;
@@ -628,10 +630,15 @@ function ResolverContent() {
   };
 
   // Submissão da questão atual (apenas no Modo Treino)
-    const handleSubmitCurrent = async () => {
-      const q = questions[currentIndex];
-      const userAns = q ? answers[q.id] : undefined;
-      if (!q || !userAns) return;
+  const handleSubmitCurrent = async () => {
+    const q = questions[currentIndex];
+    const userAns = q ? answers[q.id] : undefined;
+    if (!q || !userAns || hint5Used[currentIndex]) return;
+
+    // Rastreamento telemetria de dicas socráticas utilizadas para responder
+    const qHints = hintsHistory[currentIndex] || [];
+    const usedHints = qHints.length > 0;
+    const maxHintLevel = usedHints ? Math.max(...qHints.map((h) => h.nivel)) : 0;
 
     setSubmitting(true);
     try {
@@ -643,8 +650,15 @@ function ResolverContent() {
           aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
           tempo_segundos: timeLeft,
           confianca: confianca[currentIndex] || 4,
-          estrategia_usada: estrategias[currentIndex] || null,
+          estrategia_usada: usedHints
+            ? (estrategias[currentIndex]
+                ? `${estrategias[currentIndex]} [Dica Socrática Nível ${maxHintLevel}]`
+                : `Dica Socrática Nível ${maxHintLevel}`)
+            : (estrategias[currentIndex] || null),
           anotacoes: justificativas[currentIndex] || null,
+          dica_socratica_usada: usedHints,
+          nivel_max_dica: maxHintLevel,
+          total_dicas_solicitadas: qHints.length,
         }),
       });
       const data = await res.json();
@@ -712,6 +726,7 @@ function ResolverContent() {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           enunciado: q.enunciado,
+          materia: q.materia || "Matemática",
           topico: q.topico || "Matemática",
           subtopico: q.subtopico || null,
           gabarito: q.gabarito || null,
@@ -759,21 +774,23 @@ function ResolverContent() {
           setHintLevels((prev) => ({ ...prev, [currentIndex]: 5 }));
         }
 
-        // Se a Dica 5 foi solicitada: penalidade pedagógica (computa como incorreta no SM-2)
+        // Se a Dica 5 foi solicitada: penalidade pedagógica imediata (computa como incorreta no SM-2)
         if (isLevel5Penalty || targetLevel === 5) {
           setHint5Used((prev) => ({ ...prev, [currentIndex]: true }));
+          setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
+          setAnswers((prev) => ({ ...prev, [q.id]: "DICA_5_REVELADA" }));
 
           const resOficial = q.solucao || q.gabarito || "Gabarito Oficial";
 
-          // 1. Marca tentativa de múltipla escolha como incorreta com nota 0
+          // 1. Marca tentativa como incorreta no estado da sessão com nota zero no SM-2
           setSubmitResults((prev) => ({
             ...prev,
             [currentIndex]: {
               acertou: false,
               gabarito: resOficial,
-              resposta_enviada: "Resolução Revelada (Dica 5)",
+              resposta_enviada: "Resolução Revelada (Dica 5 - Rendição)",
               sm2: {
-                repeticoes: 1,
+                repeticoes: 0,
                 fator_facilidade: 1.3,
                 intervalo_dias: 1,
                 proxima_revisao_data: new Date(Date.now() + 86400000).toISOString().split("T")[0],
@@ -781,22 +798,24 @@ function ResolverContent() {
             },
           }));
 
-          // 2. Se for questão discursiva, zera a pontuação e registra veredito incorreto
+          // 2. Registra veredito incorreto no estado discursivo
+          const evalIncorreto: DiscursiveEvaluationResult = {
+            veredito: "incorreto",
+            desenvolvimento_presente: false,
+            resultado_final_correto: false,
+            etapas_corretas: [],
+            erros_identificados: ["Resolução oficial revelada via 5ª Dica Socrática (Rendição Pedagógica)."],
+            feedback_latex: `\\text{Gabarito Oficial Revelado via 5ª Dica Socrática: } ${resOficial}`,
+            diagnostico: "Resolução oficial revelada via 5ª Dica Socrática. Tentativa computada como incorreta (Nota 0 / SM-2) para fixação pedagógica.",
+            precisa_revisao_humana: false,
+          };
           setDiscursiveEvaluations((prev) => ({
             ...prev,
-            [currentIndex]: {
-              veredito: "incorreto",
-              desenvolvimento_presente: false,
-              resultado_final_correto: false,
-              etapas_corretas: [],
-              erros_identificados: ["Resolução oficial revelada via 5ª Dica Socrática."],
-              feedback_latex: `\\text{Gabarito Oficial Revelado via 5ª Dica Socrática: } ${resOficial}`,
-              diagnostico: "Resolução oficial revelada via 5ª Dica Socrática. Tentativa computada como incorreta para consolidação via repetição espaçada.",
-              precisa_revisao_humana: false,
-            },
+            [q.id]: evalIncorreto,
+            [currentIndex]: evalIncorreto,
           }));
 
-          // 3. Persistência assíncrona da submissão no Postgres com qualidade de revisão zero
+          // 3. Persistência assíncrona da submissão no Postgres com qualidade de revisão zero e telemetria
           fetch(`/api/questions/${q.id}/submit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -805,8 +824,13 @@ function ResolverContent() {
               aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
               tempo_segundos: timeLeft,
               confianca: 1,
-              estrategia_usada: "Dica Socrática Nível 5 (Resolução Revelada)",
+              tipo_erro: "conceitual",
+              estrategia_usada: "Dica Socrática Nível 5 (Resolução Revelada / Rendição)",
               anotacoes: "Gabarito revelado via 5ª Dica Socrática. Tentativa zerada no SM-2.",
+              dica_socratica_usada: true,
+              nivel_max_dica: 5,
+              total_dicas_solicitadas: (hintsHistory[currentIndex]?.length || 0) + 1,
+              rendicao_nivel_5: true,
             }),
           }).catch((e) => console.warn("Erro ao registrar submissão de Dica 5:", e));
         }
@@ -839,6 +863,11 @@ function ResolverContent() {
   ) => {
     const q = questions[currentIndex];
     if (!q) return;
+
+    if (hint5Used[currentIndex]) {
+      alert("A resolução oficial desta questão já foi revelada (Nível 5). A questão já foi computada como incorreta.");
+      return;
+    }
 
     const geoCmds = geometricCommands[currentIndex] || [];
     let textoDeducao = overrideContent?.texto !== undefined ? overrideContent.texto : (justificativas[currentIndex] || "");
@@ -918,6 +947,11 @@ function ResolverContent() {
       // Tentativa Válida (aprovado, parcial, incorreto):
       setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
 
+      // Telemetria das dicas socráticas utilizadas até a submissão discursiva
+      const qHints = hintsHistory[currentIndex] || [];
+      const usedHints = qHints.length > 0;
+      const maxHintLevel = usedHints ? Math.max(...qHints.map((h) => h.nivel)) : 0;
+
       // Persistência em public.tentativas e revisao_espacada via API submit
       try {
         const submitRes = await fetch(`/api/questions/${q.id}/submit`, {
@@ -932,6 +966,9 @@ function ResolverContent() {
             confianca: confianca[currentIndex] || 4,
             estrategia_usada: `Discursiva (${origem})`,
             anotacoes: evalResult.feedback_latex,
+            dica_socratica_usada: usedHints,
+            nivel_max_dica: maxHintLevel,
+            total_dicas_solicitadas: qHints.length,
           }),
         });
         const submitData = await submitRes.json();
@@ -1113,7 +1150,7 @@ function ResolverContent() {
       alert("Erro ao enviar relatório: " + e.message);
     }
   };
-  // Contagens para o Simulado & Treino: objetivas respondidas + discursivas com veredito válido
+  // Contagens para o Simulado & Treino: objetivas respondidas + discursivas com veredito válido + rendição dica 5
   const respondidasCount = useMemo(() => {
     const answeredIds = new Set<number>();
     Object.keys(answers).forEach((idStr) => {
@@ -1126,8 +1163,15 @@ function ResolverContent() {
         answeredIds.add(qId);
       }
     });
+    Object.entries(hint5Used).forEach(([idxStr, used]) => {
+      if (used) {
+        const idx = parseInt(idxStr, 10);
+        const q = questions[idx];
+        if (q) answeredIds.add(q.id);
+      }
+    });
     return answeredIds.size;
-  }, [answers, discursiveEvaluations]);
+  }, [answers, discursiveEvaluations, hint5Used, questions]);
 
   if (loading) {
     return (
@@ -2088,16 +2132,23 @@ function ResolverContent() {
             {visibleQuestionIndices.map((qIndex) => {
               const isCurrent = qIndex === currentIndex;
               const qObj = questions[qIndex];
+              const isHint5 = !!hint5Used[qIndex];
               const discursiveEval = qObj ? discursiveEvaluations[qObj.id] : undefined;
               const hasDiscursiveValida = discursiveEval && discursiveEval.veredito !== "sem_desenvolvimento" && !discursiveEval.precisa_revisao_humana;
               const isObjAnswered = qObj && answers[qObj.id] !== undefined;
-              const isAnswered = hasDiscursiveValida || isObjAnswered || answeredIndices.has(qIndex);
+              const isAnswered = isHint5 || hasDiscursiveValida || isObjAnswered || answeredIndices.has(qIndex);
               const isBookmarked = qObj && bookmarks.has(qObj.id);
 
               let buttonColorClass = "bg-slate-100 dark:bg-[#1b172e] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
               let dotColorClass = "bg-emerald-500";
 
-              if (isCurrent) {
+              if (isHint5) {
+                // Rendição pedagógica no Nível 5: pinta o número da questão na barra de Vermelho
+                buttonColorClass = isCurrent
+                  ? "bg-rose-600 border-2 border-rose-400 text-white font-extrabold shadow-md scale-105 z-10"
+                  : "bg-rose-500/20 border border-rose-500/60 text-rose-800 dark:text-rose-300 hover:bg-rose-500/30 font-extrabold";
+                dotColorClass = "bg-rose-500";
+              } else if (isCurrent) {
                 buttonColorClass = "lemmas-gold-cta shadow-md scale-105 z-10";
               } else if (discursiveEval && !discursiveEval.precisa_revisao_humana) {
                 if (discursiveEval.veredito === "aprovado") {
@@ -2117,7 +2168,9 @@ function ResolverContent() {
                 buttonColorClass = "bg-emerald-500/20 border border-emerald-500/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/30 font-extrabold";
               }
 
-              const statusTitle = discursiveEval
+              const statusTitle = isHint5
+                ? " (Errou / Rendição no Nível 5)"
+                : discursiveEval
                 ? ` (Discursiva: ${discursiveEval.veredito})`
                 : isAnswered
                 ? " (Respondida)"
@@ -2131,10 +2184,13 @@ function ResolverContent() {
                   title={`Questão ${qIndex + 1}${statusTitle}${isBookmarked ? " [Marcada]" : ""}`}
                 >
                   {qIndex + 1}
-                  {isAnswered && !isCurrent && hasDiscursiveValida && (
+                  {isHint5 && (
+                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-rose-500 shadow-xs" />
+                  )}
+                  {!isHint5 && isAnswered && !isCurrent && hasDiscursiveValida && (
                     <span className={`absolute -bottom-0.5 w-1.5 h-1.5 rounded-full ${dotColorClass} shadow-xs`} />
                   )}
-                  {isAnswered && !isCurrent && !discursiveEval && (
+                  {!isHint5 && isAnswered && !isCurrent && !discursiveEval && (
                     <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
                   )}
                   {isBookmarked && (
@@ -2509,13 +2565,13 @@ function ResolverContent() {
                 return (
                   <button
                     key={key}
-                    disabled={!isSimuladoAtivo && currentResult !== undefined}
+                    disabled={(!isSimuladoAtivo && currentResult !== undefined) || !!hint5Used[currentIndex]}
                     onClick={() => handleSelectOption(key)}
                     className={`w-full text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all ${
                       isSelected
                         ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df] ring-2 ring-amber-500/40"
                         : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300 hover:border-amber-500/40"
-                    }`}
+                    } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div
@@ -2528,7 +2584,7 @@ function ResolverContent() {
                         {key}
                       </div>
                       <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
-                        {isSelected ? "Selecionada" : "Clique para assinalar"}
+                        {hint5Used[currentIndex] ? "Bloqueada (Rendição Nível 5)" : isSelected ? "Selecionada" : "Clique para assinalar"}
                       </span>
                     </div>
                     <div className="w-full flex items-center justify-center p-2 rounded-xl bg-white dark:bg-stone-900 border border-slate-200/80 dark:border-stone-800">
@@ -2546,13 +2602,13 @@ function ResolverContent() {
                 return (
                   <button
                     key={key}
-                    disabled={!isSimuladoAtivo && currentResult !== undefined}
+                    disabled={(!isSimuladoAtivo && currentResult !== undefined) || !!hint5Used[currentIndex]}
                     onClick={() => handleSelectOption(key)}
                     className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
                       isSelected
                         ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df]"
                         : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-amber-500/30"
-                    }`}
+                    } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
@@ -2717,12 +2773,12 @@ function ResolverContent() {
         )}
 
         {/* MODO TREINO: BOTÃO DE CONFIRMAR RESPOSTA */}
-                {!isSimuladoAtivo && !currentResult && currentQ && answers[currentQ.id] && (
+        {!isSimuladoAtivo && !currentResult && currentQ && answers[currentQ.id] && !hint5Used[currentIndex] && (
           <div className="pt-2">
             <button
               onClick={handleSubmitCurrent}
               disabled={submitting}
-              className="lemmas-gold-cta px-6 py-2.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2"
+              className="lemmas-gold-cta px-6 py-2.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               <span>Confirmar Dedução & Atualizar SM-2</span>
@@ -2741,39 +2797,124 @@ function ResolverContent() {
         </div>
       ) : (
         <>
-          {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO) */}
+          {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO COM ESCADA PÓLYA DE 5 NÍVEIS) */}
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500" />
                 <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
-                  Tutor Socrático Adaptativo (MathAI Engine)
+                  Tutor Socrático Adaptativo (Método Pólya · MathAI Engine)
                 </h4>
               </div>
-              <button
-                onClick={pedirDicaSocratica}
-                disabled={loadingHint || !!hint5Used[currentIndex]}
-                className={`flex items-center gap-1.5 text-xs font-semibold rounded-lg px-2.5 py-1.5 transition ${
-                  hint5Used[currentIndex]
-                    ? "bg-zinc-800/50 text-zinc-500 cursor-not-allowed border border-zinc-700/50"
-                    : currentHintLevel === 5
-                    ? "bg-amber-500/15 border border-amber-500 text-amber-600 dark:text-[#d9b452] hover:bg-amber-500/25 animate-pulse cursor-pointer font-bold"
-                    : "text-amber-600 dark:text-[#d9b452] hover:bg-amber-500/10 cursor-pointer"
-                }`}
-              >
-                {loadingHint ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {hint5Used[currentIndex]
-                    ? "Resolução Oficial Revelada (Nível 5)"
-                    : currentHintLevel === 5
-                    ? "🔓 Revelar Resolução Oficial (Dica 5 - Penalidade)"
-                    : `Solicitar Dica Socrática (Nível ${currentHintLevel})`}
-                </span>
-              </button>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                5 Níveis Maiêuticos
+              </span>
+            </div>
+
+            {/* ESCADA MAIÊUTICA DE 5 NÍVEIS (PÓLYA) */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {[
+                { nivel: 1, label: "Nível 1", sublabel: "Intuição", fullTitle: "Intuição & Hipóteses", icon: "🧠" },
+                { nivel: 2, label: "Nível 2", sublabel: "Lema", fullTitle: "Lema & Teorema Chave", icon: "📐" },
+                { nivel: 3, label: "Nível 3", sublabel: "Partida", fullTitle: "O Primeiro Passo", icon: "✏️" },
+                { nivel: 4, label: "Nível 4", sublabel: "Destravamento", fullTitle: "Quase lá (Gargalo)", icon: "⚡" },
+                { nivel: 5, label: "Nível 5", sublabel: "Resolução", fullTitle: "Resolução Completa", icon: "🔓" },
+              ].map((step) => {
+                const isUnlocked = hintsHistory[currentIndex]?.some((h) => h.nivel === step.nivel);
+                const isCurrent = !hint5Used[currentIndex] && currentHintLevel === step.nivel;
+                const isSurrendered = step.nivel === 5 && hint5Used[currentIndex];
+
+                return (
+                  <div
+                    key={step.nivel}
+                    className={`relative p-2.5 rounded-xl border text-center transition-all ${
+                      isSurrendered
+                        ? "bg-rose-500/15 border-rose-500/50 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500/40"
+                        : isUnlocked
+                        ? "bg-purple-500/15 border-purple-500/35 text-purple-700 dark:text-purple-300 font-medium"
+                        : isCurrent
+                        ? "bg-amber-500/15 border-amber-500 text-amber-800 dark:text-amber-200 ring-2 ring-amber-500/30 font-bold"
+                        : "bg-slate-50/50 dark:bg-[#18152a]/60 border-slate-200/60 dark:border-zinc-800/60 text-slate-400 dark:text-zinc-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                        {step.label}
+                      </span>
+                      <span className="text-xs">
+                        {isSurrendered ? "❌" : isUnlocked ? "✅" : isCurrent ? "👉" : "🔒"}
+                      </span>
+                    </div>
+                    <div className="text-[11px] font-semibold truncate" title={step.fullTitle}>
+                      {step.sublabel}
+                    </div>
+                    {step.nivel === 5 && (
+                      <div className="mt-1 text-[9px] font-extrabold text-rose-500 dark:text-rose-400 leading-none">
+                        Penaliza SM-2
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* BOTÕES DE AÇÃO E DISPARO DE DICA */}
+            <div className="pt-1">
+              {hint5Used[currentIndex] ? (
+                <div className="w-full p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>Resolução Oficial Revelada (Nível 5 — Questão computada como incorreta no SM-2)</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-600 text-white shrink-0">
+                    Bloqueada
+                  </span>
+                </div>
+              ) : currentHintLevel === 5 ? (
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border-2 border-rose-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-xs text-rose-800 dark:text-rose-200 leading-tight">
+                    <strong className="block text-rose-600 dark:text-rose-400 font-bold mb-0.5">Aviso Pedagógico:</strong>
+                    Você concluiu as 4 dicas investigativas. O Nível 5 revelará a resolução oficial completa passo a passo e computará erro na questão.
+                  </div>
+                  <button
+                    onClick={pedirDicaSocratica}
+                    disabled={loadingHint}
+                    className="w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+                  >
+                    {loadingHint ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                    <span>⚠️ Ver Resolução Completa (Nível 5 — Contabiliza Questão como Errada)</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <button
+                    onClick={pedirDicaSocratica}
+                    disabled={loadingHint}
+                    className="flex items-center gap-2 text-xs font-bold rounded-xl px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500 text-amber-700 dark:text-[#d9b452] shadow-xs transition cursor-pointer"
+                  >
+                    {loadingHint ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                    )}
+                    <span>
+                      💡 Solicitar Dica Socrática (Nível {currentHintLevel}: {
+                        currentHintLevel === 1 ? "Intuição" : currentHintLevel === 2 ? "Lema Chave" : currentHintLevel === 3 ? "Primeiro Passo" : "Destravamento"
+                      })
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowHint5ConfirmModal(true)}
+                    disabled={loadingHint}
+                    className="text-xs text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition cursor-pointer py-1"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500/80" />
+                    <span>Pular para Nível 5 (Desistir & Ver Resolução)</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {hintError && (
@@ -2817,18 +2958,18 @@ function ResolverContent() {
               <div className="space-y-3">
                 {hintsHistory[currentIndex].map((item, idx) => {
                   const nivelTitulos: Record<number, string> = {
-                    1: "Nível 1 · Simbologia & Notação",
-                    2: "Nível 2 · Primeiro Passo no Papel",
-                    3: "Nível 3 · Encadeamento Intermediário",
-                    4: "Nível 4 · Pulo do Gato & Pegadinha",
-                    5: "Nível 5 · Resolução Oficial Definitiva",
+                    1: "Nível 1: Intuição · Leitura de Hipóteses",
+                    2: "Nível 2: Lema · Teorema Chave",
+                    3: "Nível 3: Partida · O Primeiro Passo",
+                    4: "Nível 4: Destravamento · Quase lá (Gargalo)",
+                    5: "Nível 5: Resolução Completa · Rendição Pedagógica",
                   };
                   return (
                     <div
                       key={idx}
                       className={`p-4 rounded-xl border text-xs leading-relaxed space-y-2.5 animate-fadeIn ${
                         item.nivel === 5
-                          ? "bg-amber-500/10 border-amber-500/30 text-slate-900 dark:text-[#f5f0df]"
+                          ? "bg-rose-500/10 border-rose-500/30 text-slate-900 dark:text-[#f5f0df]"
                           : "bg-purple-500/10 border-purple-500/25 text-slate-800 dark:text-[#f5f0df]"
                       }`}
                     >
@@ -2836,11 +2977,11 @@ function ResolverContent() {
                         <div className="flex items-center gap-2">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase text-white shadow-xs ${
-                              item.nivel === 5 ? "bg-amber-600 font-bold" : "bg-purple-600"
+                              item.nivel === 5 ? "bg-rose-600 font-bold" : "bg-purple-600"
                             }`}
                           >
                             <Sparkles className="w-3 h-3" />
-                            {item.nivel === 5 ? "[GABARITO OFICIAL]" : "[INFERÊNCIA DA IA]"}
+                            {item.nivel === 5 ? "[RESOLUÇÃO OFICIAL]" : "[INFERÊNCIA DA IA]"}
                           </span>
                           <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
                             {nivelTitulos[item.nivel] || `Nível ${item.nivel}`}
@@ -2907,40 +3048,48 @@ function ResolverContent() {
 
       {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (REVELA GABARITO & MARCA INCORRETO) */}
       {showHint5ConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[#141222] border border-amber-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#151224] border-2 border-rose-500/50 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 ring-1 ring-rose-500/30">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+              <div className="p-3 rounded-xl bg-rose-500/15 text-rose-500 shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 font-serif-math">
-                  Revelar Resolução Oficial e Gabarito?
+                  Rendição Pedagógica · Revelar Nível 5?
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                  A <strong>5ª Dica Socrática</strong> apresentará a resolução oficial completa passo a passo e o gabarito definitivo desta questão.
+                  A <strong>Dica de Nível 5</strong> fornecerá a resolução oficial completa passo a passo, o lema determinante e o gabarito definitivo da questão.
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
-              ⚠️ <strong>Regra de Integridade Pedagógica:</strong> Ao solicitar esta dica, esta tentativa será <strong>computada como incorreta (nota zero no algoritmo de repetição espaçada SM-2)</strong> para registrar que o exercício precisará de revisão futura.
+            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2 text-xs text-rose-800 dark:text-rose-200 leading-relaxed">
+              <strong className="block font-bold text-rose-600 dark:text-rose-400">
+                ⚠️ Consequências Pedagógicas Imediatas da Rendição:
+              </strong>
+              <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                <li>A questão será computada imediatamente como <strong>ERRADA</strong> (marcada em vermelho no topo).</li>
+                <li>O contador de questões respondidas será incrementado automaticamente.</li>
+                <li>O envio de alternativas ou nova dedução será <strong>permanentemente bloqueado</strong> nesta questão.</li>
+                <li>O algoritmo SM-2 registrará penalidade máxima (repetições zeradas, intervalo diário de revisão).</li>
+              </ul>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
               <button
                 type="button"
                 onClick={() => setShowHint5ConfirmModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer text-center"
               >
-                Cancelar (Tentar Sozinho)
+                Cancelar (Continuar Tentando)
               </button>
               <button
                 type="button"
                 onClick={confirmarEDesbloquearDica5}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Sim, Revelar Resolução Oficial</span>
+                <span>⚠️ Confirmar Rendição & Ver Resolução</span>
               </button>
             </div>
           </div>
