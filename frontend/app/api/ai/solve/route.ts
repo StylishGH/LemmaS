@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
+import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
-const PROMPT_SISTEMA_AVALIADOR = `Você é o Avaliador Cognitivo de Resoluções Matemáticas do LEMMAS (MathAI Engine), especializado em avaliação passo a passo de exercícios e exames de alto nível (IME, ITA, EsPCEx, AFA, EFOMM, OBM, ENEM).
+const PROMPT_SISTEMA_AVALIADOR = `Você é o Avaliador Cognitivo e Tutor de Resoluções Matemáticas do LEMMAS (MathAI Engine), especializado em avaliação passo a passo e resolução axiomática de alto nível (IME, ITA, EsPCEx, AFA, EFOMM, OBM, ENEM).
 
 PRINCÍPIO EPISTÊMICO FUNDAMENTAL: EVIDÊNCIA ANTES DE INFERÊNCIA
 - Avalie o desenvolvimento matemático a partir do encadeamento lógico de passos, e NÃO apenas pela resposta final.
@@ -30,6 +31,7 @@ REGRAS MANDATÓRIAS DE LATEX E FORMATAÇÃO:
 - Em TODOS os campos de texto do JSON ("feedback_latex", "diagnostico", "dica_proximo_passo", "transcricao_latex", "etapas_corretas", "erros_identificados"), toda e qualquer expressão, equação, símbolo ou variável matemática DEVE estar rigorosamente delimitada por $...$ (inline) ou $$...$$ (bloco destacado).
 - NUNCA use \\( ou \\[. Use sempre $ e $$.
 - Em português brasileiro: \\sen para seno e \\tg para tangente.
+- IMPORTANTE: No JSON de resposta, escape barras invertidas de comandos LaTeX como \\\\ (ex: \\\\forall, \\\\in, \\\\frac, \\\\to) para manter conformidade com JSON válido.
 
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
 {
@@ -44,10 +46,10 @@ FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
   "passos": ["Passo 1: ...", "Passo 2: ..."],
   "estrategia_identificada": "nome da estratégia observada",
   "status_resolucao": "correto | erro_conta_sinal | erro_algebraico | erro_conceitual | erro_interpretacao | incompleto",
-  "diagnostico": "parecer pedagógico explicando como o estudante pensou e onde ocorreu a falha, com equações em $...$",
+  "diagnostico": "parecer pedagógico explicando como o estudante pensou e onde ocorreu a falha, ou demonstração passo a passo completa da questão com equações em $...$",
   "metodo_alternativo": "método alternativo ou null",
   "linha_do_erro": "descrição exata da linha ou passagem onde surgiu o erro com expressões em $...$, ou null se correto",
-  "dica_proximo_passo": "pergunta socrática que faça o estudante pensar por conta própria, com equações em $...$",
+  "dica_proximo_passo": "lema fundamental, princípio determinante ou pergunta reflexiva com equações em $...$",
   "confianca_diagnostico": "alta | media | baixa"
 }`;
 
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
   try {
     const authorization = req.headers.get("authorization");
     const body = await req.json();
-    const { enunciado, gabarito, justificativa, imagem_base64 } = body;
+    const { enunciado, gabarito, justificativa, imagem_base64, modo } = body;
     if (!enunciado || typeof enunciado !== "string") {
       return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
     }
@@ -73,7 +75,13 @@ export async function POST(req: NextRequest) {
     const rawJustificativa = (justificativa || "").trim();
     const hasImage = Boolean(cleanImage);
 
-    // Validação de entrada sem desenvolvimento matemático (Apenas resposta final)
+    // Detecta se a chamada é um pedido de explicação/resolução passo a passo
+    const isExplanation = Boolean(
+      modo === "explicar" ||
+      /expli(?:que|cação)|resolução axiomática|passo a passo completo/i.test(rawJustificativa)
+    );
+
+    // Validação de entrada sem desenvolvimento matemático (Apenas resposta final no modo avaliação)
     const isSingleFinalAnswer = [
       /^\s*\(?[a-eA-E]\)?\s*$/,
       /^\s*(?:resposta|gabarito|letra|opção|opcao)?\s*(?:é|e|:)?\s*\(?[a-eA-E]\)?\s*$/i,
@@ -83,7 +91,7 @@ export async function POST(req: NextRequest) {
       /^\s*(?:acho que é|deu|resultado final:?|afirmo que)\s*.*$/i,
     ].some((p) => p.test(rawJustificativa));
 
-    if (!hasImage && (!rawJustificativa || isSingleFinalAnswer)) {
+    if (!isExplanation && !hasImage && (!rawJustificativa || isSingleFinalAnswer)) {
       return NextResponse.json({
         veredito: "sem_desenvolvimento",
         desenvolvimento_presente: false,
@@ -102,61 +110,83 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1. Tenta o Backend FastAPI (tolerância ágil de 3.5s para evitar congelamento por cold-start)
-    try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authorization?.startsWith("Bearer ")) {
-        headers["Authorization"] = authorization;
-      }
-
-      const response = await fetch(BACKEND_URL + "/api/tutor/evaluate", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          enunciado,
-          gabarito: gabarito || "",
-          justificativa_texto: justificativa || "",
-          imagem_base64: cleanImage,
-          mime_type: mimeType,
-        }),
-        signal: AbortSignal.timeout(3500),
-        cache: "no-store",
-      });
-
-      if (response.ok) {
-        const raw = await response.text();
-        let data: Record<string, any>;
-        try {
-          data = JSON.parse(raw);
-        } catch {
-          data = { detail: raw.slice(0, 500) };
+    // 1. No modo de avaliação, tenta o Backend FastAPI (tolerância ágil de 3.5s para evitar congelamento por cold-start)
+    if (!isExplanation) {
+      try {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (authorization?.startsWith("Bearer ")) {
+          headers["Authorization"] = authorization;
         }
-        if (data.veredito || data.status_resolucao) {
-          const rawVeredito = data.veredito || (data.status_resolucao === "correto" ? "aprovado" : data.status_resolucao === "erro_conta_sinal" ? "parcial" : "incorreto");
-          return NextResponse.json({
-            ...data,
-            veredito: rawVeredito,
-            desenvolvimento_presente: data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
-            resultado_final_correto: data.resultado_final_correto ?? (rawVeredito === "aprovado"),
-            etapas_corretas: data.etapas_corretas || data.passos || [],
-            erros_identificados: data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
-            feedback_latex: data.feedback_latex || data.diagnostico || "Avaliação discursiva concluída com sucesso.",
-            precisa_revisao_humana: Boolean(data.precisa_revisao_humana),
-            status_resolucao: data.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto"),
-            diagnostico: data.diagnostico || data.feedback_latex || "Não foi possível produzir um diagnóstico detalhado.",
-            modelo: data.model_name || "MathAI Engine",
-            provedor: data.model_provider || "fastapi-backend",
-            confianca: data.confianca_diagnostico || "alta",
-          });
+
+        const response = await fetch(BACKEND_URL + "/api/tutor/evaluate", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            enunciado,
+            gabarito: gabarito || "",
+            justificativa_texto: justificativa || "",
+            imagem_base64: cleanImage,
+            mime_type: mimeType,
+          }),
+          signal: AbortSignal.timeout(3500),
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const raw = await response.text();
+          let data: Record<string, any>;
+          try {
+            data = safeParseJsonWithLatex(raw);
+          } catch {
+            data = { detail: raw.slice(0, 500) };
+          }
+          if (data.veredito || data.status_resolucao) {
+            const rawVeredito = data.veredito || (data.status_resolucao === "correto" ? "aprovado" : data.status_resolucao === "erro_conta_sinal" ? "parcial" : "incorreto");
+            return NextResponse.json({
+              ...data,
+              veredito: rawVeredito,
+              desenvolvimento_presente: data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
+              resultado_final_correto: data.resultado_final_correto ?? (rawVeredito === "aprovado"),
+              etapas_corretas: data.etapas_corretas || data.passos || [],
+              erros_identificados: data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
+              feedback_latex: data.feedback_latex || data.diagnostico || "Avaliação discursiva concluída com sucesso.",
+              precisa_revisao_humana: Boolean(data.precisa_revisao_humana),
+              status_resolucao: data.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto"),
+              diagnostico: data.diagnostico || data.feedback_latex || "Não foi possível produzir um diagnóstico detalhado.",
+              modelo: data.model_name || "MathAI Engine",
+              provedor: data.model_provider || "fastapi-backend",
+              confianca: data.confianca_diagnostico || "alta",
+            });
+          }
         }
+      } catch {
+        // Backend em cold-start ou offline; aciona inferência multimodal Gemini
       }
-    } catch {
-      // Backend em cold-start ou offline; aciona inferência multimodal Gemini
     }
 
     // 2. Inferência de Alta Precisão via Gemini REST API (Multimodal com OCR e KaTeX)
     try {
-      const prompt = `Analise detalhadamente a resolução do estudante para a seguinte questão:
+      const prompt = isExplanation
+        ? `Você é o Professor e Tutor de Matemática do LEMMAS (MathAI Engine).
+Apresente a resolução comentada detalhada e explicação axiomática passo a passo para a seguinte questão:
+
+ENUNCIADO DA QUESTÃO:
+${enunciado}
+
+GABARITO OFICIAL:
+${gabarito || "Não informado"}
+
+CONTEXTO / DÚVIDA DO ESTUDANTE:
+${rawJustificativa}
+
+INSTRUÇÕES PEDAGÓGICAS E FORMATAÇÃO:
+1. No campo "diagnostico": Demonstração axiomática completa passo a passo, clara e didática. TODAS as expressões, variáveis ou equações DEVEM estar rigorosamente delimitadas por $...$ ou $$...$$.
+2. No campo "dica_proximo_passo": Lema fundamental, teorema ou princípio teórico determinante aplicado na questão.
+3. No campo "erros_identificados": Análise pedagógica do distrator ou pegadinha da alternativa assinalada pelo estudante, demonstrando por que ela está incorreta ou induz ao erro.
+4. No campo "feedback_latex": Resumo conceitual intuitivo da questão e do método de resolução.
+5. No campo "passos" / "etapas_corretas": As 3 a 5 etapas essenciais da resolução.
+6. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`
+        : `Analise detalhadamente a resolução do estudante para a seguinte questão:
 
 ENUNCIADO DA QUESTÃO:
 ${enunciado}
@@ -190,22 +220,25 @@ INSTRUÇÕES:
         timeoutMs: 14000,
       });
 
-      const parsed = JSON.parse(geminiRes.text);
-      if (parsed && (parsed.veredito || parsed.status_resolucao)) {
-        const rawVeredito = parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto");
+      const parsed = safeParseJsonWithLatex(geminiRes.text);
+      if (parsed) {
+        const rawVeredito = isExplanation
+          ? "aprovado"
+          : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
+
         return NextResponse.json({
           veredito: rawVeredito,
-          desenvolvimento_presente: parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
-          resultado_final_correto: parsed.resultado_final_correto ?? (rawVeredito === "aprovado"),
+          desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
+          resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
           etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
           erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
-          feedback_latex: parsed.feedback_latex || parsed.diagnostico || "Avaliação matemática concluída com sucesso.",
-          precisa_revisao_humana: Boolean(parsed.precisa_revisao_humana),
+          feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine." : "Avaliação matemática concluída com sucesso."),
+          precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
           transcricao_latex: parsed.transcricao_latex || "",
           passos: parsed.passos || parsed.etapas_corretas || [],
-          estrategia_identificada: parsed.estrategia_identificada || "Raciocínio Analítico",
-          status_resolucao: parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto"),
-          diagnostico: parsed.diagnostico || parsed.feedback_latex || "Procedimento analisado pela MathAI Engine.",
+          estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
+          status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
+          diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine.",
           metodo_alternativo: parsed.metodo_alternativo || null,
           linha_do_erro: parsed.linha_do_erro || null,
           dica_proximo_passo: parsed.dica_proximo_passo || null,
@@ -218,15 +251,38 @@ INSTRUÇÕES:
       console.warn("[Avaliador Cognitivo] Fallback Gemini falhou:", geminiErr);
     }
 
-    // 3. Fallback Determinístico Pedagógico (Uptime 100% garantido)
+    // 3. Fallback Determinístico Pedagógico (Uptime 100% garantido com DISCURSIVE-VERDICT)
+    if (isExplanation) {
+      return NextResponse.json({
+        veredito: "aprovado",
+        desenvolvimento_presente: true,
+        resultado_final_correto: true,
+        etapas_corretas: ["1. Identificação do enunciado e hipóteses.", "2. Aplicação das propriedades fundamentais."],
+        erros_identificados: [],
+        feedback_latex: `Gabarito oficial de referência: $${gabarito || "Ver enunciado"}$. Consulte a fundamentação teórica para conferir cada passagem.`,
+        precisa_revisao_humana: false,
+        transcricao_latex: rawJustificativa,
+        passos: ["1. Análise axiomática das condições iniciais."],
+        estrategia_identificada: "Dedução Teórica",
+        status_resolucao: "correto",
+        diagnostico: `Resolução da questão: O gabarito oficial é $${gabarito || "indicado no enunciado"}$. Revise as definições conceituais e os lemas fundamentais associados a este tópico.`,
+        metodo_alternativo: null,
+        linha_do_erro: null,
+        dica_proximo_passo: "Identifique as hipóteses explícitas do enunciado e utilize o lema da matéria correspondente.",
+        confianca_diagnostico: "media",
+        modelo: "LEMMAS Core Determinístico",
+        provedor: "lemmas-contingency",
+      });
+    }
+
     return NextResponse.json({
-      veredito: "parcial",
+      veredito: "inconclusivo",
       desenvolvimento_presente: true,
       resultado_final_correto: false,
       etapas_corretas: ["1. Registro das etapas iniciais da resolução."],
       erros_identificados: [],
       feedback_latex: "Seu desenvolvimento foi recebido pela MathAI Engine. Revise as deduções intermediárias em LaTeX e a consistência das hipóteses do problema.",
-      precisa_revisao_humana: false,
+      precisa_revisao_humana: true,
       transcricao_latex: rawJustificativa,
       passos: ["1. Análise do raciocínio matemático."],
       estrategia_identificada: "Dedução Analítica",

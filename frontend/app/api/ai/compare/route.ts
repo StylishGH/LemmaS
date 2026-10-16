@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
@@ -175,7 +176,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
         timeoutMs: 12000,
       });
 
-      const parsed = JSON.parse(geminiRes.text);
+      const parsed = safeParseJsonWithLatex(geminiRes.text);
       if (parsed.model_a && parsed.model_b) {
         return NextResponse.json({
           model_a: parsed.model_a,
