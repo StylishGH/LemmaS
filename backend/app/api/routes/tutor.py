@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.api.routes.auth import get_current_student
 from app.api.routes.exercises import _EXERCISES_STORE
@@ -27,6 +27,27 @@ class SocraticHintRequest(BaseModel):
     gabarito: Optional[str] = Field("", description="Gabarito oficial")
     estrategias_esperadas: List[str] = Field(default_factory=list)
     level: int = Field(default=1, ge=1, le=5, description="Nível de 1 a 5 da dica socrática")
+    pedagogical_preference: Optional[str] = Field(
+        default="conceitual",
+        description="Preferência pedagógica: conceitual, rigor_formal, aplicado_ml, competitivo"
+    )
+    pedagogicalPreference: Optional[str] = None
+    foco_concurso: Optional[str] = Field(None, description="Banca ou concurso alvo do aluno, ex: ITA, IME, ESA")
+    motivacoes: Optional[List[str]] = Field(default_factory=list, description="Motivações do aluno, ex: superior_docencia, data_science_ml")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_preference(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            raw = data.get("pedagogical_preference") or data.get("pedagogicalPreference")
+            allowed = {"conceitual", "rigor_formal", "aplicado_ml", "competitivo"}
+            if raw and str(raw).strip().lower() in allowed:
+                val = str(raw).strip().lower()
+            else:
+                val = "conceitual"
+            data["pedagogical_preference"] = val
+            data["pedagogicalPreference"] = val
+        return data
 
 
 class SocraticHintResponse(BaseModel):
@@ -98,7 +119,13 @@ def get_socratic_hint(
             "estrategias_esperadas": payload.estrategias_esperadas,
         }
 
-    hint_result = socratic_tutor.generate_hint(exercise_dict, level=payload.level)
+    hint_result = socratic_tutor.generate_hint(
+        exercise_dict,
+        level=payload.level,
+        pedagogical_preference=payload.pedagogical_preference,
+        foco_concurso=payload.foco_concurso,
+        motivacoes=payload.motivacoes,
+    )
 
     return SocraticHintResponse(
         level=hint_result["level"],
@@ -150,20 +177,24 @@ def evaluate_resolution(
 
     # 2. Se houver imagem anexada, processa OCR primeiro
     ocr_transcription = None
+    ocr_legibility = None
     if payload.imagem_base64:
         ocr_res = vision_processor.process_image(
             image_data=payload.imagem_base64,
             mime_type=payload.mime_type,
         )
         ocr_transcription = ocr_res.get("transcricao_latex", "")
+        ocr_legibility = ocr_res.get("legibilidade")
 
     # 3. Executa a avaliação cognitiva
-    student_text = payload.justificativa_texto or "Nenhuma justificativa em texto fornecida."
+    student_text = payload.justificativa_texto or ""
     eval_result = cognitive_evaluator.evaluate_attempt(
         exercise=exercise_dict,
         student_input=student_text,
         input_type="multimodal" if payload.imagem_base64 else "text",
         transcription_latex=ocr_transcription,
+        ocr_legibility=ocr_legibility,
+        has_image=bool(payload.imagem_base64),
     )
 
     return AiEvaluationResponse(
@@ -183,6 +214,13 @@ def evaluate_resolution(
         linha_do_erro=eval_result.get("linha_do_erro"),
         dica_proximo_passo=eval_result.get("dica_proximo_passo"),
         confianca_diagnostico=eval_result.get("confianca_diagnostico", "media"),
+        veredito=eval_result.get("veredito", "incorreto"),
+        desenvolvimento_presente=eval_result.get("desenvolvimento_presente", False),
+        resultado_final_correto=eval_result.get("resultado_final_correto", False),
+        etapas_corretas=eval_result.get("etapas_corretas", []),
+        erros_identificados=eval_result.get("erros_identificados", []),
+        feedback_latex=eval_result.get("feedback_latex", ""),
+        precisa_revisao_humana=eval_result.get("precisa_revisao_humana", False),
         created_at=datetime.now(timezone.utc),
     )
 
@@ -269,9 +307,14 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
 
     system_instruction = (
         "Você é o motor de Metacognição e Comparação de Lemas do LemmaS.\n"
+        "REGRAS ESTRITAS DE LATEX E FORMATAÇÃO:\n"
+        "- TODA e qualquer expressão, equação ou símbolo matemático DEVE estar rigorosamente delimitado por $...$ (para inline, ex: $r = 2\\text{ cm}$, $a=6$) ou $$...$$ (para fórmulas em destaque em linha própria, ex: $$r = \\frac{a + b - c}{2}$$).\n"
+        "- NUNCA escreva comandos LaTeX como \\frac, \\sqrt, \\implies, \\text ou fórmulas soltas sem os delimitadores $ ou $$.\n"
+        "- NUNCA deixe delimitadores desbalanceados ou abertos (como $... sem fechar).\n"
+        "- Utilize cabeçalhos markdown ### limpos para estruturar as etapas.\n\n"
         "Sua função é analisar o problema matemático fornecido sob DUAS perspectivas cognitivas complementares e sintetizar o aprendizado:\n"
         "1. PERSPECTIVA A (Rigor Axiomático & Prova Formal): teoremas, invariantes algébricos e demonstração analítica em LaTeX ($...$ e $$...$$).\n"
-        "2. PERSPECTIVA B (Intuição Heurística & Atalhos): intuição visual, simetrias, casos extremos e raciocínio socrático em LaTeX ($...$).\n"
+        "2. PERSPECTIVA B (Intuição Heurística & Atalhos): intuição visual, simetrias, casos extremos e raciocínio socrático em LaTeX ($...$ e $$...$$).\n"
         "3. SÍNTESE PEDAGÓGICA (Para o Licenciando em Matemática): reflexão concisa contrastando as duas visões.\n"
         "Responda EXCLUSIVAMENTE em formato JSON com chaves: model_a (name, role, content), model_b (name, role, content), sintese."
     )

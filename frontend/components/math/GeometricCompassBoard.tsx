@@ -16,6 +16,7 @@ import {
 interface GeometricCompassBoardProps {
   onClose?: () => void;
   initialCommands?: string[];
+  onCommandsChange?: (commands: string[]) => void;
   className?: string;
 }
 
@@ -93,6 +94,7 @@ const PRESET_CONSTRUCTIONS = [
 export default function GeometricCompassBoard({
   onClose,
   initialCommands,
+  onCommandsChange,
   className = "",
 }: GeometricCompassBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,15 +113,21 @@ export default function GeometricCompassBoard({
       const ggbApplet = window[appletId];
       if (ggbApplet && typeof ggbApplet.evalCommand === "function") {
         ggbApplet.evalCommand(cmd.trim());
-        setScriptLog((prev) => [...prev.slice(-10), `✓ ${cmd.trim()}`]);
+        setScriptLog((prev) => {
+          const updated = [...prev.slice(-15), `✓ ${cmd.trim()}`];
+          if (onCommandsChange) {
+            onCommandsChange(updated.filter((c) => c.startsWith("✓ ")).map((c) => c.slice(2)));
+          }
+          return updated;
+        });
       } else {
         console.warn("Applet GeoGebra ainda não inicializado para executar:", cmd);
       }
     } catch (err) {
       console.error("Erro ao executar comando GeoGebra:", err);
-      setScriptLog((prev) => [...prev.slice(-10), `✗ Erro: ${cmd.trim()}`]);
+      setScriptLog((prev) => [...prev.slice(-15), `✗ Erro: ${cmd.trim()}`]);
     }
-  }, [appletId]);
+  }, [appletId, onCommandsChange]);
 
   // Executa lote de comandos
   const runBatchCommands = useCallback((commands: string[]) => {
@@ -136,19 +144,19 @@ export default function GeometricCompassBoard({
   useEffect(() => {
     let isMounted = true;
 
-    // Timer de segurança: se a injeção do GeoGebra demorar mais de 3.5s (bloqueio de rede/CDN), chaveia para iframe
+    // Timer de segurança: se a injeção do GeoGebra demorar mais de 12s (rede lenta/bloqueio), chaveia para iframe
     const fallbackTimer = setTimeout(() => {
       if (isMounted) {
         setUseIframeFallback((prev) => {
           if (!prev) {
-            console.warn("Tempo limite de injeção GeoGebra atingido (3.5s). Ativando iframe seguro.");
+            console.warn("Tempo limite de injeção GeoGebra atingido (12s). Ativando modo iframe.");
             return true;
           }
           return prev;
         });
         setAppletLoaded(true);
       }
-    }, 3500);
+    }, 12000);
 
     const initGeoGebra = () => {
       if (!isMounted) return;
@@ -168,7 +176,7 @@ export default function GeometricCompassBoard({
             enableRightClick: true,
             showToolBarHelp: false,
             errorDialogsActive: false,
-            useBrowserForJS: false,
+            useBrowserForJS: true,
             appletOnLoad: () => {
               if (isMounted) {
                 clearTimeout(fallbackTimer);
@@ -218,6 +226,12 @@ export default function GeometricCompassBoard({
       const existing = document.getElementById("ggb-script");
       if (existing) {
         existing.addEventListener("load", () => initGeoGebra());
+        existing.addEventListener("error", () => {
+          if (isMounted) {
+            setUseIframeFallback(true);
+            setAppletLoaded(true);
+          }
+        });
       }
     }
 
@@ -240,6 +254,9 @@ export default function GeometricCompassBoard({
     if (ggbApplet && typeof ggbApplet.reset === "function") {
       ggbApplet.reset();
       setScriptLog(["✓ Quadro Geométrico reiniciado"]);
+      if (onCommandsChange) {
+        onCommandsChange([]);
+      }
     }
   };
 

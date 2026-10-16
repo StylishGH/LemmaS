@@ -68,6 +68,8 @@ temp_*
 *.tmp
 *.log
 ver_usuarios.py
+tmp/
+Q17_output/
 
 # ------------------------------------------------------------------------------
 # IDEs, Editores de Código e Sistema Operacional
@@ -89,6 +91,7 @@ data/*.db
 # Legacy web directory (superseded by frontend/)
 web/
 node_modules/
+**/node_modules/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
@@ -141,4 +144,6 @@ client_secret*.json
 # Relatórios temporários de scratch
 *_SUMMARY.md
 IMPLEMENTATION_AND_INSTRUCTIONS.md
+RELATORIO*.md
+RELATORIO_*.md
 

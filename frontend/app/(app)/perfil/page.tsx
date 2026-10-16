@@ -20,11 +20,14 @@ import {
   Loader2,
   Camera,
   Trash2,
-  Upload,
   BookOpen,
   Layers,
   HelpCircle,
-  X
+  X,
+  Search,
+  Compass,
+  Award,
+  Binary
 } from "lucide-react";
 import { useUserProfile, getInitials } from "@/lib/use-user";
 
@@ -95,99 +98,115 @@ export const TRILHAS_MOTIVACOES: TrilhaMotivacao[] = [
     icone: "🏆",
     subtitulo: "Problemas não-convencionais, criatividade algébrica e geometria avançada (OBMEP, OBM, Canguru).",
   },
+  {
+    id: "fundamentos_logica_intuicao",
+    titulo: "Fundamentos, Lógica e Intuição Matemática",
+    icone: "🧠",
+    subtitulo: "Aprender Matemática de verdade: reconstruindo fundamentos, aritmética, álgebra, geometria, funções, raciocínio dedutivo e demonstrações.",
+  },
 ];
 
-export interface CategoriaFoco {
+export interface CatalogoItem {
   id: string;
-  categoria: string;
-  icone: string;
-  itens: string[];
+  label: string;
+  tipo: "conceitual" | "banca";
+  disponivel: boolean;
+  contagemQuestoes?: number;
+  categoriaOrigem: string;
+  descricao?: string;
 }
 
-export const CATEGORIAS_FOCO: CategoriaFoco[] = [
-  {
-    id: "enem_vestibulares",
-    categoria: "ENEM & Vestibulares",
-    icone: "🎓",
-    itens: [
-      "ENEM (Matriz de Habilidades / TRI)",
-      "FUVEST (USP)",
-      "UNICAMP (Comvest)",
-      "UERJ (Exame Estadual)",
-      "UNESP (Vunesp)",
-      "CEDERJ (Fundação CECIERJ)",
-      "ITA / IME (Fase Vestibular Civil)",
-      "Vestibulares Federais (UFMG, UFPR, UFRGS)",
-    ],
-  },
-  {
-    id: "concursos_publicos",
-    categoria: "Concursos Públicos & Fiscais",
-    icone: "🏛️",
-    itens: [
-      "Receita Federal (Auditor-Fiscal / Analista)",
-      "Banco do Brasil / Caixa Econômica Federal",
-      "Polícia Federal (Perito Criminal / Agente) & PRF",
-      "IBGE (Analista / Pesquisador em Estatística)",
-      "Tribunais (TRT / TRE / TJ / TRF)",
-      "Carreiras Fiscais Estaduais (SEFAZ / ICMS)",
-      "Bancas Civis Gerais (Cebraspe / FGV / Cesgranrio / FCC)",
-    ],
-  },
-  {
-    id: "concursos_militares",
-    categoria: "Carreiras Militares",
-    icone: "🎖️",
-    itens: [
-      "ESA (Sargentos do Exército)",
-      "EsPCEx / AMAN (Oficiais do Exército)",
-      "IME (Engenharia Militar)",
-      "ITA (Engenharia Aeronáutica)",
-      "AFA (Academia da Força Aérea)",
-      "EFOMM (Oficiais da Marinha Mercante)",
-      "Escola Naval (EN)",
-      "EEAR (Especialistas de Aeronáutica)",
-      "Colégio Naval / EPCAR",
-    ],
-  },
-  {
-    id: "superior_docencia",
-    categoria: "Ensino Superior & Docência",
-    icone: "📐",
-    itens: [
-      "Cálculo Diferencial e Integral (I, II, III)",
-      "Álgebra Linear e Geometria Analítica",
-      "Análise Real e Teoria dos Números",
-      "Equações Diferenciais Ordinárias (EDO)",
-      "Matemática Discreta e Combinatória Avançada",
-      "Docência e Prática Pedagógica em Matemática",
-      "PROFMAT (Mestrado Profissional)",
-    ],
-  },
-  {
-    id: "data_science_ml",
-    categoria: "Ciência de Dados & ML",
-    icone: "📊",
-    itens: [
-      "Estatística Descritiva, Inferencial e Testes de Hipótese",
-      "Probabilidade Aplicada e Processos Estocásticos",
-      "Álgebra Linear Computacional e Decomposição de Matrizes",
-      "Otimização Matemática e Gradiente Descendente",
-      "Modelagem Matemática com Python e SQL",
-    ],
-  },
-  {
-    id: "olimpiadas_mat",
-    categoria: "Olimpíadas de Matemática",
-    icone: "🏆",
-    itens: [
-      "OBMEP (Nível 3 e Nível Universitário)",
-      "OBM (Olimpíada Brasileira de Matemática)",
-      "Canguru de Matemática Brasil",
-      "Olimpíadas Regionais & Universitárias",
-    ],
-  },
+export const TRILHAS_CONCEITUAIS_CATALOGO: CatalogoItem[] = [
+  // Disciplinas com questões reais no banco (12 Grandes Áreas Canônicas)
+  { id: "geometria_plana", label: "Geometria Plana", tipo: "conceitual", disponivel: true, contagemQuestoes: 4685, categoriaOrigem: "Geometria", descricao: "Triângulos, círculos, semelhança, áreas, trigonometria euclidiana e teoremas clássicos." },
+  { id: "probabilidade_combinatoria", label: "Probabilidade e Combinatória", tipo: "conceitual", disponivel: true, contagemQuestoes: 4281, categoriaOrigem: "Análise Combinatória", descricao: "Contagem, permutações, combinações, probabilidade condicional e variáveis discretas." },
+  { id: "algebra", label: "Álgebra", tipo: "conceitual", disponivel: true, contagemQuestoes: 3702, categoriaOrigem: "Álgebra", descricao: "Produtos notáveis, fatoração, inequações, sistemas e propriedades operatórias." },
+  { id: "teoria_dos_numeros", label: "Teoria dos Números", tipo: "conceitual", disponivel: true, contagemQuestoes: 3478, categoriaOrigem: "Aritmética & Números", descricao: "Divisibilidade, congruências modulares, primalidade, equações diofantinas e lemas axiomáticos." },
+  { id: "polinomios_complexos", label: "Polinômios e Números Complexos", tipo: "conceitual", disponivel: true, contagemQuestoes: 1311, categoriaOrigem: "Álgebra Avançada", descricao: "Relações de Girard, raízes da unidade, forma trigonométrica e teorema fundamental da álgebra." },
+  { id: "funcoes", label: "Funções", tipo: "conceitual", disponivel: true, contagemQuestoes: 981, categoriaOrigem: "Álgebra & Funções", descricao: "Função afim, quadrática, exponencial, logarítmica, modular, composta, inversa e equações funcionais." },
+  { id: "trigonometria", label: "Trigonometria", tipo: "conceitual", disponivel: true, contagemQuestoes: 541, categoriaOrigem: "Funções e Trigonometria", descricao: "Identidades, transformações em produto, equações trigonométricas e leis dos senos e cossenos." },
+  { id: "geometria_espacial", label: "Geometria Espacial", tipo: "conceitual", disponivel: true, contagemQuestoes: 460, categoriaOrigem: "Geometria", descricao: "Poliedros de Platão, prismas, pirâmides, cilindros, cones, esferas e troncos." },
+  { id: "geometria_analitica", label: "Geometria Analítica", tipo: "conceitual", disponivel: true, contagemQuestoes: 418, categoriaOrigem: "Geometria", descricao: "Retas, cônicas (elipse, parábola, hipérbole), distâncias e lugares geométricos." },
+  { id: "matematica_basica", label: "Matemática Básica & Aritmética", tipo: "conceitual", disponivel: true, contagemQuestoes: 300, categoriaOrigem: "Fundamentos", descricao: "Razões, proporções, frações, porcentagem, regra de três e operações fundamentais." },
+  { id: "calculo", label: "Cálculo Diferencial e Integral", tipo: "conceitual", disponivel: true, contagemQuestoes: 246, categoriaOrigem: "Ensino Superior", descricao: "Limites, continuidade, derivadas, integrais definidas e aplicações analíticas." },
+  { id: "algebra_linear", label: "Álgebra Linear", tipo: "conceitual", disponivel: true, contagemQuestoes: 167, categoriaOrigem: "Ensino Superior", descricao: "Espaços vetoriais, transformações lineares, matrizes, determinantes, autovalores e autovetores." },
+  
+  // Trilhas planejadas / conceituais (0 questões no banco)
+  { id: "analise_real", label: "Análise Real & Fundamentos", tipo: "conceitual", disponivel: false, categoriaOrigem: "Ensino Superior", descricao: "Completude de R, sequências de Cauchy, topologia da reta e convergência uniforme (Trilha Teórica Planejada)." },
+  { id: "equacoes_diferenciais", label: "Equações Diferenciais Ordinárias (EDO)", tipo: "conceitual", disponivel: false, categoriaOrigem: "Ensino Superior", descricao: "EDOs lineares de 1ª e 2ª ordem, fator integrante e transformada de Laplace (Trilha Teórica Planejada)." },
+  { id: "otimizacao_gradiente", label: "Otimização & Gradiente Descendente", tipo: "conceitual", disponivel: false, categoriaOrigem: "Ciência de Dados & ML", descricao: "Funções convexas, multiplicadores de Lagrange e descida de gradiente (Trilha Teórica Planejada)." },
+  { id: "estatistica_inferencial", label: "Estatística Descritiva & Inferencial", tipo: "conceitual", disponivel: false, categoriaOrigem: "Ciência de Dados & ML", descricao: "Distribuições contínuas, TCL, intervalos de confiança e testes de hipóteses (Trilha Teórica Planejada)." },
+  { id: "modelagem_python_sql", label: "Modelagem Matemática com Python & SQL", tipo: "conceitual", disponivel: false, categoriaOrigem: "Ciência de Dados & ML", descricao: "Simulações numéricas, computação com NumPy e modelagem analítica (Trilha Teórica Planejada)." },
 ];
+
+export const BANCAS_EXAMES_CATALOGO: CatalogoItem[] = [
+  // Militares com acervo real
+  { id: "ITA", label: "ITA (Engenharia Aeronáutica)", tipo: "banca", disponivel: true, contagemQuestoes: 328, categoriaOrigem: "Carreiras Militares" },
+  { id: "EEAR", label: "EEAR (Especialistas de Aeronáutica)", tipo: "banca", disponivel: true, contagemQuestoes: 216, categoriaOrigem: "Carreiras Militares" },
+  { id: "EsPCEx", label: "EsPCEx / AMAN (Oficiais do Exército)", tipo: "banca", disponivel: true, contagemQuestoes: 181, categoriaOrigem: "Carreiras Militares" },
+  { id: "IME", label: "IME (Engenharia Militar)", tipo: "banca", disponivel: true, contagemQuestoes: 180, categoriaOrigem: "Carreiras Militares" },
+  { id: "AFA", label: "AFA (Academia da Força Aérea)", tipo: "banca", disponivel: true, contagemQuestoes: 167, categoriaOrigem: "Carreiras Militares" },
+  { id: "EPCAR", label: "EPCAR (Cadetes do Ar)", tipo: "banca", disponivel: true, contagemQuestoes: 144, categoriaOrigem: "Carreiras Militares" },
+  { id: "Colegio_Naval", label: "Colégio Naval", tipo: "banca", disponivel: true, contagemQuestoes: 122, categoriaOrigem: "Carreiras Militares" },
+  { id: "ESA", label: "ESA (Sargentos do Exército)", tipo: "banca", disponivel: true, contagemQuestoes: 117, categoriaOrigem: "Carreiras Militares" },
+  { id: "Escola_Naval", label: "Escola Naval", tipo: "banca", disponivel: true, contagemQuestoes: 107, categoriaOrigem: "Carreiras Militares" },
+  { id: "EFOMM", label: "EFOMM (Marinha Mercante)", tipo: "banca", disponivel: true, contagemQuestoes: 80, categoriaOrigem: "Carreiras Militares" },
+
+  // Vestibulares com acervo real
+  { id: "ENEM", label: "ENEM (Matriz de Referência TRI)", tipo: "banca", disponivel: true, contagemQuestoes: 263, categoriaOrigem: "ENEM & Vestibulares" },
+  { id: "UNICAMP", label: "UNICAMP (Comvest)", tipo: "banca", disponivel: true, contagemQuestoes: 131, categoriaOrigem: "ENEM & Vestibulares" },
+  { id: "FUVEST", label: "FUVEST (USP)", tipo: "banca", disponivel: true, contagemQuestoes: 99, categoriaOrigem: "ENEM & Vestibulares" },
+  { id: "CEDERJ", label: "CEDERJ (Graduação CECIERJ)", tipo: "banca", disponivel: true, contagemQuestoes: 74, categoriaOrigem: "ENEM & Vestibulares" },
+
+  // Olimpíadas de destaque com acervo real
+  { id: "HMMT", label: "HMMT (Harvard-MIT Math Tournament)", tipo: "banca", disponivel: true, contagemQuestoes: 3221, categoriaOrigem: "Olimpíadas de Matemática" },
+  { id: "IMO", label: "IMO (International Mathematical Olympiad)", tipo: "banca", disponivel: true, contagemQuestoes: 1924, categoriaOrigem: "Olimpíadas de Matemática" },
+  { id: "OBM", label: "OBM (Olimpíada Brasileira de Matemática)", tipo: "banca", disponivel: true, contagemQuestoes: 998, categoriaOrigem: "Olimpíadas de Matemática" },
+  { id: "Baltic_Way", label: "Baltic Way", tipo: "banca", disponivel: true, contagemQuestoes: 853, categoriaOrigem: "Olimpíadas de Matemática" },
+  { id: "Olimpiada_Romena", label: "Olimpíada Romena de Matemática", tipo: "banca", disponivel: true, contagemQuestoes: 806, categoriaOrigem: "Olimpíadas de Matemática" },
+
+  // Bancas e Exames Planejados (Sem questões cadastradas no momento)
+  { id: "Receita_Federal", label: "Receita Federal (Auditor / Analista)", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "Banco_do_Brasil_Caixa", label: "Banco do Brasil & Caixa Econômica", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "PF_PRF", label: "Polícia Federal (Perito / Agente) & PRF", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "IBGE", label: "IBGE (Analista em Estatística)", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "Tribunais", label: "Tribunais (TRT / TRE / TJ / TRF)", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "Carreiras_Fiscais", label: "Carreiras Fiscais Estaduais (SEFAZ / ICMS)", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "Bancas_Civis_Gerais", label: "Bancas Civis Gerais (Cebraspe / FGV / Cesgranrio / FCC)", tipo: "banca", disponivel: false, categoriaOrigem: "Concursos Públicos & Fiscais" },
+  { id: "PROFMAT", label: "PROFMAT (Mestrado Profissional)", tipo: "banca", disponivel: false, categoriaOrigem: "Ensino Superior & Docência" },
+  { id: "Canguru", label: "Canguru de Matemática Brasil", tipo: "banca", disponivel: false, categoriaOrigem: "Olimpíadas de Matemática" },
+];
+
+export const MAPA_OBJETIVO_RECOMENDACOES: Record<string, { conceituais: string[]; bancas: string[] }> = {
+  enem_vestibulares: {
+    conceituais: ["funcoes", "geometria_plana", "algebra", "probabilidade_combinatoria", "matematica_basica", "trigonometria", "geometria_espacial"],
+    bancas: ["ENEM", "FUVEST", "UNICAMP", "CEDERJ"],
+  },
+  concursos_publicos: {
+    conceituais: ["matematica_basica", "funcoes", "probabilidade_combinatoria", "algebra", "estatistica_inferencial"],
+    bancas: ["Bancas_Civis_Gerais", "Receita_Federal", "Banco_do_Brasil_Caixa", "IBGE", "Tribunais", "Carreiras_Fiscais"],
+  },
+  concursos_militares: {
+    conceituais: ["funcoes", "algebra", "geometria_plana", "geometria_analitica", "geometria_espacial", "trigonometria", "polinomios_complexos", "probabilidade_combinatoria", "calculo"],
+    bancas: ["ITA", "IME", "AFA", "EFOMM", "Escola_Naval", "EsPCEx", "Colegio_Naval", "EPCAR", "ESA", "EEAR"],
+  },
+  superior_docencia: {
+    conceituais: ["funcoes", "calculo", "algebra_linear", "geometria_analitica", "teoria_dos_numeros", "polinomios_complexos", "analise_real", "equacoes_diferenciais"],
+    bancas: ["CEDERJ", "ITA", "IME", "OBM", "PROFMAT"],
+  },
+  data_science_ml: {
+    conceituais: ["algebra_linear", "probabilidade_combinatoria", "calculo", "funcoes", "otimizacao_gradiente", "estatistica_inferencial", "modelagem_python_sql"],
+    bancas: ["CEDERJ", "ITA", "OBM"],
+  },
+  olimpiadas_mat: {
+    conceituais: ["teoria_dos_numeros", "funcoes", "geometria_plana", "algebra", "polinomios_complexos", "probabilidade_combinatoria"],
+    bancas: ["OBM", "IMO", "HMMT", "Baltic_Way", "Olimpiada_Romena", "Canguru"],
+  },
+  fundamentos_logica_intuicao: {
+    conceituais: ["matematica_basica", "funcoes", "algebra", "geometria_plana", "teoria_dos_numeros"],
+    bancas: ["ENEM", "OBM", "Colegio_Naval", "EPCAR"],
+  },
+};
 
 function compressAvatar(file: File, maxSize = 256): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -229,18 +248,22 @@ function compressAvatar(file: File, maxSize = 256): Promise<string> {
 
 function calcularFocoSugerido(
   customFoco: string,
-  concursosSelecionados: string[],
+  selectedBancas: string[],
+  selectedConceituais: string[],
   motivacoesSelecionadas: string[]
 ): string {
   if (customFoco && customFoco.trim()) {
     return customFoco.trim();
   }
-  if (concursosSelecionados.length > 0) {
+  if (selectedBancas.length > 0) {
     const formatItem = (item: string) => {
       const parts = item.split("(");
       return parts[0].trim();
     };
-    return concursosSelecionados.slice(0, 2).map(formatItem).join(" / ");
+    return selectedBancas.slice(0, 2).map(formatItem).join(" / ");
+  }
+  if (selectedConceituais.length > 0) {
+    return selectedConceituais.slice(0, 2).join(" / ");
   }
   if (motivacoesSelecionadas.length > 0) {
     const primeiraTrilha = TRILHAS_MOTIVACOES.find((t) => t.id === motivacoesSelecionadas[0]);
@@ -251,7 +274,7 @@ function calcularFocoSugerido(
 
 export default function PerfilPage() {
   const { profile, loading, saveProfile, logout } = useUserProfile();
-  const [activeTab, setActiveTab] = useState<"academico" | "concursos" | "engine">("academico");
+  const [activeTab, setActiveTab] = useState<"academico" | "concursos" | "engine">("concursos");
   
   const [nome, setNome] = useState(profile.nome);
   const [email, setEmail] = useState(profile.email);
@@ -265,15 +288,27 @@ export default function PerfilPage() {
   const [faculdade, setFaculdade] = useState(profile.faculdade);
   const [semestre, setSemestre] = useState(profile.semestre);
   const [metaQuestoesDia, setMetaQuestoesDia] = useState(profile.metaQuestoesDia || 10);
-  const [concursosSelecionados, setConcursosSelecionados] = useState<string[]>(profile.concursosSelecionados || []);
-  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>(profile.motivacoesSelecionadas || []);
-  const [focoCustomizado, setFocoCustomizado] = useState<string>("");
-  const [categoriaFocoAtiva, setCategoriaFocoAtiva] = useState<string>("todas");
   
+  // Seleção múltipla de objetivos declarados
+  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>(profile.motivacoesSelecionadas || []);
+  
+  // Preferência pedagógica estrita
+  const [pedagogicalPreference, setPedagogicalPreference] = useState<'conceitual' | 'rigor_formal' | 'aplicado_ml' | 'competitivo'>('conceitual');
+  
+  // Seleções persistidas de áreas e bancas
+  const [selectedBancas, setSelectedBancas] = useState<string[]>(profile.concursosSelecionados || []);
+  const [selectedConceituais, setSelectedConceituais] = useState<string[]>(profile.conceitosSelecionados || []);
+  
+  // Visualização ativa no catálogo (4 abas obrigatórias)
+  const [catalogoVisualizacao, setCatalogoVisualizacao] = useState<"recomendadas" | "conceituais" | "bancas" | "todas">("recomendadas");
+  const [buscaCatalogo, setBuscaCatalogo] = useState<string>("");
+  
+  const [focoCustomizado, setFocoCustomizado] = useState<string>("");
   const [salvo, setSalvo] = useState(false);
 
-  // Fonte de verdade visual do avatar (preview imediato ou foto do perfil em cache/nuvem)
   const currentFoto = previewUrl || profile.fotoUrl;
+
+  const lastLoadedUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     setImgError(false);
@@ -281,14 +316,26 @@ export default function PerfilPage() {
 
   useEffect(() => {
     if (!loading) {
-      setNome(profile.nome);
-      setEmail(profile.email);
-      setEscolaridade(profile.escolaridade);
-      setFaculdade(profile.faculdade);
-      setSemestre(profile.semestre);
-      setMetaQuestoesDia(profile.metaQuestoesDia || 10);
-      setConcursosSelecionados(profile.concursosSelecionados || []);
-      setMotivacoesSelecionadas(profile.motivacoesSelecionadas || []);
+      const userKey = profile.email || (profile.id ? String(profile.id) : (profile.isGuest ? "guest" : "user"));
+      if (lastLoadedUserRef.current !== userKey) {
+        lastLoadedUserRef.current = userKey;
+        setNome(profile.nome);
+        setEmail(profile.email);
+        setEscolaridade(profile.escolaridade);
+        setFaculdade(profile.faculdade);
+        setSemestre(profile.semestre);
+        setMetaQuestoesDia(profile.metaQuestoesDia || 10);
+        setMotivacoesSelecionadas(profile.motivacoesSelecionadas || []);
+        setSelectedBancas(profile.concursosSelecionados || []);
+        setSelectedConceituais(profile.conceitosSelecionados || []);
+        
+        const pref = profile.pedagogicalPreference as 'conceitual' | 'rigor_formal' | 'aplicado_ml' | 'competitivo';
+        if (['conceitual', 'rigor_formal', 'aplicado_ml', 'competitivo'].includes(pref)) {
+          setPedagogicalPreference(pref);
+        } else {
+          setPedagogicalPreference('conceitual');
+        }
+      }
     }
   }, [loading, profile]);
 
@@ -333,27 +380,59 @@ export default function PerfilPage() {
     }
   };
 
-  const toggleConcurso = (item: string) => {
-    if (concursosSelecionados.includes(item)) {
-      setConcursosSelecionados(concursosSelecionados.filter((x) => x !== item));
-    } else {
-      setConcursosSelecionados([...concursosSelecionados, item]);
-    }
-  };
-
+  // Toggle de objetivos (Passo 1)
   const toggleMotivacao = (id: string) => {
     if (motivacoesSelecionadas.includes(id)) {
       setMotivacoesSelecionadas(motivacoesSelecionadas.filter((x) => x !== id));
     } else {
       setMotivacoesSelecionadas([...motivacoesSelecionadas, id]);
-      // Ajusta dinamicamente a categoria de bancas visível para a motivação clicada
-      setCategoriaFocoAtiva(id);
     }
   };
 
+  // Toggle de Bancas (Passo 2)
+  const toggleBanca = (itemLabel: string) => {
+    if (selectedBancas.includes(itemLabel)) {
+      setSelectedBancas(selectedBancas.filter((x) => x !== itemLabel));
+    } else {
+      setSelectedBancas([...selectedBancas, itemLabel]);
+    }
+  };
+
+  // Toggle de Trilhas Conceituais (Passo 2)
+  const toggleConceito = (itemLabel: string) => {
+    if (selectedConceituais.includes(itemLabel)) {
+      setSelectedConceituais(selectedConceituais.filter((x) => x !== itemLabel));
+    } else {
+      setSelectedConceituais([...selectedConceituais, itemLabel]);
+    }
+  };
+
+  // União reativa das recomendações dos objetivos ativos (sem duplicatas)
+  const recommendedItems = useMemo(() => {
+    const concSet = new Set<string>();
+    const bancaSet = new Set<string>();
+
+    for (const objId of motivacoesSelecionadas) {
+      const mapeamento = MAPA_OBJETIVO_RECOMENDACOES[objId];
+      if (mapeamento) {
+        mapeamento.conceituais.forEach((id) => concSet.add(id));
+        mapeamento.bancas.forEach((id) => bancaSet.add(id));
+      }
+    }
+
+    const conceituais = TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => concSet.has(c.id));
+    const bancas = BANCAS_EXAMES_CATALOGO.filter((b) => bancaSet.has(b.id));
+
+    return {
+      conceituais,
+      bancas,
+      total: conceituais.length + bancas.length,
+    };
+  }, [motivacoesSelecionadas]);
+
   const focoFinal = useMemo(() => {
-    return calcularFocoSugerido(focoCustomizado, concursosSelecionados, motivacoesSelecionadas);
-  }, [focoCustomizado, concursosSelecionados, motivacoesSelecionadas]);
+    return calcularFocoSugerido(focoCustomizado, selectedBancas, selectedConceituais, motivacoesSelecionadas);
+  }, [focoCustomizado, selectedBancas, selectedConceituais, motivacoesSelecionadas]);
 
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,9 +444,11 @@ export default function PerfilPage() {
       faculdade,
       semestre,
       metaQuestoesDia,
-      concursosSelecionados,
+      concursosSelecionados: selectedBancas,
+      conceitosSelecionados: selectedConceituais,
       motivacoesSelecionadas,
       focoConcurso: focoFinal,
+      pedagogicalPreference,
     });
     setSalvo(true);
     setTimeout(() => setSalvo(false), 3000);
@@ -375,15 +456,18 @@ export default function PerfilPage() {
 
   const userInitials = getInitials(nome);
 
-  // Lista filtrada de itens de foco para a categoria selecionada
-  const itensExibidos = useMemo(() => {
-    if (categoriaFocoAtiva === "todas") {
-      return CATEGORIAS_FOCO.flatMap((c) => c.itens.map((item) => ({ item, catNome: c.categoria, catId: c.id })));
-    }
-    const cat = CATEGORIAS_FOCO.find((c) => c.id === categoriaFocoAtiva);
-    if (!cat) return [];
-    return cat.itens.map((item) => ({ item, catNome: cat.categoria, catId: cat.id }));
-  }, [categoriaFocoAtiva]);
+  // Filtragem para busca global no catálogo
+  const catalogoFiltradoBusca = useMemo(() => {
+    if (!buscaCatalogo.trim()) return null;
+    const term = buscaCatalogo.toLowerCase().trim();
+    const conc = TRILHAS_CONCEITUAIS_CATALOGO.filter(
+      (c) => c.label.toLowerCase().includes(term) || (c.descricao && c.descricao.toLowerCase().includes(term))
+    );
+    const banc = BANCAS_EXAMES_CATALOGO.filter(
+      (b) => b.label.toLowerCase().includes(term) || b.categoriaOrigem.toLowerCase().includes(term)
+    );
+    return { conceituais: conc, bancas: banc };
+  }, [buscaCatalogo]);
 
   if (loading) {
     return (
@@ -392,7 +476,7 @@ export default function PerfilPage() {
           <Loader2 className="w-6 h-6 animate-spin text-amber-600 dark:text-[#d9b452]" />
         </div>
         <p className="text-xs text-slate-500 dark:text-zinc-400 font-sans">
-          Sincronizando perfil com a nuvem...
+          Sincronizando perfil e preferências com a nuvem...
         </p>
       </div>
     );
@@ -494,15 +578,9 @@ export default function PerfilPage() {
                 <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
                   {nome || "Estudante Convidado"}
                 </h1>
-                {profile.isGuest ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] text-[11px] font-bold">
-                    <User className="w-3.5 h-3.5" /> Visitante Local
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Verificado
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Verificado
+                </span>
               </div>
               <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 font-medium">
                 {escolaridade || "Ensino Superior"} • {faculdade || "Universidade"}
@@ -511,7 +589,7 @@ export default function PerfilPage() {
                 <span>{email || "Sem e-mail cadastrado"}</span>
                 <span>•</span>
                 <span className="font-mono text-amber-600 dark:text-[#d9b452] font-semibold">
-                  ID #{profile.isGuest ? "VISITANTE" : (profile.id || "LEMMAS-STUDENT")}
+                  ID #{profile.id || "LEMMAS-STUDENT"}
                 </span>
                 <span>•</span>
                 <button
@@ -564,6 +642,19 @@ export default function PerfilPage() {
       <div className="flex border-b border-slate-200 dark:border-amber-500/20 gap-2 overflow-x-auto">
         <button
           type="button"
+          onClick={() => setActiveTab("concursos")}
+          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
+            activeTab === "concursos"
+              ? "text-amber-600 dark:text-[#d9b452] border-b-2 border-amber-500 dark:border-[#d9b452] font-bold"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
+          }`}
+        >
+          <Target className="w-4 h-4" />
+          <span>Objetivos & Catálogo de Estudo</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("academico")}
           className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
             activeTab === "academico"
@@ -573,19 +664,6 @@ export default function PerfilPage() {
         >
           <GraduationCap className="w-4 h-4" />
           <span>Formação & Dados Acadêmicos</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("concursos")}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
-            activeTab === "concursos"
-              ? "text-amber-600 dark:text-[#d9b452] border-b-2 border-amber-500 dark:border-[#d9b452] font-bold"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
-          }`}
-        >
-          <Target className="w-4 h-4" />
-          <span>Objetivos & Metas de Estudo</span>
         </button>
 
         <button
@@ -612,6 +690,641 @@ export default function PerfilPage() {
 
       {/* 3. CONTEÚDO DAS ABAS */}
       <form onSubmit={handleSalvar} className="space-y-6">
+        {activeTab === "concursos" && (
+          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
+            <div className="space-y-1">
+              <h2 className="font-serif-math text-xl font-semibold text-slate-900 dark:text-[#f5f0df]">
+                Objetivos de Estudo & Personalização do Repertório
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Personalize sua jornada matemática: selecione seus objetivos, defina o modo de tutoria do MathAI e escolha suas áreas de foco no catálogo real do LEMMAS.
+              </p>
+            </div>
+
+            {/* PASSO 1: MOTIVAÇÃO PRINCIPAL NO LEMMAS */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">1</span>
+                  <span>Quais são os seus objetivos principais?</span>
+                </label>
+                <span className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  {motivacoesSelecionadas.length} objetivo(s) ativo(s)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {TRILHAS_MOTIVACOES.map((trilha) => {
+                  const isSelected = motivacoesSelecionadas.includes(trilha.id);
+                  return (
+                    <div
+                      key={trilha.id}
+                      onClick={() => toggleMotivacao(trilha.id)}
+                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2.5 text-xs select-none ${
+                        isSelected
+                          ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 dark:border-[#d9b452] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-[#f5f0df]">
+                          <span className="text-lg">{trilha.icone}</span>
+                          <span className="text-xs font-bold">{trilha.titulo}</span>
+                        </div>
+                        <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
+                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+                        {trilha.subtitulo}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PASSO 2: PREFERÊNCIA PEDAGÓGICA DO TUTOR MATHAI */}
+            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">2</span>
+                  <span>Como você prefere que o Tutor IA (MathAI) ensine?</span>
+                </label>
+                <span className="text-[11px] text-amber-600 dark:text-[#d9b452] font-semibold">
+                  Modo: {pedagogicalPreference}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  {
+                    id: "conceitual" as const,
+                    titulo: "Conceitual & Intuitivo",
+                    icone: "💡",
+                    descricao: "Começa pela intuição geométrica e numérica, exemplos pertinentes e explicação do porquê antes de formalizar.",
+                  },
+                  {
+                    id: "rigor_formal" as const,
+                    titulo: "Rigor Formal & Axiomas",
+                    icone: "📐",
+                    descricao: "Identifica com precisão definições, hipóteses, lemas axiomáticos e demonstrações formais passo a passo.",
+                  },
+                  {
+                    id: "aplicado_ml" as const,
+                    titulo: "Aplicado a Dados & ML",
+                    icone: "📊",
+                    descricao: "Conecta os conceitos a matrizes, espaços vetoriais, otimização, gradientes e Machine Learning prático.",
+                  },
+                  {
+                    id: "competitivo" as const,
+                    titulo: "Competitivo & Eficiente",
+                    icone: "⚡",
+                    descricao: "Destaca observações decisivas ('pulo do gato'), padrões de bancas, atalhos de prova e eliminação rápida.",
+                  },
+                ].map((modo) => {
+                  const isSelected = pedagogicalPreference === modo.id;
+                  return (
+                    <div
+                      key={modo.id}
+                      onClick={() => setPedagogicalPreference(modo.id)}
+                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2 text-xs select-none ${
+                        isSelected
+                          ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 dark:border-[#d9b452] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-[#f5f0df]">
+                          <span className="text-base">{modo.icone}</span>
+                          <span className="text-xs font-bold">{modo.titulo}</span>
+                        </div>
+                        <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
+                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+                        {modo.descricao}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PASSO 3: CATÁLOGO ORGANIZADO (4 VISUALIZAÇÕES DISTINTAS) */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">3</span>
+                  <span>Catálogo de Áreas, Disciplinas e Exames:</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
+                    {selectedConceituais.length + selectedBancas.length} selecionado(s) ({selectedConceituais.length} disciplinas, {selectedBancas.length} bancas)
+                  </span>
+                  {(selectedConceituais.length > 0 || selectedBancas.length > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBancas([]);
+                        setSelectedConceituais([]);
+                      }}
+                      className="text-[10px] text-rose-500 hover:underline font-semibold"
+                    >
+                      Limpar seleções
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 4 ABAS OBRIGATÓRIAS DO CATÁLOGO */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                <button
+                  type="button"
+                  onClick={() => setCatalogoVisualizacao("recomendadas")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    catalogoVisualizacao === "recomendadas"
+                      ? "lemmas-gold-cta font-bold shadow-xs"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Recomendadas para mim ({recommendedItems.total})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatalogoVisualizacao("conceituais")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    catalogoVisualizacao === "conceituais"
+                      ? "lemmas-gold-cta font-bold shadow-xs"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                  }`}
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Trilhas Conceituais ({TRILHAS_CONCEITUAIS_CATALOGO.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatalogoVisualizacao("bancas")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    catalogoVisualizacao === "bancas"
+                      ? "lemmas-gold-cta font-bold shadow-xs"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                  }`}
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Bancas e Exames ({BANCAS_EXAMES_CATALOGO.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatalogoVisualizacao("todas")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    catalogoVisualizacao === "todas"
+                      ? "lemmas-gold-cta font-bold shadow-xs"
+                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Todas as Áreas</span>
+                </button>
+              </div>
+
+              {/* BUSCA RÁPIDA NO CATÁLOGO */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={buscaCatalogo}
+                  onChange={(e) => setBuscaCatalogo(e.target.value)}
+                  placeholder="Filtrar matérias, tópicos ou bancas no catálogo..."
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-900 dark:text-[#f5f0df] outline-none focus:border-amber-500"
+                />
+                {buscaCatalogo && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaCatalogo("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* CONTEÚDO DAS 4 VISUALIZAÇÕES DO CATÁLOGO */}
+              <div className="space-y-5 pt-2">
+                {/* 1. ABA RECOMENDADAS PARA MIM */}
+                {catalogoVisualizacao === "recomendadas" && !catalogoFiltradoBusca && (
+                  <div className="space-y-4">
+                    {motivacoesSelecionadas.length === 0 ? (
+                      <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-center space-y-2">
+                        <Info className="w-6 h-6 text-amber-500 mx-auto" />
+                        <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                          Nenhum objetivo ativo no Passo 1.
+                        </p>
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                          Selecione um ou mais objetivos principais para que o LEMMAS calcule a união das áreas relevantes para você.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                            <Compass className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Disciplinas e Trilhas Conceituais Recomendadas ({recommendedItems.conceituais.length})</span>
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                            {recommendedItems.conceituais.map((item) => {
+                              const isSelected = selectedConceituais.includes(item.label);
+                              return (
+                                <button
+                                  type="button"
+                                  key={item.id}
+                                  onClick={() => toggleConceito(item.label)}
+                                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                    isSelected
+                                      ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                      : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="font-semibold text-xs truncate">{item.label}</span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px]">
+                                    <span className="opacity-75">{item.categoriaOrigem}</span>
+                                    {item.disponivel ? (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                        ✓ {item.contagemQuestoes} q.
+                                      </span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-zinc-500/10 text-zinc-500 font-medium">
+                                        Planejada
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                            <Award className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Bancas, Provas e Exames Recomendados ({recommendedItems.bancas.length})</span>
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                            {recommendedItems.bancas.map((item) => {
+                              const isSelected = selectedBancas.includes(item.label);
+                              return (
+                                <button
+                                  type="button"
+                                  key={item.id}
+                                  onClick={() => toggleBanca(item.label)}
+                                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                    isSelected
+                                      ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                      : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="font-semibold text-xs truncate">{item.label}</span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px]">
+                                    <span className="opacity-75">{item.categoriaOrigem}</span>
+                                    {item.disponivel ? (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                        ✓ {item.contagemQuestoes} q.
+                                      </span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
+                                        Planejada
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. ABA TRILHAS CONCEITUAIS */}
+                {catalogoVisualizacao === "conceituais" && !catalogoFiltradoBusca && (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Trilhas com Questões Ativas no Banco ({TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => c.disponivel).length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => c.disponivel).map((item) => {
+                          const isSelected = selectedConceituais.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleConceito(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-zinc-400 line-clamp-2">
+                                {item.descricao}
+                              </p>
+                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/40 dark:border-zinc-800">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                  ✓ {item.contagemQuestoes} questões
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-[#d9b452] flex items-center gap-1.5">
+                        <Binary className="w-3.5 h-3.5" />
+                        <span>Trilhas Conceituais em Planejamento ({TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => !c.disponivel).length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => !c.disponivel).map((item) => {
+                          const isSelected = selectedConceituais.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleConceito(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 opacity-90 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-zinc-400 line-clamp-2">
+                                {item.descricao}
+                              </p>
+                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/40 dark:border-zinc-800">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                                  Trilha Teórica
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. ABA BANCAS E EXAMES */}
+                {catalogoVisualizacao === "bancas" && !catalogoFiltradoBusca && (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Bancas e Exames com Questões no Acervo ({BANCAS_EXAMES_CATALOGO.filter((b) => b.disponivel).length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {BANCAS_EXAMES_CATALOGO.filter((b) => b.disponivel).map((item) => {
+                          const isSelected = selectedBancas.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleBanca(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                  ✓ {item.contagemQuestoes} questões
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-[#d9b452] flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5" />
+                        <span>Exames e Processos Seletivos em Planejamento ({BANCAS_EXAMES_CATALOGO.filter((b) => !b.disponivel).length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {BANCAS_EXAMES_CATALOGO.filter((b) => !b.disponivel).map((item) => {
+                          const isSelected = selectedBancas.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleBanca(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 opacity-90 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                                  Acervo Planejado
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. ABA TODAS AS ÁREAS / OU RESULTADOS DE BUSCA */}
+                {(catalogoVisualizacao === "todas" || catalogoFiltradoBusca) && (
+                  <div className="space-y-6">
+                    {/* DISCIPLINAS */}
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Conhecimentos Matemáticos & Disciplinas ({catalogoFiltradoBusca ? catalogoFiltradoBusca.conceituais.length : TRILHAS_CONCEITUAIS_CATALOGO.length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {(catalogoFiltradoBusca ? catalogoFiltradoBusca.conceituais : TRILHAS_CONCEITUAIS_CATALOGO).map((item) => {
+                          const isSelected = selectedConceituais.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleConceito(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                {item.disponivel ? (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                    ✓ {item.contagemQuestoes} q.
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-zinc-500/10 text-zinc-500 font-medium">
+                                    Planejada
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* BANCAS */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Instituições, Bancas & Exames ({catalogoFiltradoBusca ? catalogoFiltradoBusca.bancas.length : BANCAS_EXAMES_CATALOGO.length})</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {(catalogoFiltradoBusca ? catalogoFiltradoBusca.bancas : BANCAS_EXAMES_CATALOGO).map((item) => {
+                          const isSelected = selectedBancas.includes(item.label);
+                          return (
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => toggleBanca(item.label)}
+                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
+                                isSelected
+                                  ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
+                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{item.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="opacity-75">{item.categoriaOrigem}</span>
+                                {item.disponivel ? (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                    ✓ {item.contagemQuestoes} q.
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                                    Planejada
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* PASSO 4: FOCO PERSONALIZADO & PREVIEW EM TEMPO REAL */}
+            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">4</span>
+                <span>Foco Customizado ou Concurso Específico (Opcional):</span>
+              </label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <input
+                  type="text"
+                  value={focoCustomizado}
+                  onChange={(e) => setFocoCustomizado(e.target.value)}
+                  placeholder="Ex: Concurso Professor SEEDUC, Perito PF, PROFMAT..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                />
+
+                {/* PREVIEW DO BADGE NA NAVBAR */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#18152a]/80 border border-slate-200/80 dark:border-amber-500/20 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-zinc-400 font-medium text-[11px]">
+                    Exibição na barra superior:
+                  </span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-800 dark:text-[#dedbd0] max-w-[200px] truncate">
+                    <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">Foco:</span>
+                    <span className="truncate">{focoFinal}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PASSO 5: META DIÁRIA */}
+            <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">5</span>
+                  <span>Meta Diária de Resolução de Lemas:</span>
+                </label>
+                <span className="font-serif-math text-sm font-bold text-amber-600 dark:text-[#d9b452]">
+                  {metaQuestoesDia} lemas/dia
+                </span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                step="5"
+                value={metaQuestoesDia}
+                onChange={(e) => setMetaQuestoesDia(Number(e.target.value))}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans">
+                Aproximadamente {metaQuestoesDia * 3} minutos diários de dedicação recomendados para consolidação de repertório.
+              </p>
+            </div>
+          </div>
+        )}
+
         {activeTab === "academico" && (
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
@@ -710,205 +1423,6 @@ export default function PerfilPage() {
           </div>
         )}
 
-        {activeTab === "concursos" && (
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
-            <div className="space-y-1">
-              <h2 className="font-serif-math text-xl font-semibold text-slate-900 dark:text-[#f5f0df]">
-                Objetivos de Estudo & Personalização do Repertório
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                <span className="font-semibold text-slate-700 dark:text-zinc-300">Domínio progressivo de lemas e padrões de prova por repetição espaçada.</span> Selecione suas motivações e bancas para ajustarmos os simulados, ciclos SM-2 e recomendações de lemas.
-              </p>
-            </div>
-
-            {/* PASSO 1: MOTIVAÇÃO PRINCIPAL NO LEMMAS */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">1</span>
-                  <span>Qual é o seu objetivo principal no LEMMAS?</span>
-                </label>
-                <span className="text-[11px] text-slate-500 dark:text-zinc-400">
-                  (Selecione uma ou mais trilhas)
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {TRILHAS_MOTIVACOES.map((trilha) => {
-                  const isSelected = motivacoesSelecionadas.includes(trilha.id);
-                  return (
-                    <div
-                      key={trilha.id}
-                      onClick={() => toggleMotivacao(trilha.id)}
-                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2.5 text-xs select-none ${
-                        isSelected
-                          ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 dark:border-[#d9b452] shadow-xs"
-                          : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-[#f5f0df]">
-                          <span className="text-lg">{trilha.icone}</span>
-                          <span className="text-xs font-bold">{trilha.titulo}</span>
-                        </div>
-                        <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
-                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
-                        }`}>
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-                        {trilha.subtitulo}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* PASSO 2: BANCAS, PROVAS E FOCOS ESPECÍFICOS */}
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">2</span>
-                  <span>Bancas, Provas & Áreas de Foco Específicas:</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-                    {concursosSelecionados.length} selecionado(s)
-                  </span>
-                  {concursosSelecionados.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setConcursosSelecionados([])}
-                      className="text-[10px] text-rose-500 hover:underline font-semibold"
-                    >
-                      Limpar
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* BARRA DE FILTRO POR CATEGORIA (ABAS) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-                <button
-                  type="button"
-                  onClick={() => setCategoriaFocoAtiva("todas")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                    categoriaFocoAtiva === "todas"
-                      ? "lemmas-gold-cta font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
-                  }`}
-                >
-                  ✨ Todas as Áreas
-                </button>
-                {CATEGORIAS_FOCO.map((cat) => {
-                  const isActive = categoriaFocoAtiva === cat.id;
-                  const countNaCat = cat.itens.filter((i) => concursosSelecionados.includes(i)).length;
-                  return (
-                    <button
-                      type="button"
-                      key={cat.id}
-                      onClick={() => setCategoriaFocoAtiva(cat.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                        isActive
-                          ? "lemmas-gold-cta font-bold shadow-xs"
-                          : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/30"
-                      }`}
-                    >
-                      <span>{cat.icone}</span>
-                      <span>{cat.categoria}</span>
-                      {countNaCat > 0 && (
-                        <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold">
-                          {countNaCat}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* CHIPS DE PROVAS E DISCIPLINAS */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {itensExibidos.map(({ item, catNome }) => {
-                  const isSelected = concursosSelecionados.includes(item);
-                  return (
-                    <button
-                      type="button"
-                      key={item}
-                      onClick={() => toggleConcurso(item)}
-                      title={`Categoria: ${catNome}`}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs transition-all ${
-                        isSelected
-                          ? "lemmas-gold-cta font-bold shadow-sm scale-[1.01]"
-                          : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200/90 dark:border-amber-500/15 hover:border-amber-500/35"
-                      }`}
-                    >
-                      {isSelected ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : null}
-                      <span>{item}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* PASSO 3: FOCO PERSONALIZADO & PREVIEW EM TEMPO REAL */}
-            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">3</span>
-                <span>Foco Customizado ou Concurso Específico (Opcional):</span>
-              </label>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <input
-                  type="text"
-                  value={focoCustomizado}
-                  onChange={(e) => setFocoCustomizado(e.target.value)}
-                  placeholder="Ex: Concurso Professor SEEDUC, Perito PF, PROFMAT..."
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
-                />
-
-                {/* PREVIEW DO BADGE NA NAVBAR */}
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#18152a]/80 border border-slate-200/80 dark:border-amber-500/20 flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-zinc-400 font-medium text-[11px]">
-                    Exibição na barra superior:
-                  </span>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-800 dark:text-[#dedbd0] max-w-[200px] truncate">
-                    <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
-                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">Foco:</span>
-                    <span className="truncate">{focoFinal}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* PASSO 4: META DIÁRIA */}
-            <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">4</span>
-                  <span>Meta Diária de Resolução de Lemas:</span>
-                </label>
-                <span className="font-serif-math text-sm font-bold text-amber-600 dark:text-[#d9b452]">
-                  {metaQuestoesDia} lemas/dia
-                </span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="50"
-                step="5"
-                value={metaQuestoesDia}
-                onChange={(e) => setMetaQuestoesDia(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
-              />
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans">
-                Aproximadamente {metaQuestoesDia * 3} minutos diários de dedicação recomendados para consolidação de repertório.
-              </p>
-            </div>
-          </div>
-        )}
-
         {activeTab === "engine" && (
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
@@ -924,10 +1438,10 @@ export default function PerfilPage() {
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-[#f5f0df]">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Roteamento Multi-Modelo Ativo</span>
+                  <span>Roteamento Multi-Modelo & Modulação Pedagógica</span>
                 </div>
                 <p>
-                  O LEMMAS utiliza roteamento adaptativo: modelos ultraleves para validações de gabarito e checagens socráticas instantâneas, complementados por inferência axiomática profunda para deduções e lemas fundamentais.
+                  O LEMMAS opera integrado à MathAI Engine sob o padrão Strategy desacoplado: todas as dicas socráticas adaptam suas instruções internas de acordo com a preferência pedagógica selecionada (<strong className="text-amber-600 dark:text-[#d9b452]">{pedagogicalPreference}</strong>), modulando desde a intuição geométrica até axiomas formais.
                 </p>
               </div>
 
@@ -937,7 +1451,7 @@ export default function PerfilPage() {
                   <span>Repetição Espaçada SuperMemo-2 (SM-2) Determinística</span>
                 </div>
                 <p>
-                  Os ciclos de revisão espaçada são calculados deterministamente no backend. Erros reduzem o intervalo para recalibração imediata, enquanto acertos consistentes expandem o horizonte de fixação na memória de longo prazo.
+                  Os ciclos de revisão espaçada são calculados deterministicamente no backend. Erros reduzem o intervalo para recalibração imediata, enquanto acertos consistentes expandem o horizonte de fixação na memória de longo prazo.
                 </p>
               </div>
             </div>
