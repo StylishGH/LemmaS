@@ -177,6 +177,34 @@ export function sanitizeMathText(raw: string): string {
   text = text.replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math.trim()}$$`);
   text = text.replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math.trim()}$`);
 
+  // Desembrulha blocos $...$ ou $$...$$ que modelos LLM erroneamente colocam ao redor de frases inteiras em português
+  // No KaTeX, qualquer texto em linguagem natural colocado dentro de $ tem seus espaços colapsados e vira uma maçaroca ilegível.
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (fullMatch, inner) => {
+    const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
+    const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
+    if (words.length >= 3) {
+      return "\n" + inner.trim() + "\n";
+    }
+    return fullMatch;
+  });
+
+  text = text.replace(/\$([^\$\n]+)\$/g, (fullMatch, inner) => {
+    const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
+    const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
+    if (words.length >= 2) {
+      let unwrapped = inner;
+      unwrapped = unwrapped.replace(/(\\(?:triangle|angle|overrightarrow|overline|vec|hat|omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|in|subset|subseteq|le|ge|neq|approx|sim|perp|parallel|cong|times|cdot|div|pm|mp)\b(?:\s+[A-Za-z0-9]+)?)/g, "$$$1$$");
+      return unwrapped;
+    }
+    return fullMatch;
+  });
+
+  // Corrige $ não fechado em variáveis pontuais seguido de palavra em português (ex: "$QS intersectando-se" -> "$QS$ intersectando-se")
+  text = text.replace(/(^|[^\\$])\$([A-Za-z]{1,2}(?:_[0-9a-zA-Z]+)?|\d+(?:\.\d+)?)\s+([a-zA-ZÀ-ÿ]{2,})/g, '$1$$$2$$ $3');
+
+  // Envolve letras gregas e símbolos que vieram soltos no texto sem $ (ex: \omega, \Gamma, \cap, \cup)
+  text = text.replace(/(?<!\$)\\((?:omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|notin|subset|subseteq))\b(?!\$)/g, '$\\$1$');
+
   // Processa linha a linha identificando fórmulas isoladas sem delimitadores
   const lines = text.split("\n");
   const processedLines = lines.map((line) => {
@@ -351,10 +379,22 @@ export function renderMathText(text: string) {
           content: textRemaining.slice(textLastIndex, inlineMatch.index).replaceAll(TOKEN_REAL, "R$") 
         });
       }
-      finalParts.push({ 
-        type: "inline", 
-        content: inlineMatch[1].replaceAll(TOKEN_REAL, "R\\$") 
-      });
+      const innerContent = inlineMatch[1];
+      const withoutLatex = innerContent.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
+      const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
+
+      if (words.length >= 2) {
+        // Frase em linguagem natural erroneamente envolvida em $...$: renderiza como texto normal para preservar espaços!
+        finalParts.push({
+          type: "text",
+          content: innerContent.replaceAll(TOKEN_REAL, "R$"),
+        });
+      } else {
+        finalParts.push({ 
+          type: "inline", 
+          content: innerContent.replaceAll(TOKEN_REAL, "R\\$") 
+        });
+      }
       textLastIndex = inlineMatch.index + inlineMatch[0].length;
     }
     
