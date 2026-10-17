@@ -356,21 +356,31 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         data = content_raw
     else:
         try:
-            cleaned = content_raw.strip()
-            if cleaned.startswith("```"):
-                import re
-                cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
-                cleaned = re.sub(r"\s*```$", "", cleaned)
-            first_b = cleaned.find("{")
-            last_b = cleaned.rfind("}")
-            if first_b != -1 and last_b != -1:
-                cleaned = cleaned[first_b:last_b + 1]
-            data = json.loads(cleaned)
+            from app.core.json_safe import safe_parse_json_with_latex
+            data = safe_parse_json_with_latex(content_raw)
         except Exception:
-            data = {}
+            try:
+                cleaned = content_raw.strip()
+                if cleaned.startswith("```"):
+                    import re
+                    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+                    cleaned = re.sub(r"\s*```$", "", cleaned)
+                first_b = cleaned.find("{")
+                last_b = cleaned.rfind("}")
+                if first_b != -1 and last_b != -1:
+                    cleaned = cleaned[first_b:last_b + 1]
+                data = json.loads(cleaned)
+            except Exception:
+                data = {}
 
     model_a_data = data.get("model_a", {})
     model_b_data = data.get("model_b", {})
+
+    if res.get("status") == "unavailable" or (res.get("provider") == "fallback" and not model_a_data and not model_b_data):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="MathAI Segunda Opinião temporariamente indisponível. Todos os provedores de cognição estão sobrecarregados.",
+        )
 
     return SecondOpinionResponse(
         model_a=SecondOpinionModelItem(
