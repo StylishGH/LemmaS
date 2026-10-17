@@ -5,6 +5,8 @@ import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
+export const maxDuration = 30;
+
 const PROMPT_SISTEMA_AVALIADOR = `Você é o Avaliador Cognitivo e Tutor de Resoluções Matemáticas do LEMMAS (MathAI Engine), especializado em avaliação passo a passo e resolução axiomática de alto nível (IME, ITA, EsPCEx, AFA, EFOMM, OBM, ENEM).
 
 PRINCÍPIO EPISTÊMICO FUNDAMENTAL: EVIDÊNCIA ANTES DE INFERÊNCIA
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
             imagem_base64: cleanImage,
             mime_type: mimeType,
           }),
-          signal: AbortSignal.timeout(3500),
+          signal: AbortSignal.timeout(25000),
           cache: "no-store",
         });
 

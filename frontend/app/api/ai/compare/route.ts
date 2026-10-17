@@ -3,6 +3,8 @@ import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
+export const maxDuration = 30;
+
 // Guardrail: palavras-chave que indicam conteúdo NÃO matemático ou spam/bate-papo
 const NON_MATH_KEYWORDS = [
   "olá", "ola", "oi", "tudo bem", "como vai", "bom dia", "boa tarde", "boa noite", "tchau", "adeus",
@@ -98,16 +100,23 @@ export async function POST(req: NextRequest) {
       ? `Contexto da questão: ${contextoQuestao}\n\nDúvida do estudante: ${enunciado}`
       : enunciado;
 
-    // 1. Tenta o Backend FastAPI se estiver acordado (timeout de 3.5s para evitar travamento)
+    const authorization = req.headers.get("authorization") || "";
+    const backendHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (authorization.startsWith("Bearer ")) {
+      backendHeaders["Authorization"] = authorization;
+    }
+
+    // 1. Centralização: Requisição ao Backend FastAPI (MathAI Engine no Render)
+    // Timeout coordenado de 25 segundos (compatível com maxDuration=30s da Vercel e orçamento de 25s do Gateway)
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: backendHeaders,
         body: JSON.stringify({
           enunciado: fullPrompt,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(25000),
         cache: "no-store",
       });
 
@@ -122,9 +131,18 @@ export async function POST(req: NextRequest) {
             model_used: backendData.model_used || "mathai-gateway",
           });
         }
+      } else if (backendResp.status === 503) {
+        const errorData = await backendResp.json().catch(() => ({}));
+        return NextResponse.json(
+          {
+            error: errorData.detail || "MathAI Segunda Opinião temporariamente sobrecarregada. Tente novamente em instantes.",
+            status: "unavailable",
+          },
+          { status: 503 }
+        );
       }
-    } catch {
-      // Backend em cold-start ou offline, aciona inferência resiliente local/Gemini
+    } catch (backendErr) {
+      console.warn("[Segunda Opinião] Falha na chamada ao backend:", backendErr);
     }
 
     // 2. Inferência Direta de Alta Performance via Gemini (Latência ~1s com KaTeX real)
@@ -190,22 +208,14 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
       console.warn("[Segunda Opinião] Fallback Gemini falhou:", geminiErr);
     }
 
-    // 3. Contingência Autônoma Determinística LEMMAS (Garantia de Uptime 100%)
-    return NextResponse.json({
-      model_a: {
-        name: "Rigor Axiomático e Prova Formal (LEMMAS Core)",
-        role: "Demonstração Analítica & Invariantes Fundamentais",
-        content: `**1. Identificação Estrutural:** Para o problema apresentado, isole as grandezas invariantes e aplique as definições axiomáticas canônicas.\n\n**2. Encadeamento Lógico:** Todo passo dedutivo deve derivar estritamente das hipóteses iniciais via teoremas fundamentais em LaTeX, garantindo consistência formal.\n\n**3. Conclusão:** A demonstração analítica estabelece a verdade irrefutável sob as condições do sistema formal.`,
+    // 3. Quando todos os provedores falharem, retorna indisponibilidade real (HTTP 503) sem mascarar falha
+    return NextResponse.json(
+      {
+        error: "O motor de Segunda Opinião está temporariamente indisponível. Todos os provedores cognitivos estão sobrecarregados ou sem resposta.",
+        status: "unavailable",
       },
-      model_b: {
-        name: "Intuição Heurística & Atalhos de Gauss (LEMMAS Core)",
-        role: "Heurística Visual & Raciocínio Socrático",
-        content: `**1. Análise Heurística:** Investigue casos extremos, verifique simetrias bilaterais e avalie o comportamento assintótico.\n\n**2. Atalho Cognitivo:** Muitas vezes, uma mudança de referencial ou a consideração de propriedades invariantes permite deduzir o resultado em poucas etapas.\n\n**3. Insight Socrático:** Pergunte-se qual propriedade global o problema conserva ao ser perturbado.`,
-      },
-      sintese: "O confronto entre o rigor analítico formal e a intuição geométrica heurística consolida a verdadeira maturidade matemática necessária para exames de alto nível e formação sólida.",
-      provider: "lemmas-autonomous-contingency",
-      model_used: "lemmas-deterministic-v1",
-    });
+      { status: 503 }
+    );
     
   } catch {
     return NextResponse.json(
