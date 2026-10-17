@@ -18,6 +18,7 @@ import json
 import logging
 import re
 import time
+import uuid
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -35,9 +36,11 @@ GEMINI_MODELS_CASCADE = [
     "gemini-3.6-flash",
 ]
 
-# Modelos validados da NVIDIA NIM (prioridade: nano-omni 30b reasoning ~2s -> ultra 550b ~2.7s)
+# Modelos validados da NVIDIA NIM presentes no endpoint oficial
 NVIDIA_NIM_MODELS = [
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "nvidia/nemotron-3-super-120b-a12b",
     "nvidia/nemotron-3-ultra-550b-a55b",
 ]
 
@@ -67,6 +70,8 @@ class BaseLLMProvider(ABC):
         json_output: bool = True,
         preferred_model: Optional[str] = None,
         task_type: str = "general",
+        time_budget: Optional[float] = None,
+        correlation_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Executa a chamada e retorna dict normalizado com content, tokens e metadados."""
         pass
@@ -132,8 +137,15 @@ class OpenAICompatibleProvider(BaseLLMProvider):
         json_output: bool = True,
         preferred_model: Optional[str] = None,
         task_type: str = "general",
+        time_budget: Optional[float] = None,
+        correlation_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         if not self.is_available():
+            return None
+
+        cid = correlation_id or "local"
+        if time_budget is not None and time_budget < 2.0:
+            logger.warning("[CID:%s] [%s] Tempo restante insuficiente (%.2fs) para chamada de IA.", cid, self.name, time_budget)
             return None
 
         url = self.effective_base_url
@@ -147,8 +159,23 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             headers["Authorization"] = f"Bearer {api_key}"
 
         candidate_models = [preferred_model] if preferred_model else self.default_models
+        connect_timeout = self.timeout[0] if isinstance(self.timeout, tuple) else 2.0
+        configured_read = self.timeout[1] if isinstance(self.timeout, tuple) else self.timeout
+
+        start_provider_time = time.perf_counter()
 
         for model in candidate_models:
+            elapsed = time.perf_counter() - start_provider_time
+            if time_budget is not None:
+                remaining_for_call = time_budget - elapsed
+                if remaining_for_call < 2.0:
+                    logger.warning("[CID:%s] [%s] Orçamento esgotado para tentar modelo %s.", cid, self.name, model)
+                    break
+                effective_read = min(configured_read, max(2.0, remaining_for_call - 0.5))
+            else:
+                effective_read = configured_read
+
+            req_timeout = (connect_timeout, effective_read)
             payload: Dict[str, Any] = {
                 "model": model,
                 "messages": messages,
@@ -159,15 +186,15 @@ class OpenAICompatibleProvider(BaseLLMProvider):
                 payload["response_format"] = {"type": "json_object"}
 
             try:
-                logger.info("AI Provider [%s] call started; model=%s; task_type=%s", self.name, model, task_type)
-                resp = requests.post(endpoint, headers=headers, json=payload, timeout=self.timeout)
+                logger.info("[CID:%s] AI Provider [%s] call started; model=%s; timeout=%.1fs; task_type=%s", cid, self.name, model, effective_read, task_type)
+                resp = requests.post(endpoint, headers=headers, json=payload, timeout=req_timeout)
 
                 # Tratamento de serving engines que rejeitam response_format (ex: HTTP 400)
                 if resp.status_code == 400 and json_output and "response_format" in payload:
-                    logger.warning("[%s] 400 com response_format; tentando sem parâmetro. detail=%s", self.name, resp.text[:200])
+                    logger.warning("[CID:%s] [%s] 400 com response_format; tentando sem parâmetro. detail=%s", cid, self.name, resp.text[:200])
                     retry_payload = dict(payload)
                     retry_payload.pop("response_format", None)
-                    resp = requests.post(endpoint, headers=headers, json=retry_payload, timeout=self.timeout)
+                    resp = requests.post(endpoint, headers=headers, json=retry_payload, timeout=req_timeout)
 
                 if resp.status_code == 200:
                     data = resp.json()
@@ -186,7 +213,7 @@ class OpenAICompatibleProvider(BaseLLMProvider):
                     t_tokens = usage.get("total_tokens", p_tokens + c_tokens)
 
                     actual_model = data.get("model", model)
-                    logger.info("[%s] Succeeded; model=%s; total_tokens=%s", self.name, actual_model, t_tokens)
+                    logger.info("[CID:%s] [%s] Succeeded; model=%s; total_tokens=%s", cid, self.name, actual_model, t_tokens)
                     return {
                         "content": content,
                         "model_used": actual_model,
@@ -198,9 +225,29 @@ class OpenAICompatibleProvider(BaseLLMProvider):
                         "raw_response": data,
                     }
 
-                logger.error("[%s] Falha HTTP %s: %s", self.name, resp.status_code, resp.text[:300])
+                # Tratamento granular de erros HTTP
+                if resp.status_code in (401, 403):
+                    logger.error("[CID:%s] [%s] Falha de autenticação HTTP %s: chave inválida ou sem permissão. Interrompendo provedor.", cid, self.name, resp.status_code)
+                    break  # Erro permanente para este provedor
+
+                if resp.status_code == 402:
+                    logger.error("[CID:%s] [%s] Falha HTTP 402: Créditos insuficientes / pagamento pendente. Interrompendo provedor.", cid, self.name)
+                    break  # Erro permanente para este provedor
+
+                if resp.status_code == 404:
+                    logger.warning("[CID:%s] [%s] Modelo não encontrado HTTP 404: %s. Tentando próximo modelo.", cid, self.name, model)
+                    continue
+
+                if resp.status_code in (429, 503):
+                    logger.warning("[CID:%s] [%s] Erro transiente HTTP %s (sobrecarga/rate-limit) no modelo %s.", cid, self.name, resp.status_code, model)
+                    continue
+
+                logger.error("[CID:%s] [%s] Falha HTTP %s: %s", cid, self.name, resp.status_code, resp.text[:300])
+            except requests.exceptions.Timeout:
+                logger.warning("[CID:%s] [%s] Timeout após %.1fs na chamada do modelo %s.", cid, self.name, effective_read, model)
+                continue
             except Exception as err:
-                logger.warning("[%s] Exceção durante requisição: %s", self.name, str(err)[:250])
+                logger.warning("[CID:%s] [%s] Exceção durante requisição: %s", cid, self.name, str(err)[:250])
 
         return None
 
@@ -225,9 +272,18 @@ class GeminiProvider(BaseLLMProvider):
         json_output: bool = True,
         preferred_model: Optional[str] = None,
         task_type: str = "general",
+        time_budget: Optional[float] = None,
+        correlation_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         if not self.is_available():
             return None
+
+        cid = correlation_id or "local"
+        if time_budget is not None and time_budget < 2.0:
+            logger.warning("[CID:%s] [Gemini] Tempo restante insuficiente (%.2fs) para inferência.", cid, time_budget)
+            return None
+
+        effective_timeout = min(self.timeout, max(2.0, time_budget - 0.5)) if time_budget else self.timeout
 
         try:
             from google import genai
@@ -235,7 +291,7 @@ class GeminiProvider(BaseLLMProvider):
 
             client = genai.Client(
                 api_key=self.api_key,
-                http_options=types.HttpOptions(timeout=self.timeout),
+                http_options=types.HttpOptions(timeout=effective_timeout),
             )
 
             # Separa mensagem de sistema das mensagens de usuário
@@ -259,7 +315,7 @@ class GeminiProvider(BaseLLMProvider):
             candidate_models = [preferred_model] if preferred_model else self.models_cascade
             for model_name in candidate_models:
                 try:
-                    logger.info("[Gemini] Tentativa de cascata; model=%s; task_type=%s", model_name, task_type)
+                    logger.info("[CID:%s] [Gemini] Tentativa de cascata; model=%s; timeout=%.1fs; task_type=%s", cid, model_name, effective_timeout, task_type)
                     response = client.models.generate_content(
                         model=model_name,
                         contents=prompt_text,
@@ -273,6 +329,7 @@ class GeminiProvider(BaseLLMProvider):
                         c_tokens = getattr(usage_metadata, "candidates_token_count", 0) if usage_metadata else 0
                         t_tokens = getattr(usage_metadata, "total_token_count", p_tokens + c_tokens) if usage_metadata else 0
 
+                        logger.info("[CID:%s] [Gemini] Succeeded; model=%s; total_tokens=%s", cid, model_name, t_tokens)
                         return {
                             "content": content,
                             "model_used": model_name,
@@ -285,11 +342,21 @@ class GeminiProvider(BaseLLMProvider):
                         }
                 except Exception as err:
                     err_str = str(err)
-                    if any(code in err_str for code in ("402", "429", "503", "404")):
+                    # Erro 401/403: Chave inválida ou permissão negada -> Interrompe provedor imediatamente
+                    if any(code in err_str for code in ("401", "403", "API_KEY_INVALID", "PERMISSION_DENIED")):
+                        logger.error("[CID:%s] [Gemini] Erro permanente de autenticação: %s. Interrompendo provedor.", cid, err_str[:150])
+                        break
+                    # Erro 402: Créditos esgotados -> Interrompe provedor imediatamente
+                    if any(code in err_str for code in ("402", "prepayment credits are depleted")):
+                        logger.error("[CID:%s] [Gemini] Erro 402 permanente: créditos esgotados. Interrompendo provedor.", cid, err_str[:150])
+                        break
+                    # Erros transientes ou modelo não encontrado -> Tenta próximo da cascata
+                    if any(code in err_str for code in ("404", "429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
+                        logger.warning("[CID:%s] [Gemini] Erro transiente (%s) no modelo %s. Tentando próximo da cascata.", cid, err_str[:100], model_name)
                         continue
                     break
         except Exception as err:
-            logger.warning("[Gemini SDK] Falha de inicialização: %s", str(err)[:200])
+            logger.warning("[CID:%s] [Gemini SDK] Falha de inicialização: %s", cid, str(err)[:200])
 
         return None
 
@@ -311,6 +378,8 @@ class DeterministicAutonomousProvider(BaseLLMProvider):
         json_output: bool = True,
         preferred_model: Optional[str] = None,
         task_type: str = "general",
+        time_budget: Optional[float] = None,
+        correlation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         if not json_output:
             content = (
@@ -369,7 +438,7 @@ class MathAiGateway:
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=settings.NVIDIA_API_KEY,
             default_models=NVIDIA_NIM_MODELS,
-            timeout=(2.5, 12.0),
+            timeout=(2.0, 8.0),
         )
 
         self.deepseek_provider = OpenAICompatibleProvider(
@@ -377,7 +446,7 @@ class MathAiGateway:
             base_url=settings.DEEPSEEK_API_URL,
             api_key=settings.DEEPSEEK_API_KEY,
             default_models=["deepseek-reasoner", "deepseek-chat"],
-            timeout=(2.0, 10.0),
+            timeout=(2.0, 8.0),
         )
 
         self.openrouter_provider = OpenAICompatibleProvider(
@@ -385,7 +454,7 @@ class MathAiGateway:
             base_url=settings.OPENROUTER_API_URL,
             api_key=settings.OPENROUTER_API_KEY,
             default_models=[settings.OPENROUTER_MODEL],
-            timeout=(2.0, 12.0),
+            timeout=(2.0, 8.0),
             extra_headers={
                 "HTTP-Referer": "https://lemmas-ochre.vercel.app",
                 "X-Title": "LemmaS",
@@ -403,7 +472,7 @@ class MathAiGateway:
         self.gemini_provider = GeminiProvider(
             api_key=settings.GEMINI_API_KEY,
             models_cascade=GEMINI_MODELS_CASCADE,
-            timeout=30.0,
+            timeout=8.0,
         )
 
         self.autonomous_provider = DeterministicAutonomousProvider()
@@ -424,9 +493,12 @@ class MathAiGateway:
         preferred_model: Optional[str] = None,
         task_type: str = "general",
         evaluation_id: Optional[str] = None,
+        total_budget_seconds: float = 20.0,
+        correlation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Executa a inferência pela melhor estratégia e registra telemetria N:1."""
         start_time = time.perf_counter()
+        cid = correlation_id or f"req-{uuid.uuid4().hex[:8]}"
 
         full_input_payload = {
             "system_prompt": system_prompt or "",
@@ -445,8 +517,14 @@ class MathAiGateway:
 
         # Matriz de Provedores com base em configuração e tipo de tarefa
         cascade = self._resolve_provider_cascade(task_type)
+        deadline = start_time + total_budget_seconds
 
         for provider in cascade:
+            remaining = deadline - time.perf_counter()
+            if remaining < 2.0:
+                logger.warning("[CID:%s] Orçamento global de inferência expirado (restam %.2fs); abortando provedores restantes.", cid, remaining)
+                break
+
             call_start = time.perf_counter()
             result = provider.complete(
                 messages=all_messages,
@@ -455,6 +533,8 @@ class MathAiGateway:
                 json_output=json_output,
                 preferred_model=preferred_model,
                 task_type=task_type,
+                time_budget=remaining,
+                correlation_id=cid,
             )
 
             call_latency = round((time.perf_counter() - call_start) * 1000, 2)
@@ -527,6 +607,7 @@ class MathAiGateway:
             messages=all_messages,
             json_output=json_output,
             task_type=task_type,
+            correlation_id=cid,
         )
         fallback_res.update({
             "latency_ms": total_latency,
