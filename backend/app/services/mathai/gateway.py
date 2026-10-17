@@ -439,7 +439,7 @@ class MathAiGateway:
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=settings.NVIDIA_API_KEY,
             default_models=NVIDIA_NIM_MODELS,
-            timeout=(2.0, 8.0),
+            timeout=(2.0, 14.0),
         )
 
         self.deepseek_provider = OpenAICompatibleProvider(
@@ -494,7 +494,7 @@ class MathAiGateway:
         preferred_model: Optional[str] = None,
         task_type: str = "general",
         evaluation_id: Optional[str] = None,
-        total_budget_seconds: float = 20.0,
+        total_budget_seconds: float = 25.0,
         correlation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Executa a inferência pela melhor estratégia e registra telemetria N:1."""
@@ -662,23 +662,28 @@ class MathAiGateway:
         return cascade
 
     def _validate_and_clean_json(self, raw_text: str) -> tuple[bool, str]:
-        """Extrai blocos JSON de markdown e valida sintaxe básica."""
-        cleaned = raw_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
-            cleaned = re.sub(r"\s*```$", "", cleaned)
-            cleaned = cleaned.strip()
+        """Extrai blocos JSON de markdown e valida sintaxe básica com tolerância a comandos LaTeX."""
+        try:
+            from app.core.json_safe import safe_parse_json_with_latex
+            parsed = safe_parse_json_with_latex(raw_text)
+            return True, json.dumps(parsed, ensure_ascii=False)
+        except Exception:
+            cleaned = raw_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r"\s*```$", "", cleaned)
+                cleaned = cleaned.strip()
 
-        start = cleaned.find("{")
-        end = cleaned.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            candidate = cleaned[start : end + 1]
-            try:
-                json.loads(candidate)
-                return True, candidate
-            except Exception:
-                pass
-        return False, raw_text
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                candidate = cleaned[start : end + 1]
+                try:
+                    json.loads(candidate)
+                    return True, candidate
+                except Exception:
+                    pass
+            return False, raw_text
 
     def _record_telemetry(
         self,
