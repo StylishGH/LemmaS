@@ -244,8 +244,8 @@ class OpenAICompatibleProvider(BaseLLMProvider):
 
                 logger.error("[CID:%s] [%s] Falha HTTP %s: %s", cid, self.name, resp.status_code, resp.text[:300])
             except requests.exceptions.Timeout:
-                logger.warning("[CID:%s] [%s] Timeout após %.1fs na chamada do modelo %s.", cid, self.name, effective_read, model)
-                continue
+                logger.warning("[CID:%s] [%s] Timeout após %.1fs na chamada do modelo %s. Interrompendo tentativas neste provedor para preservar orçamento.", cid, self.name, effective_read, model)
+                break
             except Exception as err:
                 logger.warning("[CID:%s] [%s] Exceção durante requisição: %s", cid, self.name, str(err)[:250])
 
@@ -262,7 +262,7 @@ class GeminiProvider(BaseLLMProvider):
         self.timeout = timeout
 
     def is_available(self) -> bool:
-        return bool(self.api_key and settings.GEMINI_FALLBACK_ENABLED)
+        return bool(self.api_key and settings.has_gemini)
 
     def complete(
         self,
@@ -284,6 +284,7 @@ class GeminiProvider(BaseLLMProvider):
             return None
 
         effective_timeout = min(self.timeout, max(2.0, time_budget - 0.5)) if time_budget else self.timeout
+        effective_timeout_ms = int(round(effective_timeout * 1000))
 
         try:
             from google import genai
@@ -291,7 +292,7 @@ class GeminiProvider(BaseLLMProvider):
 
             client = genai.Client(
                 api_key=self.api_key,
-                http_options=types.HttpOptions(timeout=effective_timeout),
+                http_options=types.HttpOptions(timeout=effective_timeout_ms),
             )
 
             # Separa mensagem de sistema das mensagens de usuário
@@ -637,17 +638,18 @@ class MathAiGateway:
             cascade.append(self.ninerouter_provider)
 
         # 3. Raciocínio Axiomático vs Dica Socrática
-        if task_type in ("axiomatic_reasoning", "formal_proof"):
+        if task_type == "socratic_hint":
+            # Dica Socrática exige resposta interativa ultrarrápida (< 1s) para a UX do estudante
+            if self.gemini_provider.is_available():
+                cascade.append(self.gemini_provider)
             if self.nvidia_nim_provider.is_available():
                 cascade.append(self.nvidia_nim_provider)
             if self.openrouter_provider.is_available():
                 cascade.append(self.openrouter_provider)
             if self.deepseek_provider.is_available():
                 cascade.append(self.deepseek_provider)
-            if self.gemini_provider.is_available():
-                cascade.append(self.gemini_provider)
         else:
-            # Tarefas de tutoria e gerais
+            # Raciocínio formal, avaliação cognitiva e tarefas analíticas profundas
             if self.nvidia_nim_provider.is_available():
                 cascade.append(self.nvidia_nim_provider)
             if self.openrouter_provider.is_available():
