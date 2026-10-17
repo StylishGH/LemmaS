@@ -745,6 +745,8 @@ function ResolverContent() {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
+          exercise_id: q.id,
+          id: q.id,
           enunciado: q.enunciado,
           materia: q.materia || "Matemática",
           topico: q.topico || "Matemática",
