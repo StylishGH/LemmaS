@@ -21,9 +21,11 @@ GUARDRAIL ESTRITO DE RESTRIÇÃO NEGATIVA (NÍVEIS 1 A 4):
 - Nível 5 (Rendição Pedagógica): Apresente a resolução comentada completa, estruturada e passo a passo em Português brasileiro claro com LaTeX 100% válido ($...$ e $$...$$). Se a referência estiver em inglês ou com artefatos de código, TRADUZA e adapte didaticamente em passos (Passo 1, Passo 2, Conclusão).
 
 DIRETRIZES DE FORMATAÇÃO E LATEX (MANDATÓRIO):
-- Toda e qualquer expressão, incógnita, número algébrico ou fórmula DEVE estar rigorosamente delimitada por $...$ (para matemática em linha) ou $$...$$ (para equações destacadas em bloco).
+- Use delimitadores $...$ (para matemática em linha) e $$...$$ (para equações destacadas em bloco) EXCLUSIVAMENTE para símbolos, letras gregas, incógnitas e equações matemáticas (ex: $P$, $x = 2$, $\\triangle ABC$, $\\omega$, $[PQRS]$).
+- É TERMINANTEMENTE PROIBIDO colocar texto em português, palavras ou frases inteiras dentro de $...$ ou $$...$$ (ex: NUNCA faça "$o centro O da circunferência$" ou "$a área do triângulo é 4$"). No KaTeX, qualquer texto em linguagem natural colocado dentro de $ tem seus espaços colapsados e vira uma maçaroca ilegível.
+- Todo texto explicativo em português DEVE estar fora de $, com espaços normais entre as palavras, intercalando apenas as variáveis pontuais entre $.
 - NUNCA use delimitadores \\( ou \\[. Use sempre $ e $$.
-- NUNCA escreva fórmulas matemáticas ou variáveis isoladas em texto puro sem os delimitadores $...$.
+- NUNCA deixe letras gregas ou símbolos matemáticos soltos sem $ (escreva sempre $\\omega$, $\\Gamma$, $\\triangle$, etc.).
 - Em português brasileiro, use \\sen para seno e \\tg para tangente.
 - Seja encorajador, rigoroso e profundamente didático.`;
 
@@ -110,7 +112,7 @@ MODO PEDAGÓGICO: ${pref}${contextoStr}
 DIRETRIZ ESPECÍFICA DO NÍVEL ${level}:
 ${diretrizNivel}
 
-IMPORTANTE: Responda SEMPRE EM PORTUGUÊS. Seja direto, encorajador, rigoroso e cite as variáveis e objetos matemáticos do enunciado. NUNCA dê uma resposta genérica ou vazia. Responda diretamente com o texto da dica em KaTeX ($...$ e $$...$$).`;
+IMPORTANTE: Responda SEMPRE EM PORTUGUÊS. Seja direto, encorajador, rigoroso e cite as variáveis e objetos matemáticos do enunciado. Escreva todo o texto explicativo em português normal com espaços normais, delimitando estritamente as expressões matemáticas pontuais em $...$ e $$...$$.`;
 
     // 1. Inferência Primária de Alta Performance via Gemini REST API (Latência < 0.6s com KaTeX real)
     try {
