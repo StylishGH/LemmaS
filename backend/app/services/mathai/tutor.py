@@ -8,9 +8,20 @@ Implementa a pedagogia socrática progressiva para conduzir o estudante à refle
 - Nível 5 (Resolução Completa): Demonstração integral passo a passo até o gabarito.
 """
 
+import logging
 import re
 from typing import Any, Dict, List, Optional
 from app.services.mathai.gateway import mathai_gateway
+from app.services.mathai.hint_cache import (
+    hint_cache_service,
+    compute_content_hash,
+    compute_cache_key,
+    is_individualized_request,
+    validate_hint_for_cache,
+    PROMPT_STRATEGY_VERSION,
+)
+
+logger = logging.getLogger(__name__)
 
 PROMPT_SISTEMA_SOCRATICO = r"""Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine), especializado no Método de Pólya para conduzir estudantes de matemática (nível superior e concursos militares) a raciocinar por conta própria.
 
@@ -31,11 +42,28 @@ DIRETRIZES MANDATÓRIAS DE NOTAÇÃO MATEMÁTICA E LATEX:
 Seja encorajador, rigoroso e extremamente didático."""
 
 
+def is_valid_commented_solution(sol: Optional[str]) -> bool:
+    """Verifica se uma solução é uma resolução comentada autêntica e não apenas a letra do gabarito ou vazia."""
+    if not sol:
+        return False
+    text = str(sol).strip()
+    if len(text) < 15:
+        return False
+    # Descarta se for apenas a letra da alternativa ou indicação curta de gabarito
+    if re.match(r"^\s*(\(?[a-eA-E]\)?|(?:resposta|gabarito|letra|opção|opcao)\s*:?\s*\(?[a-eA-E]\)?)\s*$", text, re.IGNORECASE):
+        return False
+    # Descarta se for apenas um número isolado
+    if re.match(r"^\s*-?\d+(?:[.,]\d+)?\s*$", text):
+        return False
+    return True
+
+
 class SocraticTutor:
     """Motor de tutoria socrática escalonada em 5 níveis adaptado a preferências pedagógicas."""
 
     def __init__(self) -> None:
         self.gateway = mathai_gateway
+        self.hint_cache = hint_cache_service
 
     def generate_hint(
         self,
@@ -44,6 +72,9 @@ class SocraticTutor:
         pedagogical_preference: Optional[str] = None,
         foco_concurso: Optional[str] = None,
         motivacoes: Optional[List[str]] = None,
+        use_cache: bool = True,
+        tentativas_anteriores: Optional[Any] = None,
+        student_draft: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Gera uma dica socrática de nível 1 a 5 modulada ativamente pela preferência pedagógica e contexto do estudante."""
         level = max(1, min(5, int(level)))
@@ -59,6 +90,48 @@ class SocraticTutor:
         solucao = exercise.get("solucao", "")
         estrategias = exercise.get("estrategias_esperadas", [])
         lemas = exercise.get("lemas_associados", [])
+
+        # Identificador estável, hash de conteúdo e chave lógica determinística do cache
+        content_hash = compute_content_hash(enunciado, solucao, gabarito)
+        stable_id, questao_id = self.hint_cache.resolve_stable_exercise_id(exercise, content_hash)
+        cache_key = compute_cache_key(stable_id, level, pref, content_hash, PROMPT_STRATEGY_VERSION)
+
+        # Regra Crítica: Dicas individualizadas nunca usam nem poluem o cache base compartilhado
+        is_personal = is_individualized_request(
+            exercise,
+            {"tentativas_anteriores": tentativas_anteriores, "student_draft": student_draft}
+        )
+
+        if use_cache and not is_personal:
+            cached_data = self.hint_cache.get_cached_hint(cache_key)
+            if cached_data and cached_data.get("hint_text"):
+                logger.info(f"[SocraticTutor] Cache HIT para {stable_id} (Nível {level}, modo {pref}).")
+                return {
+                    "level": level,
+                    "hint_text": cached_data["hint_text"],
+                    "exercise_id": stable_id,
+                    "model_used": cached_data.get("model_used", "socratic-engine"),
+                    "provider": cached_data.get("provider", "cached"),
+                    "latency_ms": 0.0,
+                    "input_hash": cached_data.get("cache_key", cache_key),
+                    "cached": True,
+                    "cache_key": cache_key,
+                }
+
+        # Nível 5: Se existir resolução comentada oficial no banco, utiliza diretamente
+        if level == 5 and is_valid_commented_solution(solucao):
+            logger.info(f"[SocraticTutor] Resolução comentada oficial encontrada para {stable_id}.")
+            return {
+                "level": 5,
+                "hint_text": f"💡 **Nível 5 — Resolução Comentada Oficial:**\n\n{solucao.strip()}",
+                "exercise_id": stable_id,
+                "model_used": "Gabarito Comentado Oficial",
+                "provider": "banco_questoes",
+                "latency_ms": 0.0,
+                "input_hash": content_hash,
+                "cached": False,
+                "cache_key": cache_key,
+            }
 
         # Diretrizes pedagógicas ativas por modo
         diretrizes_modo = {
@@ -239,22 +312,98 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
             temperature=0.3,
             max_tokens=1024,
             json_output=False,
+            task_type="socratic_hint",
         )
 
         content = res.get("content", "").strip()
+        provider = res.get("provider", "fallback")
+        status_res = res.get("status", "")
+        model_used = res.get("model_used", "socratic-engine")
 
-        # Fallback determinístico caso o modelo não retorne ou caia em contingência
-        if not content or res.get("provider") == "fallback":
-            content = self._get_fallback_hint(exercise, level, pref)
+        # Verifica se um provedor real respondeu com sucesso
+        is_failed = provider in ("fallback", "none", "unavailable") or status_res in ("fallback", "failed", "unavailable", "error")
+        ai_succeeded = bool(content and not is_failed)
+
+        if not ai_succeeded:
+            logger.warning(
+                "[SocraticTutor] Falha na geração por IA para exercício %s (Nível %d). Provedores indisponíveis.",
+                stable_id,
+                level,
+            )
+            # Para Nível 5: se não há solução comentada e a IA falhou, nunca apresentar só a letra do gabarito como resolução
+            if level == 5:
+                gabarito_info = f" (Gabarito oficial: Alternativa {gabarito.strip()})" if gabarito and str(gabarito).strip() else ""
+                error_msg = f"A resolução comentada detalhada está temporariamente indisponível (falha nos provedores de IA).{gabarito_info}"
+            else:
+                error_msg = "O Tutor Socrático está temporariamente indisponível. Nenhum provedor de IA respondeu a tempo."
+
+            return {
+                "level": level,
+                "hint_text": self._get_fallback_hint(exercise, level, pref),
+                "exercise_id": stable_id,
+                "model_used": "LEMMAS Contingência",
+                "provider": "fallback",
+                "latency_ms": res.get("latency_ms", 0.0),
+                "input_hash": res.get("input_hash", ""),
+                "cached": False,
+                "cache_key": cache_key,
+                "status": "unavailable",
+                "error": error_msg,
+            }
+
+        # Validação adicional para Nível 5 gerado por IA: nunca aceitar resposta que seja apenas a letra do gabarito
+        if level == 5 and not is_valid_commented_solution(content):
+            logger.warning("[SocraticTutor] Nível 5 gerado foi descartado por ser apenas letra ou insuficiente: %s", content[:50])
+            gabarito_info = f" (Gabarito oficial: Alternativa {gabarito.strip()})" if gabarito and str(gabarito).strip() else ""
+            error_msg = f"A resolução gerada pela IA foi insuficiente ou continha apenas a letra.{gabarito_info}"
+            return {
+                "level": 5,
+                "hint_text": self._get_fallback_hint(exercise, level, pref),
+                "exercise_id": stable_id,
+                "model_used": "LEMMAS Contingência",
+                "provider": "fallback",
+                "latency_ms": res.get("latency_ms", 0.0),
+                "input_hash": res.get("input_hash", ""),
+                "cached": False,
+                "cache_key": cache_key,
+                "status": "unavailable",
+                "error": error_msg,
+            }
+
+        # Validação e persistência no cache apenas para dicas-base legítimas
+        if use_cache and not is_personal:
+            is_valid, reject_reason = validate_hint_for_cache(
+                content, level=level, gabarito=gabarito, provider=provider
+            )
+            if is_valid:
+                self.hint_cache.save_cached_hint(
+                    cache_key=cache_key,
+                    exercise_id=stable_id,
+                    questao_id=questao_id,
+                    level=level,
+                    pedagogical_preference=pref,
+                    content_hash=content_hash,
+                    hint_text=content,
+                    model_used=model_used,
+                    provider=provider,
+                    latency_ms=res.get("latency_ms", 0.0),
+                    metadata={"prompt_version": PROMPT_STRATEGY_VERSION, "foco": foco_concurso},
+                    prompt_version=PROMPT_STRATEGY_VERSION,
+                )
+            else:
+                logger.info(f"[SocraticTutor] Dica descartada para cache: {reject_reason}")
 
         return {
             "level": level,
             "hint_text": content,
-            "exercise_id": exercise.get("id"),
-            "model_used": res.get("model_used", "socratic-rule-based"),
-            "provider": res.get("provider", "fallback"),
+            "exercise_id": stable_id,
+            "model_used": model_used,
+            "provider": provider,
             "latency_ms": res.get("latency_ms", 0.0),
             "input_hash": res.get("input_hash", ""),
+            "cached": False,
+            "cache_key": cache_key,
+            "status": "completed",
         }
 
     def _get_fallback_hint(self, exercise: Dict[str, Any], level: int, pref: str = "conceitual") -> str:
@@ -265,10 +414,23 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
             topico = exercise.get("materia", "Matemática")
         else:
             topico = raw_topico
-        gabarito = exercise.get("gabarito", "")
         solucao = exercise.get("solucao", "")
-        res_oficial = solucao or gabarito or "A resolução formal completa demonstra que a tese se sustenta diretamente a partir das hipóteses."
-
+        gabarito = exercise.get("gabarito", "")
+        
+        # Determine if we have a real solution (from solucao) or just gabarito
+        has_real_solucao = bool(solucao and str(solucao).strip() and is_valid_commented_solution(solucao))
+        has_gabarito = bool(gabarito and str(gabarito).strip())
+        
+        if has_real_solucao:
+            res_oficial = solucao.strip()
+            res_oficial_source = "solucao"
+        elif has_gabarito:
+            res_oficial = "Solução não disponível via fallback - consulte o material de estudo para a resolução completa"
+            res_oficial_source = "gabarito_only"
+        else:
+            res_oficial = "A resolução formal completa demonstra que a tese se sustenta diretamente a partir das hipóteses."
+            res_oficial_source = "default"
+        
         fallback_by_pref = {
             "conceitual": {
                 1: f"💡 **Nível 1 — Intuição & Leitura de Hipóteses (Intuição e Dados)**: Você identificou quais são os símbolos, conectivos e notações essenciais desta questão de **{topico}**? (Ex: quantificadores como $\\forall$ e $\\exists$, pertinência $\\in$, ou conectivos como $\\implies$). O que cada um deles expressa intuitivamente antes de calcular?",
@@ -297,9 +459,9 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
                 3: f"💡 **Nível 3 — O Primeiro Passo / Construção Auxiliar (Largada Otimizada)**: Escreva a primeira igualdade na forma mais simplificada e direta possível para ganhar tempo de prova.",
                 4: f"💡 **Nível 4 — Destravamento do Gargalo (Pulo do Gato da Banca)**: Use o atalho de resolução que quebra a pegadinha e verifique rapidamente contra os distratores da prova.",
                 5: f"💡 **Nível 5 — Resolução Completa (Rendição Pedagógica - Resolução Definitiva)**:\n\n{res_oficial}",
-            },
+            }
         }
-
+        
         modo_dict = fallback_by_pref.get(pref, fallback_by_pref["conceitual"])
         return modo_dict.get(level, f"💡 **Nível {level}**: Desenvolva o raciocínio formal a partir das hipóteses da questão.")
 
