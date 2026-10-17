@@ -36,6 +36,9 @@ class SocraticHintRequest(BaseModel):
     pedagogicalPreference: Optional[str] = None
     foco_concurso: Optional[str] = Field(None, description="Banca ou concurso alvo do aluno, ex: ITA, IME, ESA")
     motivacoes: Optional[List[str]] = Field(default_factory=list, description="Motivações do aluno, ex: superior_docencia, data_science_ml")
+    use_cache: bool = Field(default=True, description="Se deve consultar e gravar no cache persistente")
+    tentativas_anteriores: Optional[Any] = Field(default=None, description="Tentativas ou respostas anteriores do estudante")
+    justificativa_texto: Optional[str] = Field(default=None, description="Rascunho individual ou desenvolvimento do estudante")
 
     @model_validator(mode="before")
     @classmethod
@@ -62,6 +65,8 @@ class SocraticHintResponse(BaseModel):
     provider: str
     latency_ms: float
     input_hash: str
+    cached: bool = Field(default=False, description="Indica se a resposta foi obtida a partir do cache persistente")
+    cache_key: Optional[str] = Field(default=None, description="Chave lógica determinística de indexação do cache")
 
 
 class VisionOcrRequest(BaseModel):
@@ -131,7 +136,16 @@ def get_socratic_hint(
         pedagogical_preference=payload.pedagogical_preference,
         foco_concurso=payload.foco_concurso,
         motivacoes=payload.motivacoes,
+        use_cache=payload.use_cache,
+        tentativas_anteriores=payload.tentativas_anteriores,
+        student_draft=payload.justificativa_texto,
     )
+
+    if hint_result.get("status") == "unavailable":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=hint_result.get("error") or "O Tutor Socrático está temporariamente indisponível. Todos os provedores de IA falharam.",
+        )
 
     return SocraticHintResponse(
         level=hint_result["level"],
@@ -141,6 +155,8 @@ def get_socratic_hint(
         provider=hint_result.get("provider", "fallback"),
         latency_ms=hint_result.get("latency_ms", 0.0),
         input_hash=hint_result.get("input_hash", ""),
+        cached=hint_result.get("cached", False),
+        cache_key=hint_result.get("cache_key"),
     )
 
 

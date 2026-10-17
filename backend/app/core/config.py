@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import List, Optional
 from dotenv import load_dotenv
 
-# Carrega variáveis do .env do backend ou da raiz do repositório
+# Carrega variáveis de /etc/secrets/.env (Render Secret Files), do .env do backend ou da raiz do repositório
 _BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 _ROOT_DIR = _BACKEND_DIR.parent
+_RENDER_SECRET_ENV = Path("/etc/secrets/.env")
 
-if (_BACKEND_DIR / ".env").exists():
+if _RENDER_SECRET_ENV.exists():
+    load_dotenv(_RENDER_SECRET_ENV)
+elif (_BACKEND_DIR / ".env").exists():
     load_dotenv(_BACKEND_DIR / ".env")
 elif (_ROOT_DIR / ".env").exists():
     load_dotenv(_ROOT_DIR / ".env")
