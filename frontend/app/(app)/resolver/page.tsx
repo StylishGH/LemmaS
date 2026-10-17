@@ -2997,10 +2997,10 @@ function ResolverContent() {
               </div>
             )}
 
-            {/* HISTÓRICO DE DICAS ACUMULADAS DA QUESTÃO (PROGRESSÃO MAIÊUTICA) */}
+            {/* HISTÓRICO DE DICAS ACUMULADAS DA QUESTÃO (PROGRESSÃO MAIÊUTICA - DICA NOVA NO TOPO) */}
             {hintsHistory[currentIndex] && hintsHistory[currentIndex].length > 0 ? (
               <div className="space-y-3">
-                {hintsHistory[currentIndex].map((item, idx) => {
+                {hintsHistory[currentIndex].slice().sort((a, b) => b.nivel - a.nivel).map((item, idx) => {
                   const nivelTitulos: Record<number, string> = {
                     1: "Nível 1: Intuição · Leitura de Hipóteses",
                     2: "Nível 2: Lema · Teorema Chave",
