@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
+import { generateNvidiaContent } from "@/lib/nvidia";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
@@ -164,10 +165,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Inferência de Alta Precisão via Gemini REST API (Multimodal com OCR e KaTeX)
-    try {
-      const prompt = isExplanation
-        ? `Você é o Professor e Tutor de Matemática do LEMMAS (MathAI Engine).
+    // 2. Montagem do prompt para inferência de alta precisão
+    const prompt = isExplanation
+      ? `Você é o Professor e Tutor de Matemática do LEMMAS (MathAI Engine).
 Apresente a resolução comentada detalhada e explicação axiomática passo a passo para a seguinte questão:
 
 ENUNCIADO DA QUESTÃO:
@@ -186,7 +186,7 @@ INSTRUÇÕES PEDAGÓGICAS E FORMATAÇÃO:
 4. No campo "feedback_latex": Resumo conceitual intuitivo da questão e do método de resolução.
 5. No campo "passos" / "etapas_corretas": As 3 a 5 etapas essenciais da resolução.
 6. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`
-        : `Analise detalhadamente a resolução do estudante para a seguinte questão:
+      : `Analise detalhadamente a resolução do estudante para a seguinte questão:
 
 ENUNCIADO DA QUESTÃO:
 ${enunciado}
@@ -205,6 +205,8 @@ INSTRUÇÕES:
 4. Redija um feedback didático estruturado em LaTeX ($...$ e $$...$$) explicando as razões pedagógicas da avaliação.
 5. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`;
 
+    // 2.1. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
+    try {
       const geminiRes = await generateGeminiContent({
         prompt,
         systemInstruction: PROMPT_SISTEMA_AVALIADOR,
@@ -248,7 +250,50 @@ INSTRUÇÕES:
         });
       }
     } catch (geminiErr) {
-      console.warn("[Avaliador Cognitivo] Fallback Gemini falhou:", geminiErr);
+      console.warn("[Avaliador Cognitivo] Gemini indisponível, acionando NVIDIA NIM:", geminiErr);
+    }
+
+    // 2.2. Inferência de Resiliência via NVIDIA NIM (Nemotron Reasoning / DeepSeek)
+    if (process.env.NVIDIA_API_KEY && !cleanImage) {
+      try {
+        const nvidiaRes = await generateNvidiaContent({
+          prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
+          systemInstruction: PROMPT_SISTEMA_AVALIADOR,
+          temperature: 0.15,
+          maxTokens: 1536,
+          timeoutMs: 14000,
+        });
+
+        const parsed = safeParseJsonWithLatex(nvidiaRes.text);
+        if (parsed) {
+          const rawVeredito = isExplanation
+            ? "aprovado"
+            : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
+
+          return NextResponse.json({
+            veredito: rawVeredito,
+            desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
+            resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
+            etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
+            erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
+            feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine." : "Avaliação matemática concluída com sucesso."),
+            precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
+            transcricao_latex: parsed.transcricao_latex || "",
+            passos: parsed.passos || parsed.etapas_corretas || [],
+            estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
+            status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
+            diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine.",
+            metodo_alternativo: parsed.metodo_alternativo || null,
+            linha_do_erro: parsed.linha_do_erro || null,
+            dica_proximo_passo: parsed.dica_proximo_passo || null,
+            confianca_diagnostico: parsed.confianca_diagnostico || "alta",
+            modelo: nvidiaRes.model,
+            provedor: "nvidia-nemotron",
+          });
+        }
+      } catch (nvidiaErr) {
+        console.warn("[Avaliador Cognitivo] Fallback NVIDIA NIM falhou:", nvidiaErr);
+      }
     }
 
     // 3. Fallback Determinístico Pedagógico (Uptime 100% garantido com DISCURSIVE-VERDICT)
