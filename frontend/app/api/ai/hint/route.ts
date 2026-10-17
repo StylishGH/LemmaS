@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
+import { generateNvidiaContent } from "@/lib/nvidia";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
@@ -72,34 +73,32 @@ export async function POST(req: NextRequest) {
     const cleanedSolucao = cleanRawSolution(solucao || "");
     const cleanedGabarito = cleanRawSolution(gabarito || "");
 
-    // 1. Inferência Primária de Alta Performance via Gemini REST API (Latência < 0.6s com KaTeX real)
-    try {
-      const contextoPartes: string[] = [];
-      if (materia) contextoPartes.push(`Grande Área / Matéria: ${materia}`);
-      if (cleanTopico) contextoPartes.push(`Tópico da Matéria: ${cleanTopico}${subtopico ? ` > ${subtopico}` : ""}`);
-      if (foco_concurso) contextoPartes.push(`Foco do aluno / Banca: ${foco_concurso}`);
-      if (Array.isArray(motivacoes) && motivacoes.length > 0) {
-        contextoPartes.push(`Objetivos: ${motivacoes.join(", ")}`);
-      }
-      const contextoStr = contextoPartes.length > 0 ? `\nContexto:\n${contextoPartes.join("\n")}` : "";
+    const contextoPartes: string[] = [];
+    if (materia) contextoPartes.push(`Grande Área / Matéria: ${materia}`);
+    if (cleanTopico) contextoPartes.push(`Tópico da Matéria: ${cleanTopico}${subtopico ? ` > ${subtopico}` : ""}`);
+    if (foco_concurso) contextoPartes.push(`Foco do aluno / Banca: ${foco_concurso}`);
+    if (Array.isArray(motivacoes) && motivacoes.length > 0) {
+      contextoPartes.push(`Objetivos: ${motivacoes.join(", ")}`);
+    }
+    const contextoStr = contextoPartes.length > 0 ? `\nContexto:\n${contextoPartes.join("\n")}` : "";
 
-      const refSolucao = cleanedSolucao || cleanedGabarito;
-      const gabaritoRef = refSolucao
-        ? `\nSOLUÇÃO OFICIAL DE REFERÊNCIA (CONTEXTO OCULTO PARA A IA SABER COMO A QUESTÃO É RESOLVIDA):\n${refSolucao}\n(Use este contexto para guiar a dica socrática sem vazar a resposta nos Níveis 1 a 4. No Nível 5, traduza para Português se estiver em inglês e estruture em passos didáticos.)`
-        : "";
+    const refSolucao = cleanedSolucao || cleanedGabarito;
+    const gabaritoRef = refSolucao
+      ? `\nSOLUÇÃO OFICIAL DE REFERÊNCIA (CONTEXTO OCULTO PARA A IA SABER COMO A QUESTÃO É RESOLVIDA):\n${refSolucao}\n(Use este contexto para guiar a dica socrática sem vazar a resposta nos Níveis 1 a 4. No Nível 5, traduza para Português se estiver em inglês e estruture em passos didáticos.)`
+      : "";
 
-      const diretrizNivel =
-        level === 1
-          ? "NÍVEL 1 — Intuição & Leitura de Hipóteses:\n- Instrução: Faça o aluno perceber um detalhe crucial do enunciado (uma relação entre os pontos, segmentos, triângulos ou propriedades do problema) através de uma pergunta instigante sobre o significado dos dados reais da questão. Máximo de 2 a 3 frases, terminando OBRIGATORIAMENTE com uma pergunta reflexiva.\n- PROIBIDO: Usar frases genéricas de template. PROIBIDO tratar nomes de autores ou países como matemática. PROIBIDO citar fórmulas ou vazar o gabarito."
-          : level === 2
-          ? "NÍVEL 2 — Identificação do Lema / Teorema Chave:\n- Instrução: Indique qual lema ou teorema matemático destrava esse problema específico (ex: Teorema de Menelaus, Potência de Ponto, Semelhança de Triângulos, etc.) e pergunte ao aluno como ele enunciaria essa propriedade para os elementos desta questão. Termine OBRIGATORIAMENTE com uma pergunta reflexiva.\n- PROIBIDO: Usar frases prontas genéricas. PROIBIDO substituir números na fórmula ou vazar o gabarito."
-          : level === 3
-          ? "NÍVEL 3 — O Primeiro Passo / Construção Auxiliar:\n- Instrução: Ensine como dar a largada concreta no rascunho (qual traço auxiliar desenhar na geometria, qual substituição de variável fazer na álgebra ou como armar a primeira equação) usando estritamente os objetos do enunciado.\n- PROIBIDO: Usar frases genéricas. PROIBIDO resolver a equação ou passar da metade do problema."
-          : level === 4
-          ? "NÍVEL 4 — Destravamento do Gargalo (Quase lá, falta o arremate):\n- Instrução: Mostre a relação algébrica/geométrica intermediária que resolve o gargalo principal da questão, mas pare ANTES do cálculo final. Deixe o arremate exclusivamente para o aluno.\n- PROIBIDO: Mencionar o resultado final (gabarito) ou dizer qual alternativa está certa."
-          : "NÍVEL 5 — Resolução Completa Comentada (Rendição Pedagógica):\n- Instrução: Como o aluno solicitou o Nível 5, apresente a resolução completa, comentada, rigorosa e passo a passo em Português brasileiro claro com LaTeX 100% válido ($...$ e $$...$$).\n- ADAPTAÇÃO E TRADUÇÃO OBRIGATÓRIA: Se a solução de referência estiver em inglês, com código Asymptote ou comandos LaTeX soltos, TRADUZA TODO O RACIOCÍNIO PARA O PORTUGUÊS, organize em passos didáticos numerados (Passo 1, Passo 2, Passo 3, Conclusão), remova artefatos de código e entregue uma resolução exemplar e límpida.";
+    const diretrizNivel =
+      level === 1
+        ? "NÍVEL 1 — Intuição & Leitura de Hipóteses:\n- Instrução: Faça o aluno perceber um detalhe crucial do enunciado (uma relação entre os pontos, segmentos, triângulos ou propriedades do problema) através de uma pergunta instigante sobre o significado dos dados reais da questão. Máximo de 2 a 3 frases, terminando OBRIGATORIAMENTE com uma pergunta reflexiva.\n- PROIBIDO: Usar frases genéricas de template. PROIBIDO tratar nomes de autores ou países como matemática. PROIBIDO citar fórmulas ou vazar o gabarito."
+        : level === 2
+        ? "NÍVEL 2 — Identificação do Lema / Teorema Chave:\n- Instrução: Indique qual lema ou teorema matemático destrava esse problema específico (ex: Teorema de Menelaus, Potência de Ponto, Semelhança de Triângulos, etc.) e pergunte ao aluno como ele enunciaria essa propriedade para os elementos desta questão. Termine OBRIGATORIAMENTE com uma pergunta reflexiva.\n- PROIBIDO: Usar frases prontas genéricas. PROIBIDO substituir números na fórmula ou vazar o gabarito."
+        : level === 3
+        ? "NÍVEL 3 — O Primeiro Passo / Construção Auxiliar:\n- Instrução: Ensine como dar a largada concreta no rascunho (qual traço auxiliar desenhar na geometria, qual substituição de variável fazer na álgebra ou como armar a primeira equação) usando estritamente os objetos do enunciado.\n- PROIBIDO: Usar frases genéricas. PROIBIDO resolver a equação ou passar da metade do problema."
+        : level === 4
+        ? "NÍVEL 4 — Destravamento do Gargalo (Quase lá, falta o arremate):\n- Instrução: Mostre a relação algébrica/geométrica intermediária que resolve o gargalo principal da questão, mas pare ANTES do cálculo final. Deixe o arremate exclusivamente para o aluno.\n- PROIBIDO: Mencionar o resultado final (gabarito) ou dizer qual alternativa está certa."
+        : "NÍVEL 5 — Resolução Completa Comentada (Rendição Pedagógica):\n- Instrução: Como o aluno solicitou o Nível 5, apresente a resolução completa, comentada, rigorosa e passo a passo em Português brasileiro claro com LaTeX 100% válido ($...$ e $$...$$).\n- ADAPTAÇÃO E TRADUÇÃO OBRIGATÓRIA: Se a solução de referência estiver em inglês, com código Asymptote ou comandos LaTeX soltos, TRADUZA TODO O RACIOCÍNIO PARA O PORTUGUÊS, organize em passos didáticos numerados (Passo 1, Passo 2, Passo 3, Conclusão), remova artefatos de código e entregue uma resolução exemplar e límpida.";
 
-      const userPrompt = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine).
+    const userPrompt = `Você é o Tutor Socrático da plataforma LEMMAS (MathAI Engine).
 Gere uma DICA SOCRÁTICA DE NÍVEL ${level} (de 1 a 5) focada estritamente na questão abaixo:
 
 ENUNCIADO DA QUESTÃO:
@@ -113,6 +112,8 @@ ${diretrizNivel}
 
 IMPORTANTE: Responda SEMPRE EM PORTUGUÊS. Seja direto, encorajador, rigoroso e cite as variáveis e objetos matemáticos do enunciado. NUNCA dê uma resposta genérica ou vazia. Responda diretamente com o texto da dica em KaTeX ($...$ e $$...$$).`;
 
+    // 1. Inferência Primária de Alta Performance via Gemini REST API (Latência < 0.6s com KaTeX real)
+    try {
       const geminiRes = await generateGeminiContent({
         prompt: userPrompt,
         systemInstruction: PROMPT_SISTEMA_SOCRATICO,
@@ -131,10 +132,35 @@ IMPORTANTE: Responda SEMPRE EM PORTUGUÊS. Seja direto, encorajador, rigoroso e 
         });
       }
     } catch (geminiErr) {
-      console.warn("[Tutor Socrático] Gemini falhou, tentando Backend FastAPI:", geminiErr);
+      console.warn("[Tutor Socrático] Gemini indisponível ou sem cota, acionando NVIDIA NIM:", geminiErr);
     }
 
-    // 2. Se Gemini falhar, tenta o Backend FastAPI como contingência secundária
+    // 2. Inferência de Resiliência via NVIDIA NIM (Nemotron 3 Reasoning / Llama 3.1 Nemotron)
+    try {
+      if (process.env.NVIDIA_API_KEY) {
+        const nvidiaRes = await generateNvidiaContent({
+          prompt: userPrompt,
+          systemInstruction: PROMPT_SISTEMA_SOCRATICO,
+          temperature: level === 5 ? 0.2 : 0.25,
+          maxTokens: level === 5 ? 2048 : 1024,
+          timeoutMs: 14000,
+        });
+
+        if (nvidiaRes.text) {
+          return NextResponse.json({
+            nivel: level,
+            dica: nvidiaRes.text,
+            modelo: nvidiaRes.model,
+            provedor: "nvidia-nemotron",
+            confianca: 0.97,
+          });
+        }
+      }
+    } catch (nvidiaErr) {
+      console.warn("[Tutor Socrático] NVIDIA NIM falhou, tentando Backend FastAPI:", nvidiaErr);
+    }
+
+    // 3. Se Gemini e NVIDIA falharem, tenta o Backend FastAPI como contingência
     try {
       const response = await fetch(BACKEND_URL + "/api/tutor/hint", {
         method: "POST",
