@@ -29,7 +29,9 @@ CLASSIFICAÇÃO DO STATUS (status_resolucao):
 - "incompleto": resolução interrompida ou sem elementos suficientes.
 
 REGRAS MANDATÓRIAS DE LATEX E FORMATAÇÃO:
-- Em TODOS os campos de texto do JSON ("feedback_latex", "diagnostico", "dica_proximo_passo", "transcricao_latex", "etapas_corretas", "erros_identificados"), toda e qualquer expressão, equação, símbolo ou variável matemática DEVE estar rigorosamente delimitada por $...$ (inline) ou $$...$$ (bloco destacado).
+- Em TODOS os campos de texto do JSON ("feedback_latex", "diagnostico", "dica_proximo_passo", "transcricao_latex", "etapas_corretas", "erros_identificados"), use os delimitadores $...$ (inline) ou $$...$$ (bloco destacado) EXCLUSIVAMENTE para símbolos, números, incógnitas e fórmulas matemáticas.
+- É TERMINANTEMENTE PROIBIDO colocar texto em português, explicações ou frases inteiras dentro de $...$ ou $$...$$, pois o KaTeX apaga todos os espaços entre palavras dentro de $.
+- Todo texto explicativo em português DEVE estar fora de $, com espaços normais, intercalando apenas as variáveis pontuais entre $.
 - NUNCA use \\( ou \\[. Use sempre $ e $$.
 - Em português brasileiro: \\sen para seno e \\tg para tangente.
 - IMPORTANTE: No JSON de resposta, escape barras invertidas de comandos LaTeX como \\\\ (ex: \\\\forall, \\\\in, \\\\frac, \\\\to) para manter conformidade com JSON válido.
