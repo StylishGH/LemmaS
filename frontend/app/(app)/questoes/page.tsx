@@ -1764,7 +1764,7 @@ export default function BancoQuestoesPage() {
                 {/* PREVIEW DE ALTERNATIVAS (OBJETIVAS) */}
                 {Object.keys(alternativas).length > 0 ? (
                   hasImageAlternatives(alternativas) ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${Object.keys(alternativas).length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-5"} gap-3 pt-2`}>
                       {Object.entries(alternativas).map(([letra, valor]) => (
                         <div
                           key={letra}
@@ -1782,7 +1782,7 @@ export default function BancoQuestoesPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 pt-1">
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${Object.keys(alternativas).length === 4 ? "md:grid-cols-4" : Object.keys(alternativas).length <= 3 ? "md:grid-cols-3" : "md:grid-cols-5"} gap-2 pt-1`}>
                       {Object.entries(alternativas).map(([letra, valor]) => (
                         <div
                           key={letra}
@@ -1791,7 +1791,7 @@ export default function BancoQuestoesPage() {
                           <span className="font-bold text-amber-600 dark:text-[#d9b452] mt-0.5 shrink-0">
                             ({letra})
                           </span>
-                          <div className="overflow-x-auto">
+                          <div className="overflow-x-auto w-full">
                             <MathText text={valor} className="font-mono" />
                           </div>
                         </div>
