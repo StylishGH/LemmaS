@@ -196,6 +196,78 @@ export function autoWrapLatexExpressions(text: string): string {
 }
 
 /**
+ * Normaliza quebras de linha e hifenizações espúrias oriundas de PDFs em duas colunas.
+ * Une quebras de linha suaves de parágrafos em espaço simples e restaura palavras
+ * partidas por divisão silábica (ex: "su-\ncos" -> "sucos"), preservando parágrafos reais,
+ * imagens markdown, equações em bloco e listas.
+ */
+export function normalizarQuebrasPdf(texto: string): string {
+  if (!texto) return "";
+  // 1. Des-hifenização de fim de linha: 'su-\ncos' -> 'sucos'
+  let res = texto.replace(/([a-zA-ZÀ-ÿ])-[\t ]*[\r\n]+[\t ]*([a-zA-ZÀ-ÿ])/g, "$1$2");
+
+  // 2. Normaliza quebras para \n
+  res = res.replace(/\r\n/g, "\n");
+
+  // 3. Divide em linhas
+  const linhas = res.split("\n");
+  const resultado: string[] = [];
+
+  const isStandalone = (l: string) => {
+    if (!l) return true;
+    if (l.startsWith("![") || l.startsWith("$$") || l.startsWith("\\begin{")) return true;
+    // Títulos markdown, blockquotes, listas, alternativas, números romanos e marcadores de item (I., II., 1., (A), a))
+    if (/^(?:#{1,6}\s+|>\s+|\*\s+|-\s+|\+\s+|\d+[.)]\s*|\([a-eA-E]\)\s*|[a-eA-E][.)]\s*|[IVXLCDM]+[.)]\s*|[•·-]\s*)/i.test(l)) return true;
+    return false;
+  };
+
+  for (let i = 0; i < linhas.length; i++) {
+    const l = linhas[i].trim();
+    if (!l) {
+      if (resultado.length > 0 && resultado[resultado.length - 1] !== "") {
+        resultado.push("");
+      }
+      continue;
+    }
+
+    if (isStandalone(l)) {
+      resultado.push(l);
+    } else {
+      if (
+        resultado.length > 0 &&
+        resultado[resultado.length - 1] !== "" &&
+        !isStandalone(resultado[resultado.length - 1])
+      ) {
+        resultado[resultado.length - 1] = resultado[resultado.length - 1] + " " + l;
+      } else {
+        resultado.push(l);
+      }
+    }
+  }
+
+  // Junta linhas preservando quebras de bloco
+  let output = "";
+  for (let i = 0; i < resultado.length; i++) {
+    const item = resultado[i];
+    if (item === "") {
+      if (!output.endsWith("\n\n")) {
+        output += "\n\n";
+      }
+    } else {
+      if (output === "") {
+        output = item;
+      } else if (output.endsWith("\n\n")) {
+        output += item;
+      } else {
+        output += "\n\n" + item;
+      }
+    }
+  }
+
+  return output.trim();
+}
+
+/**
  * Extrai o corpo do enunciado e as alternativas (A)-(E), garantindo normalização matemática
  * e blindagem contra encapsulamento de imagens markdown em delimitadores LaTeX $...$.
  */
@@ -205,6 +277,7 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
   // Se for declaradamente discursiva, nunca tenta extrair alternativas de múltipla escolha
   if (isDiscursiva) {
     let corpoDiscursiva = normalizarMatematica(texto.trim());
+    corpoDiscursiva = normalizarQuebrasPdf(corpoDiscursiva);
     if (!corpoDiscursiva.includes("$")) {
       corpoDiscursiva = autoWrapLatexExpressions(corpoDiscursiva);
     }
@@ -222,8 +295,9 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
     const primeiroIndex = matches[0].index ?? texto.length;
     let corpo = texto.slice(0, primeiroIndex).trim();
 
-    // Normaliza caracteres Unicode no corpo e aplica autoWrap se não tiver delimitador $
+    // Normaliza caracteres Unicode no corpo e aplica des-hifenização e união de quebras do PDF
     corpo = normalizarMatematica(corpo);
+    corpo = normalizarQuebrasPdf(corpo);
     if (!corpo.includes("$")) {
       corpo = autoWrapLatexExpressions(corpo);
     }
@@ -233,6 +307,10 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
     for (const match of matches) {
       const letra = match[1];
       let conteudo = match[2].trim();
+
+      // Des-hifeniza e limpa quebras residuais no texto da alternativa
+      conteudo = conteudo.replace(/([a-zA-ZÀ-ÿ])-[\t ]*[\r\n]+[\t ]*([a-zA-ZÀ-ÿ])/g, "$1$2");
+      conteudo = conteudo.replace(/[\r\n]+/g, " ").trim();
 
       // Se for imagem markdown ou caminho de imagem, NUNCA encapsula em $...$
       if (isImageContent(conteudo)) {
@@ -268,6 +346,7 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
   }
 
   let corpoFinal = normalizarMatematica(texto.trim());
+  corpoFinal = normalizarQuebrasPdf(corpoFinal);
   if (!corpoFinal.includes("$")) {
     corpoFinal = autoWrapLatexExpressions(corpoFinal);
   }
