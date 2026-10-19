@@ -1432,10 +1432,10 @@ function ResolverContent() {
         </div>
 
         {/* NOTA PEDAGÓGICA SOBRE QUESTÕES EM BRANCO */}
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 text-xs leading-relaxed">
-          <HelpCircle className="w-5 h-5 text-amber-600 dark:text-[#d9b452] shrink-0 mt-0.5" />
+        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 flex items-start gap-3 text-xs leading-relaxed">
+          <HelpCircle className="w-5 h-5 text-blue-600 dark:text-[#d9b452] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <strong className="text-amber-900 dark:text-[#f5f0df] block">
+            <strong className="text-blue-950 dark:text-[#f5f0df] block">
               Como questões em branco são contabilizadas?
             </strong>
             <p className="text-slate-700 dark:text-zinc-300">
@@ -1462,7 +1462,7 @@ function ResolverContent() {
                 type="button"
                 onClick={() => setReviewFilter("todas")}
                 className={`px-3 py-1 rounded-lg transition-colors ${
-                  reviewFilter === "todas" ? "bg-white dark:bg-[#231f38] text-amber-700 dark:text-[#d9b452] shadow-xs" : "text-slate-500"
+                  reviewFilter === "todas" ? "bg-white dark:bg-[#231f38] text-blue-700 dark:text-[#d9b452] shadow-xs" : "text-slate-500"
                 }`}
               >
                 Todas {(() => { const t = parseInt(searchParams.get("total") || "0", 10); return t || questions.length; })()}
@@ -1713,15 +1713,14 @@ function ResolverContent() {
   }
 
   const isQuestionDiscursiva = Boolean(
-    currentQ?.tipo === "discursiva" ||
+    currentQ?.tipo?.toLowerCase() === "discursiva" ||
     currentQ?.gabarito?.toLowerCase().includes("discursiv")
   );
   const { corpo, alternativas } = extrairEnunciadoEAlternativas(currentQ.enunciado, isQuestionDiscursiva);
   const isSimuladoAtivo = sessionType === "simulado";
   const isDiscursiva = Boolean(
     isQuestionDiscursiva ||
-    !currentQ?.alternativas ||
-    Object.keys(alternativas).length === 0
+    (currentQ?.tipo?.toLowerCase() !== "objetiva" && Object.keys(alternativas).length === 0)
   );
   const discursiveEval = currentQ ? discursiveEvaluations[currentQ.id] : undefined;
 
@@ -1752,12 +1751,12 @@ function ResolverContent() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {isDiscursiva ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs">
               <Sparkles className="w-3 h-3" />
               QUESTÃO DISCURSIVA
             </span>
           ) : (
-            <PenTool className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
+            <PenTool className="w-4 h-4 text-blue-600 dark:text-[#d9b452]" />
           )}
           <h4 className="font-serif-math text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
             {isDiscursiva ? "Bancada de Resolução do Estudante" : "Bancada de Rascunho & Ferramentas"}
@@ -1778,7 +1777,7 @@ function ResolverContent() {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               bancadaModo === "lousa"
                 ? "lemmas-gold-cta font-bold shadow-xs scale-105"
-                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
             }`}
             title="Lousa com Pointer Events e rejeição de palma para rascunhos"
           >
@@ -1830,7 +1829,7 @@ function ResolverContent() {
 
       {/* DICA QUANDO NENHUM MODO DA BANCADA ESTÁ ATIVO */}
       {!bancadaModo && isDiscursiva && (
-        <div className="p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/5 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
+        <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 dark:border-amber-500/25 dark:bg-amber-500/5 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
           Esta questão exige desenvolvimento. Escolha acima uma ferramenta: use a <strong>Lousa</strong> para desenhar ou calcular à mão com a caneta/S-Pen, a <strong>Geometria</strong> para traçados com régua e compasso, ou <strong>Dedução & OCR</strong> para digitar ou fotografar seu caderno.
         </div>
       )}
@@ -1847,13 +1846,13 @@ function ResolverContent() {
           {/* Seletor de Motor da Lousa: S-Pen 120Hz (Dual-Canvas) vs Lousa Giz LemmaS */}
           <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
             <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">Motor de Escrita Digital:</span>
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900/80 p-0.5 rounded-lg border border-amber-500/20 text-[10px]">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900/80 p-0.5 rounded-lg border border-blue-500/20 dark:border-amber-500/20 text-[10px]">
               <button
                 type="button"
                 onClick={() => setLousaEngine("spen-dual")}
                 className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
                   lousaEngine === "spen-dual"
-                    ? "bg-amber-500 text-black shadow-xs font-bold"
+                    ? "bg-blue-600 text-white dark:bg-amber-500 dark:text-black shadow-xs font-bold"
                     : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -1864,7 +1863,7 @@ function ResolverContent() {
                 onClick={() => setLousaEngine("classic")}
                 className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
                   lousaEngine === "classic"
-                    ? "bg-amber-500 text-black shadow-xs font-bold"
+                    ? "bg-blue-600 text-white dark:bg-amber-500 dark:text-black shadow-xs font-bold"
                     : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -2091,7 +2090,7 @@ function ResolverContent() {
           <div className="flex flex-wrap items-center gap-3">
             <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${
               isSimuladoAtivo
-                ? "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-[#d9b452]"
+                ? "bg-blue-500/10 border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452]"
                 : "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
             }`}>
               {sessionBannerText}
@@ -2112,7 +2111,7 @@ function ResolverContent() {
                 ? "bg-rose-500/10 border-rose-500/40 text-rose-600 animate-pulse"
                 : "bg-slate-50 dark:bg-[#1b172e] border-slate-200 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0]"
             }`}>
-              <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500 shrink-0" />
               <span>{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</span>
             </div>
 
@@ -2120,7 +2119,7 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs shadow-sm hover:opacity-95 active:scale-95 transition-all"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-amber-500 dark:to-amber-600 text-white dark:text-slate-950 font-bold text-xs shadow-sm hover:opacity-95 active:scale-95 transition-all"
               >
                 Entregar Simulado
               </button>
@@ -2219,7 +2218,7 @@ function ResolverContent() {
                     <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
                   )}
                   {isBookmarked && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-[#141222]" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600 dark:bg-amber-500 ring-2 ring-white dark:ring-[#141222]" />
                   )}
                 </button>
               );
@@ -2258,7 +2257,7 @@ function ResolverContent() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleJumpToQuestion();
               }}
-              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-amber-500/25 bg-slate-50/50 dark:bg-[#1b172e] text-xs font-semibold text-center focus:outline-none focus:border-amber-500 text-slate-800 dark:text-[#f5f0df]"
+              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-amber-500/25 bg-slate-50/50 dark:bg-[#1b172e] text-xs font-semibold text-center focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 text-slate-800 dark:text-[#f5f0df]"
             />
             <button
               type="button"
@@ -2286,7 +2285,7 @@ function ResolverContent() {
             <button
               type="button"
               onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-[#d9b452] hover:bg-amber-500/10 hover:border-amber-500/25 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-[#d9b452] hover:bg-blue-500/10 dark:hover:bg-amber-500/10 hover:border-blue-500/25 dark:hover:border-amber-500/25 transition-colors"
               title="Reportar inconsistência (digitação, LaTeX, imagem ou gabarito)"
             >
               <Flag className="w-3.5 h-3.5" />
@@ -2296,8 +2295,8 @@ function ResolverContent() {
               onClick={() => toggleBookmark(currentIndex)}
               className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
                 bookmarks.has(currentIndex)
-                  ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-[#d9b452]"
-                  : "border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:border-amber-500/30"
+                  ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452]"
+                  : "border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:border-blue-500/30 dark:hover:border-amber-500/30"
               }`}
               title={bookmarks.has(currentIndex) ? "Remover dos marcados" : "Marcar questão para revisar depois"}
             >
@@ -2555,18 +2554,18 @@ function ResolverContent() {
 
         {/* CAMADA 1: DADO OBSERVADO — RESPOSTA DO ESTUDANTE */}
         {currentQ && answers[currentQ.id] && (isSimuladoAtivo || !currentResult) && (
-                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
-                        <Eye className="w-3.5 h-3.5" />
-                        [DADO OBSERVADO]
-                      </span>
-                      <span className="text-xs font-medium text-slate-800 dark:text-[#f5f0df]">
-                        Alternativa Assinalada: <strong className="font-mono text-amber-700 dark:text-[#d9b452] font-bold">({answers[currentQ.id]})</strong>
-                      </span>
-                    </div>
+          <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 dark:bg-amber-500/10 dark:border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs">
+                <Eye className="w-3.5 h-3.5" />
+                [DADO OBSERVADO]
+              </span>
+              <span className="text-xs font-medium text-slate-800 dark:text-[#f5f0df]">
+                Alternativa Assinalada: <strong className="font-mono text-blue-700 dark:text-[#d9b452] font-bold">({answers[currentQ.id]})</strong>
+              </span>
+            </div>
             {isSimuladoAtivo && (
-              <span className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-medium">
+              <span className="text-[11px] text-blue-700 dark:text-amber-300/80 font-medium">
                 Gabarito oficial oculto até a entrega do simulado
               </span>
             )}
@@ -2575,9 +2574,9 @@ function ResolverContent() {
 
         {/* AVISO DE AUTENTICAÇÃO PARA RESPONDER */}
         {!isAuthenticated && !userLoading && (
-          <div className="p-3.5 rounded-xl border border-amber-500/35 bg-amber-500/10 text-amber-950 dark:text-[#f5f0df] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="p-3.5 rounded-xl border border-blue-500/35 bg-blue-500/10 text-blue-950 dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-[#f5f0df] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2.5">
-              <Lock className="w-4 h-4 text-amber-600 dark:text-[#d9b452] shrink-0" />
+              <Lock className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
               <span>
                 <strong>Logar para responder:</strong> Crie sua conta ou faça login para assinalar alternativas e calibrar suas revisões SM-2 no LEMMAS.
               </span>
@@ -2585,13 +2584,13 @@ function ResolverContent() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href={`/login?redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-                className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold text-xs transition shadow-sm"
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-zinc-950 font-bold text-xs transition shadow-sm"
               >
                 Entrar
               </Link>
               <Link
                 href={`/login?tab=signup&redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-                className="px-3.5 py-1.5 rounded-lg border border-amber-500/40 hover:bg-amber-500/20 text-slate-800 dark:text-[#f5f0df] font-semibold text-xs transition"
+                className="px-3.5 py-1.5 rounded-lg border border-blue-500/40 hover:bg-blue-500/20 text-blue-900 dark:border-amber-500/40 dark:hover:bg-amber-500/20 dark:text-[#f5f0df] font-semibold text-xs transition"
               >
                 Criar Conta
               </Link>
@@ -2613,8 +2612,8 @@ function ResolverContent() {
                     onClick={() => handleSelectOption(key)}
                     className={`w-full text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all ${
                       isSelected
-                        ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df] ring-2 ring-amber-500/40"
-                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300 hover:border-amber-500/40"
+                        ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/40 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-amber-500/40"
+                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300 hover:border-blue-500/40 dark:hover:border-amber-500/40"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -2650,8 +2649,8 @@ function ResolverContent() {
                     onClick={() => handleSelectOption(key)}
                     className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
                       isSelected
-                        ? "bg-amber-500/15 dark:bg-amber-500/20 border-amber-500 dark:border-[#d9b452] shadow-sm text-slate-900 dark:text-[#f5f0df]"
-                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-amber-500/30"
+                        ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/30 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-0"
+                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-blue-500/30 dark:hover:border-amber-500/30"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div
@@ -2786,8 +2785,8 @@ function ResolverContent() {
 
                 {/* LEMA FUNDAMENTAL OU CONCEITO-CHAVE */}
                 {resolucoesIa[currentQ.id].dica_proximo_passo && (
-                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#161327] border border-amber-500/25 space-y-1">
-                    <strong className="text-amber-700 dark:text-[#d9b452] flex items-center gap-1.5 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#161327] border border-blue-500/25 dark:border-amber-500/25 space-y-1">
+                    <strong className="text-blue-700 dark:text-[#d9b452] flex items-center gap-1.5 text-xs">
                       <Zap className="w-3.5 h-3.5" />
                       Lema Fundamental & Princípio Determinante:
                     </strong>
@@ -2808,7 +2807,7 @@ function ResolverContent() {
                     value={justificativas[currentIndex] || ""}
                     onChange={(e) => setJustificativas((prev) => ({ ...prev, [currentIndex]: e.target.value }))}
                     placeholder="Ex: Pegadinha na restrição do denominador; aplicar lema da média harmônica..."
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1a162b] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-amber-500 transition-colors"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1a162b] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
                   />
                 </div>
               </div>
@@ -2845,12 +2844,12 @@ function ResolverContent() {
           <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
               <div className="flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-amber-500" />
+                <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
                 <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
                   Tutor Socrático Adaptativo (Método Pólya · MathAI Engine)
                 </h4>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 border border-blue-500/25 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                 5 Níveis Maiêuticos
               </span>
             </div>
@@ -2877,7 +2876,7 @@ function ResolverContent() {
                         : isUnlocked
                         ? "bg-purple-500/15 border-purple-500/35 text-purple-700 dark:text-purple-300 font-medium"
                         : isCurrent
-                        ? "bg-amber-500/15 border-amber-500 text-amber-800 dark:text-amber-200 ring-2 ring-amber-500/30 font-bold"
+                        ? "bg-blue-500/15 border-blue-500 text-blue-800 ring-2 ring-blue-500/30 dark:bg-amber-500/15 dark:border-amber-500 dark:text-amber-200 dark:ring-amber-500/30 font-bold"
                         : "bg-slate-50/50 dark:bg-[#18152a]/60 border-slate-200/60 dark:border-zinc-800/60 text-slate-400 dark:text-zinc-500"
                     }`}
                   >
@@ -2934,12 +2933,12 @@ function ResolverContent() {
                   <button
                     onClick={pedirDicaSocratica}
                     disabled={loadingHint}
-                    className="flex items-center gap-2 text-xs font-bold rounded-xl px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500 text-amber-700 dark:text-[#d9b452] shadow-xs transition cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-bold rounded-xl px-4 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500 text-blue-700 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:border-amber-500 dark:text-[#d9b452] shadow-xs transition cursor-pointer"
                   >
                     {loadingHint ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                      <Lightbulb className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
                     )}
                     <span>
                       💡 Solicitar Dica Socrática (Nível {currentHintLevel}: {
@@ -3259,7 +3258,7 @@ export default function ResolverPage() {
   return (
     <Suspense fallback={
       <div className="py-24 flex items-center justify-center text-slate-500">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-[#d9b452]" />
       </div>
     }>
       <ResolverContent />

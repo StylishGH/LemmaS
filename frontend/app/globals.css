@@ -47,10 +47,10 @@ html[data-theme="lemmas-light"] {
   --foreground: #142e4b;
   --card-bg: rgba(255, 255, 255, 0.95);
   --card-border: rgba(203, 213, 225, 0.85);
-  --card-hover: rgba(45, 109, 161, 0.35);
-  --accent-purple: #2d6da1;
-  --accent-gold: #d9b452;
-  --gold-border: rgba(45, 109, 161, 0.35);
+  --card-hover: rgba(37, 99, 235, 0.25);
+  --accent-purple: #2563eb;
+  --accent-gold: #2563eb;
+  --gold-border: rgba(37, 99, 235, 0.35);
   --text-muted: #64748b;
   --scrollbar-track: #f1f5f9;
   --scrollbar-thumb: #cbd5e1;
@@ -93,12 +93,14 @@ body {
   background-color: #f0cd73;
 }
 
-html[data-theme="lemmas-light"] .lemmas-gold-cta {
-  background-color: #2d6da1;
+html[data-theme="lemmas-light"] .lemmas-gold-cta,
+html:not(.dark) .lemmas-gold-cta {
+  background-color: #2563eb;
   color: #ffffff;
 }
-html[data-theme="lemmas-light"] .lemmas-gold-cta:hover {
-  background-color: #173a63;
+html[data-theme="lemmas-light"] .lemmas-gold-cta:hover,
+html:not(.dark) .lemmas-gold-cta:hover {
+  background-color: #1d4ed8;
 }
 
 .math-font {
@@ -107,6 +109,11 @@ html[data-theme="lemmas-light"] .lemmas-gold-cta:hover {
 
 .gold-glow {
   box-shadow: 0 0 20px rgba(217, 180, 82, 0.2);
+}
+
+html[data-theme="lemmas-light"] .gold-glow,
+html:not(.dark) .gold-glow {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.25);
 }
 
 .glass-panel {

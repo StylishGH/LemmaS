@@ -118,7 +118,7 @@ function getMateriaBadgeColor(materia?: string) {
   if (m.includes("polinôm") || m.includes("complex")) {
     return "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/25";
   }
-  return "bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border-amber-500/25";
+  return "bg-blue-500/10 text-blue-800 border-blue-500/25 dark:bg-amber-500/10 dark:text-[#d9b452] dark:border-amber-500/25";
 }
 
 // Badge de Dificuldade
@@ -668,12 +668,12 @@ export default function BancoQuestoesPage() {
       {/* 1. HEADER EDITORIAL NO ESTILO LEMMAS */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>{total > 0 ? total.toLocaleString("pt-BR") : "20.764"} Questões Auditadas · MathAI Engine</span>
           </div>
           <h1 className="font-serif-math text-2xl sm:text-3xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
-            Banco de <em className="italic text-amber-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
+            Banco de <em className="italic text-blue-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
           </h1>
         </div>
       </div>
@@ -685,7 +685,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("todas")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border ${
             filtrosAtivosCount === 0 && categoriaBancaFiltro === "Todas"
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -697,7 +697,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("militares")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Concurso Militar"
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -710,7 +710,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("geometria")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             materiaFiltro.includes("Geometria Plana")
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -723,7 +723,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("calculo")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             materiaFiltro.includes("Cálculo")
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -736,7 +736,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("olimpiadas")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Olimpíadas"
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -749,7 +749,7 @@ export default function BancoQuestoesPage() {
           onClick={() => aplicarTrilhaRapida("vestibulares")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Vestibular & Superior"
-              ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
               : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
           }`}
         >
@@ -774,7 +774,7 @@ export default function BancoQuestoesPage() {
               setPage(1);
             }}
             placeholder="Buscar teorema, lema, matrizes, Stokes..."
-            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 dark:placeholder-zinc-500 outline-none focus:border-amber-500/50 dark:focus:border-[#d9b452] transition-colors"
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 dark:placeholder-zinc-500 outline-none focus:border-blue-500/50 dark:focus:border-[#d9b452] transition-colors"
           />
           {busca && (
             <button
@@ -796,14 +796,14 @@ export default function BancoQuestoesPage() {
             onClick={() => setActivePopover(activePopover === "banca" ? null : "banca")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
               numBancas > 0
-                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
                 : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
-            <Filter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500 shrink-0" />
             <span>{numBancas === 0 ? "Banca" : numBancas === 1 ? bancaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numBancas} Bancas`}</span>
             {numBancas > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-amber-500 shrink-0" />
             )}
             <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "banca" ? "rotate-180" : ""}`} />
           </button>
@@ -819,7 +819,7 @@ export default function BancoQuestoesPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectBanca(VAL_TODAS)}
-                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
                     Limpar ({numBancas})
                   </button>
@@ -834,7 +834,7 @@ export default function BancoQuestoesPage() {
                   value={buscaBancaInterna}
                   onChange={(e) => setBuscaBancaInterna(e.target.value)}
                   placeholder="Filtrar banca (ex: ITA, OBM, Harvard)..."
-                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:focus:ring-amber-500/50"
                 />
                 {buscaBancaInterna && (
                   <button
@@ -872,7 +872,7 @@ export default function BancoQuestoesPage() {
                   onClick={() => handleSelectBanca(VAL_TODAS)}
                   className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
                     numBancas === 0
-                      ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                       : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                   }`}
                 >
@@ -890,19 +890,19 @@ export default function BancoQuestoesPage() {
                       onClick={() => handleSelectBanca(b.name)}
                       className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
                         isSelected
-                          ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                          ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                           : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate">
                         <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[10px] shrink-0 ${
-                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-600"
+                          isSelected ? "bg-blue-600 border-blue-600 text-white font-bold dark:bg-amber-500 dark:border-amber-500 dark:text-slate-950" : "border-slate-300 dark:border-zinc-600"
                         }`}>
                           {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </span>
                         <span className="truncate">{b.name}</span>
                         {isPrioritaria && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-[#d9b452] font-semibold">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452] font-semibold">
                             BR
                           </span>
                         )}
@@ -923,7 +923,7 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -939,7 +939,7 @@ export default function BancoQuestoesPage() {
             onClick={() => setActivePopover(activePopover === "materia" ? null : "materia")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
               numMaterias > 0 || numTopicos > 0
-                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
                 : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
@@ -971,7 +971,7 @@ export default function BancoQuestoesPage() {
                       setTopicoFiltro([VAL_TODOS]);
                       setPage(1);
                     }}
-                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
                     Limpar tudo
                   </button>
@@ -993,7 +993,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectMateria(m.name)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1015,7 +1015,7 @@ export default function BancoQuestoesPage() {
                     <button
                       type="button"
                       onClick={() => handleSelectTopico(VAL_TODOS)}
-                      className="text-[10px] text-amber-600 dark:text-[#d9b452] hover:underline"
+                      className="text-[10px] text-blue-600 dark:text-[#d9b452] hover:underline"
                     >
                       Limpar tópicos
                     </button>
@@ -1023,13 +1023,13 @@ export default function BancoQuestoesPage() {
                 </div>
 
                 <div className="relative">
-                  <Search className="w-3 h-3 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={buscaTopicoInterna}
                     onChange={(e) => setBuscaTopicoInterna(e.target.value)}
                     placeholder="Buscar tópico (ex: derivadas, matrizes, poliedros)..."
-                    className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                    className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:focus:ring-amber-500/50"
                   />
                   {buscaTopicoInterna && (
                     <button
@@ -1052,7 +1052,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectTopico(topico.name)}
                         className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1069,7 +1069,7 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1085,14 +1085,14 @@ export default function BancoQuestoesPage() {
             onClick={() => setActivePopover(activePopover === "dificuldade" ? null : "dificuldade")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
               numDificuldades > 0
-                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
                 : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
-            <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <HelpCircle className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500 shrink-0" />
             <span>{numDificuldades === 0 ? "Dificuldade" : `${numDificuldades} Níveis`}</span>
             {numDificuldades > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-amber-500 shrink-0" />
             )}
             <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "dificuldade" ? "rotate-180" : ""}`} />
           </button>
@@ -1107,7 +1107,7 @@ export default function BancoQuestoesPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectDificuldade(VAL_TODAS)}
-                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
                     Todas
                   </button>
@@ -1129,7 +1129,7 @@ export default function BancoQuestoesPage() {
                     onClick={() => handleSelectDificuldade(d.id)}
                     className={`w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
                       isSelected
-                        ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                        ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                         : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                     }`}
                   >
@@ -1146,7 +1146,7 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1162,7 +1162,7 @@ export default function BancoQuestoesPage() {
             onClick={() => setActivePopover(activePopover === "ano" ? null : "ano")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
               numAnos > 0
-                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
                 : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
@@ -1184,7 +1184,7 @@ export default function BancoQuestoesPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectAno(VAL_TODOS)}
-                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
                     Todos
                   </button>
@@ -1198,7 +1198,7 @@ export default function BancoQuestoesPage() {
                   onClick={() => handleSelectAno(VAL_TODOS)}
                   className={`flex-1 py-1 rounded-md font-semibold transition-colors border ${
                     numAnos === 0
-                      ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                       : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
                   }`}
                 >
@@ -1230,7 +1230,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectAno(anoStr)}
                         className={`p-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-between border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1245,7 +1245,7 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1261,7 +1261,7 @@ export default function BancoQuestoesPage() {
             onClick={() => setActivePopover(activePopover === "formato" ? null : "formato")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
               numTipos > 0 || numTiposProva > 0 || numFases > 0
-                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold shadow-2xs"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
                 : "bg-slate-50 dark:bg-zinc-950/60 border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
             }`}
           >
@@ -1288,7 +1288,7 @@ export default function BancoQuestoesPage() {
                       setFaseNivelFiltro([VAL_TODAS]);
                       setPage(1);
                     }}
-                    className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
                   >
                     Resetar
                   </button>
@@ -1310,7 +1310,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectTipo(t.id)}
                         className={`p-1.5 rounded-lg text-xs font-medium text-center border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1337,7 +1337,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectTipoProva(tp.id)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1364,7 +1364,7 @@ export default function BancoQuestoesPage() {
                         onClick={() => handleSelectFaseNivel(f.id)}
                         className={`px-2 py-1 rounded-lg text-xs font-medium border ${
                           isSelected
-                            ? "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-[#d9b452] font-bold"
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
                             : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                         }`}
                       >
@@ -1380,7 +1380,7 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1405,7 +1405,7 @@ export default function BancoQuestoesPage() {
                 setBusca("");
                 setPage(1);
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Busca: "{busca.trim()}"</span>
               <X className="w-3 h-3" />
@@ -1415,7 +1415,7 @@ export default function BancoQuestoesPage() {
           {numBancas > 0 && (
             <button
               onClick={() => handleSelectBanca(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Banca: {joinSelecionados(bancaFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1428,7 +1428,7 @@ export default function BancoQuestoesPage() {
                 setCategoriaBancaFiltro("Todas");
                 setPage(1);
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Trilha: {categoriaBancaFiltro}</span>
               <X className="w-3 h-3" />
@@ -1438,7 +1438,7 @@ export default function BancoQuestoesPage() {
           {numMaterias > 0 && (
             <button
               onClick={() => handleSelectMateria(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Matéria: {joinSelecionados(materiaFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1448,7 +1448,7 @@ export default function BancoQuestoesPage() {
           {numTopicos > 0 && (
             <button
               onClick={() => handleSelectTopico(VAL_TODOS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Tópico: {joinSelecionados(topicoFiltro, VAL_TODOS)}</span>
               <X className="w-3 h-3" />
@@ -1458,7 +1458,7 @@ export default function BancoQuestoesPage() {
           {numAnos > 0 && (
             <button
               onClick={() => handleSelectAno(VAL_TODOS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Ano: {joinSelecionados(anoFiltro, VAL_TODOS)}</span>
               <X className="w-3 h-3" />
@@ -1468,7 +1468,7 @@ export default function BancoQuestoesPage() {
           {numDificuldades > 0 && (
             <button
               onClick={() => handleSelectDificuldade(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
               <span>Dificuldade: {joinSelecionados(dificuldadeFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1478,7 +1478,7 @@ export default function BancoQuestoesPage() {
           {lemaFiltro && (
             <button
               onClick={() => setLemaFiltro(null)}
-              className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-[#d9b452] hover:bg-amber-500/25 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 border border-blue-500/40 text-blue-800 hover:bg-blue-500/25 dark:bg-amber-500/15 dark:border-amber-500/40 dark:text-[#d9b452] dark:hover:bg-amber-500/25 transition-colors shadow-2xs"
               title="Remover filtro de lema"
             >
               <span>Lema: {lemaFiltro}</span>
@@ -1489,7 +1489,7 @@ export default function BancoQuestoesPage() {
           {filtrosAtivosCount > 0 && (
             <button
               onClick={limparFiltros}
-              className="text-amber-600 dark:text-[#d9b452] hover:underline flex items-center gap-1 font-semibold text-[11px] ml-1"
+              className="text-blue-600 hover:text-blue-700 dark:text-[#d9b452] dark:hover:text-[#d9b452] hover:underline flex items-center gap-1 font-semibold text-[11px] ml-1"
             >
               <RotateCcw className="w-3 h-3" /> Limpar filtros
             </button>
@@ -1502,10 +1502,10 @@ export default function BancoQuestoesPage() {
             <button
               type="button"
               onClick={handleSelectAllPage}
-              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors text-xs"
+              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-[#d9b452] transition-colors text-xs"
             >
               {questoes.length > 0 && questoes.every((q) => selectedIds.has(q.id)) ? (
-                <CheckSquare className="w-4 h-4 text-amber-500" />
+                <CheckSquare className="w-4 h-4 text-blue-600 dark:text-amber-500" />
               ) : (
                 <Square className="w-4 h-4 text-slate-400" />
               )}
@@ -1515,7 +1515,7 @@ export default function BancoQuestoesPage() {
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="text-[11px] text-amber-600 dark:text-[#d9b452] hover:underline font-semibold ml-1"
+                className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold ml-1"
                 title="Limpar seleção"
               >
                 ({selectedIds.size}) Limpar
@@ -1528,7 +1528,7 @@ export default function BancoQuestoesPage() {
             onClick={handleTreinarListaEstudo}
             className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-[#f5f0df] font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs"
           >
-            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+            <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>Treinar Lista ({selectedIds.size > 0 ? selectedIds.size : total})</span>
           </button>
 
@@ -1579,12 +1579,12 @@ export default function BancoQuestoesPage() {
 
         {loading ? (
           <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#141222] rounded-2xl border border-slate-200/80 dark:border-zinc-800">
-            <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-amber-500" />
             <span className="text-sm font-medium">Filtrando questões no Supabase...</span>
           </div>
         ) : questoes.length === 0 ? (
           <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-slate-500 space-y-4">
-            <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center mx-auto">
               <BookOpen className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -1597,7 +1597,7 @@ export default function BancoQuestoesPage() {
             </div>
             <button
               onClick={limparFiltros}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] text-xs font-semibold hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:text-[#d9b452] dark:hover:bg-amber-500/20 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Ver todas as {total > 0 ? total.toLocaleString("pt-BR") : "20.764"} questões</span>
@@ -1613,7 +1613,7 @@ export default function BancoQuestoesPage() {
             return (
               <div
                 key={q.id}
-                className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/15 hover:border-amber-500/35 dark:hover:border-[#d9b452]/40 shadow-sm transition-all space-y-4"
+                className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-[#d9b452]/40 shadow-sm transition-all space-y-4"
               >
                 {/* CABEÇALHO DO CARD COM METADADOS COMPLETOS */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/60">
@@ -1624,13 +1624,13 @@ export default function BancoQuestoesPage() {
                       onClick={() => toggleSelectQuestion(q.id)}
                       className={`p-1.5 rounded-lg border transition-all ${
                         selectedIds.has(q.id)
-                          ? "bg-amber-500/20 border-amber-500 text-amber-700 dark:text-[#d9b452] shadow-xs"
-                          : "border-slate-200 dark:border-zinc-700 hover:border-amber-500/40 text-slate-400"
+                          ? "bg-blue-500/15 border-blue-500 text-blue-700 dark:bg-amber-500/20 dark:border-amber-500 dark:text-[#d9b452] shadow-xs"
+                          : "border-slate-200 dark:border-zinc-700 hover:border-blue-500/40 dark:hover:border-amber-500/40 text-slate-400"
                       }`}
                       title={selectedIds.has(q.id) ? "Desmarcar questão" : "Adicionar questão à seleção de Treino/Simulado"}
                     >
                       {selectedIds.has(q.id) ? (
-                        <CheckSquare className="w-4 h-4 text-amber-600 dark:text-[#d9b452]" />
+                        <CheckSquare className="w-4 h-4 text-blue-600 dark:text-[#d9b452]" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -1638,7 +1638,7 @@ export default function BancoQuestoesPage() {
 
                     {/* BANCA & ANO */}
                     {q.banca && (
-                      <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] text-xs font-bold">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-bold">
                         {q.banca} {q.ano ? `· ${q.ano}` : ""}
                       </span>
                     )}
@@ -1647,7 +1647,7 @@ export default function BancoQuestoesPage() {
                     {q.categoria_banca && (
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
                         q.categoria_banca === "Concurso Militar"
-                          ? "bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border-amber-500/25"
+                          ? "bg-blue-500/10 text-blue-800 border-blue-500/25 dark:bg-amber-500/10 dark:text-[#d9b452] dark:border-amber-500/25"
                           : q.categoria_banca === "Vestibular & Superior"
                           ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
                           : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
@@ -1726,7 +1726,7 @@ export default function BancoQuestoesPage() {
                     <button
                       type="button"
                       onClick={() => setReportQuestaoId(q.id)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-[#d9b452] hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 transition-all"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-[#d9b452] hover:bg-blue-500/10 dark:hover:bg-amber-500/10 border border-transparent hover:border-blue-500/20 dark:hover:border-amber-500/20 transition-all"
                       title="Reportar inconsistência (digitação, gabarito, imagem)"
                     >
                       <Flag className="w-3.5 h-3.5" />
@@ -1768,10 +1768,10 @@ export default function BancoQuestoesPage() {
                       {Object.entries(alternativas).map(([letra, valor]) => (
                         <div
                           key={letra}
-                          className="p-3 rounded-2xl bg-white dark:bg-[#18152a] border border-slate-200/90 dark:border-amber-500/20 shadow-xs flex flex-col items-center gap-2 group hover:border-amber-500/50 transition-all"
+                          className="p-3 rounded-2xl bg-white dark:bg-[#18152a] border border-slate-200/90 dark:border-amber-500/20 shadow-xs flex flex-col items-center gap-2 group hover:border-blue-500/50 dark:hover:border-amber-500/50 transition-all"
                         >
                           <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-stone-800/80">
-                            <span className="font-bold text-xs px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/20">
+                            <span className="font-bold text-xs px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-[#d9b452] border border-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/20">
                               Opção ({letra})
                             </span>
                           </div>
@@ -1788,7 +1788,7 @@ export default function BancoQuestoesPage() {
                           key={letra}
                           className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 text-xs text-slate-700 dark:text-zinc-300 flex items-start gap-2"
                         >
-                          <span className="font-bold text-amber-600 dark:text-[#d9b452] mt-0.5 shrink-0">
+                          <span className="font-bold text-blue-600 dark:text-[#d9b452] mt-0.5 shrink-0">
                             ({letra})
                           </span>
                           <div className="overflow-x-auto w-full">
@@ -1817,7 +1817,7 @@ export default function BancoQuestoesPage() {
                       <>
                         <button
                           onClick={() => toggleGabarito(q.id)}
-                          className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-600 dark:hover:text-[#d9b452] transition-colors"
+                          className="text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-blue-600 dark:hover:text-[#d9b452] transition-colors"
                         >
                           {revelado ? `Gabarito: [${q.gabarito}] (Ocultar)` : "Revelar Gabarito"}
                         </button>
@@ -1837,8 +1837,8 @@ export default function BancoQuestoesPage() {
                       onClick={() => toggleSelectQuestion(q.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                         selectedIds.has(q.id)
-                          ? "bg-amber-500/15 border-amber-500 text-amber-700 dark:text-[#d9b452]"
-                          : "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-amber-500/30"
+                          ? "bg-blue-500/15 border-blue-500 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500 dark:text-[#d9b452]"
+                          : "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-blue-500/30 dark:hover:border-amber-500/30"
                       }`}
                     >
                       {selectedIds.has(q.id) ? "✓ Na Seleção" : "+ Selecionar"}

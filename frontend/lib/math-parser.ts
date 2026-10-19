@@ -155,44 +155,57 @@ export function normalizarMatematica(texto: string): string {
  */
 export function autoWrapLatexExpressions(text: string): string {
   if (!text) return "";
-  let res = text;
 
-  // 1. Mapeamentos de funções: f: \mathbb{R} \to \mathbb{R}
-  res = res.replace(/([a-zA-Z]\s*:\s*\\mathbb\{[A-Z]\}\s*\\to\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
+  // Divide o texto entre blocos já delimitados por $...$ ou $$...$$ e texto puro
+  const tokens = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+\$)/g);
 
-  // 2. Pertencimento a conjuntos: a,b,c \in \mathbb{R} ou x \in \mathbb{Z}
-  res = res.replace(/([a-zA-Z](?:\s*,\s*[a-zA-Z])*\s*\\in\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
+  const processedTokens = tokens.map((token) => {
+    // Se o token já for um bloco matemático ($...$ ou $$...$$), NÃO MODIFICA NADA!
+    if (token.startsWith("$")) {
+      return token;
+    }
 
-  // 3. Desigualdades e negações com símbolos: a \neq 0, x \le y, a \ge b
-  res = res.replace(/([a-zA-Z0-9]+\s*\\(?:neq|le|ge)\s*-?[a-zA-Z0-9]+)/g, "$$$1$$");
+    let res = token;
 
-  // 4. Definições de função com potências: f(x) = ax^2 + bx + c ou g(x) = ...
-  res = res.replace(/([a-zA-Z]\([a-zA-Z]\)\s*=\s*[^,\n.]+)/g, "$$$1$$");
+    // 1. Mapeamentos de funções: f: \mathbb{R} \to \mathbb{R}
+    res = res.replace(/([a-zA-Z]\s*:\s*\\mathbb\{[A-Z]\}\s*\\to\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
 
-  // 5. Logaritmos com base: \log_2 y = (-1/2)+(2/3)*\log_2 x
-  res = res.replace(/(\\log_[0-9]+\s*[a-zA-Z0-9]+(?:\s*[+\-*\/=]\s*[^,\n.]+)?)/g, "$$$1$$");
+    // 2. Pertencimento a conjuntos: a,b,c \in \mathbb{R} ou x \in \mathbb{Z}
+    res = res.replace(/([a-zA-Z](?:\s*,\s*[a-zA-Z])*\s*\\in\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
 
-  // 6. Equações lineares simples: y = 2, x = 0, a = 3
-  res = res.replace(/\b([a-zA-Z]\s*=\s*-?[0-9]+(?:\.[0-9]+)?)\b/g, "$$$1$$");
+    // 3. Desigualdades e negações com símbolos: a \neq 0, x \le y, a \ge b
+    res = res.replace(/([a-zA-Z0-9]+\s*\\(?:neq|le|ge)\s*-?[a-zA-Z0-9]+)/g, "$$$1$$");
 
-  // 7. Expressões algébricas: a+b+c, a + b, x - y
-  res = res.replace(/\b([a-zA-Z](?:\s*[+\-*\/]\s*[a-zA-Z])+)\b/g, "$$$1$$");
+    // 4. Definições de função com potências: f(x) = ax^2 + bx + c ou g(x) = ...
+    res = res.replace(/([a-zA-Z]\([a-zA-Z]\)\s*=\s*[^,\n.$]+)/g, "$$$1$$");
 
-  // 8. Radicais soltos: \sqrt{...}, \sqrt[3]{...}
-  res = res.replace(/(?<!\$)(\\sqrt(?:\[[0-9]+\])?\{[^}]+\})(?!\$)/g, "$$$1$$");
+    // 5. Logaritmos com base: \log_2 y = (-1/2)+(2/3)*\log_2 x
+    res = res.replace(/(\\log_[0-9]+\s*[a-zA-Z0-9]+(?:\s*[+\-*\/=]\s*[^,\n.$]+)?)/g, "$$$1$$");
 
-  // 9. Comandos geométricos soltos: \triangle ABC \sim \triangle DEF, \angle ABC
-  res = res.replace(/(?<!\$)(\\triangle\s+[A-Za-z0-9]+(?:\s*\\sim\s*\\triangle\s+[A-Za-z0-9]+)?)(?!\$)/g, "$$$1$$");
-  res = res.replace(/(?<!\$)(\\angle\s+[A-Za-z0-9]+(?:\s*=\s*[^,\n.]+)?)(?!\$)/g, "$$$1$$");
+    // 6. Equações lineares simples: y = 2, x = 0, a = 3
+    res = res.replace(/\b([a-zA-Z]\s*=\s*-?[0-9]+(?:\.[0-9]+)?)\b/g, "$$$1$$");
 
-  // 10. Frações e vetores soltos: \frac{a}{b} = \frac{c}{d}, \overrightarrow{AB} + \overrightarrow{CD}
-  res = res.replace(/(?<!\$)(\\frac\{[^{}]*\}\{[^{}]*\}(?:\s*=\s*\\frac\{[^{}]*\}\{[^{}]*\})*)(?!\$)/g, "$$$1$$");
-  res = res.replace(/(?<!\$)(\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)(?!\$)/g, "$$$1$$");
+    // 7. Expressões algébricas: a+b+c, a + b, x - y
+    res = res.replace(/\b([a-zA-Z](?:\s*[+\-*\/]\s*[a-zA-Z])+)\b/g, "$$$1$$");
 
-  // 11. Semelhança solta: A \sim B
-  res = res.replace(/(?<!\$)\b([a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+)(?!\$)/g, "$$$1$$");
+    // 8. Radicais soltos: \sqrt{...}, \sqrt[3]{...}
+    res = res.replace(/(?<!\$)(\\sqrt(?:\[[0-9]+\])?\{[^}]+\})(?!\$)/g, "$$$1$$");
 
-  return res;
+    // 9. Comandos geométricos soltos: \triangle ABC \sim \triangle DEF, \angle ABC
+    res = res.replace(/(?<!\$)(\\triangle\s+[A-Za-z0-9]+(?:\s*\\sim\s*\\triangle\s+[A-Za-z0-9]+)?)(?!\$)/g, "$$$1$$");
+    res = res.replace(/(?<!\$)(\\angle\s+[A-Za-z0-9]+(?:\s*=\s*[^,\n.$]+)?)(?!\$)/g, "$$$1$$");
+
+    // 10. Frações e vetores soltos: \frac{a}{b} = \frac{c}{d}, \overrightarrow{AB} + \overrightarrow{CD}
+    res = res.replace(/(?<!\$)(\\frac\{[^{}]*\}\{[^{}]*\}(?:\s*=\s*\\frac\{[^{}]*\}\{[^{}]*\})*)(?!\$)/g, "$$$1$$");
+    res = res.replace(/(?<!\$)(\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)(?!\$)/g, "$$$1$$");
+
+    // 11. Semelhança solta: A \sim B
+    res = res.replace(/(?<!\$)\b([a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+)(?!\$)/g, "$$$1$$");
+
+    return res;
+  });
+
+  return processedTokens.join("");
 }
 
 /**
@@ -284,14 +297,23 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
     return { corpo: corpoDiscursiva, alternativas: {} };
   }
 
-  // Busca linhas ou padrões do tipo (A) texto, (B) texto, etc.
+  // Busca linhas ou padrões do tipo (A) texto, (a) texto, etc.
   // Rigor matemático: Alternativas reais NÃO devem ser precedidas por caracteres de função (ex: \max(A), f(A), P(A), $m(B)$)
   // Devem estar precedidas por início de linha, quebra de linha ou pontuação/espaço claro.
-  const regex = /(?:^|[\n\r]|\s{2,}|(?<=[.;:\n]))\s*\(([A-E])\)\s+([^\n\r]+)/g;
-  const matches = [...texto.matchAll(regex)];
+  const regexComParenteses = /(?:^|[\n\r]|\s{2,}|(?<=[.;:\n]))\s*\(([A-Ea-e])\)\s+([^\n\r]+)/g;
+  let matches = [...texto.matchAll(regexComParenteses)];
 
-  // Alternativas legítimas de vestibular/concurso devem ter ao menos 2 opções e começar em (A)
-  if (matches.length >= 2 && matches[0][1] === "A") {
+  // Fallback: padrões sem parêntese de abertura: A) texto ou a) texto
+  if (matches.length < 2 || matches[0][1].toUpperCase() !== "A") {
+    const regexSemAbertura = /(?:^|[\n\r]|\s{2,}|(?<=[.;:\n]))\s*([A-Ea-e])\)\s+([^\n\r]+)/g;
+    const matchesSemAbertura = [...texto.matchAll(regexSemAbertura)];
+    if (matchesSemAbertura.length >= 2 && matchesSemAbertura[0][1].toUpperCase() === "A") {
+      matches = matchesSemAbertura;
+    }
+  }
+
+  // Alternativas legítimas de vestibular/concurso devem ter ao menos 2 opções e começar em (A) ou (a)
+  if (matches.length >= 2 && matches[0][1].toUpperCase() === "A") {
     const primeiroIndex = matches[0].index ?? texto.length;
     let corpo = texto.slice(0, primeiroIndex).trim();
 
@@ -305,7 +327,8 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
     const alternativas: Record<string, string> = {};
 
     for (const match of matches) {
-      const letra = match[1];
+      // Sempre normaliza a chave da alternativa para MAIÚSCULA ('A', 'B', 'C', 'D', 'E') para alinhar com o gabarito oficial
+      const letra = match[1].toUpperCase();
       let conteudo = match[2].trim();
 
       // Des-hifeniza e limpa quebras residuais no texto da alternativa
