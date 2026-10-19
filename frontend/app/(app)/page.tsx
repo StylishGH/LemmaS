@@ -248,7 +248,7 @@ export default function DashboardPage() {
       {/* 2. KPIS COM DESIGN EDITORIAL E DADOS REAIS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Aproveitamento */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Aproveitamento</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -270,10 +270,10 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 2: Total Resolvidas */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Resolvidas</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
               <BookOpenCheck className="w-4 h-4" />
             </div>
           </div>
@@ -288,14 +288,14 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 3: Tempo Médio */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Tempo Médio</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="font-serif-math text-3xl font-bold text-amber-600 dark:text-[#d9b452]">
+          <div className="font-serif-math text-3xl font-bold text-blue-600 dark:text-[#d9b452]">
             {metricas.total_resolvidas > 0 ? metricas.tempo_medio : "—"}
           </div>
           <div className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
@@ -304,10 +304,10 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 4: Acervo de Lemas */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Lemas</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
               <Target className="w-4 h-4" />
             </div>
           </div>
@@ -327,14 +327,14 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5 text-amber-600 dark:text-[#d9b452]" />
+                <BrainCircuit className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
                 Radar de Domínio Matemático
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Taxa de domínio calculada pelo LEMMAS Core por matéria
               </p>
             </div>
-            <span className="text-xs font-semibold text-amber-700 dark:text-[#d9b452] bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-blue-700 dark:text-[#d9b452] bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 px-2.5 py-1 rounded-full">
               Tempo Real
             </span>
           </div>
@@ -373,10 +373,10 @@ export default function DashboardPage() {
               <line x1="230" y1="150" x2="152" y2="195" stroke="currentColor" strokeOpacity="0.12" strokeDasharray="3 3" />
               <line x1="230" y1="150" x2="152" y2="105" stroke="currentColor" strokeOpacity="0.12" strokeDasharray="3 3" />
 
-              {/* Polígono de Desempenho do Aluno em Dourado/Âmbar */}
+              {/* Polígono de Desempenho do Aluno em Azul no Light e Dourado no Dark */}
               <polygon 
                 points={radarPointsString} 
-                className={`${hasAnyData ? "fill-amber-500/20 stroke-[#d9b452] dark:stroke-[#e1bb55]" : "fill-amber-500/5 stroke-amber-500/30 stroke-dash-2"}`}
+                className={`${hasAnyData ? "fill-blue-500/20 stroke-blue-600 dark:fill-amber-500/20 dark:stroke-[#e1bb55]" : "fill-blue-500/5 stroke-blue-500/30 dark:fill-amber-500/5 dark:stroke-amber-500/30 stroke-dash-2"}`}
                 strokeWidth="2.5" 
                 strokeDasharray={hasAnyData ? undefined : "4 4"}
               />
@@ -384,12 +384,12 @@ export default function DashboardPage() {
               {/* Vértices em Ouro (se houver dados reais) */}
               {hasAnyData && (
                 <>
-                  <circle cx={getRadarPoint(pAlgebra, 0).x} cy={getRadarPoint(pAlgebra, 0).y} r="4" className="fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pGeometria, 1).x} cy={getRadarPoint(pGeometria, 1).y} r="4" className="fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pTrigonometria, 2).x} cy={getRadarPoint(pTrigonometria, 2).y} r="4" className="fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pCalculo, 3).x} cy={getRadarPoint(pCalculo, 3).y} r="4" className="fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pCombinatoria, 4).x} cy={getRadarPoint(pCombinatoria, 4).y} r="4" className="fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pAritmetica, 5).x} cy={getRadarPoint(pAritmetica, 5).y} r="4" className="fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pAlgebra, 0).x} cy={getRadarPoint(pAlgebra, 0).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pGeometria, 1).x} cy={getRadarPoint(pGeometria, 1).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pTrigonometria, 2).x} cy={getRadarPoint(pTrigonometria, 2).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pCalculo, 3).x} cy={getRadarPoint(pCalculo, 3).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pCombinatoria, 4).x} cy={getRadarPoint(pCombinatoria, 4).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pAritmetica, 5).x} cy={getRadarPoint(pAritmetica, 5).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
                 </>
               )}
 
@@ -461,10 +461,10 @@ export default function DashboardPage() {
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
                     <span className="text-slate-700 dark:text-zinc-300">Lacuna Conceitual / Teorema</span>
-                    <span className="text-amber-600 dark:text-[#d9b452] font-bold">{diagnosticoErros.lacuna}%</span>
+                    <span className="text-blue-600 dark:text-[#d9b452] font-bold">{diagnosticoErros.lacuna}%</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-amber-500 dark:bg-[#d9b452] rounded-full" style={{ width: `${diagnosticoErros.lacuna}%` }} />
+                    <div className="h-full bg-blue-600 dark:bg-[#d9b452] rounded-full" style={{ width: `${diagnosticoErros.lacuna}%` }} />
                   </div>
                 </div>
               </div>
@@ -486,9 +486,9 @@ export default function DashboardPage() {
             )}
 
             {/* INSIGHT SOCRÁTICO DA MATHAI */}
-            <div className="p-3.5 rounded-xl bg-amber-500/5 dark:bg-[#1a172c] border border-amber-500/20 text-xs space-y-1.5 mt-4">
-              <div className="font-semibold text-amber-900 dark:text-[#e1bb55] flex items-center gap-1.5">
-                <Lightbulb className="w-4 h-4 text-amber-500" />
+            <div className="p-3.5 rounded-xl bg-blue-500/5 dark:bg-[#1a172c] border border-blue-500/20 dark:border-amber-500/20 text-xs space-y-1.5 mt-4">
+              <div className="font-semibold text-blue-900 dark:text-[#e1bb55] flex items-center gap-1.5">
+                <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
                 Conselho da MathAI Engine:
               </div>
               <p className="text-slate-600 dark:text-zinc-400 leading-relaxed text-[11px]">
@@ -509,12 +509,12 @@ export default function DashboardPage() {
         <div className="lg:col-span-5 bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CalendarClock className="w-5 h-5 text-amber-600 dark:text-[#d9b452]" />
+              <CalendarClock className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
               <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
                 Fila de Revisão Espaçada (SM-2)
               </h3>
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-[#d9b452]">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452]">
               {revisoes.length} Pendente{revisoes.length === 1 ? "" : "s"}
             </span>
           </div>
@@ -528,7 +528,7 @@ export default function DashboardPage() {
               revisoes.map((r, i) => (
                 <div 
                   key={i}
-                  className="p-3.5 rounded-xl border border-slate-200/80 dark:border-amber-500/15 bg-slate-50/50 dark:bg-[#161426] flex items-center justify-between gap-3 hover:border-amber-500/35 transition-colors"
+                  className="p-3.5 rounded-xl border border-slate-200/80 dark:border-amber-500/15 bg-slate-50/50 dark:bg-[#161426] flex items-center justify-between gap-3 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -544,7 +544,7 @@ export default function DashboardPage() {
                     </span>
                     <Link
                       href={`/resolver?id=${r.questao_id}`}
-                      className="p-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold hover:scale-105 transition-transform"
+                      className="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold hover:scale-105 transition-transform"
                       title="Resolver agora"
                     >
                       <Play className="w-3 h-3 fill-current" />
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/resolver"
-                  className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs dark:hover:bg-amber-600 transition-colors"
                 >
                   <Play className="w-3 h-3 fill-current" />
                   Resolver Novas Questões
@@ -575,12 +575,12 @@ export default function DashboardPage() {
         <div className="lg:col-span-7 bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RotateCcw className="w-5 h-5 text-amber-600 dark:text-[#d9b452]" />
+              <RotateCcw className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
               <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
                 Histórico Recente de Resoluções
               </h3>
             </div>
-            <Link href="/resolver" className="text-xs text-amber-600 dark:text-[#d9b452] hover:underline font-semibold">
+            <Link href="/resolver" className="text-xs text-blue-600 dark:text-[#d9b452] hover:underline font-semibold">
               Ver todas →
             </Link>
           </div>
@@ -625,7 +625,7 @@ export default function DashboardPage() {
               </table>
             ) : (
               <div className="p-8 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
-                <BookOpenCheck className="w-6 h-6 text-amber-500 mx-auto" />
+                <BookOpenCheck className="w-6 h-6 text-blue-600 dark:text-amber-500 mx-auto" />
                 <p className="text-xs font-semibold text-slate-800 dark:text-[#dedbd0]">
                   Nenhuma resolução recente registrada
                 </p>
@@ -634,7 +634,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/resolver"
-                  className="inline-flex items-center gap-1.5 mt-2 px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-2 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs dark:hover:bg-amber-600 transition-colors"
                 >
                   <Play className="w-3 h-3 fill-current" />
                   Iniciar Treino Agora

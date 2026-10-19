@@ -65,11 +65,11 @@ export default function AppNavbar() {
                   href={item.href}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                     active
-                      ? "bg-amber-500/15 text-amber-900 dark:text-[#f5f0df] border border-amber-500/35 dark:border-[#d9b452]/40 shadow-sm"
+                      ? "bg-blue-500/10 text-blue-900 border border-blue-500/30 dark:bg-amber-500/15 dark:text-[#f5f0df] dark:border-[#d9b452]/40 shadow-sm"
                       : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df] hover:bg-slate-100 dark:hover:bg-zinc-800/40"
                   }`}
                 >
-                  <item.icon className={`w-3.5 h-3.5 ${active ? "text-amber-600 dark:text-[#d9b452]" : "opacity-60"}`} />
+                  <item.icon className={`w-3.5 h-3.5 ${active ? "text-blue-600 dark:text-[#d9b452]" : "opacity-60"}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -111,7 +111,7 @@ export default function AppNavbar() {
               className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#1a172c] border border-slate-200/90 dark:border-amber-500/20 text-xs font-medium text-slate-700 dark:text-[#dedbd0] whitespace-nowrap shrink-0 max-w-[220px]"
               title={`Foco de estudo atual: ${profile.focoConcurso}`}
             >
-              <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
+              <Target className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
               <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">Foco:</span>
               <span className="font-semibold text-slate-800 dark:text-[#f5f0df] truncate">{profile.focoConcurso}</span>
             </div>
@@ -126,7 +126,7 @@ export default function AppNavbar() {
           ) : isAuthenticated ? (
             <Link
               href="/perfil"
-              className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-amber-400/40 transition-transform overflow-hidden shrink-0 relative group"
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-blue-400/40 dark:border-amber-400/40 transition-transform overflow-hidden shrink-0 relative group"
               title={`Meu Perfil (${profile.nome || "Aluno"})`}
             >
               {profile.fotoUrl ? (
@@ -173,11 +173,11 @@ export default function AppNavbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   active
-                    ? "bg-amber-500/15 text-amber-900 dark:text-[#f5f0df] border border-amber-500/35"
+                    ? "bg-blue-500/10 text-blue-900 border border-blue-500/30 dark:bg-amber-500/15 dark:text-[#f5f0df] dark:border-amber-500/35"
                     : "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/40"
                 }`}
               >
-                <item.icon className={`w-4 h-4 ${active ? "text-amber-600 dark:text-[#d9b452]" : "opacity-60"}`} />
+                <item.icon className={`w-4 h-4 ${active ? "text-blue-600 dark:text-[#d9b452]" : "opacity-60"}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -189,9 +189,9 @@ export default function AppNavbar() {
               <Link
                 href="/perfil"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-amber-600 dark:text-[#d9b452] font-semibold flex items-center gap-2.5 py-1"
+                className="text-blue-600 dark:text-[#d9b452] font-semibold flex items-center gap-2.5 py-1"
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold text-[11px] flex items-center justify-center border border-amber-400/40 shrink-0">
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 text-white font-bold text-[11px] flex items-center justify-center border border-blue-400/40 dark:border-amber-400/40 shrink-0">
                   {profile.fotoUrl ? (
                     <img src={profile.fotoUrl} alt={profile.nome} className="w-full h-full object-cover" />
                   ) : (

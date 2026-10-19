@@ -31,8 +31,13 @@ def sync_images(dry_run: bool = False, limit: int = None):
         print(f"[!] Diretório não encontrado: {imagens_dir}")
         return
 
-    arquivos = [p for p in imagens_dir.glob("**/*.*") if p.is_file() and p.suffix.lower() in [".png", ".jpg", ".jpeg", ".svg", ".webp"]]
-    print(f"[*] Total de imagens encontradas: {len(arquivos)}")
+    arquivos = [
+        p for p in imagens_dir.glob("**/*.*")
+        if p.is_file() 
+        and p.suffix.lower() in [".png", ".jpg", ".jpeg", ".svg", ".webp"]
+        and not any(part.startswith(("debug", "pages_", "test_")) for part in p.parts)
+    ]
+    print(f"[*] Total de imagens legítimas encontradas: {len(arquivos)}")
 
     enviadas = 0
     erros = 0
