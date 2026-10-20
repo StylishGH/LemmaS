@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Centralização: Requisição ao Backend FastAPI (MathAI Engine no Render)
-    // Timeout coordenado de 25 segundos (compatível com maxDuration=30s da Vercel e orçamento de 25s do Gateway)
+    // Timeout coordenado de 8 segundos: permite resposta se aquecido, mas não sequestra o tempo total
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
           enunciado: fullPrompt,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(8000),
         cache: "no-store",
       });
 
@@ -131,18 +131,11 @@ export async function POST(req: NextRequest) {
             model_used: backendData.model_used || "mathai-gateway",
           });
         }
-      } else if (backendResp.status === 503) {
-        const errorData = await backendResp.json().catch(() => ({}));
-        return NextResponse.json(
-          {
-            error: errorData.detail || "MathAI Segunda Opinião temporariamente sobrecarregada. Tente novamente em instantes.",
-            status: "unavailable",
-          },
-          { status: 503 }
-        );
+      } else {
+        console.warn(`[Segunda Opinião] Backend respondeu status ${backendResp.status}. Ativando fallback resiliente do Next.js...`);
       }
     } catch (backendErr) {
-      console.warn("[Segunda Opinião] Falha na chamada ao backend:", backendErr);
+      console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend:", backendErr);
     }
 
     // 2. Inferência Direta de Alta Performance via Gemini (Latência ~1s com KaTeX real)
@@ -214,6 +207,37 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
       }
     } catch (geminiErr) {
       console.warn("[Segunda Opinião] Fallback Gemini falhou:", geminiErr);
+    }
+
+    // 2.5. Inferência Terciária de Respaldo via NVIDIA NIM Direct
+    try {
+      const { generateNvidiaContent } = await import("@/lib/nvidia");
+      const systemInstructionNvidia = `Você é o motor de Segunda Opinião do LEMMAS (MathAI Engine).
+Retorne EXCLUSIVAMENTE um JSON válido com chaves:
+{
+  "model_a": { "name": "Rigor Axiomático e Prova Formal", "role": "Demonstração Analítica & Invariantes", "content": "..." },
+  "model_b": { "name": "Heurística & Atalhos Cognitivos", "role": "Intuição Heurística & Atalhos Cognitivos", "content": "..." },
+  "sintese": "..."
+}`;
+      const nvidiaRes = await generateNvidiaContent({
+        prompt: `Problema / Enunciado:\n${fullPrompt}`,
+        systemInstruction: systemInstructionNvidia,
+        temperature: 0.2,
+        timeoutMs: 8000,
+      });
+
+      const parsedNvidia = safeParseJsonWithLatex(nvidiaRes.text);
+      if (parsedNvidia.model_a && parsedNvidia.model_b) {
+        return NextResponse.json({
+          model_a: parsedNvidia.model_a,
+          model_b: parsedNvidia.model_b,
+          sintese: parsedNvidia.sintese || "",
+          provider: "nvidia-nim",
+          model_used: nvidiaRes.model,
+        });
+      }
+    } catch (nvidiaErr) {
+      console.warn("[Segunda Opinião] Fallback NVIDIA NIM falhou:", nvidiaErr);
     }
 
     // 3. Quando todos os provedores falharem, retorna indisponibilidade real (HTTP 503) sem mascarar falha
