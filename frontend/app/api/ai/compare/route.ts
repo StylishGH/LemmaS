@@ -156,20 +156,28 @@ REGRAS ESTRITAS DE LATEX E FORMATAÇÃO:
 - NUNCA deixe delimitadores desbalanceados ou abertos (como $... sem fechar).
 - Utilize cabeçalhos markdown ### limpos para cada etapa.
 
+REGRA DE OURO: DIVERGÊNCIA METODOLÓGICA ESTRITA (ORTOGONALIDADE & NÃO-CANIBALIZAÇÃO):
+O MODELO A e o MODELO B NUNCA devem convergir para o mesmo método, atalho ou fórmula intermediária. É TERMINANTEMENTE PROIBIDO que ambos ensinem o mesmo macete no final.
+
 1. MODEL_A ("Rigor Axiomático e Prova Formal"):
-- Inicie identificando explicitamente o Teorema Fundamental Aplicável.
-- Demonstre a dedução dos invariantes e equações a partir das hipóteses iniciais.
-- Apresente a Solução Axiomática detalhada com contas e fórmulas em LaTeX ($...$ para inline e $$...$$ para blocos).
-- Adicione uma nota de "Atenção a Singularidades" / hipóteses de validade.
+- Foco exclusivo em demonstração formal, dedutiva e analítica a partir de primeiros princípios e teoremas universais (ex: decomposição axiomática em áreas $S = p \\cdot r$, geometria analítica, sistemas de equações fundamentais ou cálculo).
+- PROIBIÇÃO EXPRESSA: NUNCA utilize fórmulas mnemônicas ad-hoc de concurso (como $r = \\frac{b+c-a}{2}$ no triângulo retângulo), atalhos locais de prova rápida e NUNCA inclua seções de 'demonstração alternativa' que roubem a heurística do Modelo B. Desenvolva UMA ÚNICA demonstração dedutiva pura, universal e rigorosa.
+- Estrutura esperada:
+  ### 1. Definições e Lemas Universais
+  ### 2. Dedução Analítica Formal
+  ### 3. Solução Axiomática Passo a Passo
+  ### 4. Domínio de Validade e Invariantes
 
 2. MODEL_B ("Heurística & Atalhos Cognitivos"):
-- Explore a intuição visual, geométrica ou numérica (ex: homotetia, simetria, decomposição de áreas, propriedades globais conservadas).
-- Apresente o cálculo direto com fórmulas em LaTeX ($...$ e $$...$$) com foco em velocidade de prova e clareza mental.
-- Destaque a Igualdade Heurística em bloco ($$...$$).
-- Finalize obrigatoriamente com uma "Dica Socrática" reflexiva destacando o "pulo do gato" que permite resolver quase sem contas.
+- Foco na intuição geométrica/visual e velocidade de prova. É AQUI e APENAS AQUI que devem ser explorados: reconhecimento de padrões (ex: homotetia de ternas pitagóricas 3-4-5), simetria, análise de casos extremos e os macetes rápidos de concurso (como tangências no vértice reto gerando $r = \\frac{b+c-a}{2}$).
+- Estrutura esperada:
+  ### 1. Visualização Intuitiva & Padrões
+  ### 2. O Atalho Tático (Pulo do Gato)
+  ### 3. Resolução Rápida com Mínimo de Contas
+  ### 4. Dica Socrática para Provas de Alto Rendimento
 
 3. SINTESE:
-- Breve conexão metacognitiva mostrando como o rigor analítico formal e a intuição geométrica heurística se complementam.
+- Contraste pedagógico cristalino mostrando como o rigor formal constrói a fundamentação axiomática universal para o ensino, enquanto a heurística tática fornece agilidade mental indispensável em vestibulares e concursos militares.
 
 Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
 {

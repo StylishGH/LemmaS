@@ -50,11 +50,11 @@ export default function Sidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs md:text-sm transition-all ${
                   isActive
-                    ? "bg-amber-500/15 text-amber-900 dark:text-[#f5f0df] border border-amber-500/35 dark:border-[#d9b452]/40 font-semibold shadow-sm"
+                    ? "bg-blue-500/10 text-blue-900 border border-blue-500/30 dark:bg-amber-500/15 dark:text-[#f5f0df] dark:border-[#d9b452]/40 font-semibold shadow-sm"
                     : "text-slate-600 dark:text-[#a9aaa1] hover:text-slate-900 dark:hover:text-[#f5f0df] hover:bg-slate-200/50 dark:hover:bg-zinc-800/40"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-amber-600 dark:text-[#d9b452]" : "text-slate-400 dark:text-zinc-500"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-blue-600 dark:text-[#d9b452]" : "text-slate-400 dark:text-zinc-500"}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -70,16 +70,16 @@ export default function Sidebar() {
         {/* PERFIL DO USUÁRIO COM FOTO REAL */}
         <Link 
           href="/perfil"
-          className="flex items-center gap-3 bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/15 p-2.5 rounded-xl hover:border-amber-500/40 transition-colors shadow-sm"
+          className="flex items-center gap-3 bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/15 p-2.5 rounded-xl hover:border-blue-500/30 dark:hover:border-amber-500/40 transition-colors shadow-sm"
         >
           {profile.fotoUrl ? (
             <img
               src={profile.fotoUrl}
               alt={profile.nome || "Avatar"}
-              className="w-9 h-9 rounded-full object-cover shadow-sm border border-amber-500/30"
+              className="w-9 h-9 rounded-full object-cover shadow-sm border border-blue-500/25 dark:border-amber-500/30"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-xs shadow-sm font-serif-math">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 text-white font-bold flex items-center justify-center text-xs shadow-sm font-serif-math">
               {initials}
             </div>
           )}

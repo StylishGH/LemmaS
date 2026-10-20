@@ -119,7 +119,7 @@ export default function ReportarQuestaoModal({
 
         {/* CABEÇALHO */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] flex items-center justify-center shrink-0">
             <Flag className="w-5 h-5" />
           </div>
           <div>
@@ -161,8 +161,8 @@ export default function ReportarQuestaoModal({
                       onClick={() => setMotivo(m.id)}
                       className={`w-full text-left p-2.5 rounded-xl border flex items-center gap-3 transition-all ${
                         isSelected
-                          ? "bg-amber-500/15 border-amber-500/80 text-amber-900 dark:text-[#f5f0df] shadow-xs"
-                          : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-600 dark:text-zinc-400 hover:border-amber-500/30"
+                          ? "bg-blue-500/10 border-blue-500/80 text-blue-900 dark:bg-amber-500/15 dark:border-amber-500/80 dark:text-[#f5f0df] shadow-xs"
+                          : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-600 dark:text-zinc-400 hover:border-blue-500/30 dark:hover:border-amber-500/30"
                       }`}
                     >
                       <span className="text-base shrink-0">{m.icon}</span>
@@ -175,7 +175,7 @@ export default function ReportarQuestaoModal({
                       <div
                         className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                           isSelected
-                            ? "border-amber-600 bg-amber-600 dark:border-[#d9b452] dark:bg-[#d9b452]"
+                            ? "border-blue-600 bg-blue-600 dark:border-[#d9b452] dark:bg-[#d9b452]"
                             : "border-slate-300 dark:border-zinc-700"
                         }`}
                       >
@@ -200,7 +200,7 @@ export default function ReportarQuestaoModal({
                 onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
                 rows={3}
                 placeholder="Ex: No terceiro parágrafo o expoente deveria ser x² em vez de 2x; a imagem está com resolução muito baixa..."
-                className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-amber-500 transition-colors"
+                className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
               />
             </div>
 

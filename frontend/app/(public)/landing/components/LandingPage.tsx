@@ -6,33 +6,25 @@ import {
   BrainCircuit, 
   Moon, 
   Sun, 
-  Camera, 
-  Timer, 
   LineChart, 
-  Sparkles, 
-  Compass, 
-  Lightbulb, 
-  ShieldCheck, 
   Layers,
   BookOpen,
   Play,
-  GraduationCap,
   PenTool,
   Target,
   Cpu,
-  FileText,
-  CheckCircle2
+  FileText
 } from "lucide-react";
-import { BackgroundAnimation } from "./BackgroundAnimation";
+import AppBackground from "@/components/AppBackground";
 import { BoardFrame } from "./BoardFrame";
 import { Logo } from "./Logo";
 import { AboutTeacher } from "./AboutTeacher";
 import { ContactLoop } from "./ContactLoop";
 import { BancadaShowcase } from "./BancadaShowcase";
 import { SegundaOpiniaoShowcase } from "./SegundaOpiniaoShowcase";
+import { TechCard } from "./TechCard";
 import { useTheme } from "@/components/theme-provider";
 import Link from "next/link";
-import PixelCard from "@/components/PixelCard";
 import "./BackgroundAnimation.css"; 
 import "./BoardFrame.css"; 
 import "./Logo.css"; 
@@ -110,7 +102,8 @@ export function LandingPage() {
   return (
     <BoardFrame>
       <div className="lemmas-page">
-        <BackgroundAnimation />
+        {/* Malha de coordenadas técnica global (caderno de engenharia) */}
+        <AppBackground />
         
         {/* NAVEGAÇÃO SUPERIOR */}
         <nav className="lemmas-nav">
@@ -185,34 +178,45 @@ export function LandingPage() {
           </div>
           
           <div className="lemmas-principles">
-            <PixelCard variant={isLight ? "blue" : "gold"} className="lemmas-principle">
-              <div style={{ padding: "24px 26px", width: "100%" }}>
-                <PenTool size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
-                <strong>Bancada Discursiva Multimodal</strong>
-                <p>Rascunhe na Lousa Digital, construa com o Compasso Euclidiano ou envie foto do caderno/tablet via OCR. A MathAI Engine valida o raciocínio sem penalizar demonstrações curtas válidas.</p>
-              </div>
-            </PixelCard>
-            <PixelCard variant={isLight ? "blue" : "violet"} className="lemmas-principle">
-              <div style={{ padding: "24px 26px", width: "100%" }}>
-                <Target size={26} color={isLight ? "#2d6da1" : "#a855f7"} style={{ marginBottom: 12 }} />
-                <strong>Tutor Socrático por Perfil</strong>
-                <p>Se você busca Licenciatura (didática e primeiros princípios), ITA/IME (rigor axiomático puro) ou Ciência de Dados (matrizes e probabilidade), a IA calibra o tom e as dicas para sua meta.</p>
-              </div>
-            </PixelCard>
-            <PixelCard variant={isLight ? "blue" : "gold"} className="lemmas-principle">
-              <div style={{ padding: "24px 26px", width: "100%" }}>
-                <BrainCircuit size={26} color={isLight ? "#2d6da1" : "#d9b452"} style={{ marginBottom: 12 }} />
-                <strong>Barra LeetCode / Linear</strong>
-                <p>Navegação horizontal minimalista (≤ 140px) com 5 Trilhas Rápidas de 1 clique, popovers com busca interna instantânea e bancas de elite brasileiras fixadas no topo.</p>
-              </div>
-            </PixelCard>
-            <PixelCard variant={isLight ? "blue" : "violet"} className="lemmas-principle">
-              <div style={{ padding: "24px 26px", width: "100%" }}>
-                <LineChart size={26} color={isLight ? "#2d6da1" : "#a855f7"} style={{ marginBottom: 12 }} />
-                <strong>Repetição Espaçada FSRS-v4 & SM-2</strong>
-                <p>Algoritmos determinísticos agendam revisões no momento exato em que a curva do esquecimento começa a decair, agnóstico a qualquer disciplina futura.</p>
-              </div>
-            </PixelCard>
+            <TechCard
+              meta="SYS.CORE // MATHAI ENGINE"
+              title="Bancada Discursiva Multimodal"
+              accent="math"
+              icon={<PenTool size={20} />}
+              footer={["OCR Multimodal", "Rejeição de Palma", "4 Vereditos"]}
+            >
+              <p>Rascunhe na Lousa Digital, construa com o Compasso Euclidiano ou envie foto do caderno/tablet via OCR. A MathAI Engine valida o raciocínio sem penalizar demonstrações curtas válidas.</p>
+            </TechCard>
+
+            <TechCard
+              meta="MODEL: NEMOTRON · DEEPSEEK · GEMINI"
+              title="Tutor Socrático por Perfil"
+              accent="data"
+              icon={<Target size={20} />}
+              footer={["Strategy Pattern", "Multi-LLM", "FSRS-v4"]}
+            >
+              <p>Se você busca Licenciatura (didática e primeiros princípios), ITA/IME (rigor axiomático puro) ou Ciência de Dados (matrizes e probabilidade), a IA calibra o tom e as dicas para sua meta.</p>
+            </TechCard>
+
+            <TechCard
+              meta="UI.SYS // LEETCODE-GRADE COMMANDBAR"
+              title="Barra LeetCode / Linear"
+              accent="system"
+              icon={<Layers size={20} />}
+              footer={["≤ 140px", "5 Trilhas Rápidas", "Busca Instantânea"]}
+            >
+              <p>Navegação horizontal minimalista (≤ 140px) com 5 Trilhas Rápidas de 1 clique, popovers com busca interna instantânea e bancas de elite brasileiras fixadas no topo.</p>
+            </TechCard>
+
+            <TechCard
+              meta="PIPELINE: FSRS-v4 · SM-2"
+              title="Repetição Espaçada FSRS-v4 & SM-2"
+              accent="data"
+              icon={<LineChart size={20} />}
+              footer={["SM-2", "FSRS-v4", "Curva do Esquecimento"]}
+            >
+              <p>Algoritmos determinísticos agendam revisões no momento exato em que a curva do esquecimento começa a decair, agnóstico a qualquer disciplina futura.</p>
+            </TechCard>
           </div>
         </section>
 
@@ -240,33 +244,41 @@ export function LandingPage() {
           </div>
 
           <div className="lemmas-architecture-grid">
-            <div className="lemmas-architecture-card">
-              <div className="lemmas-arch-badge">🌐 CAMADA 1</div>
-              <h3>Plataforma LEMMAS & LEMMAS Core</h3>
+            <TechCard
+              meta="LAYER.01 // PLATFORM LEMMAS + CORE"
+              title="Plataforma LEMMAS & LEMMAS Core"
+              accent="system"
+              icon={<Layers size={20} />}
+              footer={["Next.js 16 · Turbopack", "Supabase + RLS", "SHA-256 Provenance"]}
+            >
               <p>
                 Gerencia o ecossistema web, sessões dos estudantes, cronometragem precisa, histórico de tentativas e o motor determinístico de repetição espaçada SM-2 e FSRS-v4. Agnóstica e escalável para qualquer disciplina futura.
               </p>
-              <ul className="lemmas-arch-list">
+              <ul>
                 <li>Next.js 16 (App Router, Turbopack) & TypeScript</li>
                 <li>Design System Editorial com Estética Lousa de Prestígio</li>
                 <li>Barra de Comando LeetCode/Linear minimalista (≤ 140px)</li>
                 <li>Supabase Postgres com Hash SHA-256 de Autoria & RLS</li>
               </ul>
-            </div>
+            </TechCard>
 
-            <div className="lemmas-architecture-card">
-              <div className="lemmas-arch-badge arch-badge-gold">⚡ CAMADA 2</div>
-              <h3>MathAI Engine (Núcleo de Inteligência)</h3>
+            <TechCard
+              meta="LAYER.02 // COGNITION ENGINE"
+              title="MathAI Engine (Núcleo de Inteligência)"
+              accent="data"
+              icon={<Cpu size={20} />}
+              footer={["Padrão Strategy", "Roteamento Multi-Modelo", "Telemetria N:1"]}
+            >
               <p>
                 O motor cognitivo especializado em Matemática superior e militar. Avalia desenvolvimento discursivo, conduz tutoria socrática personalizada e orquestra múltiplos modelos via Padrão Strategy.
               </p>
-              <ul className="lemmas-arch-list">
+              <ul>
                 <li>Bancada Discursiva com 4 Vereditos de Ponta a Ponta</li>
                 <li>Roteamento Inteligente: NVIDIA Nemotron, DeepSeek, Gemini e SLMs Locais</li>
                 <li>Telemetria N:1 com rastreabilidade de tokens e latência</li>
                 <li>Acervo indexado com {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} questões e 138 lemas</li>
               </ul>
-            </div>
+            </TechCard>
           </div>
         </section>
 
@@ -284,9 +296,12 @@ export function LandingPage() {
             {AMOSTRA_QUESTOES.map((q) => (
               <div 
                 key={q.id}
-                className="bg-white/80 dark:bg-[#141222]/90 border border-slate-200/90 dark:border-amber-500/20 rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:border-amber-500/40 transition-all hover:scale-[1.01]"
+                className="relative bg-[var(--bg-card)] border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] rounded-2xl p-6 flex flex-col justify-between hover:border-sky-400/40 dark:hover:border-amber-400/40 transition-all hover:scale-[1.01]"
               >
-                <div className="space-y-3">
+                {/* Chanfro interno sutil da moldura de madeira */}
+                <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+
+                <div className="space-y-3 relative z-10">
                   <div className="flex items-center justify-between">
                     <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-[#d9b452] font-mono text-xs font-bold">
                       {q.banca} {q.ano}
@@ -318,7 +333,7 @@ export function LandingPage() {
                   </div>
                 </div>
 
-                <div className="pt-5 mt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                <div className="pt-5 mt-4 border-t border-[var(--border-board)] flex items-center justify-between relative z-10">
                   <Link
                     href={`/resolver?id=${q.id}`}
                     className="lemmas-gold-cta inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition hover:scale-105"
@@ -420,3 +435,4 @@ export function LandingPage() {
     </BoardFrame>
   );
 }
+

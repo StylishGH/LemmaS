@@ -195,3 +195,9 @@ html[data-theme="lemmas-light"] .lemmas-objective-checkbox input[type="radio"] {
 html[data-theme="lemmas-light"] .lemmas-checkbox-label {
   color: #173a63;
 }
+
+html[data-theme="lemmas-light"] .lemmas-founder-badge {
+  border-color: rgb(37 99 235 / .28);
+  background: rgb(37 99 235 / .09);
+  color: #2563eb;
+}

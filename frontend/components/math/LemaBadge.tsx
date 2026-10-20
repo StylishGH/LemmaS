@@ -81,10 +81,25 @@ export default function LemaBadge({
   const [data, setData] = useState<LemmaData | null>(initialData || null);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [opensUpward, setOpensUpward] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const identifier = lemaCodigo || (lemaId ? String(lemaId) : null);
+
+  // Detecta se há espaço suficiente abaixo ou se deve abrir para cima
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 380 && spaceAbove > spaceBelow) {
+        setOpensUpward(true);
+      } else {
+        setOpensUpward(false);
+      }
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (initialData) {
@@ -156,10 +171,10 @@ export default function LemaBadge({
           ref={buttonRef}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
+          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
           title="Ver Teorema / Lema Canônico"
         >
-          <Compass className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 group-hover:rotate-45 transition-transform" />
+          <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-amber-400 shrink-0 group-hover:rotate-45 transition-transform" />
           <span className="font-mono font-bold">Lema {shortNum}</span>
           {data?.titulo && (
             <span className="text-slate-600 dark:text-zinc-400 font-normal truncate max-w-[180px]">
@@ -180,10 +195,10 @@ export default function LemaBadge({
           ref={buttonRef}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer"
+          className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer"
           title="Ver Teorema / Lema Canônico"
         >
-          <Compass className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+          <Compass className="w-3 h-3 text-blue-600 dark:text-amber-400 shrink-0" />
           <span>Lema {shortNum}</span>
         </button>
         {isOpen && renderPopover()}
@@ -198,13 +213,13 @@ export default function LemaBadge({
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-500/10 text-slate-800 dark:text-[#dedbd0] border border-amber-500/25 hover:bg-amber-500/15 hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
+        className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-500/10 text-slate-800 dark:text-[#dedbd0] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/15 dark:hover:bg-amber-500/15 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
         title="Clique para ver KaTeX, gatilho de prova e intuição deste lema"
       >
-        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/15 text-blue-700 dark:bg-amber-500/20 dark:text-amber-300">
           <Compass className="w-2.5 h-2.5" />
         </span>
-        <span className="font-mono font-bold text-amber-700 dark:text-[#d9b452]">
+        <span className="font-mono font-bold text-blue-700 dark:text-[#d9b452]">
           Lema {shortNum}
         </span>
         {data?.titulo && (
@@ -218,11 +233,28 @@ export default function LemaBadge({
     </div>
   );
 
+  function sanitizeLemmaLatex(raw: string): string {
+    if (!raw) return "";
+    let clean = raw.trim();
+    // Converte \vec com múltiplos caracteres (ex: \vec{AB}, \vec {AB}) para \overrightarrow{AB}
+    clean = clean.replace(/\\vec\s*\{([A-Za-z0-9]{2,})\}/g, "\\overrightarrow{$1}");
+    clean = clean.replace(/\\vec\s+([A-Za-z]{2,})/g, "\\overrightarrow{$1}");
+    clean = clean.replace(/\\vec\s*\{([A-Za-z0-9])\}/g, "\\vec{$1}");
+    // Corrige subscritos desbalanceados ou com espaços soltos como $_ { \triangle ABC }
+    clean = clean.replace(/\$\s*_\s*\{/g, "_{");
+    clean = clean.replace(/(?:^|[\s=+\-*/])_\s*\{/g, " {}_{");
+    // Corrige barras verticais duplas espaçadas | | para \|
+    clean = clean.replace(/\|\s*\|/g, "\\|");
+    return clean;
+  }
+
   function renderPopover() {
     return (
       <div
         ref={popoverRef}
-        className="absolute z-50 left-0 sm:left-auto sm:right-0 top-full mt-2 w-80 sm:w-96 max-w-[90vw] p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-amber-500/35 shadow-2xl space-y-3.5 text-left animate-fadeIn backdrop-blur-md"
+        className={`absolute z-50 left-0 sm:left-auto sm:right-0 ${
+          opensUpward ? "bottom-full mb-2" : "top-full mt-2"
+        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left animate-fadeIn backdrop-blur-md`}
         role="dialog"
         aria-modal="true"
       >
@@ -230,7 +262,7 @@ export default function LemaBadge({
         <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-amber-500/15">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+              <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-800 border border-blue-500/30 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
                 {displayCode}
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
@@ -254,8 +286,8 @@ export default function LemaBadge({
 
         {/* FÓRMULA EM KATEX */}
         {data?.formula_latex ? (
-          <div className="p-3 rounded-xl bg-amber-500/5 dark:bg-[#1f1b33] border border-amber-500/20 overflow-x-auto text-center font-mono text-xs shadow-2xs">
-            <MathText text={data.formula_latex} />
+          <div className="p-3 rounded-xl bg-blue-500/5 dark:bg-[#1f1b33] border border-blue-500/20 dark:border-amber-500/20 overflow-x-auto text-center font-mono text-xs shadow-2xs">
+            <MathText text={sanitizeLemmaLatex(data.formula_latex)} />
           </div>
         ) : (
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-900/60 text-slate-500 text-[11px] italic">
@@ -266,11 +298,11 @@ export default function LemaBadge({
         {/* GATILHO DE RECONHECIMENTO */}
         {data?.gatilho_reconhecimento && (
           <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-[#d9b452] text-[11px] uppercase tracking-wide">
-              <Sparkles className="w-3 h-3 text-amber-500" />
+            <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-[#d9b452] text-[11px] uppercase tracking-wide">
+              <Sparkles className="w-3 h-3 text-blue-600 dark:text-amber-500" />
               <span>Gatilho de Reconhecimento:</span>
             </div>
-            <p className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs pl-4 border-l-2 border-amber-500/40 font-sans">
+            <p className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs pl-4 border-l-2 border-blue-500/40 dark:border-amber-500/40 font-sans">
               {data.gatilho_reconhecimento}
             </p>
           </div>
@@ -292,7 +324,7 @@ export default function LemaBadge({
         {/* RODAPÉ COM CONTAGEM E LINK PARA O BANCO */}
         <div className="pt-2 border-t border-slate-100 dark:border-amber-500/15 flex items-center justify-between gap-2 text-[11px]">
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 font-medium">
-            <Layers className="w-3.5 h-3.5 text-amber-500" />
+            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>
               <strong className="text-slate-800 dark:text-[#f5f0df]">
                 {data?.questoes_vinculadas_count ?? 1}
@@ -304,7 +336,7 @@ export default function LemaBadge({
           <Link
             href={`/questoes?lema=${displayCode}`}
             onClick={() => setIsOpen(false)}
-            className="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-[#d9b452] hover:underline"
+            className="inline-flex items-center gap-1 font-bold text-blue-700 dark:text-[#d9b452] hover:underline"
           >
             <span>Ver no Banco</span>
             <ExternalLink className="w-3 h-3" />
