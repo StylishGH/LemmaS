@@ -5,6 +5,7 @@ import {
   resolveStableExerciseId,
   getCachedHint,
 } from "@/lib/hint-cache";
+import { autoWrapLatexExpressions } from "@/lib/math-parser";
 
 // Limite máximo de execução na Vercel (Edge/Serverless Function)
 export const maxDuration = 30;
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         if (cached && cached.hint_text) {
           return NextResponse.json({
             nivel: level,
-            dica: cached.hint_text,
+            dica: autoWrapLatexExpressions(cached.hint_text),
             modelo: cached.model_used || "socratic-engine",
             provedor: cached.provider || "supabase-cache",
             confianca: 0.99,
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
         if (data.hint_text) {
           return NextResponse.json({
             nivel: data.level || level,
-            dica: data.hint_text,
+            dica: autoWrapLatexExpressions(data.hint_text),
             modelo: data.model_used || "fastapi-tutor",
             provedor: data.provider || "backend",
             confianca: 0.95,

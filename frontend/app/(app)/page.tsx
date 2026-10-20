@@ -198,7 +198,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               href="/login?tab=signup"
-              className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#18152b] border border-slate-300 dark:border-amber-500/25 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-xs font-semibold transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#1e2329] border border-slate-300 dark:border-amber-500/25 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-xs font-semibold transition-colors"
             >
               Criar Conta
             </Link>
@@ -207,13 +207,13 @@ export default function DashboardPage() {
       )}
 
       {/* 1. HERO BANNER EDITORIAL LEMMAS */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-amber-500/20 bg-gradient-to-br from-white via-slate-50 to-amber-50/20 dark:from-[#141224] dark:via-[#110f1e] dark:to-[#0e0d18] p-8 md:p-10 shadow-sm dark:shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative rounded-3xl overflow-hidden border border-[var(--border-board)] dark:border-amber-500/20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 dark:from-[#161a1e] dark:via-[#13171b] dark:to-[#101316] p-8 md:p-10 shadow-sm dark:shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-semibold text-amber-700 dark:text-[#d9b452]">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs font-semibold text-blue-700 dark:text-[#d9b452]">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
               <span>Workspace Cognitivo · LEMMAS Core & MathAI</span>
             </div>
             <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               href="/questoes"
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-[#18152b] border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-sm font-semibold transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-[#1e2329] border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-sm font-semibold transition-colors shadow-sm"
             >
               <span>Explorar Lemas ({totalQuestions})</span>
             </Link>
@@ -248,7 +248,7 @@ export default function DashboardPage() {
       {/* 2. KPIS COM DESIGN EDITORIAL E DADOS REAIS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Aproveitamento */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Aproveitamento</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -270,7 +270,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 2: Total Resolvidas */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Resolvidas</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -288,7 +288,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 3: Tempo Médio */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Tempo Médio</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -304,7 +304,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 4: Acervo de Lemas */}
-        <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Lemas</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -323,7 +323,7 @@ export default function DashboardPage() {
       {/* 3. RADAR COGNITIVO VETORIAL DOURADO + DIAGNÓSTICO METACONCEITUAL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* RADAR COGNITIVO SVG COM VIEWBOX AMPLO (460x300) - ZERO OVERFLOW */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="lg:col-span-7 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
@@ -424,7 +424,7 @@ export default function DashboardPage() {
 
         {/* DIAGNÓSTICO METACONCEITUAL & ERROS */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
               <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
@@ -486,7 +486,7 @@ export default function DashboardPage() {
             )}
 
             {/* INSIGHT SOCRÁTICO DA MATHAI */}
-            <div className="p-3.5 rounded-xl bg-blue-500/5 dark:bg-[#1a172c] border border-blue-500/20 dark:border-amber-500/20 text-xs space-y-1.5 mt-4">
+            <div className="p-3.5 rounded-xl bg-blue-500/5 dark:bg-[#1e2329] border border-blue-500/20 dark:border-amber-500/20 text-xs space-y-1.5 mt-4">
               <div className="font-semibold text-blue-900 dark:text-[#e1bb55] flex items-center gap-1.5">
                 <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
                 Conselho da MathAI Engine:
@@ -506,7 +506,7 @@ export default function DashboardPage() {
       {/* 4. REPETIÇÃO ESPAÇADA (SM-2) & HISTÓRICO RECENTE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* REPETIÇÃO ESPAÇADA */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="lg:col-span-5 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CalendarClock className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
@@ -528,7 +528,7 @@ export default function DashboardPage() {
               revisoes.map((r, i) => (
                 <div 
                   key={i}
-                  className="p-3.5 rounded-xl border border-slate-200/80 dark:border-amber-500/15 bg-slate-50/50 dark:bg-[#161426] flex items-center justify-between gap-3 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors"
+                  className="p-3.5 rounded-xl border border-[var(--border-board)] border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex items-center justify-between gap-3 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -572,7 +572,7 @@ export default function DashboardPage() {
         </div>
 
         {/* HISTÓRICO DE RESOLUÇÕES */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="lg:col-span-7 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RotateCcw className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />

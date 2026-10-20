@@ -30,10 +30,10 @@ export function BancadaShowcase() {
           className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
             activeTab === "lousa"
               ? "lemmas-gold-cta scale-105"
-              : "bg-white/80 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
           }`}
         >
-          <PenTool className="w-4 h-4 text-amber-500" />
+          <PenTool className="w-4 h-4 text-blue-600 dark:text-amber-500" />
           <span>Lousa de Rascunho Digital</span>
         </button>
 
@@ -43,7 +43,7 @@ export function BancadaShowcase() {
           className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
             activeTab === "geometria"
               ? "bg-sky-500 text-white font-bold scale-105"
-              : "bg-white/80 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
           }`}
         >
           <Compass className="w-4 h-4 text-sky-500" />
@@ -55,36 +55,36 @@ export function BancadaShowcase() {
           onClick={() => setActiveTab("ocr")}
           className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
             activeTab === "ocr"
-              ? "bg-purple-600 text-white font-bold scale-105"
-              : "bg-white/80 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-purple-500/35"
+              ? "bg-sky-600 text-white font-bold scale-105"
+              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
           }`}
         >
-          <Camera className="w-4 h-4 text-purple-500" />
+          <Camera className="w-4 h-4 text-sky-500" />
           <span>Dedução & OCR de Caderno</span>
         </button>
       </div>
 
       {/* ÁREA VISUAL PRINCIPAL DA FERRAMENTA SELECIONADA */}
-      <div className="rounded-3xl border border-slate-200/90 dark:border-amber-500/25 bg-white dark:bg-[#141222] shadow-xl overflow-hidden transition-all">
+      <div className="rounded-3xl border border-slate-200/90 dark:border-amber-500/25 bg-white dark:bg-[var(--bg-card)] shadow-xl overflow-hidden transition-all">
         {/* ABA 1: LOUSA DE RASCUNHO */}
         {activeTab === "lousa" && (
           <div className="p-6 md:p-8 space-y-6 animate-fadeIn">
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-amber-500" />
+                <span className="w-3 h-3 rounded-full bg-blue-600 dark:bg-amber-500" />
                 <span className="font-serif-math font-bold text-sm text-slate-900 dark:text-[#f5f0df]">
                   Lousa Digital com Rejeição de Palma & Alta Densidade
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400">
-                <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1a172e] font-mono text-[11px] border border-slate-200 dark:border-amber-500/20">
+                <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[var(--bg-elevated)] font-mono text-[11px] border border-slate-200 dark:border-amber-500/20">
                   Resolução com Pointer Events
                 </span>
               </div>
             </div>
 
             {/* SIMULADOR VISUAL DA LOUSA */}
-            <div className="relative rounded-2xl border border-amber-500/25 bg-[#100e1c] p-6 md:p-8 min-h-[300px] flex flex-col justify-between overflow-hidden text-[#f5f0df] shadow-inner">
+            <div className="relative rounded-2xl border border-amber-500/25 bg-[#0d0f13] p-6 md:p-8 min-h-[300px] flex flex-col justify-between overflow-hidden text-[#f5f0df] shadow-inner">
               {/* Barra de Ferramentas Superior da Lousa */}
               <div className="flex flex-wrap items-center justify-between gap-2 z-10 pb-4 border-b border-white/10 text-xs">
                 <div className="flex items-center gap-2">
@@ -198,13 +198,13 @@ export function BancadaShowcase() {
           <div className="p-6 md:p-8 space-y-6 animate-fadeIn">
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-500" />
+                <span className="w-3 h-3 rounded-full bg-sky-500" />
                 <span className="font-serif-math font-bold text-sm text-slate-900 dark:text-[#f5f0df]">
                   OCR Multimodal de Caderno & Detecção de Erros
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400">
-                <span className="px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-300 font-mono text-[11px] border border-purple-500/20">
+                <span className="px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-300 font-mono text-[11px] border border-sky-500/20">
                   Visão Computacional + LaTeX
                 </span>
               </div>
@@ -213,8 +213,8 @@ export function BancadaShowcase() {
             {/* SIMULADOR DO SCANNER DE OCR */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Foto do Caderno com Linha Laser de Scan */}
-              <div className="relative rounded-2xl border border-purple-500/30 bg-[#161226] p-5 min-h-[240px] flex flex-col justify-between text-[#f5f0df] shadow-inner overflow-hidden">
-                <div className="text-[11px] font-mono text-purple-300 pb-2 border-b border-purple-500/20 flex justify-between">
+              <div className="relative rounded-2xl border border-sky-500/30 bg-[#0f1622] p-5 min-h-[240px] flex flex-col justify-between text-[#f5f0df] shadow-inner overflow-hidden">
+                <div className="text-[11px] font-mono text-sky-300 pb-2 border-b border-sky-500/20 flex justify-between">
                   <span>Foto do Caderno (Manuscrito)</span>
                   <span className="text-emerald-400">Legibilidade Alta</span>
                 </div>
@@ -225,21 +225,21 @@ export function BancadaShowcase() {
                     f'(x) = 3x² - 3 = 0<br />
                     3(x² - 1) = 0 =&gt; x = ±1
                   </div>
-                  <div className="text-[11px] text-purple-300 font-mono">
+                  <div className="text-[11px] text-sky-300 font-mono">
                     ✦ Transcrição Matemática Automática
                   </div>
                 </div>
 
-                <div className="text-[11px] text-zinc-400 font-mono pt-2 border-t border-purple-500/20 flex justify-between">
+                <div className="text-[11px] text-zinc-400 font-mono pt-2 border-t border-sky-500/20 flex justify-between">
                   <span>Varredura por Tokens</span>
                   <span>100% Auditável</span>
                 </div>
               </div>
 
               {/* Parecer do Diagnóstico Socrático */}
-              <div className="rounded-2xl border border-slate-200 dark:border-purple-500/25 bg-slate-50 dark:bg-[#1a1430] p-5 space-y-3 text-xs leading-relaxed">
-                <div className="flex items-center justify-between pb-2 border-b border-purple-500/20">
-                  <span className="font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider text-[11px]">
+              <div className="rounded-2xl border border-slate-200 dark:border-sky-500/25 bg-slate-50 dark:bg-[#111b2c] p-5 space-y-3 text-xs leading-relaxed">
+                <div className="flex items-center justify-between pb-2 border-b border-sky-500/20">
+                  <span className="font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider text-[11px]">
                     Diagnóstico MathAI
                   </span>
                   <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold font-mono text-[10px]">
@@ -255,7 +255,7 @@ export function BancadaShowcase() {
                   <p>
                     <strong className="text-slate-900 dark:text-[#f5f0df]">Primeiro Ponto de Desvio:</strong> Nenhum erro detectado nas derivadas.
                   </p>
-                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-900 dark:text-purple-200 font-medium">
+                  <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-900 dark:text-sky-200 font-medium">
                     💡 <strong>Dica Socrática:</strong> Para classificar os pontos críticos como máximo ou mínimo local, qual lema você pode aplicar agora? O teste da primeira ou da segunda derivada?
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export function BancadaShowcase() {
       </div>
 
       {/* O GUARDA-CORPO EPISTÊMICO: OS 4 VEREDITOS AUDITÁVEIS */}
-      <div className="rounded-3xl border border-slate-200/90 dark:border-amber-500/20 bg-slate-50/60 dark:bg-[#151224] p-6 md:p-8 space-y-5">
+      <div className="rounded-3xl border border-slate-200/90 dark:border-amber-500/20 bg-slate-50/60 dark:bg-[var(--bg-card)] p-6 md:p-8 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <span className="lemmas-eyebrow">AUDITORIA & INTEGRIDADE</span>
@@ -284,7 +284,7 @@ export function BancadaShowcase() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#1a172e] border border-emerald-500/30 space-y-2">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-elevated)] border border-emerald-500/30 space-y-2">
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider">
               <CheckCircle2 className="w-4 h-4" />
               <span>Aprovado</span>
@@ -294,7 +294,7 @@ export function BancadaShowcase() {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#1a172e] border border-amber-500/30 space-y-2">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-elevated)] border border-amber-500/30 space-y-2">
             <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-wider">
               <AlertTriangle className="w-4 h-4" />
               <span>Parcial</span>
@@ -304,7 +304,7 @@ export function BancadaShowcase() {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#1a172e] border border-slate-300 dark:border-zinc-700 space-y-2">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-elevated)] border border-slate-300 dark:border-zinc-700 space-y-2">
             <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400 font-bold text-xs uppercase tracking-wider">
               <FileQuestion className="w-4 h-4" />
               <span>Sem Desenvolvimento</span>
@@ -314,7 +314,7 @@ export function BancadaShowcase() {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#1a172e] border border-rose-500/30 space-y-2">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-elevated)] border border-rose-500/30 space-y-2">
             <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider">
               <XCircle className="w-4 h-4" />
               <span>Incorreto</span>
@@ -328,3 +328,4 @@ export function BancadaShowcase() {
     </div>
   );
 }
+

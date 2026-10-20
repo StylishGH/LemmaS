@@ -27,33 +27,129 @@ html {
   }
 }
 
-:root,
-html[data-theme="lemmas-dark"] {
-  --background: #0e0d16;
-  --foreground: #f5f0df;
-  --card-bg: rgba(20, 18, 32, 0.88);
-  --card-border: rgba(224, 184, 77, 0.16);
-  --card-hover: rgba(224, 184, 77, 0.32);
-  --accent-purple: #8b5cf6;
-  --accent-gold: #d9b452;
-  --gold-border: rgba(217, 180, 82, 0.35);
-  --text-muted: #a1a1aa;
-  --scrollbar-track: #0e0d16;
-  --scrollbar-thumb: #2d2642;
+@layer base {
+  /* ==========================================================================
+     MODO LIGHT: QUADRO BRANCO & PILOTO (Whiteboard & Marker)
+     Fundo branco acetinado, texto preto denso, cores de marcador realistas.
+     ========================================================================== */
+  :root,
+  html[data-theme="lemmas-light"] {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --bg-board: #f8fafc;          /* Superfície geral (Porcelana fria) */
+    --bg-card: #ffffff;           /* Superfície do quadro branco puro */
+    --bg-elevated: #f1f5f9;       /* Inputs, filtros e hover */
+    
+    --border-board: #cbd5e1;      /* Divisórias sutis de alumínio/moldura */
+    --border-badge: #cbd5e1;      /* Traço fino de contorno */
+    --border-wood-edge: #94a3b8;  /* Reflexo chanfrado da moldura de quadro branco */
+
+    --ink-primary: #0f172a;       /* Piloto Preto (Enunciados e KaTeX) */
+    --ink-secondary: #475569;     /* Cinza grafite (Subtítulos e metadados) */
+    --ink-muted: #64748b;         /* Rascunho / placeholders */
+
+    /* Tintas de Piloto (Alta densidade, baixa luminosidade para leitura no branco) */
+    --marker-blue: #1d4ed8;       /* Azul Royal (Banca / Tópicos) */
+    --marker-red: #dc2626;        /* Vermelho (Difícil / Alertas) */
+    --marker-green: #15803d;      /* Verde (Fácil / Gabarito / Sucesso) */
+    --marker-amber: #b45309;      /* Laranja/Ocre (Média / Destaque) */
+
+    /* Fundo das Badges (Água de limpeza / translúcido) */
+    --badge-bg: rgba(241, 245, 249, 0.8);
+    --border-badge: #cbd5e1;
+
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --card-hover: rgba(29, 78, 216, 0.12);
+    --accent-purple: #1d4ed8;
+    --accent-gold: #b45309;
+    --gold-border: rgba(180, 83, 9, 0.35);
+    --text-muted: #64748b;
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+  }
+
+  /* ==========================================================================
+     MODO DARK: QUADRO NEGRO & GIZ (Slate & Mineral Chalk)
+     Ardósia mineral fosca, giz branco marfim, zero efeito neon.
+     ========================================================================== */
+  .dark,
+  html[data-theme="lemmas-dark"] {
+    --background: #101316;
+    --foreground: #eceff4;
+    --bg-board: #101316;          /* Moldura escura profunda */
+    --bg-card: #14171c;           /* Fundo da lousa mineral fosca (Ardósia) */
+    --bg-elevated: #1e2329;       /* Apagador / rastro de giz suave */
+
+    --border-board: #63391f;      /* Moldura de madeira nobre estrutural visível (carvalho escuro / teca) */
+    --border-wood-edge: #c68a53;  /* Chanfro chanfrado dourado da madeira */
+    --border-badge: rgba(255, 255, 255, 0.12);
+
+    --ink-primary: #eceff4;       /* Giz Branco Marfim (Não queima a retina) */
+    --ink-secondary: #94a3b8;     /* Pó de giz secundário */
+    --ink-muted: #6c757d;         /* Giz apagado */
+
+    /* Pigmentos de Giz Pastel (Baixa saturação, alta luminosidade fosca) */
+    --marker-blue: #93c5fd;       /* Giz Azul Bebê */
+    --marker-red: #fda4af;        /* Giz Rosa/Salmão (Difícil) */
+    --marker-green: #86efac;      /* Giz Verde Menta */
+    --marker-amber: #fde047;      /* Giz Amarelo Clássico (EFOMM / Simulado) */
+
+    /* Fundo das Badges (Apenas um contorno de giz na lousa, sem fundo colorido!) */
+    --badge-bg: rgba(255, 255, 255, 0.03);
+
+    --card-bg: rgba(22, 26, 30, 0.95);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover: rgba(253, 224, 71, 0.2);
+    --accent-purple: #93c5fd;
+    --accent-gold: #fde047;
+    --gold-border: rgba(253, 224, 71, 0.35);
+    --text-muted: #adb5bd;
+    --scrollbar-track: #101316;
+    --scrollbar-thumb: #1e2329;
+  }
 }
 
-html[data-theme="lemmas-light"] {
-  --background: #f0f4f8;
-  --foreground: #142e4b;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --card-border: rgba(203, 213, 225, 0.85);
-  --card-hover: rgba(37, 99, 235, 0.25);
-  --accent-purple: #2563eb;
-  --accent-gold: #2563eb;
-  --gold-border: rgba(37, 99, 235, 0.35);
-  --text-muted: #64748b;
-  --scrollbar-track: #f1f5f9;
-  --scrollbar-thumb: #cbd5e1;
+/* ==========================================================================
+   COMPONENTES DE ESTÉTICA DE QUADRO
+   ========================================================================== */
+
+/* 1. Badges unificadas (Fim do efeito Árvore de Natal) */
+.lemma-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  background-color: var(--badge-bg);
+  border: 1px solid var(--border-badge);
+  color: var(--ink-secondary);
+  transition: all 0.15s ease;
+}
+
+/* Indicador pontual (Bolinha de giz/piloto em vez de pintar o fundo inteiro) */
+.lemma-badge-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* 2. Nitidez Cirúrgica para Equações (KaTeX / MathJax) */
+.katex, .MathJax {
+  color: var(--ink-primary) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 3. Tratamento de Figuras Geométricas no Quadro Negro */
+/* No modo dark, transforma diagramas P&B de fundo branco em traços de giz na lousa */
+.dark .question-diagram-invertible,
+html[data-theme="lemmas-dark"] .question-diagram-invertible {
+  filter: invert(0.91) hue-rotate(180deg) contrast(1.05);
+  mix-blend-mode: screen;
+  border-radius: 0.5rem;
 }
 
 body {
@@ -85,22 +181,25 @@ body {
 }
 
 .lemmas-gold-cta {
-  background-color: #e1bb55;
-  color: #18150f;
+  background-color: var(--marker-blue, #1d4ed8);
+  color: #ffffff;
+  border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 .lemmas-gold-cta:hover {
-  background-color: #f0cd73;
+  background-color: #1e40af;
 }
 
-html[data-theme="lemmas-light"] .lemmas-gold-cta,
-html:not(.dark) .lemmas-gold-cta {
-  background-color: #2563eb;
-  color: #ffffff;
+.dark .lemmas-gold-cta,
+html[data-theme="lemmas-dark"] .lemmas-gold-cta {
+  border: 1px solid rgba(253, 224, 71, 0.4);
+  background-color: rgba(253, 224, 71, 0.1);
+  color: #fde047;
 }
-html[data-theme="lemmas-light"] .lemmas-gold-cta:hover,
-html:not(.dark) .lemmas-gold-cta:hover {
-  background-color: #1d4ed8;
+.dark .lemmas-gold-cta:hover,
+html[data-theme="lemmas-dark"] .lemmas-gold-cta:hover {
+  background-color: rgba(253, 224, 71, 0.2);
+  border-color: rgba(253, 224, 71, 0.6);
 }
 
 .math-font {
@@ -136,7 +235,8 @@ html:not(.dark) .gold-glow {
   transition: background-color 0.3s ease, background-image 0.3s ease;
 }
 
-html[data-theme="lemmas-light"] .lemmas-app-frame {
+html[data-theme="lemmas-light"] .lemmas-app-frame,
+html:not(.dark) .lemmas-app-frame {
   background-color: #e9eef2;
   background-image: 
     linear-gradient(145deg, #f0f4f8 0%, #e9eef2 42%, #d8e1e8 72%, #cad5de 100%),
@@ -154,6 +254,7 @@ html[data-theme="lemmas-light"] .lemmas-app-frame {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
 
-html[data-theme="lemmas-light"] .lemmas-grain-overlay {
+html[data-theme="lemmas-light"] .lemmas-grain-overlay,
+html:not(.dark) .lemmas-grain-overlay {
   opacity: 0.035;
 }

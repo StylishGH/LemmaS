@@ -25,7 +25,7 @@ export default function PrivacidadePage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-500 transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-blue-600 dark:hover:text-amber-500 transition-colors"
             >
               <ArrowLeft size={16} /> Voltar ao Início
             </Link>
@@ -42,7 +42,7 @@ export default function PrivacidadePage() {
             </Link>
             <button
               type="button"
-              className="lemmas-theme-toggle p-2 rounded-xl border border-amber-500/20 text-slate-600 dark:text-[#d9b452] hover:bg-amber-500/10 transition-colors"
+              className="lemmas-theme-toggle p-2 rounded-xl border border-amber-500/20 text-slate-600 dark:text-[#d9b452] hover:bg-blue-500/10 dark:hover:bg-amber-500/10 transition-colors"
               onClick={() => setLight((v) => !v)}
               aria-label={light ? "Ativar quadro negro" : "Ativar quadro branco"}
             >

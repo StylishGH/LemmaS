@@ -33,13 +33,13 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
         onClick={toggleTheme}
         className={`p-2 rounded-xl transition-all border ${
           isLight
-            ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 shadow-sm"
+            ? "bg-slate-100 hover:bg-blue-50/50 border-slate-300 hover:border-blue-500/40 text-slate-800 shadow-sm"
             : "bg-[#181528] hover:bg-[#201c35] border-amber-500/30 text-amber-400 hover:text-amber-300 shadow-sm"
         } ${className}`}
         aria-label={isLight ? "Ativar Lousa de Giz (Escuro)" : "Ativar Quadro Branco (Claro)"}
         title={isLight ? "Mudar para Lousa de Giz Clássica (Dark)" : "Mudar para Quadro Branco Moderno (Light)"}
       >
-        {isLight ? <Moon className="w-4 h-4 text-slate-700" /> : <Sun className="w-4 h-4 text-amber-400" />}
+        {isLight ? <Moon className="w-4 h-4 text-blue-600" /> : <Sun className="w-4 h-4 text-amber-400" />}
       </button>
     );
   }
@@ -50,7 +50,7 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
       onClick={toggleTheme}
       className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
         isLight
-          ? "bg-slate-100 hover:bg-slate-200/80 border-slate-300 text-slate-800 shadow-sm"
+          ? "bg-slate-100 hover:bg-blue-50/50 border-slate-300 hover:border-blue-500/40 text-slate-800 shadow-sm"
           : "bg-[#181528] hover:bg-[#201c35] border-amber-500/25 text-zinc-300 shadow-sm"
       } ${className}`}
       aria-label="Alternar tema cenográfico"
@@ -69,11 +69,11 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
       <div
         className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-colors ${
           isLight
-            ? "bg-slate-200 border-slate-300 text-slate-700"
+            ? "bg-blue-500/10 border-blue-500/25 text-blue-600"
             : "bg-amber-500/10 border-amber-500/30 text-amber-400"
         }`}
       >
-        {isLight ? <Moon className="w-3.5 h-3.5 text-slate-700" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+        {isLight ? <Moon className="w-3.5 h-3.5 text-blue-600" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
       </div>
     </button>
   );

@@ -38,8 +38,80 @@ DIRETRIZES MANDATÓRIAS DE NOTAÇÃO MATEMÁTICA E LATEX:
 - NUNCA use delimitadores \( ou \[. Use SEMPRE $ e $$.
 - NUNCA escreva fórmulas matemáticas ou variáveis isoladas em texto puro sem os delimitadores $...$.
 - Em português brasileiro, adote notação padrão: \sen para seno e \tg para tangente.
+- ATENÇÃO CRÍTICA A FUNÇÕES TRIGONOMÉTRICAS E RELAÇÕES: Jamais escreva tg(\theta), sen(x) ou \theta = \alpha - \beta em texto puro. Fórmulas e relações trigonométricas DEVEM estar 100% delimitadas por $...$, ex: $\operatorname{tg}(\theta) = \operatorname{tg}(\alpha - \beta)$, $\operatorname{tg}(\alpha)$ e $\theta = \alpha - \beta$.
 
 Seja encorajador, rigoroso e extremamente didático."""
+
+
+def auto_wrap_latex_in_backend(text: str) -> str:
+    """Higieniza e auto-envolve expressões matemáticas soltas retornadas pela IA."""
+    if not text:
+        return ""
+
+    trig_names = r"(?:tg|sen|cossec|cosec|cotg|arcsen|arctg|tan|sin|cos|sec|cot|arccos|arctan)"
+    trig_pt = r"(?:tg|sen|cossec|cosec|cotg|arcsen|arctg)"
+
+    def apply_outside_math(s, fn):
+        parts = re.split(r"(\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$)", s)
+        res = []
+        for p in parts:
+            if p.startswith("$"):
+                res.append(p)
+            else:
+                res.append(fn(p))
+        return "".join(res)
+
+    res = text
+
+    # 1. Equações completas com funções trigonométricas ou comandos com contrabarra
+    # Ex: tg(\theta ) = tg(\alpha - \beta ) ou \theta =\alpha -\beta
+    eq_regex = re.compile(
+        r"(^|[\s([{:;])"
+        r"((?:\\?" + trig_names + r"\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)"
+        r"(?:\s*[-+*/]\s*(?:\\?" + trig_names + r"\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*"
+        r"\s*=\s*"
+        r"(?:\\?" + trig_names + r"\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)"
+        r"(?:\s*[-+*/]\s*(?:\\?" + trig_names + r"\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*)"
+        r"($|[\s)\]},;:?!])"
+    )
+
+    def wrap_eq(m):
+        prefix = m.group(1)
+        match = m.group(2)
+        suffix = m.group(3)
+        if "\\" in match or "(" in match or re.search(r"\b" + trig_names + r"\b", match):
+            clean = re.sub(r"\b(" + trig_pt + r")\b", r"\\operatorname{\1}", match)
+            clean = clean.replace("$", "").strip()
+            return f"{prefix}${clean}${suffix}"
+        return m.group(0)
+
+    res = apply_outside_math(res, lambda chunk: eq_regex.sub(wrap_eq, chunk))
+
+    # 2. Funções trigonométricas isoladas com argumento entre parênteses: tg(\alpha ), tg(\beta ), sen(x)
+    trig_call_regex = re.compile(
+        r"(^|[\s([{:;])"
+        r"((?:\\?" + trig_names + r")\s*\([^)]+\))"
+        r"($|[\s)\]},;:?!])"
+    )
+
+    def wrap_trig(m):
+        prefix = m.group(1)
+        match = m.group(2)
+        suffix = m.group(3)
+        clean = re.sub(r"\b(" + trig_pt + r")\b", r"\\operatorname{\1}", match)
+        clean = clean.replace("$", "").strip()
+        return f"{prefix}${clean}${suffix}"
+
+    res = apply_outside_math(res, lambda chunk: trig_call_regex.sub(wrap_trig, chunk))
+
+    # 3. Letras gregas soltas no texto puro (fora de $)
+    greek_regex = re.compile(
+        r"(?<!\$)\\((?:omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|"
+        r"Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|notin|subset|subseteq))\b(?!\$)"
+    )
+    res = apply_outside_math(res, lambda chunk: greek_regex.sub(r"$\\\1$", chunk))
+
+    return res
 
 
 def is_valid_commented_solution(sol: Optional[str]) -> bool:
@@ -316,6 +388,8 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
         )
 
         content = res.get("content", "").strip()
+        if content:
+            content = auto_wrap_latex_in_backend(content)
         provider = res.get("provider", "fallback")
         status_res = res.get("status", "")
         model_used = res.get("model_used", "socratic-engine")

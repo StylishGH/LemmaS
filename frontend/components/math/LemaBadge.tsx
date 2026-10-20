@@ -81,10 +81,25 @@ export default function LemaBadge({
   const [data, setData] = useState<LemmaData | null>(initialData || null);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [opensUpward, setOpensUpward] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const identifier = lemaCodigo || (lemaId ? String(lemaId) : null);
+
+  // Detecta se há espaço suficiente abaixo ou se deve abrir para cima
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 380 && spaceAbove > spaceBelow) {
+        setOpensUpward(true);
+      } else {
+        setOpensUpward(false);
+      }
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (initialData) {
@@ -218,11 +233,28 @@ export default function LemaBadge({
     </div>
   );
 
+  function sanitizeLemmaLatex(raw: string): string {
+    if (!raw) return "";
+    let clean = raw.trim();
+    // Converte \vec com múltiplos caracteres (ex: \vec{AB}, \vec {AB}) para \overrightarrow{AB}
+    clean = clean.replace(/\\vec\s*\{([A-Za-z0-9]{2,})\}/g, "\\overrightarrow{$1}");
+    clean = clean.replace(/\\vec\s+([A-Za-z]{2,})/g, "\\overrightarrow{$1}");
+    clean = clean.replace(/\\vec\s*\{([A-Za-z0-9])\}/g, "\\vec{$1}");
+    // Corrige subscritos desbalanceados ou com espaços soltos como $_ { \triangle ABC }
+    clean = clean.replace(/\$\s*_\s*\{/g, "_{");
+    clean = clean.replace(/(?:^|[\s=+\-*/])_\s*\{/g, " {}_{");
+    // Corrige barras verticais duplas espaçadas | | para \|
+    clean = clean.replace(/\|\s*\|/g, "\\|");
+    return clean;
+  }
+
   function renderPopover() {
     return (
       <div
         ref={popoverRef}
-        className="absolute z-50 left-0 sm:left-auto sm:right-0 top-full mt-2 w-80 sm:w-96 max-w-[90vw] p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left animate-fadeIn backdrop-blur-md"
+        className={`absolute z-50 left-0 sm:left-auto sm:right-0 ${
+          opensUpward ? "bottom-full mb-2" : "top-full mt-2"
+        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left animate-fadeIn backdrop-blur-md`}
         role="dialog"
         aria-modal="true"
       >
@@ -255,7 +287,7 @@ export default function LemaBadge({
         {/* FÓRMULA EM KATEX */}
         {data?.formula_latex ? (
           <div className="p-3 rounded-xl bg-blue-500/5 dark:bg-[#1f1b33] border border-blue-500/20 dark:border-amber-500/20 overflow-x-auto text-center font-mono text-xs shadow-2xs">
-            <MathText text={data.formula_latex} />
+            <MathText text={sanitizeLemmaLatex(data.formula_latex)} />
           </div>
         ) : (
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-900/60 text-slate-500 text-[11px] italic">
