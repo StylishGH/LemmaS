@@ -20,6 +20,18 @@ export interface UserProfile {
   fotoUrl?: string | null;
   isGuest: boolean;
   emailVerificado: boolean;
+  // Dados fiscais, endereço e faturamento (NFS-e)
+  cpf?: string;
+  celular?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  dataNascimento?: string;
+  optInNotificacoes?: boolean;
 }
 
 export const DEFAULT_GUEST_PROFILE: UserProfile = {
@@ -38,6 +50,17 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   fotoUrl: null,
   isGuest: true,
   emailVerificado: false,
+  cpf: "",
+  celular: "",
+  cep: "",
+  logradouro: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "RJ",
+  dataNascimento: "",
+  optInNotificacoes: true,
 };
 
 export function getInitials(name?: string): string {
@@ -102,6 +125,111 @@ export function calcularStreakDias(tentativas: { data_hora?: string | null }[]):
 }
 
 const STORAGE_KEY = "lemmas_user_profile";
+export const CUSTOM_AVATAR_KEY = "lemmas_custom_avatar";
+
+/**
+ * Heurística resiliente para inferir motivações ativas caso o array `motivacoes_selecionadas`
+ * tenha vindo vazio do banco ou legado do onboarding.
+ */
+export function inferirMotivacoes(
+  concursosFoco: string | null | undefined,
+  currentMotivacoes: string[] | undefined,
+  motivosObj?: any
+): string[] {
+  if (Array.isArray(currentMotivacoes) && currentMotivacoes.length > 0) {
+    return currentMotivacoes;
+  }
+
+  // Se vier no padrão do onboarding legado
+  if (motivosObj && typeof motivosObj === "object") {
+    const categoria = motivosObj.objetivo_categoria;
+    if (categoria === "militar") return ["militares_altodesempenho"];
+    if (categoria === "vestibular") return ["enem_vestibulares"];
+    if (categoria === "professor") return ["superior_docencia"];
+    if (categoria === "profissional") {
+      const seg = motivosObj.detalhes_objetivo?.profissional?.segmento;
+      if (seg === "dados_ia") return ["data_science_ml"];
+      if (seg === "concursos_publicos") return ["concursos_publicos"];
+      return ["fundamentos_logica_intuicao"];
+    }
+  }
+
+  const foco = (concursosFoco || "").trim().toLowerCase();
+  if (!foco) return [];
+
+  const detected: string[] = [];
+  if (
+    foco.includes("fundamento") ||
+    foco.includes("lógica") ||
+    foco.includes("logica") ||
+    foco.includes("intuição") ||
+    foco.includes("intuicao")
+  ) {
+    detected.push("fundamentos_logica_intuicao");
+  }
+  if (
+    foco.includes("militar") ||
+    foco.includes("esa") ||
+    foco.includes("espcex") ||
+    foco.includes("ime") ||
+    foco.includes("ita") ||
+    foco.includes("afa") ||
+    foco.includes("efomm") ||
+    foco.includes("epcar") ||
+    foco.includes("naval")
+  ) {
+    detected.push("militares_altodesempenho");
+  }
+  if (
+    foco.includes("superior") ||
+    foco.includes("docência") ||
+    foco.includes("docencia") ||
+    foco.includes("graduação") ||
+    foco.includes("licenciatura") ||
+    foco.includes("cálculo") ||
+    foco.includes("álgebra linear")
+  ) {
+    detected.push("superior_docencia");
+  }
+  if (
+    foco.includes("dados") ||
+    foco.includes("machine learning") ||
+    foco.includes("ml") ||
+    foco.includes("ciência de dados") ||
+    foco.includes("data science")
+  ) {
+    detected.push("data_science_ml");
+  }
+  if (
+    foco.includes("olimpíada") ||
+    foco.includes("olimpiada") ||
+    foco.includes("obmep") ||
+    foco.includes("obm") ||
+    foco.includes("canguru")
+  ) {
+    detected.push("olimpiadas_mat");
+  }
+  if (
+    foco.includes("enem") ||
+    foco.includes("vestibular") ||
+    foco.includes("fuvest") ||
+    foco.includes("unicamp")
+  ) {
+    detected.push("enem_vestibulares");
+  }
+  if (
+    foco.includes("concurso") ||
+    foco.includes("receita") ||
+    foco.includes("banco") ||
+    foco.includes("tribunal") ||
+    foco.includes("pf") ||
+    foco.includes("prf")
+  ) {
+    detected.push("concursos_publicos");
+  }
+
+  return detected.length > 0 ? detected : ["fundamentos_logica_intuicao"];
+}
 
 function getCachedProfile(): UserProfile | null {
   if (typeof window === "undefined") return null;
@@ -172,6 +300,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
 
         const cached = getCachedProfile();
+        let cachedCustomAvatar: string | null = null;
+        if (typeof window !== "undefined") {
+          try {
+            cachedCustomAvatar = localStorage.getItem(CUSTOM_AVATAR_KEY);
+          } catch {}
+        }
+
+        // Prioridade estrita do avatar:
+        // Foto customizada persistida (base64 ou URL) NUNCA é descartada pelo Google Avatar
+        const initialAvatar =
+          cachedCustomAvatar ||
+          (cached?.fotoUrl && cached.fotoUrl !== googleAvatar ? cached.fotoUrl : null) ||
+          googleAvatar ||
+          null;
+
         const emailConfirmadoNoAuth = isUserEmailVerified(user);
 
         let loadedProfile: UserProfile = {
@@ -180,7 +323,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           id: user.id,
           nome: user.user_metadata?.full_name || user.user_metadata?.name || cached?.nome || user.email.split("@")[0] || "Aluno LEMMAS",
           email: user.email,
-          fotoUrl: googleAvatar || cached?.fotoUrl || null,
+          fotoUrl: initialAvatar,
           isGuest: false,
           emailVerificado: emailConfirmadoNoAuth,
         };
@@ -188,7 +331,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         try {
           const { data: dbUser } = await supabase
             .from("usuarios")
-            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, motivos, verificado")
+            .select("id, nome, email, escolaridade, faculdade, curso, concursos_foco, motivos, verificado, cpf, celular, cep, logradouro, numero, bairro, cidade, estado")
             .eq("email", user.email)
             .maybeSingle();
 
@@ -209,21 +352,57 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (dbUser) {
-            let fotoDoBanco: string | null = null;
+            let fotoDoBanco: string | null | undefined = undefined;
             let concursosSalvos: string[] = [];
             let motivacoesSalvas: string[] = [];
             let conceitosSalvos: string[] = [];
             let pedPrefSalva: string | undefined = undefined;
+            let parsedFaturamento: Record<string, any> = {};
 
             if (dbUser.motivos) {
               try {
-                const parsed = JSON.parse(dbUser.motivos);
-                if (parsed?.foto_url) fotoDoBanco = parsed.foto_url;
-                if (Array.isArray(parsed?.concursos_selecionados)) concursosSalvos = parsed.concursos_selecionados;
-                if (Array.isArray(parsed?.motivacoes_selecionadas)) motivacoesSalvas = parsed.motivacoes_selecionadas;
-                if (Array.isArray(parsed?.conceitos_selecionados)) conceitosSalvos = parsed.conceitos_selecionados;
-                if (parsed?.pedagogical_preference) pedPrefSalva = parsed.pedagogical_preference;
-              } catch {}
+                const parsed = typeof dbUser.motivos === "string" ? JSON.parse(dbUser.motivos) : dbUser.motivos;
+                if (parsed && typeof parsed === "object") {
+                  if (parsed.foto_url !== undefined) {
+                    fotoDoBanco = parsed.foto_url;
+                    if (typeof window !== "undefined") {
+                      if (parsed.foto_url) {
+                        localStorage.setItem(CUSTOM_AVATAR_KEY, parsed.foto_url);
+                      } else if (parsed.foto_url === null) {
+                        localStorage.removeItem(CUSTOM_AVATAR_KEY);
+                      }
+                    }
+                  }
+                  if (Array.isArray(parsed.concursos_selecionados)) concursosSalvos = parsed.concursos_selecionados;
+                  if (Array.isArray(parsed.motivacoes_selecionadas)) motivacoesSalvas = parsed.motivacoes_selecionadas;
+                  if (Array.isArray(parsed.conceitos_selecionados)) conceitosSalvos = parsed.conceitos_selecionados;
+                  if (parsed.pedagogical_preference) pedPrefSalva = parsed.pedagogical_preference;
+                  if (parsed.faturamento && typeof parsed.faturamento === "object") {
+                    parsedFaturamento = parsed.faturamento;
+                  }
+                }
+              } catch (parseErr) {
+                console.warn("Aviso no parse de motivos do usuário:", parseErr);
+              }
+            }
+
+            // Resolução robusta de objetivos ativos:
+            // Se `motivacoesSalvas` estiver vazio (ex: usuário veio de onboarding),
+            // recupera via heurística a partir de `concursos_foco`.
+            const motivacoesRecuperadas = inferirMotivacoes(
+              dbUser.concursos_foco,
+              motivacoesSalvas,
+              dbUser.motivos
+            );
+
+            // Resolução do avatar: banco explícito > cache local customizado > Google Avatar
+            let resolvedFoto: string | null = null;
+            if (fotoDoBanco !== undefined) {
+              resolvedFoto = fotoDoBanco;
+            } else if (cachedCustomAvatar) {
+              resolvedFoto = cachedCustomAvatar;
+            } else if (googleAvatar) {
+              resolvedFoto = googleAvatar;
             }
 
             loadedProfile = {
@@ -233,12 +412,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               escolaridade: dbUser.escolaridade || loadedProfile.escolaridade,
               faculdade: dbUser.faculdade || loadedProfile.faculdade,
               focoConcurso: dbUser.concursos_foco || loadedProfile.focoConcurso,
-              fotoUrl: fotoDoBanco || googleAvatar || loadedProfile.fotoUrl,
+              fotoUrl: resolvedFoto,
               concursosSelecionados: concursosSalvos.length > 0 ? concursosSalvos : (loadedProfile.concursosSelecionados || []),
-              motivacoesSelecionadas: motivacoesSalvas.length > 0 ? motivacoesSalvas : (loadedProfile.motivacoesSelecionadas || []),
+              motivacoesSelecionadas: motivacoesRecuperadas.length > 0 ? motivacoesRecuperadas : (loadedProfile.motivacoesSelecionadas || []),
               conceitosSelecionados: conceitosSalvos.length > 0 ? conceitosSalvos : (loadedProfile.conceitosSelecionados || []),
               pedagogicalPreference: pedPrefSalva || loadedProfile.pedagogicalPreference || "conceitual",
               emailVerificado: estaVerificado,
+              cpf: dbUser.cpf || loadedProfile.cpf || "",
+              celular: dbUser.celular || loadedProfile.celular || "",
+              cep: dbUser.cep || loadedProfile.cep || "",
+              logradouro: dbUser.logradouro || loadedProfile.logradouro || "",
+              numero: dbUser.numero || loadedProfile.numero || "",
+              bairro: dbUser.bairro || loadedProfile.bairro || "",
+              cidade: dbUser.cidade || loadedProfile.cidade || "",
+              estado: dbUser.estado || loadedProfile.estado || "RJ",
+              complemento: parsedFaturamento.complemento || loadedProfile.complemento || "",
+              dataNascimento: parsedFaturamento.data_nascimento || loadedProfile.dataNascimento || "",
+              optInNotificacoes: parsedFaturamento.opt_in_notificacoes ?? loadedProfile.optInNotificacoes ?? true,
             };
           } else if (user.email) {
             const { data: novoDbUser } = await supabase
@@ -364,9 +554,54 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+
+      if (updated.fotoUrl !== undefined) {
+        if (updated.fotoUrl) {
+          localStorage.setItem(CUSTOM_AVATAR_KEY, updated.fotoUrl);
+        } else {
+          localStorage.removeItem(CUSTOM_AVATAR_KEY);
+        }
+      }
     }
 
     if (!next.isGuest && next.email) {
+      // 1. Tenta salvar via rota de API dedicada (SSR Server Supabase com cookies autenticados)
+      try {
+        const res = await fetch("/api/user/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: next.nome,
+            escolaridade: next.escolaridade,
+            faculdade: next.faculdade,
+            focoConcurso: next.focoConcurso,
+            fotoUrl: next.fotoUrl,
+            concursosSelecionados: next.concursosSelecionados,
+            motivacoesSelecionadas: next.motivacoesSelecionadas,
+            conceitosSelecionados: next.conceitosSelecionados,
+            pedagogicalPreference: next.pedagogicalPreference,
+            cpf: next.cpf,
+            celular: next.celular,
+            cep: next.cep,
+            logradouro: next.logradouro,
+            numero: next.numero,
+            complemento: next.complemento,
+            bairro: next.bairro,
+            cidade: next.cidade,
+            estado: next.estado,
+            dataNascimento: next.dataNascimento,
+            optInNotificacoes: next.optInNotificacoes,
+          }),
+        });
+
+        if (res.ok) {
+          return;
+        }
+      } catch (apiErr) {
+        console.warn("Aviso na chamada da API /api/user/profile, usando fallback direto no Supabase Client:", apiErr);
+      }
+
+      // 2. Fallback direto no Supabase Client
       try {
         let parsed: Record<string, any> = {};
         try {
@@ -377,9 +612,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             .maybeSingle();
 
           if (dbUser?.motivos) {
-            try {
-              parsed = JSON.parse(dbUser.motivos);
-            } catch {}
+            parsed = typeof dbUser.motivos === "string" ? JSON.parse(dbUser.motivos) : dbUser.motivos;
           }
         } catch {}
 
@@ -398,6 +631,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (next.conceitosSelecionados !== undefined) {
           parsed.conceitos_selecionados = next.conceitosSelecionados;
         }
+        if (
+          next.complemento !== undefined ||
+          next.dataNascimento !== undefined ||
+          next.optInNotificacoes !== undefined
+        ) {
+          parsed.faturamento = {
+            ...(parsed.faturamento || {}),
+            ...(next.complemento !== undefined ? { complemento: next.complemento } : {}),
+            ...(next.dataNascimento !== undefined ? { data_nascimento: next.dataNascimento } : {}),
+            ...(next.optInNotificacoes !== undefined ? { opt_in_notificacoes: next.optInNotificacoes } : {}),
+          };
+        }
 
         const updatePayload: Record<string, any> = {
           nome: next.nome,
@@ -406,6 +651,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           concursos_foco: next.focoConcurso,
           motivos: JSON.stringify(parsed),
         };
+
+        if (next.cpf) updatePayload.cpf = next.cpf;
+        if (next.celular) updatePayload.celular = next.celular;
+        if (next.cep) updatePayload.cep = next.cep;
+        if (next.logradouro) updatePayload.logradouro = next.logradouro;
+        if (next.numero) updatePayload.numero = next.numero;
+        if (next.bairro) updatePayload.bairro = next.bairro;
+        if (next.cidade) updatePayload.cidade = next.cidade;
+        if (next.estado) updatePayload.estado = next.estado;
 
         const { error: upsertErr } = await supabase
           .from("usuarios")

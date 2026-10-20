@@ -43,6 +43,14 @@ export function cleanLatexForKatex(latex: string): string {
   if (clean.includes("\\left\\langle") && !clean.includes("\\right\\rangle")) {
     clean = clean.replace(/\\left\\langle/g, "\\langle");
   }
+  // Converte \vec com múltiplos caracteres (ex: \vec{AB}, \vec {AB}) para \overrightarrow{AB} (KaTeX restringe \vec a 1 caractere)
+  clean = clean.replace(/\\vec\s*\{([A-Za-z0-9]{2,})\}/g, "\\overrightarrow{$1}");
+  clean = clean.replace(/\\vec\s+([A-Za-z]{2,})/g, "\\overrightarrow{$1}");
+  clean = clean.replace(/\\vec\s*\{([A-Za-z0-9])\}/g, "\\vec{$1}");
+  // Corrige subscrito sem base (ex: _{ \triangle ABC } -> {}_{ \triangle ABC })
+  clean = clean.replace(/(?:^|[\s=+\-*/])_\s*\{/g, " {}_{");
+  // Corrige barras verticais duplas com espaçamento indevido (| | -> \|)
+  clean = clean.replace(/\|\s*\|/g, "\\|");
   // Converte barras invertidas duplas desnecessárias
   clean = clean.replace(/\\\\(?=[a-zA-Z])/g, "\\");
   return clean;
@@ -183,7 +191,7 @@ export function sanitizeMathText(raw: string): string {
     const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
     const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
     if (words.length >= 3) {
-      return "\n" + inner.trim() + "\n";
+      return "\n" + autoWrapLatexExpressions(inner.trim()) + "\n";
     }
     return fullMatch;
   });
@@ -192,9 +200,7 @@ export function sanitizeMathText(raw: string): string {
     const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
     const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
     if (words.length >= 2) {
-      let unwrapped = inner;
-      unwrapped = unwrapped.replace(/(\\(?:triangle|angle|overrightarrow|overline|vec|hat|omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|in|subset|subseteq|le|ge|neq|approx|sim|perp|parallel|cong|times|cdot|div|pm|mp)\b(?:\s+[A-Za-z0-9]+)?)/g, "$$$1$$");
-      return unwrapped;
+      return autoWrapLatexExpressions(inner);
     }
     return fullMatch;
   });
@@ -202,8 +208,8 @@ export function sanitizeMathText(raw: string): string {
   // Corrige $ não fechado em variáveis pontuais seguido de palavra em português (ex: "$QS intersectando-se" -> "$QS$ intersectando-se")
   text = text.replace(/(^|[^\\$])\$([A-Za-z]{1,2}(?:_[0-9a-zA-Z]+)?|\d+(?:\.\d+)?)\s+([a-zA-ZÀ-ÿ]{2,})/g, '$1$$$2$$ $3');
 
-  // Envolve letras gregas e símbolos que vieram soltos no texto sem $ (ex: \omega, \Gamma, \cap, \cup)
-  text = text.replace(/(?<!\$)\\((?:omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|notin|subset|subseteq))\b(?!\$)/g, '$\\$1$');
+  // Envolve expressões matemáticas e comandos soltos usando o autoWrapLatexExpressions
+  text = autoWrapLatexExpressions(text);
 
   // Processa linha a linha identificando fórmulas isoladas sem delimitadores
   const lines = text.split("\n");
@@ -294,10 +300,8 @@ export function renderMathText(text: string) {
   let preprocessed = sanitizeMathText(text);
   preprocessed = normalizarMatematica(preprocessed).replace(/R\$/g, TOKEN_REAL);
 
-  // Se o texto não possui nenhum delimitador matemático, aplica autoWrap em expressões óbvias
-  if (!preprocessed.includes("$")) {
-    preprocessed = autoWrapLatexExpressions(preprocessed);
-  }
+  // Aplica autoWrap nos trechos fora de $...$ e $$...$$ para envolver equações, funções trigonométricas e letras gregas
+  preprocessed = autoWrapLatexExpressions(preprocessed);
 
   // Auto-envolve expressões matemáticas com comandos LaTeX soltos que vieram sem delimitadores $ (ex: \triangle OXM \sim \triangle OYN, \frac{XM}{YN} = \frac{OM}{ON})
   const looseMathRegex = /(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+[A-Za-z0-9]+(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to|\\sim|\\approx|\\perp|\\parallel|\\cong)\s*(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+)?[A-Za-z0-9]+)*|\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to)\s*(?:\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|[a-zA-Z0-9_{}^]+))*|\\(?:sqrt|sum|int|lim)\b(?:\{[^{}]*\}|\[[^\]]*\])*(?:[a-zA-Z0-9_{}^+\-*\/=<>]+)*|\b[a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+|\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)+/g;
@@ -513,7 +517,7 @@ function FormattedTextChunk({ content }: { content: string }) {
               <img
                 src={resolveFigureUrl(rawUrl)}
                 alt={alt || "Figura matemática da questão"}
-                className="max-h-80 max-w-full mx-auto rounded-xl object-contain p-2 bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 shadow-xs"
+                className="question-diagram-invertible max-h-80 max-w-full mx-auto rounded-xl object-contain p-2 bg-white dark:bg-transparent border border-slate-200 dark:border-white/10 shadow-xs"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.currentTarget;

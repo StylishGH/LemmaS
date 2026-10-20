@@ -1,0 +1,30 @@
+import sys
+from pathlib import Path
+
+for s in (getattr(sys, "stdout", None), getattr(sys, "stderr", None)):
+    if s and hasattr(s, "reconfigure"):
+        try:
+            s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+
+from dotenv import load_dotenv
+load_dotenv(PROJECT_ROOT / "backend" / ".env")
+
+from app.core.config import get_supabase_client
+sb = get_supabase_client()
+res = sb.table("questoes").select("id,mathnet_id,banca,ano,enunciado,figura_path").in_("mathnet_id", [
+    "militar_espcex_2022_mat_q03", "militar_espcex_2022_mat_q04", "militar_espcex_2022_mat_q07",
+    "militar_espcex_2023_2f_mat_q06", "militar_espcex_2023_2f_mat_q10", "militar_espcex_2023_2f_mat_q18"
+]).execute()
+
+for r in res.data:
+    txt = (r.get("enunciado") or "")[:120].replace("\n", " ")
+    print(f"{r['ano']} | {r['mathnet_id']} | ID: {r['id']}")
+    print(f"  Fig: {r.get('figura_path')}")
+    print(f"  Txt: {txt}")
+    print("-" * 50)

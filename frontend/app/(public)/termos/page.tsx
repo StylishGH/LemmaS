@@ -25,7 +25,7 @@ export default function TermosPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-500 transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-blue-600 dark:hover:text-amber-500 transition-colors"
             >
               <ArrowLeft size={16} /> Voltar ao Início
             </Link>
@@ -42,7 +42,7 @@ export default function TermosPage() {
             </Link>
             <button
               type="button"
-              className="lemmas-theme-toggle p-2 rounded-xl border border-amber-500/20 text-slate-600 dark:text-[#d9b452] hover:bg-amber-500/10 transition-colors"
+              className="lemmas-theme-toggle p-2 rounded-xl border border-amber-500/20 text-slate-600 dark:text-[#d9b452] hover:bg-blue-500/10 dark:hover:bg-amber-500/10 transition-colors"
               onClick={() => setLight((v) => !v)}
               aria-label={light ? "Ativar quadro negro" : "Ativar quadro branco"}
             >
@@ -53,12 +53,12 @@ export default function TermosPage() {
 
         {/* Cabeçalho do Documento */}
         <header className="space-y-3 pb-8 border-b border-amber-500/20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-blue-600 dark:text-[#d9b452] text-xs font-semibold">
             <Scale size={14} />
             <span>Documento Jurídico Vinculante · Versão 1.2</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
-            Termos de Uso e <em className="italic text-amber-600 dark:text-[#d9b452]">Serviço.</em>
+            Termos de Uso e <em className="italic text-blue-600 dark:text-[#d9b452]">Serviço.</em>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-[#a9aaa1]">
             Última atualização: <strong>Outubro de 2026</strong>. Aplicável a todos os usuários, estudantes, assinantes e parceiros da plataforma <strong>LEMMAS</strong>.
@@ -69,7 +69,7 @@ export default function TermosPage() {
         <div className="pt-8 space-y-8 text-sm leading-relaxed text-slate-700 dark:text-[#dedbd0]">
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">1.</span> Objeto da Plataforma e Finalidade Educacional
+              <span className="text-blue-600 dark:text-amber-500">1.</span> Objeto da Plataforma e Finalidade Educacional
             </h2>
             <p>
               O <strong>LEMMAS</strong> (operado pela MathAI Engine) é um ecossistema cognitivo dedicado ao aprendizado, treinamento analítico, resolução estruturada de problemas matemáticos e preparação para exames militares e acadêmicos de alta exigência.
@@ -81,7 +81,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">2.</span> Propriedade Intelectual e Proteção contra Scraping
+              <span className="text-blue-600 dark:text-amber-500">2.</span> Propriedade Intelectual e Proteção contra Scraping
             </h2>
             <p>
               Todos os elementos que compõem o LEMMAS — incluindo, mas não se limitando a: códigos-fonte, algoritmos de agendamento, grafos de conhecimento de lemas matemáticos, formulações didáticas, resoluções autorais, identidade visual, marca e design editorial — são de propriedade intelectual exclusiva do LEMMAS e de seus criadores.
@@ -100,7 +100,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">3.</span> Acesso, Criação de Contas e Individualidade
+              <span className="text-blue-600 dark:text-amber-500">3.</span> Acesso, Criação de Contas e Individualidade
             </h2>
             <p>
               O cadastro no LEMMAS exige o fornecimento de credenciais válidas e verídicas. O acesso à conta é <strong>estritamente individual e intransferível</strong>.
@@ -112,7 +112,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">4.</span> Planos Pagos e Reembolso
+              <span className="text-blue-600 dark:text-amber-500">4.</span> Planos Pagos e Reembolso
             </h2>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>As assinaturas e compras avulsas seguem os valores vigentes no checkout.</li>
@@ -121,7 +121,7 @@ export default function TermosPage() {
               </li>
               <li>
                 Para cumprimento das obrigações fiscais e emissão de Nota Fiscal Eletrônica (NFS-e), o usuário cadastrará seus dados fiscais na seção de{" "}
-                <Link href="/perfil/faturamento" className="text-amber-500 underline font-semibold">
+                <Link href="/perfil/faturamento" className="text-blue-600 dark:text-amber-500 underline font-semibold">
                   Faturamento
                 </Link>.
               </li>
@@ -130,7 +130,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">5.</span> Rescisão
+              <span className="text-blue-600 dark:text-amber-500">5.</span> Rescisão
             </h2>
             <p>
               O descumprimento de qualquer cláusula autoriza o <strong>LEMMAS</strong> a encerrar ou suspender o acesso do usuário à plataforma sem prejuízo de eventuais reparações legais.
@@ -139,7 +139,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">6.</span> Uso Ético dos Modelos de Inteligência Artificial
+              <span className="text-blue-600 dark:text-amber-500">6.</span> Uso Ético dos Modelos de Inteligência Artificial
             </h2>
             <p>
               O MathAI Engine atua como um <em>tutor socrático</em> pedagógico, projetado para orientar o raciocínio matemático e a autonomia analítica. O estudante compromete-se a:
@@ -153,7 +153,7 @@ export default function TermosPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <span className="text-amber-500">7.</span> Legislação Aplicável e Foro
+              <span className="text-blue-600 dark:text-amber-500">7.</span> Legislação Aplicável e Foro
             </h2>
             <p>
               Estes Termos de Uso são regidos e interpretados segundo as leis da República Federativa do Brasil. Para a solução de quaisquer controvérsias decorrentes deste contrato, as partes elegem o foro da Comarca do domicílio do usuário consumidor ou o Foro da Comarca de Niterói/RJ.
@@ -165,10 +165,10 @@ export default function TermosPage() {
         <footer className="mt-12 pt-6 border-t border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-zinc-500">
           <span>LEMMAS © 2026. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
-            <Link href="/privacidade" className="hover:text-amber-500">
+            <Link href="/privacidade" className="hover:text-blue-600 dark:hover:text-amber-500">
               Política de Privacidade
             </Link>
-            <Link href="/login?tab=signup" className="hover:text-amber-500 font-semibold">
+            <Link href="/login?tab=signup" className="hover:text-blue-600 dark:hover:text-amber-500 font-semibold">
               Criar Conta
             </Link>
           </div>
