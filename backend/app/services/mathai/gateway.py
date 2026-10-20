@@ -38,9 +38,8 @@ GEMINI_MODELS_CASCADE = [
 
 # Modelos validados da NVIDIA NIM presentes no endpoint oficial
 NVIDIA_NIM_MODELS = [
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     "nvidia/nemotron-3.5-lightning-30b-a3b",
-    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     "nvidia/nemotron-3-ultra-550b-a55b",
 ]
 
