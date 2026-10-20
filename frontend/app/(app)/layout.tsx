@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "../globals.css";
 import AppNavbar from "@/components/AppNavbar";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
-import { BackgroundAnimation } from "../(public)/landing/components/BackgroundAnimation";
+import AppBackground from "@/components/AppBackground";
 import { BoardFrame } from "../(public)/landing/components/BoardFrame";
 import "../(public)/landing/components/BoardFrame.css";
 
@@ -26,7 +26,7 @@ export default function AppLayout({
         <div className="lemmas-grain-overlay" aria-hidden="true" />
 
         {/* ONDAS HARMÔNICAS SUTIS EM SEGUNDO PLANO */}
-        <BackgroundAnimation />
+        <AppBackground />
 
         {/* BARRA DE NAVEGAÇÃO SUPERIOR UNIFICADA (TOP NAVIGATION ROOM) */}
         <AppNavbar />

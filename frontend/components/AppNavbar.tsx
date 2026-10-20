@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { Logo } from "@/app/(public)/landing/components/Logo";
+import { LogoLoop, type LogoItem } from "@/app/(public)/landing/components/LogoLoop";
 import { useUserProfile } from "@/lib/use-user";
 
 export default function AppNavbar() {
@@ -33,7 +34,7 @@ export default function AppNavbar() {
 
   const navLinks = [
       { label: "Dashboard", href: "/", icon: LayoutDashboard },
-      { label: "Banco de Lemas", href: "/questoes", icon: BookOpen },
+      { label: "Banco de Questões", href: "/questoes", icon: BookOpen },
       { label: "Resolver / Simulado", href: "/resolver", icon: PenTool },
       { label: "Segunda Opinião", href: "/opinioes", icon: Scale },
       { label: "Sobre o LEMMAS", href: "/landing", icon: Info },
@@ -44,6 +45,31 @@ export default function AppNavbar() {
     if (href === "/landing" && pathname === "/landing") return true;
     return pathname.startsWith(href) && href !== "/";
   };
+
+  const focoParts = useMemo(() => {
+    if (!profile.focoConcurso) return [];
+    const raw = profile.focoConcurso
+      .split(/[,/|·•]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return raw.length > 0 ? raw : [profile.focoConcurso.trim()];
+  }, [profile.focoConcurso]);
+
+  const focoLoopItems: LogoItem[] = useMemo(() => {
+    return focoParts.map((part) => ({
+      node: (
+        <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 dark:text-[#f5f0df] text-[11px] whitespace-nowrap">
+          {part}
+          <span className="text-slate-400 dark:text-zinc-600 text-[9px] select-none opacity-60">
+            •
+          </span>
+        </span>
+      ),
+    }));
+  }, [focoParts]);
+
+  const isFocoLongOrMulti =
+    focoParts.length > 1 || (profile.focoConcurso ? profile.focoConcurso.length > 15 : false);
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-[#0e0d16]/85 border-b border-slate-200/80 dark:border-amber-500/20 transition-colors duration-200">
@@ -108,12 +134,32 @@ export default function AppNavbar() {
           {/* FOCO DE ESTUDO / OBJETIVO */}
           {mounted && isAuthenticated && profile.focoConcurso && (
             <div 
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#1a172c] border border-slate-200/90 dark:border-amber-500/20 text-xs font-medium text-slate-700 dark:text-[#dedbd0] whitespace-nowrap shrink-0 max-w-[220px]"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#1a172c] border border-slate-200/90 dark:border-amber-500/20 text-xs font-medium text-slate-700 dark:text-[#dedbd0] whitespace-nowrap shrink-0 w-[210px] xl:w-[240px] overflow-hidden"
               title={`Foco de estudo atual: ${profile.focoConcurso}`}
             >
               <Target className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">Foco:</span>
-              <span className="font-semibold text-slate-800 dark:text-[#f5f0df] truncate">{profile.focoConcurso}</span>
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 shrink-0">Foco:</span>
+              <div className="flex-1 overflow-hidden min-w-0 h-[18px] flex items-center">
+                {isFocoLongOrMulti ? (
+                  <LogoLoop
+                    logos={focoLoopItems}
+                    speed={24}
+                    logoHeight={14}
+                    gap={16}
+                    fadeOut
+                    fadeOutWidth={0.14}
+                    pauseOnHover
+                    draggable={false}
+                    scaleOnHover={false}
+                    intro={false}
+                    ariaLabel={`Foco: ${profile.focoConcurso}`}
+                  />
+                ) : (
+                  <span className="font-semibold text-slate-800 dark:text-[#f5f0df] text-[11px] truncate">
+                    {profile.focoConcurso}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 

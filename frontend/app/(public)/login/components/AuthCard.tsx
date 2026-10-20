@@ -410,9 +410,9 @@ export function AuthCard() {
 
   return (
     <div className="lemmas-signup-container max-w-md mx-auto">
-      <div className="lemmas-signup-card border border-amber-500/25 bg-white dark:bg-[#141222] shadow-xl rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="lemmas-signup-card border border-blue-500/25 dark:border-amber-500/25 bg-white dark:bg-[#141222] shadow-xl rounded-2xl p-6 sm:p-8 space-y-6">
         {/* Badge do LEMMAS */}
-        <div className="lemmas-founder-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-[#d9b452] border border-amber-500/20">
+        <div className="lemmas-founder-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 dark:bg-amber-500/10 text-blue-600 dark:text-[#d9b452] border border-blue-500/20 dark:border-amber-500/20">
           <Sparkles size={14} /> Plataforma Cognitiva · LEMMAS
         </div>
 
@@ -434,7 +434,7 @@ export function AuthCard() {
         {aguardandoCodigo ? (
           /* TELA DE CONFIRMAÇÃO POR LINK DE E-MAIL */
           <div className="space-y-6 animate-fadeIn text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/15 dark:bg-amber-500/15 border border-blue-500/30 dark:border-amber-500/30 text-blue-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
               <Mail size={32} className="animate-pulse" />
             </div>
 
@@ -445,7 +445,7 @@ export function AuthCard() {
               <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
                 Enviamos um link de ativação para:
               </p>
-              <div className="inline-block px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-mono font-bold text-amber-700 dark:text-[#d9b452] break-all">
+              <div className="inline-block px-3 py-1.5 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/20 dark:border-amber-500/20 text-xs font-mono font-bold text-blue-700 dark:text-[#d9b452] break-all">
                 {email}
               </div>
             </div>
@@ -486,7 +486,7 @@ export function AuthCard() {
                   type="button"
                   onClick={handleReenviarCodigo}
                   disabled={reenviando}
-                  className="text-slate-600 dark:text-zinc-400 hover:text-amber-500 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <RotateCcw size={13} className={reenviando ? "animate-spin" : ""} />
                   <span>{reenviando ? "Reenviando..." : "Não recebeu? Reenviar e-mail"}</span>
@@ -499,7 +499,7 @@ export function AuthCard() {
                     setErro(null);
                     setMensagemSucesso(null);
                   }}
-                  className="text-amber-600 dark:text-[#d9b452] font-semibold hover:underline cursor-pointer"
+                  className="text-blue-600 dark:text-[#d9b452] font-semibold hover:underline cursor-pointer"
                 >
                   Corrigir e-mail / Voltar
                 </button>
@@ -513,9 +513,9 @@ export function AuthCard() {
             <div className="space-y-1">
               <h2 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
                 {tab === "signup" ? (
-                  <>Criar sua conta no <em className="italic text-amber-600 dark:text-[#d9b452]">LEMMAS</em></>
+                  <>Criar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
                 ) : (
-                  <>Acessar sua conta no <em className="italic text-amber-600 dark:text-[#d9b452]">LEMMAS</em></>
+                  <>Acessar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
                 )}
               </h2>
               <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
@@ -532,7 +532,7 @@ export function AuthCard() {
                 onClick={() => alternarTab("signup")}
                 className={`flex-1 py-2 rounded-lg transition-all ${
                   tab === "signup"
-                    ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 shadow-sm"
+                    ? "bg-blue-600 text-white dark:bg-[#d9b452] dark:text-slate-900 shadow-sm"
                     : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -543,7 +543,7 @@ export function AuthCard() {
                 onClick={() => alternarTab("signin")}
                 className={`flex-1 py-2 rounded-lg transition-all ${
                   tab === "signin"
-                    ? "bg-amber-500 dark:bg-[#d9b452] text-slate-900 shadow-sm"
+                    ? "bg-blue-600 text-white dark:bg-[#d9b452] dark:text-slate-900 shadow-sm"
                     : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 }`}
               >
@@ -583,7 +583,7 @@ export function AuthCard() {
               {tab === "signup" && (
                 <div className="space-y-1.5">
                   <label htmlFor="name" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                    <User size={14} className="text-amber-500" /> Nome Completo
+                    <User size={14} className="text-blue-500 dark:text-amber-500" /> Nome Completo
                   </label>
                   <input
                     type="text"
@@ -591,7 +591,7 @@ export function AuthCard() {
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Carlos Eduardo de Oliveira"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                     required
                   />
                 </div>
@@ -599,7 +599,7 @@ export function AuthCard() {
 
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                  <Mail size={14} className="text-amber-500" /> Endereço de E-mail
+                  <Mail size={14} className="text-blue-500 dark:text-amber-500" /> Endereço de E-mail
                 </label>
                 <input
                   type="email"
@@ -607,7 +607,7 @@ export function AuthCard() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu.email@exemplo.com"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                   required
                 />
               </div>
@@ -615,12 +615,12 @@ export function AuthCard() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label htmlFor="password" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                    <Lock size={14} className="text-amber-500" /> Senha de Acesso
+                    <Lock size={14} className="text-blue-500 dark:text-amber-500" /> Senha de Acesso
                   </label>
                   <button
                     type="button"
                     onClick={() => setMostrarSenha(!mostrarSenha)}
-                    className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-amber-500 flex items-center gap-1"
+                    className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1"
                   >
                     {mostrarSenha ? <EyeOff size={13} /> : <Eye size={13} />}
                     {mostrarSenha ? "Ocultar" : "Mostrar"}
@@ -632,7 +632,7 @@ export function AuthCard() {
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder={tab === "signup" ? "Crie uma senha forte" : "Sua senha"}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                   required
                 />
 
@@ -713,7 +713,7 @@ export function AuthCard() {
                   <button
                     type="button"
                     onClick={() => alternarTab("signin")}
-                    className="text-amber-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
                   >
                     Entrar
                   </button>
@@ -724,7 +724,7 @@ export function AuthCard() {
                   <button
                     type="button"
                     onClick={() => alternarTab("signup")}
-                    className="text-amber-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
                   >
                     Cadastre-se gratuitamente
                   </button>

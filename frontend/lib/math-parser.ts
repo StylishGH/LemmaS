@@ -151,61 +151,130 @@ export function normalizarMatematica(texto: string): string {
 }
 
 /**
- * Detecta expressões matemáticas óbvias em enunciados sem delimitadores e as envolve em $...$
+ * Aplica uma função transformadora APENAS nos trechos fora de blocos matemáticos $...$ e $$...$$
+ */
+export function applyOutsideMath(text: string, fn: (plainText: string) => string): string {
+  if (!text || typeof text !== "string") return "";
+  const tokens = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$)/g);
+  return tokens.map((token) => {
+    if (token.startsWith("$")) return token;
+    return fn(token);
+  }).join("");
+}
+
+/**
+ * Detecta expressões matemáticas óbvias em enunciados, dicas e explicações sem delimitadores e as envolve em $...$
  */
 export function autoWrapLatexExpressions(text: string): string {
   if (!text) return "";
 
-  // Divide o texto entre blocos já delimitados por $...$ ou $$...$$ e texto puro
-  const tokens = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+\$)/g);
+  let res = text;
+  const trigPattern = /\b(tg|sen|cossec|cosec|cotg|arcsen|arctg)\b/g;
 
-  const processedTokens = tokens.map((token) => {
-    // Se o token já for um bloco matemático ($...$ ou $$...$$), NÃO MODIFICA NADA!
-    if (token.startsWith("$")) {
-      return token;
-    }
-
-    let res = token;
-
-    // 1. Mapeamentos de funções: f: \mathbb{R} \to \mathbb{R}
-    res = res.replace(/([a-zA-Z]\s*:\s*\\mathbb\{[A-Z]\}\s*\\to\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
-
-    // 2. Pertencimento a conjuntos: a,b,c \in \mathbb{R} ou x \in \mathbb{Z}
-    res = res.replace(/([a-zA-Z](?:\s*,\s*[a-zA-Z])*\s*\\in\s*\\mathbb\{[A-Z]\})/g, "$$$1$$");
-
-    // 3. Desigualdades e negações com símbolos: a \neq 0, x \le y, a \ge b
-    res = res.replace(/([a-zA-Z0-9]+\s*\\(?:neq|le|ge)\s*-?[a-zA-Z0-9]+)/g, "$$$1$$");
-
-    // 4. Definições de função com potências: f(x) = ax^2 + bx + c ou g(x) = ...
-    res = res.replace(/([a-zA-Z]\([a-zA-Z]\)\s*=\s*[^,\n.$]+)/g, "$$$1$$");
-
-    // 5. Logaritmos com base: \log_2 y = (-1/2)+(2/3)*\log_2 x
-    res = res.replace(/(\\log_[0-9]+\s*[a-zA-Z0-9]+(?:\s*[+\-*\/=]\s*[^,\n.$]+)?)/g, "$$$1$$");
-
-    // 6. Equações lineares simples: y = 2, x = 0, a = 3
-    res = res.replace(/\b([a-zA-Z]\s*=\s*-?[0-9]+(?:\.[0-9]+)?)\b/g, "$$$1$$");
-
-    // 7. Expressões algébricas: a+b+c, a + b, x - y
-    res = res.replace(/\b([a-zA-Z](?:\s*[+\-*\/]\s*[a-zA-Z])+)\b/g, "$$$1$$");
-
-    // 8. Radicais soltos: \sqrt{...}, \sqrt[3]{...}
-    res = res.replace(/(?<!\$)(\\sqrt(?:\[[0-9]+\])?\{[^}]+\})(?!\$)/g, "$$$1$$");
-
-    // 9. Comandos geométricos soltos: \triangle ABC \sim \triangle DEF, \angle ABC
-    res = res.replace(/(?<!\$)(\\triangle\s+[A-Za-z0-9]+(?:\s*\\sim\s*\\triangle\s+[A-Za-z0-9]+)?)(?!\$)/g, "$$$1$$");
-    res = res.replace(/(?<!\$)(\\angle\s+[A-Za-z0-9]+(?:\s*=\s*[^,\n.$]+)?)(?!\$)/g, "$$$1$$");
-
-    // 10. Frações e vetores soltos: \frac{a}{b} = \frac{c}{d}, \overrightarrow{AB} + \overrightarrow{CD}
-    res = res.replace(/(?<!\$)(\\frac\{[^{}]*\}\{[^{}]*\}(?:\s*=\s*\\frac\{[^{}]*\}\{[^{}]*\})*)(?!\$)/g, "$$$1$$");
-    res = res.replace(/(?<!\$)(\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)(?!\$)/g, "$$$1$$");
-
-    // 11. Semelhança solta: A \sim B
-    res = res.replace(/(?<!\$)\b([a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+)(?!\$)/g, "$$$1$$");
-
-    return res;
+  // 1. Equações completas com funções trigonométricas, letras gregas ou comandos LaTeX
+  // Ex: tg(\theta ) = tg(\alpha - \beta ) ou \theta =\alpha -\beta ou y = \alpha + \beta
+  const equationRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)(?:\s*[-+*/]\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*\s*=\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)(?:\s*[-+*/]\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*)(?!\$)/g;
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(equationRegex, (match) => {
+      if (/\\|[()]|\b(?:tg|sen|cos|tan|sin|sec|cotg)\b/.test(match)) {
+        let clean = match.replace(trigPattern, "\\operatorname{$1}");
+        clean = clean.replace(/\\?\$/g, "");
+        return `$${clean.trim()}$`;
+      }
+      return match;
+    });
   });
 
-  return processedTokens.join("");
+  // 2. Funções trigonométricas isoladas com argumento entre parênteses:
+  // Ex: tg(\alpha ), tg(\beta ), sen(x), cos(\theta)
+  const trigCallRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((?:tg|sen|cossec|cosec|cotg|arcsen|arctg|tan|sin|cos|sec|cot|arccos|arctan)\s*\([^)]+\))(?!\$)/g;
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(trigCallRegex, (match) => {
+      let clean = match.replace(trigPattern, "\\operatorname{$1}");
+      clean = clean.replace(/\\?\$/g, "");
+      return `$${clean.trim()}$`;
+    });
+  });
+
+  // 3. Mapeamentos de funções: f: \mathbb{R} \to \mathbb{R}
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/([a-zA-Z]\s*:\s*\\mathbb\{[A-Z]\}\s*\\to\s*\\mathbb\{[A-Z]\})/g, (_, m) => `$${m}$`);
+  });
+
+  // 4. Pertencimento a conjuntos: a,b,c \in \mathbb{R} ou x \in \mathbb{Z}
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/([a-zA-Z](?:\s*,\s*[a-zA-Z])*\s*\\in\s*\\mathbb\{[A-Z]\})/g, (_, m) => `$${m}$`);
+  });
+
+  // 5. Desigualdades e negações com símbolos: a \neq 0, x \le y, a \ge b
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/([a-zA-Z0-9]+\s*\\(?:neq|le|ge)\s*-?[a-zA-Z0-9]+)/g, (_, m) => `$${m}$`);
+  });
+
+  // 6. Definições de função com potências: f(x) = ax^2 + bx + c ou g(x) = ...
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/([a-zA-Z]\([a-zA-Z]\)\s*=\s*[^,\n.$]+)/g, (_, m) => `$${m}$`);
+  });
+
+  // 7. Logaritmos com base: \log_2 y = (-1/2)+(2/3)*\log_2 x
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/(\\log_[0-9]+\s*[a-zA-Z0-9]+(?:\s*[+\-*\/=]\s*[^,\n.$]+)?)/g, (_, m) => `$${m}$`);
+  });
+
+  // 8. Equações com comandos com contrabarra soltos e operadores (+, -, =, /)
+  // Ex: \theta =\alpha -\beta (caso com espaços ou caracteres especiais)
+  const looseCmdEqRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((\\[a-zA-Z]+|[a-zA-Z0-9])\s*=\s*(\\[a-zA-Z]+|[a-zA-Z0-9])(?:\s*[-+*/]\s*(\\[a-zA-Z]+|[a-zA-Z0-9]))*)(?!\$)/g;
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(looseCmdEqRegex, (match) => {
+      if (match.includes("\\")) {
+        return `$${match.trim()}$`;
+      }
+      return match;
+    });
+  });
+
+  // 9. Equações lineares simples: y = 2, x = 0, a = 3
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/\b([a-zA-Z]\s*=\s*-?[0-9]+(?:\.[0-9]+)?)\b/g, (_, m) => `$${m}$`);
+  });
+
+  // 10. Expressões algébricas: a+b+c, a + b, x - y
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/\b([a-zA-Z](?:\s*[+\-*\/]\s*[a-zA-Z])+)\b/g, (_, m) => `$${m}$`);
+  });
+
+  // 11. Radicais soltos: \sqrt{...}, \sqrt[3]{...}
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/(?<!\$)(\\sqrt(?:\[[0-9]+\])?\{[^}]+\})(?!\$)/g, (_, m) => `$${m}$`);
+  });
+
+  // 12. Comandos geométricos soltos: \triangle ABC \sim \triangle DEF, \angle ABC
+  res = applyOutsideMath(res, (chunk) => {
+    let c = chunk.replace(/(?<!\$)(\\triangle\s+[A-Za-z0-9]+(?:\s*\\sim\s*\\triangle\s+[A-Za-z0-9]+)?)(?!\$)/g, (_, m) => `$${m}$`);
+    c = c.replace(/(?<!\$)(\\angle\s+[A-Za-z0-9]+(?:\s*=\s*[^,\n.$]+)?)(?!\$)/g, (_, m) => `$${m}$`);
+    return c;
+  });
+
+  // 13. Frações e vetores soltos: \frac{a}{b} = \frac{c}{d}, \overrightarrow{AB} + \overrightarrow{CD}
+  res = applyOutsideMath(res, (chunk) => {
+    let c = chunk.replace(/(?<!\$)(\\frac\{[^{}]*\}\{[^{}]*\}(?:\s*=\s*\\frac\{[^{}]*\}\{[^{}]*\})*)(?!\$)/g, (_, m) => `$${m}$`);
+    c = c.replace(/(?<!\$)(\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)(?!\$)/g, (_, m) => `$${m}$`);
+    return c;
+  });
+
+  // 14. Semelhança solta: A \sim B
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(/(?<!\$)\b([a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+)(?!\$)/g, (_, m) => `$${m}$`);
+  });
+
+  // 15. Letras gregas e operadores de conjuntos soltos no texto puro (fora de $)
+  // Usa função para evitar conflitos de escaping em replacements
+  const greekRegex = /(?<!\$)\\((?:omega|alpha|beta|gamma|delta|theta|pi|lambda|sigma|mu|phi|tau|rho|Gamma|Delta|Theta|Lambda|Sigma|Omega|Psi|Phi|cap|cup|notin|subset|subseteq))\b(?!\$)/g;
+  res = applyOutsideMath(res, (chunk) => {
+    return chunk.replace(greekRegex, (_, greekName) => `$\\${greekName}$`);
+  });
+
+  return res;
 }
 
 /**

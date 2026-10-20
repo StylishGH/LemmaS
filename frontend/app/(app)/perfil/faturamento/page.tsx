@@ -26,9 +26,12 @@ import {
   ESTADOS_BRASIL,
 } from "@/lib/validation";
 import { createClient } from "@/lib/supabase";
+import { useUserProfile } from "@/lib/use-user";
 
 export default function FaturamentoPage() {
   const supabase = createClient();
+  const { profile, saveProfile } = useUserProfile();
+
   // Identificação Civil e Fiscal
   const [cpf, setCpf] = useState("");
   const [cpfValido, setCpfValido] = useState<boolean | null>(null);
@@ -52,33 +55,51 @@ export default function FaturamentoPage() {
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Carrega dados salvos localmente ou do perfil
+  // Carrega dados persistidos do Supabase (via profile) e fallback local
   useEffect(() => {
+    if (profile) {
+      if (profile.cpf) {
+        const fmt = formatarCPF(profile.cpf);
+        setCpf(fmt);
+        setCpfValido(validarCPF(profile.cpf));
+      }
+      if (profile.celular) setTelefone(formatarTelefone(profile.celular));
+      if (profile.cep) setCep(formatarCEP(profile.cep));
+      if (profile.logradouro) setLogradouro(profile.logradouro);
+      if (profile.numero) setNumero(profile.numero);
+      if (profile.complemento) setComplemento(profile.complemento);
+      if (profile.bairro) setBairro(profile.bairro);
+      if (profile.cidade) setCidade(profile.cidade);
+      if (profile.estado) setEstadoUf(profile.estado);
+      if (profile.dataNascimento) setDataNascimento(profile.dataNascimento);
+      if (typeof profile.optInNotificacoes === "boolean") setOptInNotificacoes(profile.optInNotificacoes);
+    }
+
     if (typeof window !== "undefined") {
       const salvo = localStorage.getItem("lemmas_dados_faturamento");
       if (salvo) {
         try {
           const d = JSON.parse(salvo);
-          if (d.cpf) {
-            setCpf(d.cpf);
-            setCpfValido(validarCPF(d.cpf));
+          setCpf((prev) => prev || (d.cpf ? formatarCPF(d.cpf) : ""));
+          if (d.cpf && !cpfValido) setCpfValido(validarCPF(d.cpf));
+          setTelefone((prev) => prev || (d.telefone ? formatarTelefone(d.telefone) : ""));
+          if (typeof d.optInNotificacoes === "boolean") {
+            setOptInNotificacoes((prev) => (profile.optInNotificacoes !== undefined ? profile.optInNotificacoes : d.optInNotificacoes));
           }
-          if (d.telefone) setTelefone(d.telefone);
-          if (typeof d.optInNotificacoes === "boolean") setOptInNotificacoes(d.optInNotificacoes);
-          if (d.dataNascimento) setDataNascimento(d.dataNascimento);
-          if (d.cep) setCep(d.cep);
-          if (d.logradouro) setLogradouro(d.logradouro);
-          if (d.numero) setNumero(d.numero);
-          if (d.complemento) setComplemento(d.complemento);
-          if (d.bairro) setBairro(d.bairro);
-          if (d.cidade) setCidade(d.cidade);
-          if (d.estadoUf) setEstadoUf(d.estadoUf);
+          setDataNascimento((prev) => prev || d.dataNascimento || "");
+          setCep((prev) => prev || (d.cep ? formatarCEP(d.cep) : ""));
+          setLogradouro((prev) => prev || d.logradouro || "");
+          setNumero((prev) => prev || d.numero || "");
+          setComplemento((prev) => prev || d.complemento || "");
+          setBairro((prev) => prev || d.bairro || "");
+          setCidade((prev) => prev || d.cidade || "");
+          setEstadoUf((prev) => prev || d.estadoUf || "RJ");
         } catch {
           // Ignora erro de JSON
         }
       }
     }
-  }, []);
+  }, [profile]);
 
   // Manipulador de CPF com máscara e validação
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +179,8 @@ export default function FaturamentoPage() {
     }
 
     setSalvando(true);
+    const limpoTelefone = telefone.replace(/\D/g, "");
+
     const dados = {
       cpf,
       cpf_limpo: limpoCpf,
@@ -179,28 +202,28 @@ export default function FaturamentoPage() {
     }
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      await saveProfile({
+        cpf: limpoCpf,
+        celular: limpoTelefone,
+        cep: limpoCep,
+        logradouro: logradouro.trim(),
+        numero: numero.trim(),
+        complemento: complemento.trim(),
+        bairro: bairro.trim(),
+        cidade: cidade.trim(),
+        estado: estadoUf,
+        dataNascimento,
+        optInNotificacoes,
+      });
 
-      if (user) {
-        await supabase
-          .from("usuarios")
-          .update({
-            configuracoes: {
-              faturamento: dados,
-            },
-          })
-          .eq("email", user.email);
-      }
-    } catch {
-      // Ignora erro se coluna em migração
-    }
-
-    setTimeout(() => {
-      setSalvando(false);
       setSucesso(true);
-    }, 500);
+      setTimeout(() => setSucesso(false), 4000);
+    } catch (saveErr: any) {
+      console.error("Erro ao salvar faturamento:", saveErr);
+      setErro(saveErr?.message || "Erro ao sincronizar dados fiscais com o servidor.");
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -209,7 +232,7 @@ export default function FaturamentoPage() {
       <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-amber-500/20">
         <Link
           href="/perfil"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-amber-500 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-blue-600 dark:hover:text-amber-500 transition-colors"
         >
           <ArrowLeft size={16} /> Voltar ao Perfil
         </Link>
@@ -218,12 +241,12 @@ export default function FaturamentoPage() {
 
       {/* Cabeçalho */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] text-xs font-semibold">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-blue-600 dark:text-[#d9b452] text-xs font-semibold">
           <CreditCard size={14} />
           <span>Conformidade Fiscal & LGPD · Nota Fiscal Eletrônica</span>
         </div>
         <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
-          Dados Fiscais & <em className="italic text-amber-600 dark:text-[#d9b452]">Faturamento.</em>
+          Dados Fiscais & <em className="italic text-blue-600 dark:text-[#d9b452]">Faturamento.</em>
         </h1>
         <p className="text-xs md:text-sm text-slate-600 dark:text-[#a9aaa1] max-w-2xl leading-relaxed">
           Mantenha suas informações civis e fiscais atualizadas para emissão correta de Nota Fiscal de Serviços Eletrônica (NFS-e) e transações de planos pagos.
@@ -239,7 +262,7 @@ export default function FaturamentoPage() {
           </p>
           <p>
             Seus dados fiscais são protegidos por Row Level Security (RLS) no Supabase e utilizados estritamente para o cumprimento de obrigações tributárias e emissão de notas fiscais, conforme estabelecido na nossa{" "}
-            <Link href="/privacidade" className="text-amber-500 underline font-semibold">
+            <Link href="/privacidade" className="text-blue-600 dark:text-amber-500 underline font-semibold">
               Política de Privacidade
             </Link>.
           </p>
@@ -266,7 +289,7 @@ export default function FaturamentoPage() {
         {/* BLOCO 1: IDENTIFICAÇÃO CIVIL E FISCAL */}
         <div className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-sm space-y-5">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <FileText size={16} className="text-amber-500" />
+            <FileText size={16} className="text-blue-500 dark:text-amber-500" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#f5f0df]">
               Identificação Civil e Fiscal
             </h2>
@@ -300,7 +323,7 @@ export default function FaturamentoPage() {
                     ? "border-emerald-500/60 focus:ring-emerald-500"
                     : cpfValido === false
                     ? "border-rose-500/60 focus:ring-rose-500"
-                    : "border-slate-200 dark:border-zinc-800 focus:ring-amber-500"
+                    : "border-slate-200 dark:border-zinc-800 focus:ring-blue-500 dark:focus:ring-amber-500"
                 }`}
                 required
               />
@@ -312,7 +335,7 @@ export default function FaturamentoPage() {
             {/* Campo Telefone / WhatsApp */}
             <div className="space-y-1.5">
               <label htmlFor="tel" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                <Phone size={13} className="text-amber-500" /> Telefone / WhatsApp *
+                <Phone size={13} className="text-blue-500 dark:text-amber-500" /> Telefone / WhatsApp *
               </label>
               <input
                 type="text"
@@ -321,7 +344,7 @@ export default function FaturamentoPage() {
                 onChange={handleTelefoneChange}
                 placeholder="(00) 00000-0000"
                 maxLength={15}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
               <span className="text-[10px] text-slate-400 block">
@@ -332,7 +355,7 @@ export default function FaturamentoPage() {
             {/* Campo Data de Nascimento */}
             <div className="space-y-1.5">
               <label htmlFor="nasc" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                <Calendar size={13} className="text-amber-500" /> Data de Nascimento *
+                <Calendar size={13} className="text-blue-500 dark:text-amber-500" /> Data de Nascimento *
               </label>
               <input
                 type="text"
@@ -341,7 +364,7 @@ export default function FaturamentoPage() {
                 onChange={handleNascimentoChange}
                 placeholder="DD/MM/AAAA"
                 maxLength={10}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
               <span className="text-[10px] text-slate-400 block">
@@ -357,7 +380,7 @@ export default function FaturamentoPage() {
                 type="checkbox"
                 checked={optInNotificacoes}
                 onChange={(e) => setOptInNotificacoes(e.target.checked)}
-                className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                className="rounded border-slate-300 text-blue-600 dark:text-amber-500 focus:ring-blue-500 dark:focus:ring-amber-500"
               />
               <span>
                 Aceito receber comunicações acadêmicas e operacionais da plataforma LEMMAS via WhatsApp/SMS.
@@ -369,7 +392,7 @@ export default function FaturamentoPage() {
         {/* BLOCO 2: ENDEREÇO E LOGRADOURO */}
         <div className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-sm space-y-5">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <MapPin size={16} className="text-amber-500" />
+            <MapPin size={16} className="text-blue-500 dark:text-amber-500" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#f5f0df]">
               Endereço de Cobrança (NFS-e)
             </h2>
@@ -381,7 +404,7 @@ export default function FaturamentoPage() {
               <label htmlFor="cep" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center justify-between">
                 <span>CEP *</span>
                 {buscandoCep && (
-                  <span className="text-[10px] text-amber-500 flex items-center gap-1 font-mono">
+                  <span className="text-[10px] text-blue-600 dark:text-amber-500 flex items-center gap-1 font-mono">
                     <Loader2 size={11} className="animate-spin" /> Consultando ViaCEP...
                   </span>
                 )}
@@ -394,13 +417,13 @@ export default function FaturamentoPage() {
                   onChange={handleCepChange}
                   placeholder="00000-000"
                   maxLength={9}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                   required
                 />
                 <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
               {cepMensagem && (
-                <span className="text-[10px] text-amber-600 dark:text-[#d9b452] font-semibold block">
+                <span className="text-[10px] text-blue-600 dark:text-[#d9b452] font-semibold block">
                   {cepMensagem}
                 </span>
               )}
@@ -416,7 +439,7 @@ export default function FaturamentoPage() {
                 value={logradouro}
                 onChange={(e) => setLogradouro(e.target.value)}
                 placeholder="Ex: Av. Rio Branco"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
             </div>
@@ -434,7 +457,7 @@ export default function FaturamentoPage() {
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
                 placeholder="Ex: 123 ou S/N"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
             </div>
@@ -449,7 +472,7 @@ export default function FaturamentoPage() {
                 value={complemento}
                 onChange={(e) => setComplemento(e.target.value)}
                 placeholder="Ex: Apto 402, Bloco B"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
               />
             </div>
 
@@ -463,7 +486,7 @@ export default function FaturamentoPage() {
                 value={bairro}
                 onChange={(e) => setBairro(e.target.value)}
                 placeholder="Ex: Centro"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
             </div>
@@ -481,7 +504,7 @@ export default function FaturamentoPage() {
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
                 placeholder="Ex: Niterói"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               />
             </div>
@@ -494,7 +517,7 @@ export default function FaturamentoPage() {
                 id="uf"
                 value={estadoUf}
                 onChange={(e) => setEstadoUf(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
                 required
               >
                 {ESTADOS_BRASIL.map((est) => (

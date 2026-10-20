@@ -62,6 +62,8 @@ interface Question {
   gabarito: string;
   banca?: string;
   ano?: number;
+  dificuldade?: number | null;
+  categoria_banca?: string | null;
   tipo?: string;
   figura_path?: string | null;
   edicao?: string;
@@ -144,7 +146,7 @@ function AuthPromptModal({ open, onClose }: { open: boolean; onClose: () => void
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[#151324] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
+      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
@@ -214,7 +216,7 @@ function ConfirmarEntregaModal({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[#151324] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
+      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
@@ -271,6 +273,40 @@ function ConfirmarEntregaModal({
         </div>
       </div>
     </div>
+  );
+}
+
+
+function renderDificuldadeBadge(dificuldade?: number | null) {
+  if (!dificuldade) {
+    return (
+      <span className="lemma-badge text-[var(--ink-muted)]">
+        <span className="lemma-badge-dot bg-[var(--ink-muted)]" />
+        Nível Não Calibrado
+      </span>
+    );
+  }
+  if (dificuldade <= 2) {
+    return (
+      <span className="lemma-badge !text-[var(--marker-green)]">
+        <span className="lemma-badge-dot bg-[var(--marker-green)]" />
+        Fácil
+      </span>
+    );
+  }
+  if (dificuldade === 3) {
+    return (
+      <span className="lemma-badge !text-[var(--marker-amber)]">
+        <span className="lemma-badge-dot bg-[var(--marker-amber)]" />
+        Média
+      </span>
+    );
+  }
+  return (
+    <span className="lemma-badge !text-[var(--marker-red)]">
+      <span className="lemma-badge-dot bg-[var(--marker-red)]" />
+      Difícil
+    </span>
   );
 }
 
@@ -1198,7 +1234,7 @@ function ResolverContent() {
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-500">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-amber-500" />
         <span className="text-sm font-medium">Carregando ambiente de resolução e simulador...</span>
       </div>
     );
@@ -1251,8 +1287,8 @@ function ResolverContent() {
     return (
       <div className="space-y-8 max-w-4xl mx-auto py-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-semibold text-amber-700 dark:text-[#d9b452]">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs font-semibold text-blue-700 dark:text-[#d9b452]">
+            <Zap className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>Simulador & Treino Interativo · LEMMAS Core & MathAI Engine</span>
           </div>
           <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
@@ -1264,9 +1300,11 @@ function ResolverContent() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-          {/* CARD 1: MODO ESTUDO LIVRE (swapped with simulado) */}
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-amber-500/35 transition-all">
-            <div className="space-y-3">
+          {/* CARD 1: MODO ESTUDO LIVRE */}
+          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
+            {/* Chanfro interno sutil da moldura de madeira */}
+            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+            <div className="space-y-3 relative z-10">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg">
                 💡
               </div>
@@ -1277,16 +1315,18 @@ function ResolverContent() {
             </div>
             <button
               onClick={startWorkoutTreino}
-              className="mt-6 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1b172e] dark:hover:bg-[#25203d] text-slate-800 dark:text-[#f5f0df] border border-slate-200 dark:border-amber-500/20 font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+              className="mt-6 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1e2329] dark:hover:bg-[#252b33] text-slate-800 dark:text-[#f5f0df] border border-slate-200 dark:border-amber-500/20 font-semibold text-xs transition-colors flex items-center justify-center gap-2 relative z-10"
             >
               <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
               <span>Treinar Livremente</span>
             </button>
           </div>
 
-          {/* CARD 2: SIMULADO CRONOMETRADO (swapped with treino livre) */}
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-amber-500/35 transition-all">
-            <div className="space-y-3">
+          {/* CARD 2: SIMULADO CRONOMETRADO */}
+          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
+            {/* Chanfro interno sutil da moldura de madeira */}
+            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+            <div className="space-y-3 relative z-10">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center font-bold text-lg">
                 ⏱️
               </div>
@@ -1297,7 +1337,7 @@ function ResolverContent() {
             </div>
             <button
               onClick={startWorkoutSimulado}
-              className="lemmas-gold-cta mt-6 w-full py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
+              className="lemmas-gold-cta mt-6 w-full py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-sm relative z-10"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Iniciar Simulado Rápido</span>
@@ -1305,8 +1345,10 @@ function ResolverContent() {
           </div>
 
           {/* CARD 3: NAVEGAR NO BANCO */}
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-amber-500/35 transition-all">
-            <div className="space-y-3">
+          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
+            {/* Chanfro interno sutil da moldura de madeira */}
+            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+            <div className="space-y-3 relative z-10">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center font-bold text-lg">
                 📚
               </div>
@@ -1317,7 +1359,7 @@ function ResolverContent() {
             </div>
             <Link
               href="/questoes"
-              className="mt-6 w-full py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#1b172e] font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+              className="mt-6 w-full py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#1e2329] font-semibold text-xs transition-colors flex items-center justify-center gap-2 relative z-10"
             >
               <span>Ir ao Banco de Questões</span>
             </Link>
@@ -1420,7 +1462,7 @@ function ResolverContent() {
           </div>
 
           {/* TEMPO TOTAL */}
-          <div className="p-5 rounded-2xl bg-slate-100 dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-center space-y-1">
+          <div className="p-5 rounded-2xl bg-slate-100 dark:bg-[var(--bg-card)] border border-slate-200 dark:border-zinc-800 text-center space-y-1">
             <div className="text-2xl md:text-3xl font-bold font-serif-math text-slate-900 dark:text-[#f5f0df]">
               {tempoMin}m {tempoSeg}s
             </div>
@@ -1457,7 +1499,7 @@ function ResolverContent() {
             </div>
 
             {/* ABAS DE FILTRO */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#18152a] text-xs font-semibold">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#1e2329] text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setReviewFilter("todas")}
@@ -1512,7 +1554,7 @@ function ResolverContent() {
               return (
                 <div
                   key={q.id}
-                  className={`p-5 rounded-2xl bg-white dark:bg-[#141222] border transition-all space-y-4 ${
+                  className={`p-5 rounded-2xl bg-white dark:bg-[var(--bg-card)] border transition-all space-y-4 ${
                     acertou
                       ? "border-emerald-500/30"
                       : isEmBranco
@@ -1568,31 +1610,38 @@ function ResolverContent() {
                   {isExpanded && (
                     <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/80 space-y-4 animate-fadeIn">
                       {/* ALTERNATIVAS */}
-                      {q.alternativas && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                          {Object.entries(q.alternativas).map(([letra, valor]) => {
-                            const isAluno = alunoResp === letra;
-                            const gabarito = (q.gabarito || "").trim().toUpperCase();
-                            const isGabarito = gabarito && gabarito === letra.toUpperCase();
+                      {q.alternativas && (() => {
+                        const isComplex = Object.values(q.alternativas).some((v) => 
+                          v && (v.length > 20 || v.includes("\\frac") || v.includes("\\sqrt") || v.includes("\\matrix"))
+                        );
+                        return (
+                          <div className={`grid gap-2 text-xs ${isComplex ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-5"}`}>
+                            {Object.entries(q.alternativas).map(([letra, valor]) => {
+                              const isAluno = alunoResp === letra;
+                              const gabarito = (q.gabarito || "").trim().toUpperCase();
+                              const isGabarito = gabarito && gabarito === letra.toUpperCase();
 
-                            return (
-                              <div
-                                key={letra}
-                                className={`p-2.5 rounded-xl border flex items-start gap-2 ${
-                                  isGabarito
-                                    ? "bg-emerald-500/15 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold"
-                                    : isAluno
-                                    ? "bg-rose-500/15 border-rose-500 text-rose-900 dark:text-rose-200 font-semibold"
-                                    : "bg-slate-50/50 dark:bg-zinc-900/40 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
-                                }`}
-                              >
-                                <span className="font-bold">({letra})</span>
-                                <MathText text={valor} />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                              return (
+                                <div
+                                  key={letra}
+                                  className={`px-3 py-2.5 rounded-xl border flex items-center gap-2.5 min-h-[48px] ${
+                                    isGabarito
+                                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold"
+                                      : isAluno
+                                      ? "bg-rose-500/15 border-rose-500 text-rose-900 dark:text-rose-200 font-semibold"
+                                      : "bg-slate-50/50 dark:bg-zinc-900/40 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                                  }`}
+                                >
+                                  <span className="font-bold shrink-0">({letra})</span>
+                                  <div className="overflow-x-auto overflow-y-hidden w-full py-0.5 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                    <MathText text={valor} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
 
                       {/* BOTÃO PARA PEDIR EXPLICAÇÃO À IA */}
                       {!iaResult && (
@@ -1648,7 +1697,7 @@ function ResolverContent() {
                             <MathText text={iaResult.diagnostico} />
                           </div>
                           {iaResult.dica_proximo_passo && (
-                            <div className="p-2.5 rounded-lg bg-white/70 dark:bg-[#18152a] border border-purple-500/20 text-slate-700 dark:text-zinc-300">
+                            <div className="p-2.5 rounded-lg bg-white/70 dark:bg-[#1e2329] border border-purple-500/20 text-slate-700 dark:text-zinc-300">
                               <span className="font-bold text-purple-700 dark:text-purple-300 block mb-1">Lema / Passo-chave:</span>
                               <MathText text={iaResult.dica_proximo_passo} />
                             </div>
@@ -1690,7 +1739,7 @@ function ResolverContent() {
   if (loadingChunk && !currentQ) {
     return (
       <div className="max-w-2xl mx-auto py-24 text-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-amber-500 mx-auto" />
         <p className="text-slate-600 dark:text-zinc-400 text-sm font-medium">
           Carregando questão #{currentIndex + 1} da MathAI Engine...
         </p>
@@ -1746,8 +1795,11 @@ function ResolverContent() {
     <div
       ref={bancadaRef}
       id="bancada-resolucao"
-      className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 scroll-mt-6 animate-fadeIn"
+      className="relative z-10 rounded-2xl bg-[var(--bg-card)] p-4 sm:p-5 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-4 scroll-mt-6 animate-fadeIn"
     >
+      {/* Chanfro interno sutil da moldura de madeira */}
+      <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+      <div className="space-y-4 relative z-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {isDiscursiva ? (
@@ -1777,7 +1829,7 @@ function ResolverContent() {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               bancadaModo === "lousa"
                 ? "lemmas-gold-cta font-bold shadow-xs scale-105"
-                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
+                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-blue-500/35 dark:hover:border-amber-500/35"
             }`}
             title="Lousa com Pointer Events e rejeição de palma para rascunhos"
           >
@@ -1797,7 +1849,7 @@ function ResolverContent() {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               bancadaModo === "geometria"
                 ? "bg-sky-500 text-white font-bold shadow-xs scale-105"
-                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-sky-500/35"
             }`}
             title="Quadro Euclidiano com régua, compasso e script de lemas"
           >
@@ -1817,7 +1869,7 @@ function ResolverContent() {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               bancadaModo === "texto"
                 ? "bg-purple-600 text-white font-bold shadow-xs scale-105"
-                : "bg-slate-100 dark:bg-[#18152a] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-purple-500/35"
+                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-purple-500/35"
             }`}
             title="Dedução digitada em texto ou envio de foto para OCR"
           >
@@ -1955,7 +2007,7 @@ function ResolverContent() {
 
       {bancadaModo === "texto" && (
         <div className="space-y-4 animate-fadeIn">
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#18152a] space-y-2">
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#1e2329] space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
@@ -1971,21 +2023,21 @@ function ResolverContent() {
               value={justificativas[currentIndex] || ""}
               onChange={(e) => setJustificativas({ ...justificativas, [currentIndex]: e.target.value })}
               placeholder="Descreva seu desenvolvimento matemático passo a passo..."
-              className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[#141222] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono leading-relaxed resize-y"
+              className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[var(--bg-card)] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500 font-mono leading-relaxed resize-y"
               rows={3}
             />
           </div>
 
-          <div className="p-4 rounded-xl border-2 border-dashed border-amber-500/35 bg-amber-500/5 text-center space-y-3">
+          <div className="p-4 rounded-xl border-2 border-dashed border-blue-500/35 dark:border-amber-500/35 bg-blue-500/5 dark:bg-amber-500/5 text-center space-y-3">
             <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
-              <Upload className="w-4 h-4 text-amber-500" />
+              <Upload className="w-4 h-4 text-blue-600 dark:text-amber-500" />
               <span>Upload de Foto do Caderno / Rascunho da Lousa</span>
             </div>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 cursor-pointer"
+              className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 dark:file:bg-amber-500 dark:file:text-slate-900 dark:hover:file:bg-amber-600 cursor-pointer"
             />
             {currentImage && (
               <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho anexada e pronta para OCR!</p>
@@ -2022,14 +2074,14 @@ function ResolverContent() {
       )}
 
       {currentDiagnostico && (
-        <div className="text-left p-5 rounded-xl bg-white dark:bg-[#141222] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
+        <div className="text-left p-5 rounded-xl bg-white dark:bg-[var(--bg-card)] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-purple-500/20">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
                 <BrainCircuit className="w-3 h-3" />
                 [INFERÊNCIA DA IA]
               </span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
                 Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
               </span>
             </div>
@@ -2050,7 +2102,7 @@ function ResolverContent() {
           </div>
 
           {currentDiagnostico.transcricao_latex && (
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-purple-500/20 space-y-1">
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-purple-500/20 space-y-1">
               <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
               <div className="text-slate-800 dark:text-zinc-200">
                 <MathText text={currentDiagnostico.transcricao_latex} />
@@ -2068,7 +2120,7 @@ function ResolverContent() {
           )}
 
           {currentDiagnostico.dica_proximo_passo && (
-            <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1c1730] border border-purple-500/20 space-y-1">
+            <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1e2329] border border-purple-500/20 space-y-1">
               <span className="font-bold text-[11px] text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Lema / Próximo Passo:</span>
               <div className="text-slate-800 dark:text-zinc-200">
                 <MathText text={currentDiagnostico.dica_proximo_passo} />
@@ -2077,13 +2129,17 @@ function ResolverContent() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 
   return (
     <div className="max-w-5xl mx-auto py-6 space-y-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
       {/* BARRA SUPERIOR DO SIMULADOR / TREINO */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 shadow-sm space-y-4">
+      <div className="relative z-20 rounded-2xl bg-[var(--bg-card)] p-4 sm:p-5 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-4">
+        {/* Chanfro interno sutil da moldura de madeira */}
+        <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+        <div className="space-y-4 relative z-10">
         {/* LINHA 1: STATUS DA SESSÃO, CRONÔMETRO E AÇÃO PRINCIPAL */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-amber-500/10">
           {/* Lado Esquerdo: Modo e Progresso */}
@@ -2109,7 +2165,7 @@ function ResolverContent() {
             <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border font-mono text-xs font-bold shadow-xs ${
               isSimuladoAtivo && timeLeft < 300
                 ? "bg-rose-500/10 border-rose-500/40 text-rose-600 animate-pulse"
-                : "bg-slate-50 dark:bg-[#1b172e] border-slate-200 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0]"
+                : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0]"
             }`}>
               <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500 shrink-0" />
               <span>{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</span>
@@ -2163,7 +2219,7 @@ function ResolverContent() {
               const isAnswered = isHint5 || hasDiscursiveValida || isObjAnswered || answeredIndices.has(qIndex);
               const isBookmarked = qObj && bookmarks.has(qObj.id);
 
-              let buttonColorClass = "bg-slate-100 dark:bg-[#1b172e] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
+              let buttonColorClass = "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
               let dotColorClass = "bg-emerald-500";
 
               if (isHint5) {
@@ -2186,7 +2242,7 @@ function ResolverContent() {
                   dotColorClass = "bg-rose-500";
                 } else {
                   // sem_desenvolvimento: Regra de Ouro (não pinta como tentativa avaliada)
-                  buttonColorClass = "bg-slate-100 dark:bg-[#1b172e] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
+                  buttonColorClass = "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
                 }
               } else if (isAnswered) {
                 buttonColorClass = "bg-emerald-500/20 border border-emerald-500/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/30 font-extrabold";
@@ -2257,7 +2313,7 @@ function ResolverContent() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleJumpToQuestion();
               }}
-              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-amber-500/25 bg-slate-50/50 dark:bg-[#1b172e] text-xs font-semibold text-center focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 text-slate-800 dark:text-[#f5f0df]"
+              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-amber-500/25 bg-slate-50/50 dark:bg-[#1e2329] text-xs font-semibold text-center focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 text-slate-800 dark:text-[#f5f0df]"
             />
             <button
               type="button"
@@ -2268,15 +2324,45 @@ function ResolverContent() {
             </button>
           </div>
         </div>
+        </div>
       </div>
 
       {/* CARD DO ENUNCIADO */}
-      <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500">
-              {currentQ?.materia} • <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
+      <div className="relative z-10 rounded-2xl bg-[var(--bg-card)] p-6 md:p-8 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-6">
+        {/* Chanfro interno sutil da moldura de madeira */}
+        <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/5 relative z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* BREADCRUMB EDITORIAL */}
+            <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1.5 mr-1">
+              <span>Matemática</span>
+              <span className="opacity-40">›</span>
+              <span>{currentQ?.materia}</span>
+              {currentQ?.topico && (
+                <>
+                  <span className="opacity-40">›</span>
+                  <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
+                </>
+              )}
             </div>
+
+            {/* BADGES METADADOS UNIFICADOS (QUADRO DE GIZ / BRANCO) */}
+            {currentQ?.banca && (
+              <span className="lemma-badge font-semibold !text-[var(--marker-amber)] dark:!text-[var(--marker-amber)]">
+                {currentQ.banca} {currentQ.ano ? `· ${currentQ.ano}` : ""}
+              </span>
+            )}
+            {currentQ?.categoria_banca && (
+              <span className="lemma-badge text-slate-600 dark:text-slate-400">
+                {currentQ.categoria_banca}
+              </span>
+            )}
+            {renderDificuldadeBadge(currentQ?.dificuldade)}
+            {currentQ?.tipo && (
+              <span className="lemma-badge">
+                {currentQ.tipo === "discursiva" ? "Discursiva" : "Múltipla Escolha"}
+              </span>
+            )}
             {(currentQ?.lema_codigo || currentQ?.lema_id) && (
               <LemaBadge lemaCodigo={currentQ?.lema_codigo} lemaId={currentQ?.lema_id} />
             )}
@@ -2312,12 +2398,12 @@ function ResolverContent() {
 
         {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER (OCULTA SE AS ALTERNATIVAS JÁ FOREM AS IMAGENS OU SE JÁ ESTIVER NO CORPO) */}
         {currentQ?.figura_path && !corpo.includes("![") && !hasImageAlternatives(alternativas) && (
-          <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-900/60 border border-slate-200 dark:border-stone-800">
+          <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-[var(--border-board)] relative z-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={resolveFigureUrl(currentQ.figura_path)}
               alt={`Figura da Questão ${currentQ.id}`}
-              className="max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-stone-900 p-2 border border-slate-200 dark:border-stone-800"
+              className="question-diagram-invertible max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-[#161a1e] p-2 border border-[var(--border-board)]"
               loading="lazy"
               onError={(e) => {
                 const target = e.currentTarget;
@@ -2400,7 +2486,7 @@ function ResolverContent() {
                   </div>
                   <div className="flex items-center gap-2">
                     {discursiveEval.modelo && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1a162b] text-slate-700 dark:text-zinc-300 border border-emerald-500/20 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-emerald-500/20 font-mono">
                         {discursiveEval.modelo}
                       </span>
                     )}
@@ -2613,7 +2699,7 @@ function ResolverContent() {
                     className={`w-full text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all ${
                       isSelected
                         ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/40 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-amber-500/40"
-                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/15 text-slate-700 dark:text-zinc-300 hover:border-blue-500/40 dark:hover:border-amber-500/40"
+                        : "bg-slate-50/50 dark:bg-[#1e2329] border border-[var(--border-board)] text-slate-700 dark:text-zinc-300 hover:border-blue-500/40 dark:hover:border-amber-500/40"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -2650,7 +2736,7 @@ function ResolverContent() {
                     className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
                       isSelected
                         ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/30 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-0"
-                        : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                        : "bg-slate-50/50 dark:bg-[#1e2329] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-blue-500/30 dark:hover:border-amber-500/30"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div
@@ -2763,7 +2849,7 @@ function ResolverContent() {
                   </div>
                   <div className="flex items-center gap-2">
                     {resolucoesIa[currentQ.id].modelo && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1a162b] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
                         {resolucoesIa[currentQ.id].modelo}
                       </span>
                     )}
@@ -2785,7 +2871,7 @@ function ResolverContent() {
 
                 {/* LEMA FUNDAMENTAL OU CONCEITO-CHAVE */}
                 {resolucoesIa[currentQ.id].dica_proximo_passo && (
-                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#161327] border border-blue-500/25 dark:border-amber-500/25 space-y-1">
+                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#1e2329] border border-blue-500/25 dark:border-amber-500/25 space-y-1">
                     <strong className="text-blue-700 dark:text-[#d9b452] flex items-center gap-1.5 text-xs">
                       <Zap className="w-3.5 h-3.5" />
                       Lema Fundamental & Princípio Determinante:
@@ -2807,7 +2893,7 @@ function ResolverContent() {
                     value={justificativas[currentIndex] || ""}
                     onChange={(e) => setJustificativas((prev) => ({ ...prev, [currentIndex]: e.target.value }))}
                     placeholder="Ex: Pegadinha na restrição do denominador; aplicar lema da média harmônica..."
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1a162b] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1e2329] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
                   />
                 </div>
               </div>
@@ -2832,7 +2918,7 @@ function ResolverContent() {
 
       {/* BLOCO DE IA: DESATIVADO NO SIMULADO VS ATIVO NO TREINO */}
       {isSimuladoAtivo ? (
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-zinc-800 text-xs flex items-center gap-3 text-slate-600 dark:text-zinc-400">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-slate-200/80 dark:border-zinc-800 text-xs flex items-center gap-3 text-slate-600 dark:text-zinc-400">
           <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
           <p className="leading-relaxed">
             <strong>Ambiente Oficial de Simulado:</strong> Auxílios da MathAI Engine (dicas e diagnósticos) ficam desabilitados durante a realização da prova. Ao entregar o simulado, você poderá acionar a IA para cada questão individualmente.
@@ -2841,7 +2927,7 @@ function ResolverContent() {
       ) : (
         <>
           {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO COM ESCADA PÓLYA DE 5 NÍVEIS) */}
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[var(--bg-card)] border border border-[var(--border-board)] rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
@@ -2877,7 +2963,7 @@ function ResolverContent() {
                         ? "bg-purple-500/15 border-purple-500/35 text-purple-700 dark:text-purple-300 font-medium"
                         : isCurrent
                         ? "bg-blue-500/15 border-blue-500 text-blue-800 ring-2 ring-blue-500/30 dark:bg-amber-500/15 dark:border-amber-500 dark:text-amber-200 dark:ring-amber-500/30 font-bold"
-                        : "bg-slate-50/50 dark:bg-[#18152a]/60 border-slate-200/60 dark:border-zinc-800/60 text-slate-400 dark:text-zinc-500"
+                        : "bg-slate-50/50 dark:bg-[#1e2329]/60 border-slate-200/60 dark:border-zinc-800/60 text-slate-400 dark:text-zinc-500"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
@@ -3026,7 +3112,7 @@ function ResolverContent() {
                             <Sparkles className="w-3 h-3" />
                             {item.nivel === 5 ? "[RESOLUÇÃO OFICIAL]" : "[INFERÊNCIA DA IA]"}
                           </span>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e1935] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
                             {nivelTitulos[item.nivel] || `Nível ${item.nivel}`}
                           </span>
                         </div>
@@ -3092,7 +3178,7 @@ function ResolverContent() {
       {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (REVELA GABARITO & MARCA INCORRETO) */}
       {showHint5ConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[#151224] border-2 border-rose-500/50 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 ring-1 ring-rose-500/30">
+          <div className="bg-white dark:bg-[var(--bg-card)] border-2 border-rose-500/50 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 ring-1 ring-rose-500/30">
             <div className="flex items-start gap-3">
               <div className="p-3 rounded-xl bg-rose-500/15 text-rose-500 shrink-0">
                 <AlertTriangle className="w-6 h-6" />

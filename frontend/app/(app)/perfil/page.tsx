@@ -30,7 +30,7 @@ import {
   Binary,
   AlertTriangle
 } from "lucide-react";
-import { useUserProfile, getInitials } from "@/lib/use-user";
+import { useUserProfile, getInitials, inferirMotivacoes } from "@/lib/use-user";
 
 const ESCOLARIDADE_OPCOES = [
   "Ensino Médio (em andamento / concluído)",
@@ -290,8 +290,12 @@ export default function PerfilPage() {
   const [semestre, setSemestre] = useState(profile.semestre);
   const [metaQuestoesDia, setMetaQuestoesDia] = useState(profile.metaQuestoesDia || 10);
   
-  // Seleção múltipla de objetivos declarados
-  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>(profile.motivacoesSelecionadas || []);
+  // Seleção múltipla de objetivos declarados (com inferência heurística caso vazio)
+  const [motivacoesSelecionadas, setMotivacoesSelecionadas] = useState<string[]>(
+    profile.motivacoesSelecionadas?.length
+      ? profile.motivacoesSelecionadas
+      : inferirMotivacoes(profile.focoConcurso, [])
+  );
   
   // Preferência pedagógica estrita
   const [pedagogicalPreference, setPedagogicalPreference] = useState<'conceitual' | 'rigor_formal' | 'aplicado_ml' | 'competitivo'>('conceitual');
@@ -326,7 +330,12 @@ export default function PerfilPage() {
         setFaculdade(profile.faculdade);
         setSemestre(profile.semestre);
         setMetaQuestoesDia(profile.metaQuestoesDia || 10);
-        setMotivacoesSelecionadas(profile.motivacoesSelecionadas || []);
+        
+        const motivacoesAtivas =
+          profile.motivacoesSelecionadas && profile.motivacoesSelecionadas.length > 0
+            ? profile.motivacoesSelecionadas
+            : inferirMotivacoes(profile.focoConcurso, []);
+        setMotivacoesSelecionadas(motivacoesAtivas);
         setSelectedBancas(profile.concursosSelecionados || []);
         setSelectedConceituais(profile.conceitosSelecionados || []);
         
@@ -473,8 +482,8 @@ export default function PerfilPage() {
   if (loading) {
     return (
       <div className="max-w-xl mx-auto py-24 text-center space-y-4 animate-pulse text-slate-800 dark:text-[#f5f0df]">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center mx-auto shadow-sm">
-          <Loader2 className="w-6 h-6 animate-spin text-amber-600 dark:text-[#d9b452]" />
+        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 flex items-center justify-center mx-auto shadow-sm">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-[#d9b452]" />
         </div>
         <p className="text-xs text-slate-500 dark:text-zinc-400 font-sans">
           Sincronizando perfil e preferências com a nuvem...
@@ -486,7 +495,7 @@ export default function PerfilPage() {
   if (profile.isGuest) {
     return (
       <div className="max-w-xl mx-auto py-12 px-4 animate-fadeIn text-center space-y-6 text-slate-800 dark:text-[#f5f0df]">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+        <div className="w-16 h-16 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
           <User className="w-8 h-8" />
         </div>
         <div className="space-y-3">
@@ -506,7 +515,7 @@ export default function PerfilPage() {
           </Link>
           <Link
             href="/login"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-amber-500/40 hover:bg-amber-500/10 text-slate-800 dark:text-[#f5f0df] font-semibold text-xs flex items-center justify-center gap-2 transition"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-blue-500/40 hover:bg-blue-500/10 text-slate-800 dark:border-amber-500/40 dark:hover:bg-amber-500/10 dark:text-[#f5f0df] font-semibold text-xs flex items-center justify-center gap-2 transition"
           >
             <LogIn className="w-4 h-4" />
             <span>Já tenho conta (Entrar)</span>
@@ -519,7 +528,7 @@ export default function PerfilPage() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
       {/* 1. HEADER DO PERFIL ESTILO EDITORIAL LEMMAS */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-amber-500/20 bg-white dark:bg-[#141222] p-6 md:p-8 shadow-sm">
+      <div className="relative rounded-3xl overflow-hidden border border border-[var(--border-board)] bg-white dark:bg-[#161a1e] p-6 md:p-8 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             
@@ -527,7 +536,7 @@ export default function PerfilPage() {
             <div className="relative group shrink-0">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-700 p-0.5 shadow-md overflow-hidden relative cursor-pointer group-hover:scale-[1.02] transition-transform"
+                className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 p-0.5 shadow-md overflow-hidden relative cursor-pointer group-hover:scale-[1.02] transition-transform"
                 title="Clique para alterar sua foto de perfil"
               >
                 {currentFoto && !imgError ? (
@@ -538,17 +547,17 @@ export default function PerfilPage() {
                     className="w-full h-full rounded-[14px] object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-[14px] bg-[#0e0d16] flex items-center justify-center text-[#d9b452] font-black text-2xl tracking-wider font-serif-math">
+                  <div className="w-full h-full rounded-[14px] bg-[#0e0d16] flex items-center justify-center text-blue-500 dark:text-[#d9b452] font-black text-2xl tracking-wider font-serif-math">
                     {userInitials}
                   </div>
                 )}
                 {salvandoFoto && (
                   <div className="absolute inset-0 bg-black/60 rounded-[14px] flex items-center justify-center z-20">
-                    <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+                    <Loader2 className="w-6 h-6 text-blue-400 dark:text-amber-400 animate-spin" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold gap-1 rounded-[14px]">
-                  <Camera className="w-4 h-4 text-amber-400" />
+                  <Camera className="w-4 h-4 text-blue-300 dark:text-amber-400" />
                   <span>Trocar</span>
                 </div>
               </div>
@@ -558,7 +567,7 @@ export default function PerfilPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={salvandoFoto}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg border-2 border-white dark:border-[#141222] transition-transform hover:scale-110 cursor-pointer z-10"
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-500 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 flex items-center justify-center shadow-lg border-2 border-white dark:border-[#141222] transition-transform hover:scale-110 cursor-pointer z-10"
                 title="Alterar foto de perfil"
                 aria-label="Alterar foto de perfil"
               >
@@ -584,7 +593,7 @@ export default function PerfilPage() {
                     <ShieldCheck className="w-3.5 h-3.5" /> E-mail Verificado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] text-[11px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-[#d9b452] text-[11px] font-bold">
                     <AlertTriangle className="w-3.5 h-3.5" /> E-mail Não Verificado
                   </span>
                 )}
@@ -595,7 +604,7 @@ export default function PerfilPage() {
               <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-zinc-500">
                 <span>{email || "Sem e-mail cadastrado"}</span>
                 <span>•</span>
-                <span className="font-mono text-amber-600 dark:text-[#d9b452] font-semibold">
+                <span className="font-mono text-blue-600 dark:text-[#d9b452] font-semibold">
                   ID #{profile.id || "LEMMAS-STUDENT"}
                 </span>
                 <span>•</span>
@@ -603,7 +612,7 @@ export default function PerfilPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={salvandoFoto}
-                  className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-[#d9b452] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 font-semibold text-blue-600 dark:text-[#d9b452] hover:underline cursor-pointer"
                 >
                   <Camera className="w-3 h-3" />
                   <span>{currentFoto ? "Alterar foto" : "Adicionar foto"}</span>
@@ -633,12 +642,12 @@ export default function PerfilPage() {
 
           {/* CHIPS RÁPIDOS DE STATUS */}
           <div className="flex sm:flex-col gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]">
-              <Flame className="w-4 h-4 fill-amber-500" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-xs font-bold text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452]">
+              <Flame className="w-4 h-4 fill-blue-600 text-blue-600 dark:fill-amber-500 dark:text-amber-500" />
               <span>{profile.streakDias} {profile.streakDias === 1 ? "dia consecutivo" : "dias consecutivos"}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-[#1b172e] border border-amber-500/20 text-xs font-bold text-amber-700 dark:text-[#dedbd0]">
-              <Target className="w-4 h-4 text-amber-500" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-700 dark:bg-[#1b172e] dark:border-amber-500/20 dark:text-[#dedbd0]">
+              <Target className="w-4 h-4 text-blue-600 dark:text-amber-500" />
               <span>Foco: {profile.focoConcurso || "Matemática Geral"}</span>
             </div>
           </div>
@@ -652,7 +661,7 @@ export default function PerfilPage() {
           onClick={() => setActiveTab("concursos")}
           className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
             activeTab === "concursos"
-              ? "text-amber-600 dark:text-[#d9b452] border-b-2 border-amber-500 dark:border-[#d9b452] font-bold"
+              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
               : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
           }`}
         >
@@ -665,7 +674,7 @@ export default function PerfilPage() {
           onClick={() => setActiveTab("academico")}
           className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
             activeTab === "academico"
-              ? "text-amber-600 dark:text-[#d9b452] border-b-2 border-amber-500 dark:border-[#d9b452] font-bold"
+              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
               : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
           }`}
         >
@@ -678,7 +687,7 @@ export default function PerfilPage() {
           onClick={() => setActiveTab("engine")}
           className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
             activeTab === "engine"
-              ? "text-amber-600 dark:text-[#d9b452] border-b-2 border-amber-500 dark:border-[#d9b452] font-bold"
+              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
               : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
           }`}
         >
@@ -688,9 +697,9 @@ export default function PerfilPage() {
 
         <Link
           href="/perfil/faturamento"
-          className="pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 text-slate-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-[#d9b452] ml-auto sm:ml-0 shrink-0"
+          className="pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-[#d9b452] ml-auto sm:ml-0 shrink-0"
         >
-          <CreditCard className="w-4 h-4 text-amber-500" />
+          <CreditCard className="w-4 h-4 text-blue-600 dark:text-amber-500" />
           <span>Dados Fiscais & Faturamento</span>
         </Link>
       </div>
@@ -698,7 +707,7 @@ export default function PerfilPage() {
       {/* 3. CONTEÚDO DAS ABAS */}
       <form onSubmit={handleSalvar} className="space-y-6">
         {activeTab === "concursos" && (
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
+          <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
             <div className="space-y-1">
               <h2 className="font-serif-math text-xl font-semibold text-slate-900 dark:text-[#f5f0df]">
                 Objetivos de Estudo & Personalização do Repertório
@@ -712,7 +721,7 @@ export default function PerfilPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">1</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">1</span>
                   <span>Quais são os seus objetivos principais?</span>
                 </label>
                 <span className="text-[11px] text-slate-500 dark:text-zinc-400">
@@ -729,8 +738,8 @@ export default function PerfilPage() {
                       onClick={() => toggleMotivacao(trilha.id)}
                       className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2.5 text-xs select-none ${
                         isSelected
-                          ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 dark:border-[#d9b452] shadow-xs"
-                          : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                          ? "bg-blue-500/10 dark:bg-amber-500/15 border-blue-500 dark:border-[#d9b452] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -739,7 +748,7 @@ export default function PerfilPage() {
                           <span className="text-xs font-bold">{trilha.titulo}</span>
                         </div>
                         <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
-                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
+                          isSelected ? "bg-blue-600 border-blue-600 text-white dark:bg-amber-500 dark:border-amber-500 dark:text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
                         }`}>
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
@@ -757,10 +766,10 @@ export default function PerfilPage() {
             <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">2</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">2</span>
                   <span>Como você prefere que o Tutor IA (MathAI) ensine?</span>
                 </label>
-                <span className="text-[11px] text-amber-600 dark:text-[#d9b452] font-semibold">
+                <span className="text-[11px] text-blue-600 dark:text-[#d9b452] font-semibold">
                   Modo: {pedagogicalPreference}
                 </span>
               </div>
@@ -799,8 +808,8 @@ export default function PerfilPage() {
                       onClick={() => setPedagogicalPreference(modo.id)}
                       className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2 text-xs select-none ${
                         isSelected
-                          ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 dark:border-[#d9b452] shadow-xs"
-                          : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                          ? "bg-blue-500/10 dark:bg-amber-500/15 border-blue-500 dark:border-[#d9b452] shadow-xs"
+                          : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -809,7 +818,7 @@ export default function PerfilPage() {
                           <span className="text-xs font-bold">{modo.titulo}</span>
                         </div>
                         <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
-                          isSelected ? "bg-amber-500 border-amber-500 text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
+                          isSelected ? "bg-blue-600 border-blue-600 text-white dark:bg-amber-500 dark:border-amber-500 dark:text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
                         }`}>
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
@@ -827,7 +836,7 @@ export default function PerfilPage() {
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">3</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">3</span>
                   <span>Catálogo de Áreas, Disciplinas e Exames:</span>
                 </label>
                 <div className="flex items-center gap-3">
@@ -857,7 +866,7 @@ export default function PerfilPage() {
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     catalogoVisualizacao === "recomendadas"
                       ? "lemmas-gold-cta font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                      : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -870,7 +879,7 @@ export default function PerfilPage() {
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     catalogoVisualizacao === "conceituais"
                       ? "lemmas-gold-cta font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                      : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
                   }`}
                 >
                   <Compass className="w-3.5 h-3.5" />
@@ -883,7 +892,7 @@ export default function PerfilPage() {
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     catalogoVisualizacao === "bancas"
                       ? "lemmas-gold-cta font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                      : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
                   }`}
                 >
                   <Award className="w-3.5 h-3.5" />
@@ -896,7 +905,7 @@ export default function PerfilPage() {
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     catalogoVisualizacao === "todas"
                       ? "lemmas-gold-cta font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-[#18152a] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                      : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
@@ -912,7 +921,7 @@ export default function PerfilPage() {
                   value={buscaCatalogo}
                   onChange={(e) => setBuscaCatalogo(e.target.value)}
                   placeholder="Filtrar matérias, tópicos ou bancas no catálogo..."
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-900 dark:text-[#f5f0df] outline-none focus:border-amber-500"
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-900 dark:text-[#f5f0df] outline-none focus:border-blue-500 dark:focus:border-amber-500"
                 />
                 {buscaCatalogo && (
                   <button
@@ -931,8 +940,8 @@ export default function PerfilPage() {
                 {catalogoVisualizacao === "recomendadas" && !catalogoFiltradoBusca && (
                   <div className="space-y-4">
                     {motivacoesSelecionadas.length === 0 ? (
-                      <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-center space-y-2">
-                        <Info className="w-6 h-6 text-amber-500 mx-auto" />
+                      <div className="p-6 rounded-2xl bg-blue-500/5 dark:bg-amber-500/5 border border-blue-500/20 dark:border-amber-500/20 text-center space-y-2">
+                        <Info className="w-6 h-6 text-blue-500 dark:text-amber-500 mx-auto" />
                         <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
                           Nenhum objetivo ativo no Passo 1.
                         </p>
@@ -944,7 +953,7 @@ export default function PerfilPage() {
                       <>
                         <div className="space-y-2">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
-                            <Compass className="w-3.5 h-3.5 text-amber-500" />
+                            <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
                             <span>Disciplinas e Trilhas Conceituais Recomendadas ({recommendedItems.conceituais.length})</span>
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -958,7 +967,7 @@ export default function PerfilPage() {
                                   className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                     isSelected
                                       ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                      : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                      : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                                   }`}
                                 >
                                   <div className="flex items-center justify-between gap-1">
@@ -985,7 +994,7 @@ export default function PerfilPage() {
 
                         <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
-                            <Award className="w-3.5 h-3.5 text-amber-500" />
+                            <Award className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
                             <span>Bancas, Provas e Exames Recomendados ({recommendedItems.bancas.length})</span>
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -999,7 +1008,7 @@ export default function PerfilPage() {
                                   className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                     isSelected
                                       ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                      : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                      : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                                   }`}
                                 >
                                   <div className="flex items-center justify-between gap-1">
@@ -1047,7 +1056,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1070,7 +1079,7 @@ export default function PerfilPage() {
                     </div>
 
                     <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-[#d9b452] flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-[#d9b452] flex items-center gap-1.5">
                         <Binary className="w-3.5 h-3.5" />
                         <span>Trilhas Conceituais em Planejamento ({TRILHAS_CONCEITUAIS_CATALOGO.filter((c) => !c.disponivel).length})</span>
                       </span>
@@ -1085,7 +1094,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 opacity-90 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1128,7 +1137,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1148,7 +1157,7 @@ export default function PerfilPage() {
                     </div>
 
                     <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-[#d9b452] flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-[#d9b452] flex items-center gap-1.5">
                         <Award className="w-3.5 h-3.5" />
                         <span>Exames e Processos Seletivos em Planejamento ({BANCAS_EXAMES_CATALOGO.filter((b) => !b.disponivel).length})</span>
                       </span>
@@ -1163,7 +1172,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 opacity-90 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1190,7 +1199,7 @@ export default function PerfilPage() {
                     {/* DISCIPLINAS */}
                     <div className="space-y-2">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
-                        <Compass className="w-3.5 h-3.5 text-amber-500" />
+                        <Compass className="w-3.5 h-3.5 text-blue-500 dark:text-amber-500" />
                         <span>Conhecimentos Matemáticos & Disciplinas ({catalogoFiltradoBusca ? catalogoFiltradoBusca.conceituais.length : TRILHAS_CONCEITUAIS_CATALOGO.length})</span>
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -1204,7 +1213,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1232,7 +1241,7 @@ export default function PerfilPage() {
                     {/* BANCAS */}
                     <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        <Award className="w-3.5 h-3.5 text-blue-500 dark:text-amber-500" />
                         <span>Instituições, Bancas & Exames ({catalogoFiltradoBusca ? catalogoFiltradoBusca.bancas.length : BANCAS_EXAMES_CATALOGO.length})</span>
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -1246,7 +1255,7 @@ export default function PerfilPage() {
                               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#18152a] border-slate-200 dark:border-amber-500/15 hover:border-amber-500/35"
+                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -1278,7 +1287,7 @@ export default function PerfilPage() {
             {/* PASSO 4: FOCO PERSONALIZADO & PREVIEW EM TEMPO REAL */}
             <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">4</span>
+                <span className="w-5 h-5 rounded-full bg-blue-500/15 dark:bg-amber-500/20 text-blue-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">4</span>
                 <span>Foco Customizado ou Concurso Específico (Opcional):</span>
               </label>
               
@@ -1288,16 +1297,16 @@ export default function PerfilPage() {
                   value={focoCustomizado}
                   onChange={(e) => setFocoCustomizado(e.target.value)}
                   placeholder="Ex: Concurso Professor SEEDUC, Perito PF, PROFMAT..."
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 />
 
                 {/* PREVIEW DO BADGE NA NAVBAR */}
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#18152a]/80 border border-slate-200/80 dark:border-amber-500/20 flex items-center justify-between text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1e2329]/80 border border border-[var(--border-board)] flex items-center justify-between text-xs">
                   <span className="text-slate-500 dark:text-zinc-400 font-medium text-[11px]">
                     Exibição na barra superior:
                   </span>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-800 dark:text-[#dedbd0] max-w-[200px] truncate">
-                    <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-800 dark:text-[#dedbd0] max-w-[200px] truncate">
+                    <Target className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
                     <span className="text-[10px] text-slate-500 dark:text-zinc-400">Foco:</span>
                     <span className="truncate">{focoFinal}</span>
                   </div>
@@ -1309,10 +1318,10 @@ export default function PerfilPage() {
             <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">5</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/15 dark:bg-amber-500/20 text-blue-600 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">5</span>
                   <span>Meta Diária de Resolução de Lemas:</span>
                 </label>
-                <span className="font-serif-math text-sm font-bold text-amber-600 dark:text-[#d9b452]">
+                <span className="font-serif-math text-sm font-bold text-blue-600 dark:text-[#d9b452]">
                   {metaQuestoesDia} lemas/dia
                 </span>
               </div>
@@ -1323,7 +1332,7 @@ export default function PerfilPage() {
                 step="5"
                 value={metaQuestoesDia}
                 onChange={(e) => setMetaQuestoesDia(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-blue-600 dark:accent-amber-500 cursor-pointer"
               />
               <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-sans">
                 Aproximadamente {metaQuestoesDia * 3} minutos diários de dedicação recomendados para consolidação de repertório.
@@ -1333,7 +1342,7 @@ export default function PerfilPage() {
         )}
 
         {activeTab === "academico" && (
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
               <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">Perfil Acadêmico</h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
@@ -1351,7 +1360,7 @@ export default function PerfilPage() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Seu nome"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 />
               </div>
 
@@ -1364,7 +1373,7 @@ export default function PerfilPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu.email@exemplo.com"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 />
               </div>
 
@@ -1375,7 +1384,7 @@ export default function PerfilPage() {
                 <select
                   value={escolaridade}
                   onChange={(e) => setEscolaridade(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 >
                   {ESCOLARIDADE_OPCOES.map((opt) => (
                     <option key={opt} value={opt}>
@@ -1392,7 +1401,7 @@ export default function PerfilPage() {
                 <select
                   value={faculdade}
                   onChange={(e) => setFaculdade(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 >
                   {FACULDADES_BRASIL.map((f) => (
                     <option key={f} value={f}>
@@ -1411,7 +1420,7 @@ export default function PerfilPage() {
                   value={semestre}
                   onChange={(e) => setSemestre(e.target.value)}
                   placeholder="Ex: 5º Período"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
                 />
               </div>
 
@@ -1423,7 +1432,7 @@ export default function PerfilPage() {
                   type="text"
                   defaultValue="Ciência de Dados & Machine Learning (Python/SQL)"
                   readOnly
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18152a]/60 border border-slate-200 dark:border-amber-500/10 text-sm text-slate-600 dark:text-zinc-400 cursor-not-allowed"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1e2329]/60 border border-slate-200 dark:border-amber-500/10 text-sm text-slate-600 dark:text-zinc-400 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -1431,7 +1440,7 @@ export default function PerfilPage() {
         )}
 
         {activeTab === "engine" && (
-          <div className="bg-white dark:bg-[#141222] border border-slate-200/80 dark:border-amber-500/15 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
               <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">
                 Calibração da MathAI Engine & Roteamento Axiomático
@@ -1442,17 +1451,17 @@ export default function PerfilPage() {
             </div>
 
             <div className="space-y-4 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 space-y-2">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-[#f5f0df]">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Sparkles className="w-4 h-4 text-blue-500 dark:text-amber-500" />
                   <span>Roteamento Multi-Modelo & Modulação Pedagógica</span>
                 </div>
                 <p>
-                  O LEMMAS opera integrado à MathAI Engine sob o padrão Strategy desacoplado: todas as dicas socráticas adaptam suas instruções internas de acordo com a preferência pedagógica selecionada (<strong className="text-amber-600 dark:text-[#d9b452]">{pedagogicalPreference}</strong>), modulando desde a intuição geométrica até axiomas formais.
+                  O LEMMAS opera integrado à MathAI Engine sob o padrão Strategy desacoplado: todas as dicas socráticas adaptam suas instruções internas de acordo com a preferência pedagógica selecionada (<strong className="text-blue-600 dark:text-[#d9b452]">{pedagogicalPreference}</strong>), modulando desde a intuição geométrica até axiomas formais.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 space-y-2">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-[#f5f0df]">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   <span>Repetição Espaçada SuperMemo-2 (SM-2) Determinística</span>
