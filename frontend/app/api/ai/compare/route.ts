@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateGeminiContent } from "@/lib/gemini";
-import { generateNvidiaContent } from "@/lib/nvidia";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 // Node.js process types for process.env
@@ -74,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     if (!enunciado || typeof enunciado !== "string" || enunciado.trim().length < 10) {
       return NextResponse.json(
-        { 
+        {
           error: "Envie uma dúvida ou problema matemático com no mínimo 10 caracteres. O LEMMAS é exclusivo para problemas, teoremas, demonstrações e deduções matemáticas ou físico-matemáticas.",
           blocked: true,
           reason: "query_muito_curta"
@@ -92,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     if (!isMathRelated(enunciado)) {
       return NextResponse.json(
-        { 
+        {
           error: "O LEMMAS é uma plataforma exclusiva para problemas, teoremas, demonstrações e deduções matemáticas ou físico-matemáticas. Não é permitido o uso para bate-papo casual, piadas ou assuntos fora do escopo das ciências matemáticas.",
           blocked: true,
           reason: "conteudo_nao_matematico"
@@ -107,7 +105,8 @@ export async function POST(req: NextRequest) {
       backendHeaders["Authorization"] = authorization;
     }
 
-    // 1. Backend FastAPI (timeout curto 8s para evitar sequestro do maxDuration da Vercel)
+    // 1. Backend FastAPI no Render (timeout 25s para caber no maxDuration=30s da Vercel)
+    // O backend no Render tem as chaves (GEMINI_API_KEY, NVIDIA_API_KEY) e faz o cascade interno
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
@@ -116,7 +115,7 @@ export async function POST(req: NextRequest) {
           enunciado,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(25000), // 25s - backend faz cascade interno
         cache: "no-store",
       });
 
@@ -132,113 +131,12 @@ export async function POST(req: NextRequest) {
           });
         }
       }
-      // Se backend falhou (não ok), cai para fallback direto
-      console.warn("[Segunda Opinião] Backend falhou ou timeout, acionando fallback Gemini direto");
+      console.warn("[Segunda Opinião] Backend respondeu com erro:", backendResp.status);
     } catch (backendErr) {
-      console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (8s), acionando fallback:", backendErr);
+      console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (25s):", backendErr);
     }
 
-    // 2. Fallback Primário: Gemini REST API (Segunda Opinião - dois modelos ortogonais)
-    const PROMPT_SISTEMA_COMPARE = `Você é o comparador de modelos do LEMMAS (MathAI Engine).
-Sua tarefa é gerar DOIS pareceres ORTOGONAIS sobre a mesma questão matemática.
-
-MODELO A — RIGOR AXIOMÁTICO:
-- Desenvolva EXCLUSIVAMENTE prova formal dedutiva universal
-- Use partição canônica de áreas, teoremas fundamentais, definições rigorosas
-- PROIBIDO: citar atalhos ad-hoc de concurso, fórmulas de memorização rápida (ex: r = (b+c-a)/2), "demonstração alternativa" que roube heurística
-- Estilo: demonstração matemática pura, passo a passo, axiomática
-
-MODELO B — INTUIÇÃO HEURÍSTICA:
-- Explore homotetia de figuras primitivas (3-4-5), simetrias, macetes rápidos de tangência
-- Atalhos de concurso, visualização geométrica, reconhecimento de padrões
-- ÚNICO autorizado a usar heurísticas e "pulo do gato"
-- Estilo: resolução rápida, insight visual, truques de banca
-
-FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
-{
-  "model_a": "parecer rigoroso axiomático completo com LaTeX em $...$ e $$...$$",
-  "model_b": "parecer heurístico intuitivo completo com LaTeX em $...$ e $$...$$",
-  "sintese": "síntese comparativa breve destacando onde cada abordagem brilha"
-}`;
-
-    const comparePrompt = `Questão para Segunda Opinião:
-${enunciado}
-${contextoQuestao ? `\nContexto adicional: ${contextoQuestao}` : ""}
-
-INSTRUÇÕES:
-1. Gere DOIS pareceres ortogonais conforme as definições acima
-2. Use LaTeX delimitado por $...$ (inline) ou $$...$$ (bloco) para TODAS as expressões matemáticas
-3. NUNCA coloque texto explicativo em português dentro de $...$
-4. Retorne EXCLUSIVAMENTE o objeto JSON especificado`;
-
-    // 2.1 Gemini (primário - rápido, <1.5s)
-    try {
-      const geminiRes = await generateGeminiContent({
-        prompt: comparePrompt,
-        systemInstruction: PROMPT_SISTEMA_COMPARE,
-        jsonOutput: true,
-        temperature: 0.2,
-        maxTokens: 3072,
-        timeoutMs: 14000,
-      });
-
-      const parsed = safeParseJsonWithLatex(geminiRes.text);
-      if (parsed && parsed.model_a && parsed.model_b) {
-        return NextResponse.json({
-          model_a: {
-            name: "Rigor Axiomático e Prova Formal",
-            role: "Demonstração Analítica & Invariantes",
-            content: parsed.model_a,
-          },
-          model_b: {
-            name: "Heurística & Atalhos Cognitivos",
-            role: "Intuição Heurística & Atalhos Cognitivos",
-            content: parsed.model_b,
-          },
-          sintese: parsed.sintese || "",
-          provider: "gemini-flash-lite",
-          model_used: geminiRes.model,
-        });
-      }
-    } catch (geminiErr) {
-      console.warn("[Segunda Opinião] Gemini indisponível, acionando NVIDIA NIM:", geminiErr);
-    }
-
-    // 2.2 NVIDIA NIM (secundário - Nemotron Reasoning)
-    if (process.env.NVIDIA_API_KEY) {
-      try {
-        const nvidiaRes = await generateNvidiaContent({
-          prompt: `${comparePrompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown.`,
-          systemInstruction: PROMPT_SISTEMA_COMPARE,
-          temperature: 0.2,
-          maxTokens: 3072,
-          timeoutMs: 14000,
-        });
-
-        const parsed = safeParseJsonWithLatex(nvidiaRes.text);
-        if (parsed && parsed.model_a && parsed.model_b) {
-          return NextResponse.json({
-            model_a: {
-              name: "Rigor Axiomático e Prova Formal",
-              role: "Demonstração Analítica & Invariantes",
-              content: parsed.model_a,
-            },
-            model_b: {
-              name: "Heurística & Atalhos Cognitivos",
-              role: "Intuição Heurística & Atalhos Cognitivos",
-              content: parsed.model_b,
-            },
-            sintese: parsed.sintese || "",
-            provider: "nvidia-nemotron",
-            model_used: nvidiaRes.model,
-          });
-        }
-      } catch (nvidiaErr) {
-        console.warn("[Segunda Opinião] Fallback NVIDIA NIM falhou:", nvidiaErr);
-      }
-    }
-
-    // 3. Fallback Determinístico (Uptime 100% garantido)
+    // 2. Fallback Determinístico (Uptime 100% garantido) — sem keys no Vercel
     const fallbackSintese = "Resposta em modo contingência: Modelo A fornece a demonstração formal universal; Modelo B oferece o atalho visual de concurso. Em produção, a IA geraria pareceres específicos ao enunciado.";
     const fallbackModelA = `**Modelo A — Rigor Axiomático (Contingência)**
 
@@ -252,7 +150,7 @@ Seja o problema enquadrado em seu domínio teórico. As hipóteses são explicit
 3. Encadeamento dedutivo sem saltos lógicos
 4. Conclusão pela validade universal do resultado
 
-$\\\\therefore$ A solução decorre diretamente dos axiomas e definições.`;
+$\\therefore$ A solução decorre diretamente dos axiomas e definições.`;
 
     const fallbackModelB = `**Modelo B — Intuição Heurística (Contingência)**
 
