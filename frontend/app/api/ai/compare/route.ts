@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 // Guardrail: palavras-chave que indicam conteúdo NÃO matemático ou spam/bate-papo
 const NON_MATH_KEYWORDS = [
@@ -96,27 +95,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fullPrompt = contextoQuestao 
-      ? `Contexto da questão: ${contextoQuestao}\n\nDúvida do estudante: ${enunciado}`
-      : enunciado;
-
     const authorization = req.headers.get("authorization") || "";
     const backendHeaders: Record<string, string> = { "Content-Type": "application/json" };
     if (authorization.startsWith("Bearer ")) {
       backendHeaders["Authorization"] = authorization;
     }
 
-    // 1. Centralização: Requisição ao Backend FastAPI (MathAI Engine no Render)
-    // Timeout coordenado de 8 segundos: permite resposta se aquecido, mas não sequestra o tempo total
+    // A inferência é centralizada no MathAI Engine. O backend seleciona o
+    // Nemotron Lightning e só usa Gemini como contingência, mantendo o mesmo
+    // contrato e a telemetria da requisição.
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
         headers: backendHeaders,
         body: JSON.stringify({
-          enunciado: fullPrompt,
+          enunciado,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(38000),
         cache: "no-store",
       });
 
@@ -131,119 +127,23 @@ export async function POST(req: NextRequest) {
             model_used: backendData.model_used || "mathai-gateway",
           });
         }
-      } else {
-        console.warn(`[Segunda Opinião] Backend respondeu status ${backendResp.status}. Ativando fallback resiliente do Next.js...`);
+        return NextResponse.json(
+          { error: "O MathAI Engine retornou uma resposta incompleta. Tente novamente." },
+          { status: 502 },
+        );
       }
+      const errorPayload = await backendResp.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorPayload.detail || errorPayload.error || "A Segunda Opinião está temporariamente indisponível." },
+        { status: backendResp.status },
+      );
     } catch (backendErr) {
       console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend:", backendErr);
     }
 
-    // 2. Inferência Direta de Alta Performance via Gemini (Latência ~1s com KaTeX real)
-    try {
-      const { generateGeminiContent } = await import("@/lib/gemini");
-      const systemInstruction = `Você é o motor de Segunda Opinião do LEMMAS (MathAI Engine), especializado em resolver problemas matemáticos comparando duas correntes pedagógicas consagradas:
-
-REGRAS ESTRITAS DE LATEX E FORMATAÇÃO:
-- TODA e qualquer expressão, equação ou símbolo matemático DEVE estar rigorosamente delimitado por $...$ (para inline, ex: $r = 2\\text{ cm}$, $a=6$) ou $$...$$ (para fórmulas em destaque em linha própria, ex: $$r = \\frac{a + b - c}{2}$$).
-- NUNCA escreva comandos LaTeX como \\frac, \\sqrt, \\implies, \\text ou fórmulas soltas sem os delimitadores $ ou $$.
-- NUNCA deixe delimitadores desbalanceados ou abertos (como $... sem fechar).
-- Utilize cabeçalhos markdown ### limpos para cada etapa.
-
-REGRA DE OURO: DIVERGÊNCIA METODOLÓGICA ESTRITA (ORTOGONALIDADE & NÃO-CANIBALIZAÇÃO):
-O MODELO A e o MODELO B NUNCA devem convergir para o mesmo método, atalho ou fórmula intermediária. É TERMINANTEMENTE PROIBIDO que ambos ensinem o mesmo macete no final.
-
-1. MODEL_A ("Rigor Axiomático e Prova Formal"):
-- Foco exclusivo em demonstração formal, dedutiva e analítica a partir de primeiros princípios e teoremas universais (ex: decomposição axiomática em áreas $S = p \\cdot r$, geometria analítica, sistemas de equações fundamentais ou cálculo).
-- PROIBIÇÃO EXPRESSA: NUNCA utilize fórmulas mnemônicas ad-hoc de concurso (como $r = \\frac{b+c-a}{2}$ no triângulo retângulo), atalhos locais de prova rápida e NUNCA inclua seções de 'demonstração alternativa' que roubem a heurística do Modelo B. Desenvolva UMA ÚNICA demonstração dedutiva pura, universal e rigorosa.
-- Estrutura esperada:
-  ### 1. Definições e Lemas Universais
-  ### 2. Dedução Analítica Formal
-  ### 3. Solução Axiomática Passo a Passo
-  ### 4. Domínio de Validade e Invariantes
-
-2. MODEL_B ("Heurística & Atalhos Cognitivos"):
-- Foco na intuição geométrica/visual e velocidade de prova. É AQUI e APENAS AQUI que devem ser explorados: reconhecimento de padrões (ex: homotetia de ternas pitagóricas 3-4-5), simetria, análise de casos extremos e os macetes rápidos de concurso (como tangências no vértice reto gerando $r = \\frac{b+c-a}{2}$).
-- Estrutura esperada:
-  ### 1. Visualização Intuitiva & Padrões
-  ### 2. O Atalho Tático (Pulo do Gato)
-  ### 3. Resolução Rápida com Mínimo de Contas
-  ### 4. Dica Socrática para Provas de Alto Rendimento
-
-3. SINTESE:
-- Contraste pedagógico cristalino mostrando como o rigor formal constrói a fundamentação axiomática universal para o ensino, enquanto a heurística tática fornece agilidade mental indispensável em vestibulares e concursos militares.
-
-Retorne EXCLUSIVAMENTE um objeto JSON válido no seguinte formato:
-{
-  "model_a": {
-    "name": "Rigor Axiomático e Prova Formal",
-    "role": "Demonstração Analítica & Invariantes",
-    "content": "texto em markdown com fórmulas LaTeX devidamente delimitadas ($...$ e $$...$$)"
-  },
-  "model_b": {
-    "name": "Heurística & Atalhos Cognitivos",
-    "role": "Intuição Heurística & Atalhos Cognitivos",
-    "content": "texto em markdown com fórmulas LaTeX devidamente delimitadas ($...$ e $$...$$)"
-  },
-  "sintese": "reflexão metacognitiva sobre as duas abordagens com fórmulas em LaTeX delimitadas"
-}`;
-
-      const geminiRes = await generateGeminiContent({
-        prompt: `Problema / Enunciado:\n${fullPrompt}`,
-        systemInstruction,
-        jsonOutput: true,
-        temperature: 0.2,
-        timeoutMs: 12000,
-      });
-
-      const parsed = safeParseJsonWithLatex(geminiRes.text);
-      if (parsed.model_a && parsed.model_b) {
-        return NextResponse.json({
-          model_a: parsed.model_a,
-          model_b: parsed.model_b,
-          sintese: parsed.sintese || "",
-          provider: "gemini-cascade",
-          model_used: geminiRes.model,
-        });
-      }
-    } catch (geminiErr) {
-      console.warn("[Segunda Opinião] Fallback Gemini falhou:", geminiErr);
-    }
-
-    // 2.5. Inferência Terciária de Respaldo via NVIDIA NIM Direct
-    try {
-      const { generateNvidiaContent } = await import("@/lib/nvidia");
-      const systemInstructionNvidia = `Você é o motor de Segunda Opinião do LEMMAS (MathAI Engine).
-Retorne EXCLUSIVAMENTE um JSON válido com chaves:
-{
-  "model_a": { "name": "Rigor Axiomático e Prova Formal", "role": "Demonstração Analítica & Invariantes", "content": "..." },
-  "model_b": { "name": "Heurística & Atalhos Cognitivos", "role": "Intuição Heurística & Atalhos Cognitivos", "content": "..." },
-  "sintese": "..."
-}`;
-      const nvidiaRes = await generateNvidiaContent({
-        prompt: `Problema / Enunciado:\n${fullPrompt}`,
-        systemInstruction: systemInstructionNvidia,
-        temperature: 0.2,
-        timeoutMs: 8000,
-      });
-
-      const parsedNvidia = safeParseJsonWithLatex(nvidiaRes.text);
-      if (parsedNvidia.model_a && parsedNvidia.model_b) {
-        return NextResponse.json({
-          model_a: parsedNvidia.model_a,
-          model_b: parsedNvidia.model_b,
-          sintese: parsedNvidia.sintese || "",
-          provider: "nvidia-nim",
-          model_used: nvidiaRes.model,
-        });
-      }
-    } catch (nvidiaErr) {
-      console.warn("[Segunda Opinião] Fallback NVIDIA NIM falhou:", nvidiaErr);
-    }
-
-    // 3. Quando todos os provedores falharem, retorna indisponibilidade real (HTTP 503) sem mascarar falha
     return NextResponse.json(
       {
-        error: "O motor de Segunda Opinião está temporariamente indisponível. Todos os provedores cognitivos estão sobrecarregados ou sem resposta.",
+        error: "O MathAI Engine excedeu o tempo de resposta. Tente novamente em alguns instantes.",
         status: "unavailable",
       },
       { status: 503 }
