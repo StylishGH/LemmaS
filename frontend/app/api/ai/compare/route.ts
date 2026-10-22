@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
       if (backendResp.ok) {
         const backendData = await backendResp.json();
         if (backendData.model_a && backendData.model_b) {
+          // Backend já retorna no formato correto (objetos com name/role/content)
           return NextResponse.json({
             model_a: backendData.model_a,
             model_b: backendData.model_b,
@@ -185,8 +186,16 @@ INSTRUÇÕES:
       const parsed = safeParseJsonWithLatex(geminiRes.text);
       if (parsed && parsed.model_a && parsed.model_b) {
         return NextResponse.json({
-          model_a: parsed.model_a,
-          model_b: parsed.model_b,
+          model_a: {
+            name: "Rigor Axiomático e Prova Formal",
+            role: "Demonstração Analítica & Invariantes",
+            content: parsed.model_a,
+          },
+          model_b: {
+            name: "Heurística & Atalhos Cognitivos",
+            role: "Intuição Heurística & Atalhos Cognitivos",
+            content: parsed.model_b,
+          },
           sintese: parsed.sintese || "",
           provider: "gemini-flash-lite",
           model_used: geminiRes.model,
@@ -210,8 +219,16 @@ INSTRUÇÕES:
         const parsed = safeParseJsonWithLatex(nvidiaRes.text);
         if (parsed && parsed.model_a && parsed.model_b) {
           return NextResponse.json({
-            model_a: parsed.model_a,
-            model_b: parsed.model_b,
+            model_a: {
+              name: "Rigor Axiomático e Prova Formal",
+              role: "Demonstração Analítica & Invariantes",
+              content: parsed.model_a,
+            },
+            model_b: {
+              name: "Heurística & Atalhos Cognitivos",
+              role: "Intuição Heurística & Atalhos Cognitivos",
+              content: parsed.model_b,
+            },
             sintese: parsed.sintese || "",
             provider: "nvidia-nemotron",
             model_used: nvidiaRes.model,
@@ -223,8 +240,8 @@ INSTRUÇÕES:
     }
 
     // 3. Fallback Determinístico (Uptime 100% garantido)
-    return NextResponse.json({
-      model_a: `**Modelo A — Rigor Axiomático (Contingência)**
+    const fallbackSintese = "Resposta em modo contingência: Modelo A fornece a demonstração formal universal; Modelo B oferece o atalho visual de concurso. Em produção, a IA geraria pareceres específicos ao enunciado.";
+    const fallbackModelA = `**Modelo A — Rigor Axiomático (Contingência)**
 
 Análise rigorosa do enunciado proposto. Pela definição formal dos objetos matemáticos envolvidos, aplicamos a estrutura axiomática padrão.
 
@@ -232,27 +249,40 @@ Seja o problema enquadrado em seu domínio teórico. As hipóteses são explicit
 
 **Demonstração:**
 1. Identificação das condições necessárias e suficientes
-2. Aplicação da propriedade canônica (ex: partição de áreas $S = p \\cdot r$ para triângulos)
+2. Aplicação da propriedade canônica (ex: partição de áreas $S = p \\\\cdot r$ para triângulos)
 3. Encadeamento dedutivo sem saltos lógicos
 4. Conclusão pela validade universal do resultado
 
-$\\therefore$ A solução decorre diretamente dos axiomas e definições.`,
-      model_b: `**Modelo B — Intuição Heurística (Contingência)**
+$\\\\therefore$ A solução decorre diretamente dos axiomas e definições.`;
+
+    const fallbackModelB = `**Modelo B — Intuição Heurística (Contingência)**
 
 Visão rápida: reconheça o padrão clássico. Muitas questões dessa família reduzem-se a figuras notáveis.
 
 **Macete direto:**
 - Identifique o triângulo 3-4-5 ou homotetia de primitiva
-- Use tangência e simetria: $r = \\frac{b+c-a}{2}$ (triângulo retângulo)
-- Área pelo produto dos catetos ou $S = p \\cdot r$
+- Use tangência e simetria: $r = \\\\frac{b+c-a}{2}$ (triângulo retângulo)
+- Área pelo produto dos catetos ou $S = p \\\\cdot r$
 
 **Resolução em 3 passos:**
 1. Desenhe a figura e marque o que é igual
 2. Aplique a relação métrica imediata
 3. Confira no gabarito
 
-O "pulo do gato" está na simetria da configuração.`,
-      sintese: "Resposta em modo contingência: Modelo A fornece a demonstração formal universal; Modelo B oferece o atalho visual de concurso. Em produção, a IA geraria pareceres específicos ao enunciado.",
+O "pulo do gato" está na simetria da configuração.`;
+
+    return NextResponse.json({
+      model_a: {
+        name: "Rigor Axiomático e Prova Formal",
+        role: "Demonstração Analítica & Invariantes",
+        content: fallbackModelA,
+      },
+      model_b: {
+        name: "Heurística & Atalhos Cognitivos",
+        role: "Intuição Heurística & Atalhos Cognitivos",
+        content: fallbackModelB,
+      },
+      sintese: fallbackSintese,
       provider: "lemmas-contingency",
       model_used: "deterministic-fallback",
     });
