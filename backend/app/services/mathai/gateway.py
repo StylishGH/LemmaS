@@ -313,8 +313,20 @@ class GeminiProvider(BaseLLMProvider):
             )
 
             candidate_models = [preferred_model] if preferred_model else self.models_cascade
+            start_provider_time = time.perf_counter()
             for model_name in candidate_models:
                 try:
+                    if time_budget is not None:
+                        remaining = time_budget - (time.perf_counter() - start_provider_time)
+                        if remaining < 2.0:
+                            logger.warning("[CID:%s] [Gemini] Orçamento esgotado antes do modelo %s.", cid, model_name)
+                            break
+                        effective_timeout = min(self.timeout, max(2.0, remaining - 0.5))
+                        effective_timeout_ms = int(round(effective_timeout * 1000))
+                        client = genai.Client(
+                            api_key=self.api_key,
+                            http_options=types.HttpOptions(timeout=effective_timeout_ms),
+                        )
                     logger.info("[CID:%s] [Gemini] Tentativa de cascata; model=%s; timeout=%.1fs; task_type=%s", cid, model_name, effective_timeout, task_type)
                     response = client.models.generate_content(
                         model=model_name,
@@ -438,7 +450,7 @@ class MathAiGateway:
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=settings.NVIDIA_API_KEY,
             default_models=NVIDIA_NIM_MODELS,
-            timeout=(2.0, 14.0),
+            timeout=(2.0, 24.0),
         )
 
         self.deepseek_provider = OpenAICompatibleProvider(
@@ -526,12 +538,20 @@ class MathAiGateway:
                 break
 
             call_start = time.perf_counter()
+            # `preferred_model` é específico do provedor. Em Segunda Opinião
+            # ele fixa o Nemotron Lightning, sem enviar esse identificador para
+            # Gemini, OpenRouter ou DeepSeek caso a contingência seja acionada.
+            provider_preferred_model = (
+                preferred_model
+                if task_type != "second_opinion" or provider.name == "nvidia"
+                else None
+            )
             result = provider.complete(
                 messages=all_messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
                 json_output=json_output,
-                preferred_model=preferred_model,
+                preferred_model=provider_preferred_model,
                 task_type=task_type,
                 time_budget=remaining,
                 correlation_id=cid,
@@ -564,6 +584,37 @@ class MathAiGateway:
                         )
                         continue
                     content = cleaned_content
+
+                    if task_type == "second_opinion":
+                        try:
+                            comparison = json.loads(content)
+                            valid_comparison = all(
+                                isinstance(comparison.get(key), dict)
+                                and isinstance(comparison[key].get("content"), str)
+                                and bool(comparison[key]["content"].strip())
+                                for key in ("model_a", "model_b")
+                            ) and isinstance(comparison.get("sintese"), str) and bool(comparison["sintese"].strip())
+                        except (TypeError, ValueError):
+                            valid_comparison = False
+
+                        if not valid_comparison:
+                            logger.warning(
+                                "Provider [%s] retornou comparação incompleta; acionando próximo fallback.",
+                                provider.name,
+                            )
+                            self._record_telemetry(
+                                evaluation_id=evaluation_id,
+                                provider=provider.name,
+                                model_used=result.get("model_used", "unknown"),
+                                task_type=task_type,
+                                prompt_tokens=result.get("prompt_tokens", 0),
+                                completion_tokens=result.get("completion_tokens", 0),
+                                latency_ms=call_latency,
+                                status_code=422,
+                                success=False,
+                                error_message="Comparação sem os dois modelos e a síntese",
+                            )
+                            continue
 
                 total_latency = round((time.perf_counter() - start_time) * 1000, 2)
                 result.update({
@@ -643,6 +694,18 @@ class MathAiGateway:
                 cascade.append(self.gemini_provider)
             if self.nvidia_nim_provider.is_available():
                 cascade.append(self.nvidia_nim_provider)
+            if self.openrouter_provider.is_available():
+                cascade.append(self.openrouter_provider)
+            if self.deepseek_provider.is_available():
+                cascade.append(self.deepseek_provider)
+        elif task_type == "second_opinion":
+            # A comparação precisa de uma resposta estruturada, com duas linhas
+            # de raciocínio completas. O Nemotron Lightning é o modelo rápido
+            # validado para esse papel; Gemini permanece como contingência.
+            if self.nvidia_nim_provider.is_available():
+                cascade.append(self.nvidia_nim_provider)
+            if self.gemini_provider.is_available():
+                cascade.append(self.gemini_provider)
             if self.openrouter_provider.is_available():
                 cascade.append(self.openrouter_provider)
             if self.deepseek_provider.is_available():
