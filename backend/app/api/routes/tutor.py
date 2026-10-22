@@ -312,7 +312,7 @@ class SecondOpinionResponse(BaseModel):
 
 
 class SecondOpinionRequest(BaseModel):
-    enunciado: str = Field(..., min_length=5, max_length=1500, description="Dúvida ou problema matemático")
+    enunciado: str = Field(..., min_length=5, max_length=2500, description="Dúvida ou problema matemático")
     contextoQuestao: Optional[str] = Field(None, description="Contexto adicional da questão")
 
 
@@ -353,6 +353,7 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         "  ### 4. Dica Socrática para Provas de Alto Rendimento\n\n"
         "3. SÍNTESE PEDAGÓGICA (Para o Licenciando em Matemática):\n"
         "- Contraste didático entre a universalidade da prova formal do Modelo A (essencial para fundamentar o ensino e polígonos genéricos) e a economia cognitiva do atalho do Modelo B (essencial para agilidade em provas de alto rendimento).\n\n"
+        "- Seja objetivo: cada seção deve conter apenas os passos indispensáveis; a resposta inteira deve caber em cerca de 1.100 tokens.\n\n"
         "Responda EXCLUSIVAMENTE em formato JSON com chaves: model_a (name, role, content), model_b (name, role, content), sintese."
     )
 
@@ -360,9 +361,15 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         messages=[{"role": "user", "content": prompt}],
         system_prompt=system_instruction,
         temperature=0.2,
-        max_tokens=1600,
+        # O Lightning 30B da NVIDIA responde rapidamente e mantém capacidade
+        # suficiente para produzir duas leituras matemáticas independentes.
+        # Fixar o modelo evita gastar o orçamento da requisição sondando modelos
+        # menos adequados antes de consultar o fallback Gemini.
+        max_tokens=1150,
         json_output=True,
-        task_type="axiomatic_reasoning",
+        preferred_model="nvidia/nemotron-3.5-lightning-30b-a3b",
+        task_type="second_opinion",
+        total_budget_seconds=32.0,
     )
 
     content_raw = res.get("content", "{}")
