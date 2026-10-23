@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from typing import List, Optional
+from urllib.parse import urlsplit
 from dotenv import load_dotenv
 
 # Carrega variáveis de /etc/secrets/.env (Render Secret Files), do .env do backend ou da raiz do repositório
@@ -71,6 +72,8 @@ class Settings:
         # Infraestrutura Opcional de Roteamento (9Router local ou cluster)
         self.NINEROUTER_URL: str = os.getenv("NINEROUTER_URL", "").rstrip("/")
         self.NINEROUTER_API_KEY: str = os.getenv("NINEROUTER_API_KEY", "").strip()
+        self.OMNIROUTE_URL: str = os.getenv("OMNIROUTE_URL", "").strip().rstrip("/")
+        self.OMNIROUTE_API_KEY: str = os.getenv("OMNIROUTE_API_KEY", "").strip()
 
         # Provedor Aberto Especializado Local (vLLM / Ollama / LM Studio) - Rota Nível E
         self.PRIMARY_AI_PROVIDER: str = os.getenv("PRIMARY_AI_PROVIDER", "auto").strip().lower()
@@ -107,6 +110,16 @@ class Settings:
     def has_9router(self) -> bool:
         """Verifica se o endpoint do 9Router está explicitamente configurado."""
         return bool(self.NINEROUTER_URL)
+
+    @property
+    def has_omniroute(self) -> bool:
+        """Só habilita o OmniRoute com URL HTTPS e chave configuradas."""
+        parsed_url = urlsplit(self.OMNIROUTE_URL)
+        return bool(
+            self.OMNIROUTE_API_KEY
+            and parsed_url.scheme == "https"
+            and parsed_url.netloc
+        )
 
     @property
     def has_local_llm(self) -> bool:
