@@ -20,14 +20,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## OmniRoute configuration
+## AI provider routing
 
 The `/api/ai/hint` and `/api/ai/compare` routes are proxied by this Next.js app to
-the FastAPI backend. FastAPI owns provider selection, the `math-socratic`
-OmniRoute combo, and bounded fallbacks; Next.js must not start a second direct
-provider cascade when the backend is slow or unavailable. Configure
-`OMNIROUTE_URL` (HTTPS) and `OMNIROUTE_API_KEY` only in the backend environment
-(Render), never in Vercel or with a `NEXT_PUBLIC_` prefix.
+the FastAPI backend. For these routes, FastAPI calls providers directly in
+sequence: NVIDIA NIM, Groq, OpenRouter, then River when configured. Provider
+credentials and model settings belong in the backend environment (Render), never
+in Vercel or with a `NEXT_PUBLIC_` prefix. Next.js must not start a second provider
+cascade when the backend is slow or unavailable.
 
 For local development, point `LEMMAS_BACKEND_URL` at the local FastAPI server
 (for example, `http://localhost:8001`) and run the backend separately.

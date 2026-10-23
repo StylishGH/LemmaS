@@ -168,22 +168,42 @@ flowchart TD
         subgraph Providers["Provedores Plugáveis (BaseLLMProvider)"]
             P1[LocalLLMProvider\nvLLM / Ollama\nQwen2.5-Math-7B]
             P2[NvidiaNimProvider\nNemotron 3.5 Lightning]
-            P3[DeepSeekProvider\nDeepSeek Reasoner R1]
-            P4[GeminiProvider\nGemini Flash Lite]
-            P5[DeterministicAutonomousProvider\nSymPy & Heurística Local]
+            P3[GroqProvider\nGPT-OSS 20B]
+            P4[OpenRouterProvider\nMistral Nemo]
+            P5[RiverProvider\nDeepSeek V4.1 Flash]
+            P6[DeepSeekProvider\nDeepSeek Reasoner]
+            P7[GeminiProvider\nGemini Flash Lite]
+            P8[DeterministicAutonomousProvider\nSymPy & Heurística Local]
         end
 
-        Gateway -->|1. Provedor Primário Configurado| P1
+        Gateway -->|Demais tarefas: provedor configurado| P1
         P1 -.->|Timeout / 404 / 503| P2
-        P2 -.->|Quota / Erro de JSON| P3
-        P3 -.->|Indisponibilidade| P4
-        P4 -.->|Contingência Final| P5
+        P2 -.->|Falha| P6
+        P6 -.->|Indisponibilidade| P7
+        P7 -.->|Contingência Final| P8
+        Gateway -->|Dicas / Segunda Opinião| P2
+        P2 -.->|Timeout / 429 / 503| P3
+        P3 -.->|Timeout / quota| P4
+        P4 -.->|Contingência| P5
+        P5 -.->|Indisponibilidade| P8
 
         Gateway -->|Gravação N:1 em cada tentativa| TelemetryDB[(Supabase: ai_inference_logs)]
     end
 ```
 
 ### 6.2. O Contrato do Padrão Strategy (`BaseLLMProvider`)
+
+Para dicas socráticas e Segunda Opinião, o `MathAiGateway` chama os provedores diretamente,
+em sequência: NVIDIA NIM, Groq (quando configurado), OpenRouter e River (quando
+configurado). Cada tentativa tem limite próprio de tempo; respostas HTTP 429/503 e
+timeouts passam ao próximo provedor. River usa `deepseek-ai/DeepSeek-V4.1-Flash` por
+padrão; o endpoint, modelo e chave são configuráveis pelo ambiente do backend.
+O NIM tem ainda um limitador local de 35 chamadas por minuto por processo para manter
+margem abaixo do limite de 40 RPM informado pelo provedor. Esse limitador não coordena
+múltiplas instâncias do backend. O fallback determinístico permanece como última
+contingência, sem depender da VM OmniRoute.
+`NVIDIA_API_KEY_2` é uma credencial reserva: só é tentada após HTTP 401/403 da
+credencial primária; respostas 429 seguem para o próximo provedor sem rotação de chave.
 
 Cada provedor implementa a interface abstrata:
 
@@ -226,4 +246,3 @@ Localizado em `data/schemas/11_ai_inference_telemetry.sql`:
 - **Cardinalidade N:1:** Uma avaliação (`evaluation_id`) pode conter múltiplas tentativas (`attempt_number`), registrando qual provedor falhou (com código HTTP e latência) e qual obteve êxito.
 - **Rastreabilidade de Custo:** Rastreia `prompt_tokens`, `completion_tokens`, `total_tokens` e `estimated_cost_usd` por inferência individual.
 - **Auditoria de Treinamento:** Permite correlacionar saídas de SLMs locais versus LLMs comerciais para benchmarks contínuos de Pass@1 e aderência axiomática.
-
