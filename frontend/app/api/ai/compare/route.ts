@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
+import { generateOmniRouteContent } from "@/lib/omniroute";
 
 // Node.js process types for process.env
 /// <reference types="node" />
@@ -59,7 +60,7 @@ function isMathRelated(text: string): boolean {
   for (const keyword of MATH_KEYWORDS) {
     if (lower.includes(keyword)) return true;
   }
-  const mathNotationRegex = /(\$.*?\$|\\\(.*?\\\)|\\\[.*?\\\]|\\frac|\\sqrt|\\sum|\\int|\^\{?\d+\}?|[∑∏∫∂∇√∞πθαβγδεζηλμσφω≤≥≠≈≡∈∉⊂⊃∪∩∅∀∃¬∧∨⇒⇔])/;
+  const mathNotationRegex = /(\$.*?\$|\\(.*?\\)|\\[.*?\\]|\\frac|\\sqrt|\\sum|\\int|\^\{?\d+\}?|[∑∏∫∂∇√∞πθαβγδεζηλμσφω≤≥≠≈≡∈∉⊂⊃∪∩∅∀∃¬∧∨⇒⇔])/;
   if (mathNotationRegex.test(text)) return true;
   const basicMathRegex = /\d+\s*[\+\-\*\/\^=<>]\s*\d+|\d+\s*(?:cm|m|km|g|kg|L|s|min|h|°)\b/;
   return basicMathRegex.test(text);
@@ -106,7 +107,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Backend FastAPI no Render (timeout 25s para caber no maxDuration=30s da Vercel)
-    // O backend no Render tem as chaves (GEMINI_API_KEY, NVIDIA_API_KEY) e faz o cascade interno
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
           enunciado,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(25000), // 25s - backend faz cascade interno
+        signal: AbortSignal.timeout(25000),
         cache: "no-store",
       });
 
@@ -136,7 +136,56 @@ export async function POST(req: NextRequest) {
       console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (25s):", backendErr);
     }
 
-    // 2. Fallback Determinístico (Uptime 100% garantido) — sem keys no Vercel
+    // 2. OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
+    if (process.env.OMNIROUTE_API_KEY) {
+      try {
+        const omniRes = await generateOmniRouteContent({
+          prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere uma comparação entre duas abordagens para a questão matemática abaixo.
+
+MODELO A — Rigor Axiomático e Prova Formal: desenvolva exclusivamente prova formal dedutiva universal, sem atalhos de concurso, sem fórmulas de memorização rápida.
+
+MODELO B — Intuição Heurística: explore homotetia de figuras primitivas, simetrias e macetes rápidos de tangência.
+
+ENUNCIADO: ${enunciado}
+${contextoQuestao ? `CONTEXTO: ${contextoQuestao}` : ""}
+
+Retorne EXCLUSIVAMENTE JSON válido com:
+\{
+  "model_a": "conteúdo completo do Modelo A com LaTeX em \$\$...\$\$",
+  "model_b": "conteúdo completo do Modelo B com LaTeX em \$\$...\$\$",
+  "sintese": "síntese pedagógica comparando as duas abordagens"
+\}`,
+          systemInstruction: "Você é um tutor de matemática especializado em comparação de métodos. Responda SOMENTE com JSON válido.",
+          temperature: 0.15,
+          maxTokens: 2000,
+          timeoutMs: 12000,
+        });
+
+        const parsed = safeParseJsonWithLatex(omniRes.text);
+        if (parsed && (parsed.model_a || parsed.model_b)) {
+          return NextResponse.json({
+            model_a: {
+              name: "Rigor Axiomático e Prova Formal",
+              role: "Demonstração Analítica & Invariantes",
+              content: parsed.model_a || "",
+            },
+            model_b: {
+              name: "Heurística & Atalhos Cognitivos",
+              role: "Intuição Heurística & Atalhos Cognitivos",
+              content: parsed.model_b || "",
+            },
+            sintese: parsed.sintese || "Comparação gerada pelo OmniRoute (Azure).",
+            provider: "omniroute-azure",
+            ia_usada: "OmniRoute (Azure) - MathAI",
+            model_used: omniRes.model || "math-socratic",
+          });
+        }
+      } catch (omniErr) {
+        console.warn("[Segunda Opinião] Fallback OmniRoute falhou:", omniErr);
+      }
+    }
+
+    // 3. Fallback Determinístico (Uptime 100% garantido) — sem keys no Vercel
     const fallbackSintese = "Resposta em modo contingência: Modelo A fornece a demonstração formal universal; Modelo B oferece o atalho visual de concurso. Em produção, a IA geraria pareceres específicos ao enunciado.";
     const fallbackModelA = `**Modelo A — Rigor Axiomático (Contingência)**
 
@@ -146,7 +195,7 @@ Seja o problema enquadrado em seu domínio teórico. As hipóteses são explicit
 
 **Demonstração:**
 1. Identificação das condições necessárias e suficientes
-2. Aplicação da propriedade canônica (ex: partição de áreas $S = p \\\\cdot r$ para triângulos)
+2. Aplicação da propriedade canônica (ex: partição de áreas $S = p \\cdot r$ para triângulos)
 3. Encadeamento dedutivo sem saltos lógicos
 4. Conclusão pela validade universal do resultado
 
@@ -158,8 +207,8 @@ Visão rápida: reconheça o padrão clássico. Muitas questões dessa família 
 
 **Macete direto:**
 - Identifique o triângulo 3-4-5 ou homotetia de primitiva
-- Use tangência e simetria: $r = \\\\frac{b+c-a}{2}$ (triângulo retângulo)
-- Área pelo produto dos catetos ou $S = p \\\\cdot r$
+- Use tangência e simetria: $r = \\frac{b+c-a}{2}$ (triângulo retângulo)
+- Área pelo produto dos catetos ou $S = p \\cdot r$
 
 **Resolução em 3 passos:**
 1. Desenhe a figura e marque o que é igual
