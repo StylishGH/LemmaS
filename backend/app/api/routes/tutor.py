@@ -361,9 +361,7 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         messages=[{"role": "user", "content": prompt}],
         system_prompt=system_instruction,
         temperature=0.2,
-        # O OmniRoute seleciona o combo math-socratic; demais provedores são
-        # contingência e mantêm seus modelos padrão.
-        max_tokens=1150,
+        max_tokens=2048,
         json_output=True,
         preferred_model="nvidia/nemotron-3.5-lightning-30b-a3b",
         task_type="second_opinion",

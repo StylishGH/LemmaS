@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 from typing import List, Optional
-from urllib.parse import urlsplit
 from dotenv import load_dotenv
 
 # Carrega variáveis de /etc/secrets/.env (Render Secret Files), do .env do backend ou da raiz do repositório
@@ -55,9 +54,23 @@ class Settings:
         # Provedores Diretos de IA (Produção & Nuvem)
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
         self.NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "").strip()
+        self.NVIDIA_API_KEY_2: str = os.getenv("NVIDIA_API_KEY_2", "").strip()
+        self.GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
+        self.GROQ_MODEL: str = os.getenv(
+            "GROQ_MODEL", "openai/gpt-oss-20b"
+        ).strip()
+        self.RIVER_API_KEY: str = os.getenv("RIVER_API_KEY", "").strip()
+        self.RIVER_MODEL: str = os.getenv(
+            "RIVER_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash"
+        ).strip()
+        self.RIVER_API_URL: str = os.getenv(
+            "RIVER_API_URL", "https://api.river.ai/v1"
+        ).rstrip("/")
         self.DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
         self.OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "").strip()
-        self.OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openrouter/auto").strip()
+        self.OPENROUTER_MODEL: str = os.getenv(
+            "OPENROUTER_MODEL", "mistralai/mistral-nemo"
+        ).strip()
         self.OPENROUTER_API_URL: str = os.getenv(
             "OPENROUTER_API_URL", "https://openrouter.ai/api/v1"
         ).rstrip("/")
@@ -72,8 +85,6 @@ class Settings:
         # Infraestrutura Opcional de Roteamento (9Router local ou cluster)
         self.NINEROUTER_URL: str = os.getenv("NINEROUTER_URL", "").rstrip("/")
         self.NINEROUTER_API_KEY: str = os.getenv("NINEROUTER_API_KEY", "").strip()
-        self.OMNIROUTE_URL: str = os.getenv("OMNIROUTE_URL", "").strip().rstrip("/")
-        self.OMNIROUTE_API_KEY: str = os.getenv("OMNIROUTE_API_KEY", "").strip()
 
         # Provedor Aberto Especializado Local (vLLM / Ollama / LM Studio) - Rota Nível E
         self.PRIMARY_AI_PROVIDER: str = os.getenv("PRIMARY_AI_PROVIDER", "auto").strip().lower()
@@ -94,7 +105,17 @@ class Settings:
     @property
     def has_nvidia(self) -> bool:
         """Verifica se a chave direta da NVIDIA NIM está configurada."""
-        return bool(self.NVIDIA_API_KEY)
+        return bool(self.NVIDIA_API_KEY or self.NVIDIA_API_KEY_2)
+
+    @property
+    def has_groq(self) -> bool:
+        """Verifica se a chave da Groq está configurada."""
+        return bool(self.GROQ_API_KEY and self.GROQ_MODEL)
+
+    @property
+    def has_river(self) -> bool:
+        """Verifica se as credenciais e o modelo do River estão configurados."""
+        return bool(self.RIVER_API_KEY and self.RIVER_MODEL and self.RIVER_API_URL)
 
     @property
     def has_deepseek(self) -> bool:
@@ -110,16 +131,6 @@ class Settings:
     def has_9router(self) -> bool:
         """Verifica se o endpoint do 9Router está explicitamente configurado."""
         return bool(self.NINEROUTER_URL)
-
-    @property
-    def has_omniroute(self) -> bool:
-        """Só habilita o OmniRoute com URL HTTPS e chave configuradas."""
-        parsed_url = urlsplit(self.OMNIROUTE_URL)
-        return bool(
-            self.OMNIROUTE_API_KEY
-            and parsed_url.scheme == "https"
-            and parsed_url.netloc
-        )
 
     @property
     def has_local_llm(self) -> bool:
