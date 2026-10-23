@@ -126,6 +126,8 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             return settings.has_openrouter
         elif self.name == "9router":
             return settings.has_9router
+        elif self.name == "omniroute":
+            return settings.has_omniroute
         return bool(self.effective_base_url and self.effective_api_key)
 
     def complete(
@@ -481,6 +483,21 @@ class MathAiGateway:
             timeout=(0.8, 3.5),
         )
 
+        omniroute_url = settings.OMNIROUTE_URL.rstrip("/")
+        if omniroute_url and not omniroute_url.endswith("/chat/completions"):
+            omniroute_url = (
+                f"{omniroute_url}/chat/completions"
+                if omniroute_url.endswith("/v1")
+                else f"{omniroute_url}/v1/chat/completions"
+            )
+        self.omniroute_provider = OpenAICompatibleProvider(
+            name="omniroute",
+            base_url=omniroute_url,
+            api_key=settings.OMNIROUTE_API_KEY,
+            default_models=["math-socratic"],
+            timeout=(2.0, 24.0),
+        )
+
         self.gemini_provider = GeminiProvider(
             api_key=settings.GEMINI_API_KEY,
             models_cascade=GEMINI_MODELS_CASCADE,
@@ -670,26 +687,28 @@ class MathAiGateway:
         """Resolve a ordem dos provedores conforme a matriz pedagógica e o .env."""
         # Se forçado explicitamente via PRIMARY_AI_PROVIDER
         primary = settings.PRIMARY_AI_PROVIDER
-        if primary == "local_vllm" and self.local_vllm_provider.is_available():
+        if task_type != "second_opinion" and primary == "local_vllm" and self.local_vllm_provider.is_available():
             return [self.local_vllm_provider, self.nvidia_nim_provider, self.openrouter_provider, self.deepseek_provider, self.gemini_provider]
-        if primary == "deepseek" and self.deepseek_provider.is_available():
+        if task_type != "second_opinion" and primary == "deepseek" and self.deepseek_provider.is_available():
             return [self.deepseek_provider, self.nvidia_nim_provider, self.openrouter_provider, self.gemini_provider]
-        if primary == "gemini" and self.gemini_provider.is_available():
+        if task_type != "second_opinion" and primary == "gemini" and self.gemini_provider.is_available():
             return [self.gemini_provider, self.nvidia_nim_provider, self.openrouter_provider]
 
         cascade: List[BaseLLMProvider] = []
 
         # 1. vLLM / Modelo Aberto Local tem prioridade se configurado
-        if self.local_vllm_provider.is_available():
+        if task_type != "second_opinion" and self.local_vllm_provider.is_available():
             cascade.append(self.local_vllm_provider)
 
         # 2. 9Router se explicitamente configurado
-        if settings.has_9router and not settings.has_nvidia:
+        if task_type != "second_opinion" and settings.has_9router and not settings.has_nvidia:
             cascade.append(self.ninerouter_provider)
 
         # 3. Raciocínio Axiomático vs Dica Socrática
         if task_type == "socratic_hint":
-            # Dica Socrática exige resposta interativa ultrarrápida (< 1s) para a UX do estudante
+            # Dicas passam pelo gateway central; priorize o combo pedagógico configurado.
+            if self.omniroute_provider.is_available():
+                cascade.append(self.omniroute_provider)
             if self.gemini_provider.is_available():
                 cascade.append(self.gemini_provider)
             if self.nvidia_nim_provider.is_available():
@@ -699,9 +718,10 @@ class MathAiGateway:
             if self.deepseek_provider.is_available():
                 cascade.append(self.deepseek_provider)
         elif task_type == "second_opinion":
-            # A comparação precisa de uma resposta estruturada, com duas linhas
-            # de raciocínio completas. O Nemotron Lightning é o modelo rápido
-            # validado para esse papel; Gemini permanece como contingência.
+            # Prioriza o combo pedagógico do OmniRoute; provedores diretos ficam
+            # disponíveis como contingência quando o gateway não responder.
+            if self.omniroute_provider.is_available():
+                cascade.append(self.omniroute_provider)
             if self.nvidia_nim_provider.is_available():
                 cascade.append(self.nvidia_nim_provider)
             if self.gemini_provider.is_available():

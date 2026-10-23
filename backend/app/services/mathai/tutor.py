@@ -385,6 +385,7 @@ Responda em tom encorajador e direto, mantendo o rigor em LaTeX ($...$ e $$...$$
             max_tokens=1024,
             json_output=False,
             task_type="socratic_hint",
+            total_budget_seconds=16.0,
         )
 
         content = res.get("content", "").strip()
