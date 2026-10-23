@@ -1,218 +1,145 @@
-# SHARED-MEMORY — MathAI / LEMMAS
+# SHARED-MEMORY (Índice Canônico de Alta Densidade)
+> **Princípio:** Regras ativas obrigatórias de 1 linha. Detalhes técnicos ficam nos arquivos especializados.
 
-Memória compartilhada entre agentes de IA e desenvolvedores para documentar pegadinhas, decisões arquiteturais e evitar reincidência de erros.
+## 0. Migração Windows → Linux (2026-10-21 — ambiente atual)
 
----
+- [LINUX-BASE-2026-10] Host Ubuntu. Home `/home/guilherme`; Hermes `~/.hermes`; projetos `~/dev` (cópia limpa, SEM `.git`); histórico git recuperado copiando `.git` de `/mnt/dados/dev/<repo>`; vault Obsidian `~/memoria`; disco 1 TB (antigo D:) montado em `/mnt/dados` (NTFS, UUID `48A037BDA037AFF4`, ainda fora do `/etc/fstab` até rodar `sudo bash ~/fix_fstab.sh`).
+- [LINUX-9ROUTER-2026-10] 9router roda como serviço de usuário `~/.config/systemd/user/9router.service` (`9router --skip-update -n -H 127.0.0.1`), dados em `~/.config/9router`, dashboard senha `123456`; npm 11+ bloqueia postinstall → rodar `node hooks/postinstall.js` em `~/.local/lib/node_modules/9router`; providers ativos: nvidia, deepseek, gemini, openrouter; combo `nvidia-fallback`.
+- [LINUX-STT-2026-10] STT local em `~/.hermes/venvs/stt` (faster-whisper 1.2.1) e `HERMES_LOCAL_STT_COMMAND` apontando para `~/.hermes/venvs/stt/bin/python ~/.hermes/bin/stt_whisper.py {input_path} {output_dir} {language} {model}`; obrigatório `av<19` — PyAV 19 removeu o kwarg `metadata_errors` e quebra `faster_whisper/audio.py`.
+- [LINUX-MCP-VENV-2026-10] MCPs Python do alethe-sentry usam `~/dev/alethe-sentry/.venv/bin/python` (pandas 3.0.6); `/usr/bin/python3` não tem pandas; o pacote `@modelcontextprotocol/server-sequentialthinking` NÃO existe (nome correto `server-sequential-thinking`).
+- [LINUX-PATHS-2026-10] Proibido hardcodar `D:/...` ou `C:\Users\guigu`: usar `Path.home()/"dev"/...` ou `Path(__file__).resolve().parent`; 36 scripts de alethe-sentry/LemmaS foram reescritos. Scripts perdidos na migração (fora do backup): `~/teamwork_projects/alethe_hermes_integration/{alethe_hermes_mcp.py,job_hunter.py,job_hunter_history.db}` e `~/roku_alexa/roku_mcp_server.py`.
+- [LINUX-JOBHUNTER-2026-10] Job Hunter reescrito em `~/dev/alethe-agents/scripts/job_hunter.py` (só stdlib; fontes GitHub `backend-br/vagas` + `frontendbr/vagas` + Remotive + RemoteOK; filtro EXIGE stack de dados no título e rejeita senior/pleno/especialista/lead/estágio; dedupe SQLite `job_hunter_history.db`; saídas `vagas_para_planilha.csv` e `radar_vagas_hoje.md`). Agendado por `job-hunter.timer` (systemd user, 19:00, Persistent=true). APIs mortas: Gupy (404) e o `search` da Remotive é ignorado.
+- [LINUX-ALETHE-TOKEN-2026-10] No fork alethe, `init_token()` (`src-tauri/src/agent_events.rs`) agora resolve o token do listener 9123 nesta ordem: `ALETHE_LISTENER_TOKEN` → `~/.config/alethe/listener-token` (0600) → nanoid novo persistido. Antes era efêmero por boot, o que quebrava qualquer cliente externo (Hermes) a cada restart.
+- [LINUX-AIMEMORY-2026-10] ai-memory 3.1.2 em `~/.local/bin`, serviço `ai-memory.service` (systemd user), MCP em `127.0.0.1:49374/mcp` que EXIGE `Authorization: Bearer <token>` lido de `~/.local/share/ai-memory/auth-tokens/default`; web UI em `/web` (usuário qualquer, senha = token).
+- [LINUX-DOCKER-2026-10] Docker 29.1.3 + Compose v2 instalados; o grupo `docker` só entra em vigor em sessão nova (depois de `usermod -aG docker`) — shell antiga dá `permission denied` no socket. `docker compose config` funciona sem daemon.
+- [SENTRY-CONTAINER-2026-10] `alethe-sentry` roda com `network_mode: host` + bind `./data:/app/data` (na rede bridge o 127.0.0.1 do container é ele mesmo e host.docker.internal não escuta nada) e os módulos resolvem caminho por `Path(os.getenv("SENTRY_BASE_DIR", str(Path(__file__).resolve().parent)))` — dentro do container vira `/app`. Alerta de colisão tem dedupe em `data/collisions_notified.json` (sem isso cada restart reenviava as ~25 colisões).
 
-### [2026-10-06] — Transição Arquitetural: MathAI -> LEMMAS
-- **Regra:** O projeto como um todo se chama **LEMMAS** (Adaptive Learning Platform). O termo **MathAI** passa a se referir estritamente ao "Engine Especialista" de matemática. 
-- **Por quê:** O sistema evoluiu de um chatbot/experimento de matemática para uma plataforma modular que suporta disciplinas variadas. O core geral (LEMMAS Core: histórico, repetição espaçada, SM-2, perfil do aluno) deve ser isolado dos módulos especialistas (MathAI, BioIA, QuimIA). Nunca referenciar toda a aplicação apenas como "MathAI", especialmente na Landing Page.
-- **Quem achou:** Usuário / Antigravity (Decisão de Produto/Portfólio).
+## 1. Regras Operacionais Globais (Obrigatórias em toda sessão)
+- [SEGUNDA-OPINIAO-RESILIENT-CASCADE-2026] No painel Segunda Opinião (/opinioes e /api/ai/compare), a rota Next.js NUNCA deve abortar com HTTP 503 prematuro caso o backend no Render retorne 503/timeout/500: o timeout da chamada HTTP ao backend deve ser restrito a 8s (evitando sequestro do maxDuration da Vercel) e qualquer falha do Render deve acionar imediatamente o fallback direto via Gemini (generateGeminiContent) e terciário via NVIDIA NIM direct (generateNvidiaContent), garantindo retorno <1.5s mesmo em cold start do Render.
+- [9ROUTER-UPDATE-WIN-2026-10] A opção "Update" do menu do 9router NÃO atualiza: ela mata o servidor (:20128) e só imprime o comando; atualizar SEMPRE com 'npm i -g 9router@latest --prefer-online' com o 9router parado, depois rodar manualmente 'node hooks/postinstall.js' dentro de '%APPDATA%\npm\node_modules\9router' (npm 11+ bloqueia postinstall via allow-scripts); processos iniciados por shell de agente morrem no fim da sessão (Job Object) — relançar com 'explorer.exe "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\9router.vbs"'. Em 2026-10-20 a chave NVIDIA estava VÁLIDA, mas o catálogo NIM mudou: nemotron-3-super, kimi-k2.6, nemotron-nano-3, llama-3.1-nemotron-ultra = 404 "Function not found for account" (aparecem em /v1/models mas não executam); glm-5.2, minimax-m2.7/m3, deepseek-v4-pro, gpt-oss-120b, llama-3.3-70b = 410 EOL; nemotron-3-ultra alterna OK/404; funcionam: openai/gpt-oss-20b (~2s), nvidia/nemotron-3.5-lightning-30b-a3b (~3s), nemotron-3-nano-omni-reasoning (~1,3s), poolside/laguna-xs-2.1 (~1,9s), z-ai/glm-5.3 (~6-12s, deprecação em 8d), meta/muse-glimmer-30b (~10s); early-access (step-5-preview, nemotron-3.5-super-vl, glm-5.3-flash, deepseek-v4.1-flash) dão timeout 30s+. nemotron-3-super e kimi-k2.6 SAÍRAM da lista Free Endpoint do build.nvidia.com. Gemini no mesmo dia: 3.8/3.7-flash e 3.1-flash-lite com 503 "high demand"/timeout DIRETO no Google (não é o 9router); gemini-3.6-flash (~3s) e gemini-3-flash-preview (~2s) OK; gemini-4-argon e 3.1-pro = sem free tier (limit: 0). Hermes ficou lento por cascata de fallbacks no nemotron-super morto; DeepSeek (ds/*, deepseek/*) e Groq respondem em ~0,5–1s. Nunca pôr padrão e reserva no mesmo provider.
+- [COMPARE-ORTHOGONALITY-NON-CANIBALIZATION-2026] No painel Segunda Opinião (/opinioes, /api/ai/compare e /api/tutor/compare), o Modelo A (Rigor Axiomático) e o Modelo B (Intuição Heurística) devem obedecer à regra estrita de ortogonalidade e não-canibalização: o Modelo A desenvolve exclusivamente prova formal dedutiva universal (ex: partição canônica de áreas S = p*r), sendo terminantemente proibido de citar atalhos ad-hoc de concurso, fórmulas de memorização rápida (como r = (b+c-a)/2) ou adicionar passos de "demonstração alternativa" que roubem a heurística; o Modelo B é o único autorizado a explorar homotetia de figuras primitivas (3-4-5), simetrias e os macetes rápidos de tangência.
+- [ALETHE-BAR-COUNCIL-LIVE-DASHBOARD-3009] O painel visual interativo do Alethe Bar Council opera em 'http://localhost:3009' via 'D:\dev\council_server.py' (FastAPI + Uvicorn) servindo 'D:\dev\llm-council-dashboard.html' com CORS liberado; o cenário 2.5D conta com 6 assentos vetorizados e iluminados por spots dinâmicos: o Barman/Juiz central (:50%), os 4 conselheiros (:29% Pragmático, :49% Arquiteto Formal, :69% Advogado do Diabo [amigo de box braids com anéis dourados, cavanhaque e camisa branca], :89% Estrategista Lateral) e Guilherme/Usuário (:9%, óculos escuros retangulares, cabelo cacheado, sorriso com aparelho dentário metálico, camiseta bege e café filtrado UFF), que abre a sessão fazendo a pergunta diretamente ao Barman e intervém na réplica do Grill-Me; o pipeline multi-turn deliberativo opera via 'council_state.py' e 'llm_council.py' (debating_r1 -> mapping_contradictions -> cross_examining_r2 -> evaluating -> grill_me -> judging -> completed) com persistência atômica NTFS, 12 falas alternadas no roteiro dinâmico e polling reativo a cada 1.2s.
+- [LEMMAS-PROFILE-AVATAR-BILLING-SYNC] No LemmaS (Next.js 16 + Supabase), 'public.usuarios' possui colunas dedicadas ('cpf', 'celular', 'cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado', 'motivos') e NUNCA teve tabela 'billing_profiles' nem coluna 'configuracoes'; persistência de perfil, foto e dados fiscais trafega centralizada via rota '/api/user/profile' (POST/GET via '@/lib/supabase-server') com fallback resiliente; no mount ('use-user.tsx'), a prioridade do avatar é estrita ('foto_do_banco' > 'lemmas_custom_avatar' em localStorage > 'googleAvatar'), impedindo que o avatar do Google OAuth reverta e sobrescreva fotos customizadas (ex: Black Gon); e 'inferirMotivacoes(concursos_foco)' recupera automaticamente os checkboxes do Passo 1 e Passo 3 em '/perfil' caso 'motivacoes_selecionadas' venha vazio do onboarding.
+- [LATEX-AUTO-WRAP-TRIG-GREEK-LOOKBEHIND] No KaTeX/MathDisplay do LemmaS, comandos com contrabarra e equações matemáticas geradas por LLMs sem delimitadores $ (ex: tg(\theta) = tg(\alpha - \beta), \theta = \alpha - \beta, \alpha e \beta) NUNCA devem usar regex com word boundary \b antes de contrabarra (\b\\?cmd), pois no regex \ é caractere não-palavra (\W) e \b casa entre \ e o início do comando, deixando a contrabarra vazada fora de $; no math-parser.ts e MathDisplay.tsx, autoWrapLatexExpressions usa applyOutsideMath em multi-pass para envolver equações completas, funções trigonométricas brasileiras com \operatorname{tg}/\sen e letras gregas isoladas usando lookbehind de início de token e callbacks puros de substituição (evitando corrupção por escaping de $$ e $1 no JS); no backend (tutor.py), auto_wrap_latex_in_backend higieniza a inferência antes de gravar no cache e PROMPT_SISTEMA_SOCRATICO proíbe expressamente notação trigonométrica nua fora de $.
+- [MILITARY-TAXONOMY-DIFFICULTY-CALIBRATION] No Supabase do LemmaS (public.questoes), bancas militares de oficiais e sargentos (EFOMM, AFA, EN, EsPCEx, IME, ITA, EEAR, ESA, EPCAR, CN) pertencem OBRIGATORIAMENTE à 'categoria_banca = "Concurso Militar"' (jamais "Olimpíadas" ou "Vestibular & Superior") e tipo_material = 'concurso_militar'; na EFOMM (Cálculo Diferencial e Integral, Otimização de Regiomontanus, Álgebra Linear e Matrizes 4x4), a régua de dificuldade mínima é Nível 3 (Médio) e Nível 4 (Difícil) — nunca classificar problemas de Cálculo/Otimização como Nível 2 (Fácil).
+- [HERMES-VOICE-STT-TTS-AUTODETECT] Áudio no Hermes (WhatsApp/Telegram): STT usa Groq Whisper gratuito ('whisper-large-v3-turbo') em 'stt.provider: "groq"' com 'GROQ_API_KEY' no '.env' e 'language: ""' (vazio) para autodetectar perfeitamente PT e EN em áudios do celular; TTS opera sob demanda via 'tts.provider: "edge"' com voz 'pt-BR-AntonioNeural' e 'edge-tts' instalado no Python 3.14 do Hermes, convertendo MP3 em Ogg Opus para WhatsApp em <0.15s usando o ffmpeg embutido ('~/.hermes/tools/ffmpeg-9.0.1-win32-x64/bin') injetado no PATH e em 'Hermes_Gateway.vbs'; auto_tts fica 'off' por padrão para o Hermes sempre responder em texto a menos que o usuário peça explicitamente áudio ('me manda um áudio', tool 'text_to_speech').
+- [MILITARY-FIGURES-EXTRACTION-NATIVE] Em exames militares (AFA, EEAR, EPCAR, ESA, EsPCEx, Colégio Naval, Escola Naval, IME, ITA), 85%+ das figuras existem como XObjects nativos no PDF original: extração via 'doc.extract_image(xref)' elimina 100% de texto de enunciado vazado e preserva todos os vértices e eixos sem risco de corte por bounding box de LLMs; no Windows, a pasta 'frontend/public/data/imagens' deve ser mantida como Junction NTFS para 'data/imagens' ('mklink /J'); na produção (Vercel), resolveFigureUrl aponta para Supabase Storage ('questoes-imagens'), sendo OBRIGATÓRIO rodar 'sync_military_images_fast.py' após extrações para não servir brasões/logos em cache; em provas bitmap scaneadas (Colégio Naval/Escola Naval), o scraper antigo capturava a capa de instruções (página 0) em massa — questões puramente textuais devem ter 'figura_path = NULL' no Postgres e figuras reais devem ser recortadas com 'get_pixmap(dpi=300, clip=Rect)'; e autoWrapLatexExpressions no math-parser.ts deve tokenizar em volta de $...$ e $$...$$ para nunca engolir equações preexistentes em blocos com erro KaTeX em vermelho.
+- [ALETHE-TERMINAL-FILE-URI-LINKS] Links locais file:///, markdown [text](file:///...) e caminhos Windows com barras normais (D:/...) no terminal do Alethe: terminalLinks.ts detecta links markdown '[label](target)' primeiro via MARKDOWN_LINK_PATTERN, apontando target para o destino real e abrangendo todo o span (evitando que labels com extensao .md virarem caminhos relativos quebrados no cwd); no Rust (diagnostics.rs), existing_path_from_user_input decodifica percent-encoding, remove prefixos file:// e /X:, apara delimitadores e normaliza barras para backslashes no Windows, e open_in_file_explorer usa '/select,<path>' em argumento unico para o Explorer nunca exibir 'caminho nao existe'.
+- [ALETHE-PLUGIN-MANIFEST-SPEC-NULL] Garantir spec != null em PluginManifest e self-heal contra instancias zumbis do Alethe segurando lock do EBWebView no Windows: No Alethe (src-tauri/src/plugins.rs), PluginManifest.spec deve ter default_spec retornando {} em vez de Value::Null, e src/lib/pluginMarket.ts deve usar optional chaining (manifest.spec?.author). Alem disso, no Windows (src-tauri/src/lib.rs), se uma instancia zumbi em desktop em segundo plano segurar o mutex single-instance (com.kc1t.alethe-sim) e o lock do EBWebView sem janela ativa (FindWindowW == null), o boot limpa os processos alethe.exe orfaos antes de subir a WebView e sempre inicia via Shell.Application COM no desktop interativo.
+- [HERMES-YAML-DUPLICATE-KEY-GUARD] Nunca duplicar chaves em ~/.hermes/config.yaml (ruamel.yaml bloqueia terminal_scope com DuplicateKeyError): O Hermes usa `ruamel.yaml` em `tools/terminal_scope.py` (`enforce_no_refusal()`), que rejeita chaves YAML duplicadas com `TerminalPolicyUnavailable` (ex: duplicar `career-telemetry` em `mcp_servers` trava todos os comandos do Hermes). Antes de editar `~/.hermes/config.yaml`, sempre verifique chaves existentes em `mcp_servers` e valide com `tools.terminal_scope.enforce_no_refusal()`.
+- [TAURI-V2-GUI-EMBED-BUILD] Sempre usar npx tauri build --debug --no-bundle e windows_subsystem=windows para gerar o binÃ¡rio GUI do Alethe: No Tauri v2 (Windows), rodar `cargo build` puro compila sem `TAURI_ENV_DEBUG`/`custom-protocol` no `tauri-build`, deixando `webview_mb=0` (apontando para `devUrl: 1422` inexistente) e abrindo janela preta de CMD. Sempre use `#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]` em `main.rs` e compile com `npx tauri build --debug --no-bundle` para embutir `../dist` na WebView (`http://tauri.localhost`) e iniciar via `explorer.exe`.
+- [SURREALDB-SPECTRON-CLOUD] Triple-Sync ativo entre SHARED-MEMORY.md, SurrealDB Local (:8009) e SurrealDB Agent Memory Cloud (Spectron): O MCP oficial `agent-memory` da SurrealDB Cloud (`https://srv1.spectron.aws-usw2.surreal.cloud/mcp`, Context ID `06gkpsl9cpqq5eu992jjv9vv2c`) estÃ¡ ativo no Antigravity (`mcp_config.json` via `serverUrl`) e no Hermes (`config.yaml` via `url`), sincronizado em Triple-Sync com o container local `surrealdb-alethe` (`127.0.0.1:8009`) e `SHARED-MEMORY.md` via `D:\dev\alethe-sentry\surreal_memory_mcp.py`.
+- [9ROUTER-DEEPSEEK-CACHE-90] A API Oficial do DeepSeek (`deepseek/deepseek-chat` e `deepseek/deepseek-reasoner`) e o Google Gemini estão registrados nativamente no 9Router (`localhost:20128/v1`); `llm_council.py` (`hermes_shield` e `hermes_council`) injeta `STATIC_CACHE_PREFIX` (~1.800 tokens imutáveis do `SHARED-MEMORY.md`) no início do `system` prompt, atingindo >92% de `prompt_cache_hit_tokens` ($0.028/1M tokens).
+- [ALETHE-CANVAS-COMMANDER-HOOKS] Toda invocação de `hermes_shield`, `hermes_council`, `hermes_think` e `alethe_execute` emite eventos HTTP ao vivo (`SubagentStart`, `SubagentStop`, `Stop`) via `alethe_canvas_hooks.py` para `127.0.0.1:9123/hook` sob o planner ativo: no Alethe Canvas (`agentCanvasStore.ts`), emitir apenas `SubagentStop` pode deixar a rodada visualmente travada em 'running'; é obrigatório disparar `emit_stop_hook()` com `{"hook_event_name": "Stop", "background_tasks": []}` ao término para forçar a transição de todos os nós para 'done'.
+- [SURREALDB-DUAL-SYNC-8009] A memória opera em Arquitetura Híbrida Dual-Sync: `SHARED-MEMORY.md` garante boot 0ms e prefixo de cache, enquanto o container `surrealdb-alethe` (`127.0.0.1:8009`, RocksDB em `~/.alethe-surrealdb/data`) e o MCP `D:\dev\alethe-sentry\surreal_memory_mcp.py` sincronizam regras, incidentes e telemetria de carreira (`vaga`, `incident`, `RELATE`).
+- [NVIDIA-NIM-REASONING-TIMEOUT-COMPARE-2026] No NVIDIA NIM, modelos de raciocínio CoT (`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`) levam ~11s para gerar resoluções completas com LaTeX; o timeout por provedor no gateway deve ser de no mínimo 14s (com orçamento total de 25s), e rotas proxy Next.js (`/api/ai/compare`, `/api/ai/solve`) DEVEM definir `export const maxDuration = 30;` e `AbortSignal.timeout(25000)` para nunca abortar o backend prematuramente aos 3,5s nem expor contingências estáticas falsas.
+- [HINT-ORDER-DESCENDING-RESOLVER-2026] Em `/resolver`, o histórico de dicas (`hintsHistory[currentIndex]`) deve ser ordenado decrescente por nível (`.slice().sort((a, b) => b.nivel - a.nivel)`), garantindo que a dica recém-desbloqueada apareça no topo da lista e as anteriores abaixo.
+- [LEMMAS-CENTRALIZED-HINT-ENGINE-2026] A geração de dicas socráticas é 100% centralizada no FastAPI (`/api/tutor/hint`) com autenticação Bearer do Supabase; a rota frontend `/api/ai/hint` atua exclusivamente como proxy/validador (`maxDuration = 30`, timeout `25000ms`), eliminando chamadas diretas de IA do Next.js; o gateway Python adota orçamento de 20s (provedores com timeout 8s) e fast-break imediato em erros 401, 402 e 403; o Nível 5 rejeita letras secas ('A') como resolução via `is_valid_commented_solution`; falha total de provedores retorna indisponibilidade real HTTP 503; suporte nativo a Secret Files do Render em `/etc/secrets/.env`.
+- [LEMMAS-2K-CATALOG-TAXONOMY] O catálogo canônico do LemmaS possui exatamente 2.000 lemas axiomáticos e táticos em 'public.lemmas' ('LEMA-0001' a 'LEMA-2000') mapeados para 100% das 21.272 questões em 'public.questoes' (lema_id FK e lema_codigo). No frontend, o componente 'LemaBadge.tsx' exibe Popover com KaTeX, gatilho de prova e filtro via query param '?lema=LEMA-XXXX'; atualizações em lote no Supabase devem usar UPDATE com VALUES (...) em lotes <= 2.500 rows.
+- [HINT-SOCRATIC-NO-TEMPLATES-DEDUPE] Dicas socráticas (Níveis 1 a 4) nunca devem usar templates estáticos de string interpolando `${topico}` (evita que autores/países como "Denis Sidorov, Moldávia" virem pseudo-teoremas); a rota `/api/ai/hint` chama diretamente o Gemini (`gemini-flash-lite-latest`) em português com contexto oculto da solução. Ao acionar o Nível 5, a resolução traduzida e comentada em passos didáticos é exibida exclusivamente no card do Tutor, substituindo o Parecer da Banca por badge compacto, escondendo hashes/decimais espúrios (`isSpuriousGabarito`), ocultando imagens quebradas (`onError` com `display: none` e descarte de `[asy]`) e auto-envolvendo comandos LaTeX soltos (`\triangle`, `\overrightarrow`, `\frac`, `\sim`, `\right\rangle`) em `$..$`.
+- [NVIDIA-NIM-MULTI-MODEL-RESILIENCE] As rotas de inferência do Next.js (`/api/ai/hint` e `/api/ai/solve`) adotam cascata resiliente multi-provedor: 1. Gemini REST (`gemini-flash-lite-latest`, latência < 0.6s); 2. NVIDIA NIM via `frontend/lib/nvidia.ts` (`meta/llama-3.2-11b-vision-instruct`, `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` e `nvidia/nemotron-3.5-lightning`, com extração segura de `content` e `reasoning_content`); 3. FastAPI backend no Render (`/api/tutor/hint` e `/api/tutor/evaluate`, que exigem token JWT Bearer do Supabase e retornam 401 se a sessão estiver ausente/expirada); 4. Contingência determinística formatada. Na Vercel, as chaves `GEMINI_API_KEY` e `NVIDIA_API_KEY` devem estar configuradas nas Environment Variables do projeto.
+- [TABLET-SPEN-DUAL-CANVAS-120HZ] Para eliminar input lag da S-Pen (120Hz/240Hz) em tablets (Galaxy Tab), o componente SpenSmartCanvas.tsx adota arquitetura Dual-Canvas (baseCanvas estático no fundo para traços finalizados + inkCanvas no topo com desynchronized: true), desenho incremental O(1) de curvas de Bézier (apenas os últimos 3 pontos no pointermove sem clearRect de histórico), zero re-renderizações React durante a escrita (estados em useRef) e trava de DPR em Math.min(devicePixelRatio, 2) contra sobrecarga de VRAM.
+- [HINT-5-SOCRATIC-PENALTY-SM2] O sistema de tutoria socrática do LemmaS segue escada pedagógica estrita de 5 níveis (1: Simbologia/Notação, 2: Primeiro Passo no Rascunho, 3: Encadeamento Dedutivo Intermediário, 4: Pulo do Gato/Pegadinha de Banca, 5: Resolução Oficial Definitiva). Ao solicitar o Nível 5, o sistema deve exibir modal de confirmação alertando que a questão será considerada incorreta no agendamento SM-2 (nota 0, repetição diária) e gravar o veredito epistêmico apropriado no histórico.
+- [GOOGLE-AUTH-AUTO-VERIFIED-SWR] Usuários autenticados via Google OAuth possuem e-mail nativamente verificado (detectado via 'user_metadata.email_verified === true' ou 'app_metadata.provider === "google"'); use-user.tsx e auth/callback devem atribuir 'verificado = 1' no Postgres imediatamente, e o hook use-user deve revalidar em segundo plano (SWR) no mount para nunca manter cache estático desatualizado do localStorage com 'emailVerificado: false'.
+- [LATEX-COLLAPSE-INLINE-EOL] No MathDisplay.tsx (sanitizeMathText e renderMathText), nunca permitir que blocos $...$ ou $$...$$ que contenham 2+ palavras em linguagem natural sejam renderizados em modo matemático pelo KaTeX (pois o KaTeX apaga todos os espaços entre as palavras). 'sanitizeMathText' desembrulha frases em português falsamente envolvidas em $, auto-envolve variáveis pontuais ($QS intersectando -> $QS$ intersectando) e letras gregas nuas (\omega -> $\omega$), enquanto 'renderMathText' atua como barreira secundária rebaixando inlines com 2+ palavras para 'type: text', preservando 100% dos espaços.
+- [LLM-JSON-LATEX-ESCAPING] Em rotas de API que geram JSON com fórmulas LaTeX via Gemini/LLM (ex: /api/ai/solve, /api/ai/compare), contrabarras de comandos matemáticos (\forall, \in, \frac, \to, etc.) causam 'SyntaxError: Bad escaped character in JSON' no JSON.parse nativo; use sempre safeParseJsonWithLatex para sanitizar contrabarras não escapadas antes do parse e evitar queda indevida no fallback determinístico.
+- [RESOLVER-DISCURSIVE-CARD-DEDUPE] Em /resolver, para questões discursivas, nunca renderize o card genérico de resultado de múltipla escolha (currentResult) abaixo do card discursivo (discursiveEval); unifique a exibição do Gabarito Oficial formatado em <MathText> e do agendamento SM-2 dentro do próprio container da avaliação discursiva.
+- [TABLET-SPEN-BEZIER-PALM-REJECTION] No canvas da Lousa digital (MathScratchpad.tsx), nunca use apenas lineTo entre pontos esparsos de touch; use getCoalescedEvents (120Hz/240Hz), interpolação Bézier quadrática em pontos médios, rejeição estrita de palma (pointerType === 'pen' descarta touch subsequente) e capture buttons & 32 para borracha instantânea pelo botão lateral da S-Pen.
+- [TABLET-CANVAS-PERF-ZERO-REFLOW] No Android Chrome / Tablet (Galaxy Tab S-Pen), chamar `getBoundingClientRect()` dentro do loop de `pointermove`/`getCoalescedEvents` (120Hz/240Hz) causa Forced Synchronous Reflow que congela a GPU; cacheie o rect no `pointerdown` e filtre micro-ruído sub-pixel (`dx*dx + dy*dy < 2.5`). Em questões discursivas, nunca duplique os botões da Bancada em banners de CTA — integre a Bancada diretamente no container da questão discursiva e condicionalmente no rodapé para objetivas.
+- [FEEDBACK-REPORT-QUESTION-VALIDATION] A rota /api/feedback e schemas de feedback nunca devem exigir os parâmetros booleanos 'util' ou 'concorda_diagnostico' quando tipo === 'report_erro' ou quando for um relato/comentário de inconsistência de questão/LaTeX.
+- [SUPABASE-EMAIL-VERIFICATION-DUAL-FLOW] No Supabase Auth, links de confirmação trafegam via 'token_hash' (com type=signup/email) além de 'code' (PKCE); formulários de auth NUNCA devem exigir exclusivamente código de 6 dígitos quando o e-mail enviar link, devem oferecer suporte aos dois caminhos (com detecção automática via polling e botão de atualização) e o callback (/auth/callback) deve sempre sincronizar 'public.usuarios.verificado = 1'.
+- [EXEC-WIN] Nunca passe comandos multilinhas literais no PTY; delegue via `safe_delegate.py`.
+- [CONSOLE-UTF8] Scripts Python no Windows devem inicializar `sys.stdout` com encoding `utf-8`.
+- [PTY-CRASH] Em caso de reabertura de terminal, invoque `alethe_resume` para recuperar o estado.
+- [HERMES-SPEED] Mantenha `moa.enabled: false` nos perfis do Hermes.
+- [ROUTER-AUTH] Conexões `provider: custom` exigem token fictício no 9Router (`api_key: sk-cb...`).
+- [TOKEN-SHIELD] Para preservar a cota do Antigravity, NUNCA gere rascunhos longos de código diretamente no Gemini; delegue para `hermes_shield` e use o Antigravity apenas para revisão final.
+- [DIVERGENCE-COUNCIL] Sempre que o Guilherme pedir ideias, arquitetura ou caminhos alternativos, dispare `hermes_council` para consultar os 4 modelos heterogêneos em paralelo.
+- [NIM-PREFIX] No 9Router, modelos nativos da NVIDIA exigem namespace duplo 'nvidia/nvidia/nemotron-...' para evitar 404/503.
+- [AUTO-DELEGATE-DEFAULT] Modo Padrão Ativo: Toda tarefa de código novo, refatoração pesada ou decisão arquitetural é repassada AUTOMATICAMENTE para hermes_shield ou hermes_council pelo Antigravity, sem esperar o Guilherme pedir. O Gemini atua exclusivamente como auditor/revisor final e aplicador de diffs, a menos que o Guilherme ordene explicitamente 'trabalhe sozinho', 'modo direto' ou 'somente você'.
+- [FIGURES-PROVENANCE] PDFs com 'madematica'/'resolvida' são resoluções comentadas (não provas originais); figuras de resolução NUNCA devem ser atribuídas à questão original (ex: AFA 2012 Q10 é SOURCE_MISSING).
+- [PY-ENV-WIN] No ambiente Windows local, use explicitamente 'C:\\Users\\guigu\\AppData\\Local\\Programs\\Python\\Python312\\python.exe' para scripts com PyMuPDF/fitz, cv2 e pytest.
+- [DISCURSIVE-VERDICT] Fallback de IA no frontend NUNCA deve atribuir veredito definitivo ('aprovado'/'incorreto') nem nota SM-2 quando o backend estiver indisponível; deve retornar 'inconclusivo' ('precisa_revisao_humana: true') e preservar o rascunho intacto.
+- [SUPABASE-QUESTOES-TAXONOMY] No Supabase do LemmaS, a tabela oficial de questões é 'public.questoes' (não 'public.questions'); a taxonomia possui 12 Grandes Áreas Canônicas ('Funções' desmembrada de 'Álgebra', sem resíduos de 'Geral', 'Lógica' ou 'Matemática Geral').
+- [STATE-CLOBBER-PERFIL] No frontend Next.js, formulários de perfil (/perfil) NUNCA devem sincronizar estado local em useEffect([profile]) contínuo nem disparar PROFILE_EVENT localmente síncrono que acione re-fetch antes da gravação no Supabase; use lastLoadedUserRef para inicialização única e upsert({ onConflict: 'email' }) no Postgres.
+- [GITHUB-BRANCH-PROTECTION] O branch 'main' no GitHub (StylishGH/LemmaS) possui proteção ativa (GH006); toda entrega de release deve ser enviada via branch dedicada (ex: release/v1.0-launch) para abertura de Pull Request.
+- [DASHBOARD-RADAR-MAPPING] No Dashboard do LemmaS, os 6 eixos do Radar agrupam matérias canônicas via mapeador explícito ('Matemática Básica' -> 'Aritmética', etc.), tempo médio possui teto de 900s contra abas esquecidas e caminhos com parênteses no PowerShell ('(app)') devem ser cotados com aspas duplas.
+- [KATEX-DELIMITER-RUNAWAY] No parser KaTeX do LemmaS (MathDisplay.tsx), delimitadores desbalanceados de LLMs engolem o parágrafo subsequente em vermelho; sanitizeMathText balanceia $ ímpares linha a linha, neutraliza \\undefined e FormattedInlineLine trata headings ###.
+- [GIT-NESTED-NODE-MODULES] Em monorepos com subpacotes (ex: frontend/packages/*), .gitignore deve usar '**/node_modules/' explicitamente; pacotes adicionados acidentalmente ao índice Git devem ser desindexados com 'git rm -r --cached' para evitar binários e inchaço (ex: esbuild.exe).
+- [WHATSAPP-PORT-ISOLATION] A ponte Baileys do Hermes usa a porta padrão 3000, que colide com o Next.js (LemmaS). Para isolar, defina a porta 3005 em 'C:\\Users\\guigu\\AppData\\Local\\hermes\\platforms\\whatsapp\\bridge_port' e envie mensagens via HTTP POST em 'http://127.0.0.1:3005/send' com '{chatId, message}'.
+- [HERMES-MOBILE-MODEL] Configurado com 'nvidia/nvidia/nemotron-3-ultra-550b-a55b' (9Router :20128/v1 com provider: custom) e fallback multicamadas ortogonal ('ds/deepseek-v4-flash' -> 'gemini/gemini-3-flash-preview' -> 'nvidia/nvidia/nemotron-3.5-lightning-30b-a3b' -> 'deepseek/deepseek-chat'). MCP sqlite quebrado (404 npm) desativado (enabled: false) para estancar respawn de processos node.
+- [GOOGLE-SHEETS-WEBHOOK] Para sincronização direta do Alethe Sentry com Google Sheets sem service account GCP, use o endpoint Apps Script Webhook (/exec) com action: 'sync_all' e POST JSON.
+- [JOB-HUNTER-ETHICAL] O Job Hunter autônomo roda via Tarefa Agendada 'Alethe_JobHunter' (19:00 diário) em 'C:\\Users\\guigu\\teamwork_projects\\alethe_hermes_integration\\job_hunter.py'. Fontes 100% éticas e oficiais: GitHub Vagas BR, BuscaVagasDados e Remotive API. Alvo exclusivo: ENTRADA EFETIVA (Júnior, Assistente, Trainee - CLT) com descarte estrito de estágios corporativos (bloqueados pela coordenação da Licenciatura em Matemática da UFF) e penalidade para Pleno/Sênior. Deduplicação via SQLite local (job_hunter_history.db), gera CSV para Sheets e despacha webhook para o WhatsApp do Hermes (:3005). Nunca usar bots logados no LinkedIn/Indeed para evitar ban de conta e bloqueio de IP.
+- [HERMES-WIN-JOB-BREAKAWAY] No Windows, spawns de subprocessos desanexados (como o bridge Baileys do WhatsApp no adapter.py) falham com '[WinError 5] Acesso negado' quando CREATE_BREAKAWAY_FROM_JOB é usado dentro de Job Objects restritivos. Sempre capturar OSError e fazer fallback para 'windows_detach_flags_without_breakaway()'.
+- [HERMES-GATEWAY-RESTART-WIN] No Windows, o Hermes Gateway supervisionado roda desacoplado de Job Objects via Tarefa Agendada. Se o gateway cair ou o bridge WhatsApp (:3005) parar, NUNCA inicie por subshell interativo (morre no exit do processo pai); reative sempre com 'schtasks /Run /TN Hermes_Gateway'.
+- [HERMES-CRON-WHATSAPP-TARGET] Ao criar ou agendar cron jobs no Hermes para o WhatsApp via CLI (fora de uma sessão interativa no app), '--deliver whatsapp' falha com 'no delivery target resolved'; use SEMPRE a gramática explícita '--deliver whatsapp:<chat_id>' (ex: 'whatsapp:5521981435188@s.whatsapp.net').
+- [CAREER-FUNNEL-WATCHER-WHATSAPP] O monitor de carreira unificado roda via 'career_funnel_monitor.py' integrado ao Alethe Sentry e ao MCP 'career-telemetry': conecta via IMAP no Gmail, rastreia e-mails da Gupy/RHs, ignora newsletters/job alerts, extrai novas etapas/testes com links e prazos e gerencia notificações no WhatsApp (:3005) em 3 tempos (imediata na detecção, a cada 2 dias se pendente, e D-1 urgente na véspera do vencimento). Consolida o funil de 4 categorias em 'D:\\dev\\alethe-agents\\QUADRO_FUNIL_VAGAS.md' (Ações Pendentes, Aguardando Retorno, Vagas Recomendadas e Não Conseguiu).
+- [PATCH-TOOL-TSX-CRLF-DOUBLE] Ao aplicar 'patch' em TSX grande com CRLF (ex: LemmaS frontend/app/(app)/questoes/page.tsx), o patch tool pode duplicar o arquivo inteiro inserindo linha em branco após cada linha (~1950→~3875 linhas, mantendo limpo apenas o hunk substituído); SEMPRE conferir 'git diff --stat' e 'wc -l' logo após o patch; recuperação: script Python que mantém o hunk limpo e pega só as linhas ímpares das regiões duplicadas (validando fronteiras por âncoras conhecidas), aplica as edições pendentes no mesmo script, regrava com newline='\\r\\n' e valida com tsc --noEmit (exit 0).
 
----
+## 3. OmniRoute no Azure — Deploy concluído (2026-10-22)
 
-### [2026-10-07] — Diretriz Operacional: Cérebro (Antigravity+User) vs Braços (Hermes)
-- **Regra:** O Antigravity (IA principal) e o Usuário atuam como o **Cérebro** (estrategistas, arquitetos, revisores). Sempre que houver uma tarefa densa, repetitiva ou com alto consumo de tokens (como importar layouts inteiros do Higgsfield/v0, refatorar grandes blocos de código ou criar boilerplate de novas rotas), o Antigravity deve **proativamente propor delegar a tarefa para o Hermes** (`alethe_delegate` ou background task).
-- **Importante:** NÃO force/hardcode um modelo específico e pesado (ex: `nvidia/nemotron-3-ultra-550b-a55b`) no JSON da task, a menos que seja estritamente necessário. Deixe vazio para que o Hermes utilize o seu modelo configurado por padrão (o combo de `fallback` de alta velocidade hospedado no 9Router).
-- **Por quê:** Economia de tokens da janela de contexto principal e ganho gigantesco de velocidade de resposta. Modelos muito pesados têm latência alta, enquanto o combo de fallback do 9Router pula nós inativos e devolve a resposta instantaneamente.
-- **Quem achou:** Usuário / Antigravity.
+- [AZURE-OMNIROUTE-2026-10] OmniRoute (diegosouzapw/omniroute:latest, NÃO é 9router) rodando em Azure Container Apps.
+  - RG: mathai-rg-cl | Environment: mathai-env-cl (Consumption, scale-to-zero) | Região: chilecentral (única liberada pela Azure for Students nesta conta).
+  - URL pública: https://omniroute-mathai.wittypebble-4ffc5c1f.chilecentral.azurecontainerapps.io
+  - CPU/RAM: 1 vCPU / 2 GiB | Replicas: min=0 / max=3 | /v1/models responde (HTTP 401 com API Key = esperado).
+  - Providers injetados no container: NVIDIA_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, DEEPSEEK_API_KEY (de ~/.hermes/.env).
+  - Dashboard: http(s)://<URL>/ → login admin / CHANGE ME. API Key do endpoint gerada em Endpoints do dashboard.
+  - Chave Bearer válida para /v1/*: omnimathai-2026-10-23-1792714290
+  - ⚠️ Volume persistente /app/data NÃO suportado pela API version disponível nesta região/conta → combos do dashboard somem no cold start (scale-to-zero).
+  - Combo math-socratic CRIADO E TESTADO (ID: 62a7fffa-ea5c-4520-a939-9c24cb1981fa, estratégia priority):
+    1. nvidia/nemotron-3-nano-omni-30b-a3b-reasoning (NIM — CoT, ✅ JSON válido)
+    2. gemini/gemini-3.6-flash (Google — velocista, ✅ responde)
+    3. openrouter/meta-llama/llama-3.3-70b-instruct (OpenRouter — curinga, ✅ JSON válido)
+  - Modelos NÃO funcionam com nossas chaves (402/401): qwen/qwen-2.5-72b-instruct (OpenRouter sem crédito), deepseek-chat (DeepSeek sem saldo), gpt-oss-20b
+  - Dashboard web bloqueado externamente (token de startup necessário). Use API REST diretamente.
+  - Para LemmaS: OMNIROUTER_URL=https://omniroute-mathai.wittypebble-4ffc5c1f.chilecentral.azurecontainerapps.io + Authorization: Bearer omnimathai-2026-10-23-1792714290
+  - Código integrado no LemmaS (frontend/lib/omniroute.ts + hint/solve/compare routes) — commits 3bce08d + 69e487a, PRs #56 e #57, mergeado na main em 2026-10-22
+  - Segunda Opinião agora chama DOIS modelos NVIDIA distintos via OmniRoute (cérebros diferentes):
+    - Modelo A (Rigor Axiomático): nvidia/nvidia/nemotron-3-ultra-550b-a55b (550B parâmetros)
+    - Modelo B (Segunda Opinião/Heurística): nvidia/google/gemma-4-31b-it (31B parâmetros, Google hospedado na NVIDIA)
+  - ⚠️ MODELOS NVIDIA TESTADOS E MORTOS (não testar de novo):
+    - nemotron-3.5-lightning-30b-a3b: TypeError (retorna vazio)
+    - nemotron-3-super-120b-a12b: HTTP 404 upstream error
+    - llama-3.1-nemotron-ultra-253b-v1: HTTP 404
+    - llama-3.3-nemotron-super-49b-v1: HTTP 404
+    - moonshotai/kimi-k3: HTTP 410 model_shutdown
+    - deepseek-ai/deepseek-v4-pro-0813: HTTP 410 model_shutdown
+    - deepseek-ai/deepseek-v4-flash-0731: HTTP 410 model_shutdown
+    - openai/gpt-oss-120b: HTTP 401 (sem credenciais)
+  - ⚠️ PROVEDORES SEM CRÉDITO / COM ERRO:
+    - OpenRouter/meta-llama/llama-3.3-70b-instruct: out of credits (per-model billing)
+    - DeepSeek/deepseek-chat: Insufficient Balance (402)
+  - Código integrado no LemmaS (frontend/lib/omniroute.ts + hint/solve/compare routes) — commits 3bce08d + 69e487a, PRs #56 e #57, mergeado na main
+  - Pendente: adicionar OMNIROUTE_API_KEY nas Environment Variables do serviço no Render e fazer redeploy
+- [HERMES-SPEED] Mantenha `moa.enabled: false` nos perfis do Hermes.
+- [ROUTER-AUTH] Conexões `provider: custom` exigem token fictício no 9Router (`api_key: sk-cb...`).
+- [TOKEN-SHIELD] Para preservar a cota do Antigravity, NUNCA gere rascunhos longos de código diretamente no Gemini; delegue para `hermes_shield` e use o Antigravity apenas para revisão final.
+- [DIVERGENCE-COUNCIL] Sempre que o Guilherme pedir ideias, arquitetura ou caminhos alternativos, dispare `hermes_council` para consultar os 4 modelos heterogêneos em paralelo.
+- [NIM-PREFIX] No 9Router, modelos nativos da NVIDIA exigem namespace duplo 'nvidia/nvidia/nemotron-...' para evitar 404/503.
+- [AUTO-DELEGATE-DEFAULT] Modo Padrão Ativo: Toda tarefa de código novo, refatoração pesada ou decisão arquitetural é repassada AUTOMATICAMENTE para hermes_shield ou hermes_council pelo Antigravity, sem esperar o Guilherme pedir. O Gemini atua exclusivamente como auditor/revisor final e aplicador de diffs, a menos que o Guilherme ordene explicitamente 'trabalhe sozinho', 'modo direto' ou 'somente você'.
+- [FIGURES-PROVENANCE] PDFs com 'madematica'/'resolvida' são resoluções comentadas (não provas originais); figuras de resolução NUNCA devem ser atribuídas à questão original (ex: AFA 2012 Q10 é SOURCE_MISSING).
+- [PY-ENV-WIN] No ambiente Windows local, use explicitamente 'C:\Users\guigu\AppData\Local\Programs\Python\Python312\python.exe' para scripts com PyMuPDF/fitz, cv2 e pytest.
+- [DISCURSIVE-VERDICT] Fallback de IA no frontend NUNCA deve atribuir veredito definitivo ('aprovado'/'incorreto') nem nota SM-2 quando o backend estiver indisponível; deve retornar 'inconclusivo' ('precisa_revisao_humana: true') e preservar o rascunho intacto.
+- [SUPABASE-QUESTOES-TAXONOMY] No Supabase do LemmaS, a tabela oficial de questões é 'public.questoes' (não 'public.questions'); a taxonomia possui 12 Grandes Áreas Canônicas ('Funções' desmembrada de 'Álgebra', sem resíduos de 'Geral', 'Lógica' ou 'Matemática Geral').
+- [STATE-CLOBBER-PERFIL] No frontend Next.js, formulários de perfil (/perfil) NUNCA devem sincronizar estado local em useEffect([profile]) contínuo nem disparar PROFILE_EVENT localmente síncrono que acione re-fetch antes da gravação no Supabase; use lastLoadedUserRef para inicialização única e upsert({ onConflict: 'email' }) no Postgres.
+- [GITHUB-BRANCH-PROTECTION] O branch 'main' no GitHub (StylishGH/LemmaS) possui proteção ativa (GH006); toda entrega de release deve ser enviada via branch dedicada (ex: release/v1.0-launch) para abertura de Pull Request.
+- [DASHBOARD-RADAR-MAPPING] No Dashboard do LemmaS, os 6 eixos do Radar agrupam matérias canônicas via mapeador explícito ('Matemática Básica' -> 'Aritmética', etc.), tempo médio possui teto de 900s contra abas esquecidas e caminhos com parênteses no PowerShell ('(app)') devem ser cotados com aspas duplas.
+- [KATEX-DELIMITER-RUNAWAY] No parser KaTeX do LemmaS (MathDisplay.tsx), delimitadores desbalanceados de LLMs engolem o parágrafo subsequente em vermelho; sanitizeMathText balanceia $ ímpares linha a linha, neutraliza \undefined e FormattedInlineLine trata headings ###.
+- [GIT-NESTED-NODE-MODULES] Em monorepos com subpacotes (ex: frontend/packages/*), .gitignore deve usar '**/node_modules/' explicitamente; pacotes adicionados acidentalmente ao índice Git devem ser desindexados com 'git rm -r --cached' para evitar binários e inchaço (ex: esbuild.exe).
+- [WHATSAPP-PORT-ISOLATION] A ponte Baileys do Hermes usa a porta padrão 3000, que colide com o Next.js (LemmaS). Para isolar, defina a porta 3005 em 'C:\Users\guigu\AppData\Local\hermes\platforms\whatsapp\bridge_port' e envie mensagens via HTTP POST em 'http://127.0.0.1:3005/send' com '{chatId, message}'.
+- [HERMES-MOBILE-MODEL] Configurado com 'nvidia/nvidia/nemotron-3-ultra-550b-a55b' (9Router :20128/v1 com provider: custom) e fallback multicamadas ortogonal ('ds/deepseek-v4-flash' -> 'gemini/gemini-3-flash-preview' -> 'nvidia/nvidia/nemotron-3.5-lightning-30b-a3b' -> 'deepseek/deepseek-chat'). MCP sqlite quebrado (404 npm) desativado (enabled: false) para estancar respawn de processos node.
+- [GOOGLE-SHEETS-WEBHOOK] Para sincronização direta do Alethe Sentry com Google Sheets sem service account GCP, use o endpoint Apps Script Webhook (/exec) com action: 'sync_all' e POST JSON.
+- [JOB-HUNTER-ETHICAL] O Job Hunter autônomo roda via Tarefa Agendada 'Alethe_JobHunter' (19:00 diário) em 'C:\Users\guigu\teamwork_projects\alethe_hermes_integration\job_hunter.py'. Fontes 100% éticas e oficiais: GitHub Vagas BR, BuscaVagasDados e Remotive API. Alvo exclusivo: ENTRADA EFETIVA (Júnior, Assistente, Trainee - CLT) com descarte estrito de estágios corporativos (bloqueados pela coordenação da Licenciatura em Matemática da UFF) e penalidade para Pleno/Sênior. Deduplicação via SQLite local (job_hunter_history.db), gera CSV para Sheets e despacha webhook para o WhatsApp do Hermes (:3005). Nunca usar bots logados no LinkedIn/Indeed para evitar ban de conta e bloqueio de IP.
+- [HERMES-WIN-JOB-BREAKAWAY] No Windows, spawns de subprocessos desanexados (como o bridge Baileys do WhatsApp no adapter.py) falham com '[WinError 5] Acesso negado' quando CREATE_BREAKAWAY_FROM_JOB é usado dentro de Job Objects restritivos. Sempre capturar OSError e fazer fallback para 'windows_detach_flags_without_breakaway()'.
+- [HERMES-GATEWAY-RESTART-WIN] No Windows, o Hermes Gateway supervisionado roda desacoplado de Job Objects via Tarefa Agendada. Se o gateway cair ou o bridge WhatsApp (:3005) parar, NUNCA inicie por subshell interativo (morre no exit do processo pai); reative sempre com 'schtasks /Run /TN Hermes_Gateway'.
+- [HERMES-CRON-WHATSAPP-TARGET] Ao criar ou agendar cron jobs no Hermes para o WhatsApp via CLI (fora de uma sessão interativa no app), '--deliver whatsapp' falha com 'no delivery target resolved'; use SEMPRE a gramática explícita '--deliver whatsapp:<chat_id>' (ex: 'whatsapp:5521981435188@s.whatsapp.net').
+- [CAREER-FUNNEL-WATCHER-WHATSAPP] O monitor de carreira unificado roda via 'career_funnel_monitor.py' integrado ao Alethe Sentry e ao MCP 'career-telemetry': conecta via IMAP no Gmail, rastreia e-mails da Gupy/RHs, ignora newsletters/job alerts, extrai novas etapas/testes com links e prazos e gerencia notificações no WhatsApp (:3005) em 3 tempos (imediata na detecção, a cada 2 dias se pendente, e D-1 urgente na véspera do vencimento). Consolida o funil de 4 categorias em 'D:\dev\alethe-agents\QUADRO_FUNIL_VAGAS.md' (Ações Pendentes, Aguardando Retorno, Vagas Recomendadas e Não Conseguiu).
+- [PATCH-TOOL-TSX-CRLF-DOUBLE] Ao aplicar 'patch' em TSX grande com CRLF (ex: LemmaS frontend/app/(app)/questoes/page.tsx), o patch tool pode duplicar o arquivo inteiro inserindo linha em branco após cada linha (~1950→~3875 linhas, mantendo limpo apenas o hunk substituído); SEMPRE conferir 'git diff --stat' e 'wc -l' logo após o patch; recuperação: script Python que mantém o hunk limpo e pega só as linhas ímpares das regiões duplicadas (validando fronteiras por âncoras conhecidas), aplica as edições pendentes no mesmo script, regrava com newline='\r\n' e valida com tsc --noEmit (exit 0).
 
----
 
-### [2026-10-04] — Nomes das Funções de Usuário em `src/database/users.py`
-- **Regra:** Usar sempre `fazer_login(email, senha, ip=None)` para autenticar e `criar_sessao_lembrada(usuario_id)` para emitir o token de sessão criptografado.
-- **Por quê:** O módulo `users.py` não exporta `autenticar_usuario` nem `criar_sessao_persistente`. Funções renomeadas ou refatoradas no passado geram `ImportError` silencioso se presumidas por convenção padrão.
-- **Quem achou:** Antigravity (Missão Noturna MathAI-Web).
-
----
-
-### [2026-10-04] — SQLite Concorrência no Windows (WAL Mode)
-- **Regra:** Em servidores FastAPI consumindo SQLite local no Windows, SEMPRE ativar `PRAGMA journal_mode = WAL;` e `PRAGMA busy_timeout = 5000;` no ciclo de vida (`lifespan`) da aplicação.
-- **Por quê:** O Windows utiliza locking mandatório de arquivos (`LockFileEx`). Sob requisições concorrentes ou requisições paralelas do frontend, o SQLite padrão pode lançar erros `database is locked` / `SQLITE_BUSY`. O modo WAL (Write-Ahead Logging) permite leituras concorrentes simultâneas com escrita.
-- **Quem achou:** Revisão Técnica Impiedosa com NVIDIA Nemotron-3 Ultra (550B) / Antigravity.
-
----
-
-### [2026-10-04] — Fórmulas Matemáticas e Expressões em JSX/TSX
-- **Regra:** Nunca inserir chaves LaTeX brutas como `{a+b-c}` diretamente no corpo de elementos JSX sem escape (`{"{...}"}` ou texto plano adaptado).
-- **Por quê:** O compilador TypeScript/Babel do Next.js interpreta `{...}` dentro de tags JSX como blocos de código JavaScript. Chaves LaTeX geram erro `TS2304: Cannot find name 'a'`.
-- **Quem achou:** Antigravity (Next.js build check).
-
----
-
-### [2026-10-04] — Banco de Dados em Clones Locais Isolados
-- **Regra:** Em clones isolados (ex: `D:\dev\mathai-web`), copiar o arquivo `data/mathai.db` do repositório principal para permitir testes locais imediatos com o acervo real de questões.
-- **Por quê:** O arquivo `.sqlite` ou `.db` é ignorado pelo `.gitignore`. Um clone inicial criará um banco vazio (`Total questoes: 0`), o que impede a validação visual do frontend sem ingestão prévia.
-- **Quem achou:** Antigravity.
-
-
----
-
-### [2026-10-08] — AUDITORIA DE SEGURANÇA CRÍTICA — LEMMAS / MathAI
-**Baseado em:** PLANO-DE-CORRECOES.md (análise do repositório + site publicado)  
-**Executada por:** 4 subagentes de segurança paralelos (Hermes delegated tasks)  
-**Status:** TODOS os 10 itens críticos/altos CONFIRMADOS no código atual
-
-#### 🔴 CRÍTICO — Correção IMEDIATA (HOJE)
-
-| # | Vulnerabilidade | Arquivo/Local | Evidência |
-|---|----------------|---------------|-----------|
-| 1 | **Supabase anon key hardcoded** | `backend/app/core/config.py:50-56` | `SUPABASE_URL` = `https://gzlzwqknwfgrsnyvgpnv.supabase.co`, `SUPABASE_KEY` = JWT real de produção (`eyJhbG...sVHI`) |
-| 2 | **SECRET_KEY JWT fraca e pública** | `backend/app/core/config.py:32-34` | Default: `lemmas-mathai-super-secret-key-change-in-production-2026` — permite forjar tokens JWT |
-| 3 | **DEBUG=true + conta demo** | `backend/app/core/config.py:29` + `backend/app/api/routes/auth.py:142-150` | `DEBUG` default `true`; login aceita `demo@lemmas.app` / `lemmas123` |
-| 4 | **CORS `*` + `allow_credentials=True`** | `backend/app/main.py:34-44` | Fallback para `["*"]` com credentials — vetor CSRF clássico |
-| 5 | **Rotas /tutor/* sem autenticação** | `backend/app/api/routes/tutor.py` | `/hint`, `/evaluate`, `/ocr`, `/review-schedule` — **zero `Depends(get_current_student)`** |
-| 6 | **IDOR em `/review-schedule`** | `backend/app/api/routes/tutor.py:200` | Aceita `student_id` do payload em vez de derivar do JWT |
-| 7 | **Credenciais Supabase no frontend** | `frontend/lib/supabase.ts:3-6` | URL e anon key reais como fallback no código client-side |
-
-#### 🟠 ALTO — Esta Semana
-
-| # | Item | Localização | Ação |
-|---|------|-------------|------|
-| 8 | **Rate limiting ausente** | `backend/app/main.py` + `requirements.txt` | `slowapi` não instalado; nenhuma rota protegida |
-| 9 | **OpenAPI docs expostas** | `backend/app/main.py:29-30` | `docs_url="/docs"`, `redoc_url="/redoc"` hardcoded |
-| 10 | **Middleware auth frontend inexistente** | `frontend/middleware.ts` | Não existe; `/perfil` e `/resolver` acessíveis sem login |
-| 11 | **@supabase/ssr não instalado** | `frontend/package.json` | Apenas `@supabase/supabase-js` presente |
-| 12 | **RLS não configurado no Supabase** | Banco de dados | Dados expostos via Data API pública |
-
-#### ✅ Checklist de Verificação Pós-Correção
-```bash
-# 1. Dashboard exige login (janela anônima):
-curl -s -o /dev/null -w "%{http_code}
-" https://lemmas-ochre.vercel.app/perfil
-# Esperado: 307 redirect → /login
-
-# 2. /docs desativado em produção:
-curl -s -o /dev/null -w "%{http_code}
-" https://SEU-BACKEND.onrender.com/docs
-# Esperado: 404
-
-# 3. Rotas de IA exigem token (401 sem auth):
-curl -s -o /dev/null -w "%{http_code}
-" -X POST https://SEU-BACKEND.onrender.com/api/tutor/hint -H "Content-Type: application/json" -d '{"level":1}'
-# Esperado: 401
-
-# 4. Login demo desativado:
-curl -s -o /dev/null -w "%{http_code}
-" -X POST https://SEU-BACKEND.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"email":"demo@lemmas.app","password":"lemmas123"}'
-# Esperado: 401
-
-# 5. RLS ativo (Data API direto):
-curl "https://SEU-PROJETO.supabase.co/rest/v1/tentativas?select=*" -H "apikey: ANON_KEY"
-# Esperado: [] ou erro — NUNCA dados reais
-
-# 6. Segredos no histórico do Git:
-gitleaks git . --verbose
-# Se encontrar chaves: ROTACIONAR IMEDIATAMENTE
-```
-
-#### 🎯 Ordem de Execução Recomendada (15 min → 2h)
-1. **Rotacionar anon key Supabase** + remover hardcode no config.py (15 min)
-2. **SECRET_KEY forte no Render** + fail-fast no main.py (10 min)
-3. **DEBUG=false no Render** + remover bloco demo em auth.py (5 min)
-4. **Auth nas rotas /tutor/*** + user_id do JWT (30 min)
-5. **Rate limiting (slowapi)** (30 min)
-6. **RLS no Supabase** (1-2h)
-7. **Middleware auth frontend** + @supabase/ssr (1h)
-8. **CORS com domínios reais** no Render (5 min)
-9. **Cloudflare na frente do backend** (1h)
-10. **gitleaks + rotação de chaves no histórico** (30 min)
-
-**Quem achou:** 4 subagentes Hermes (security auditors) + Usuário (iniciador da auditoria).
-
----
-
-### [2026-10-08] — CORREÇÕES DE SEGURANÇA APLICADAS (Backend + Frontend)
-**Commit backend:** `4aca117` — fix(security): rotacionar segredos, remover credenciais hardcoded e proteger rotas /tutor  
-**Commit frontend:** `77fb5ba` — fix(security): frontend - remover hardcodes, adicionar @supabase/ssr, middleware auth e client servidor
-
-#### ✅ CONCLUÍDO — Backend
-| Item | Ação | Arquivo/Commit |
-|------|------|----------------|
-| 1 | SUPABASE_URL / SUPABASE_KEY hardcoded → **removidos** | `config.py` |
-| 2 | SECRET_KEY sem default (fail-fast) | `config.py` + `main.py` |
-| 3 | DEBUG default `false` | `config.py` |
-| 4 | Token expiry 7d → **8h** | `config.py` |
-| 5 | CORS sem fallback `*`; origens fixas | `main.py` |
-| 6 | OpenAPI docs só em DEBUG | `main.py` |
-| 7 | Rate limiting (slowapi) integrado | `main.py` + `requirements.txt` |
-| 8 | Demo creds removidas | `auth.py` |
-| 9 | 4 rotas `/tutor/*` protegidas com `Depends(get_current_student)` | `tutor.py` |
-| 10 | IDOR corrigido: student_id do JWT | `tutor.py` |
-
-#### ✅ CONCLUÍDO — Frontend
-| Item | Ação | Arquivo/Commit |
-|------|------|----------------|
-| 1 | Supabase URL/key hardcoded → **removidos** + fail-fast | `lib/supabase.ts` |
-| 2 | `@supabase/ssr` instalado | `package.json` |
-| 3 | Middleware auth criado | `middleware.ts` |
-| 4 | SSR client para Server Components | `lib/supabase-server.ts` |
-| 5 | Proteção: /perfil /resolver /dashboard | `middleware.ts` |
-
-#### ⏳ PENDENTE (Ação sua)
-| Item | O que fazer | Onde |
-|------|-------------|------|
-| 1 | **Rotacionar anon key Supabase** + definir em Render + Vercel | Supabase Dashboard → Settings → API |
-| 2 | **Definir SECRET_KEY forte** (64+ chars) no Render | Render → Environment |
-| 3 | **DEBUG=false** no Render | Render → Environment |
-| 4 | **SUPABASE_URL / SUPABASE_KEY** no Render | Render → Environment |
-| 5 | **NEXT_PUBLIC_SUPABASE_URL / ANON_KEY** no Vercel | Vercel → Settings → Environment Variables |
-| 6 | **Aplicar RLS** no Supabase | Supabase Dashboard → SQL Editor → rodar `04_production_rls_hardening.sql` |
-| 7 | **gitleaks** no histórico + rotação se houver vazamento | `gitleaks git . --verbose` |
-| 8 | **Cloudflare** na frente do backend (opcional, recomendado) | Cloudflare Dashboard |
-
-#### 🔍 Checklist de Verificação Pós-Deploy
-```bash
-# 1. Dashboard exige login (janela anônima):
-curl -s -o /dev/null -w "%{http_code}
-" https://lemmas-ochre.vercel.app/perfil
-# Esperado: 307 redirect → /login
-
-# 2. /docs desativado em produção:
-curl -s -o /dev/null -w "%{http_code}
-" https://SEU-BACKEND.onrender.com/docs
-# Esperado: 404
-
-# 3. Rotas de IA exigem token (401 sem auth):
-curl -s -o /dev/null -w "%{http_code}
-" -X POST https://SEU-BACKEND.onrender.com/api/tutor/hint -H "Content-Type: application/json" -d '{"level":1}'
-# Esperado: 401
-
-# 4. Login demo desativado:
-curl -s -o /dev/null -w "%{http_code}
-" -X POST https://SEU-BACKEND.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"email":"demo@lemmas.app","password":"lemmas123"}'
-# Esperado: 401
-
-# 5. RLS ativo (Data API direto):
-curl "https://SEU-PROJETO.supabase.co/rest/v1/tentativas?select=*" -H "apikey: ANON_KEY"
-# Esperado: [] ou erro — NUNCA dados reais
-
-# 6. Segredos no histórico do Git:
-gitleaks git . --verbose
-# Se encontrar chaves: ROTACIONAR IMEDIATAMENTE
-```
-
----
-
-### [2026-10-08] — FIX BUILD FRONTEND: Tipagem CookieOptions
-**Commit:** `1a643fb` — fix(frontend): tipar CookieOptions no middleware e supabase-server para build passar
-
-#### Erro Original
-```
-lib/supabase-server.ts(15,16): error TS7006: Parameter 'cookiesToSet' implicitly has an 'any' type.
-middleware.ts(17,16): error TS7006: Parameter 'cookiesToSet' implicitly has an 'any' type.
-```
-
-#### Correção
-```typescript
-// Em ambos os arquivos:
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-
-// setAll tipado explicitamente:
-setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[])
-```
-
-#### Status
-- ✅ `npm run build` passa (Next.js 16.3.8 + Turbopack + TypeScript)
-- ⚠️ Aviso "middleware → proxy" é depreciação futura apenas; funciona normal
-- Migração futura: `npx @next/codemod@canary middleware-to-proxy .`
+## 2. Mapa Topológico de Consulta Sob Demanda (Leia apenas se a tarefa demandar)
+- Histórico Canônico de Lições & Incidentes Passados: `D:\dev\alethe-agents\docs\SHARED-MEMORY-HISTORICO.md`
+- Arquitetura Completa do Ecossistema: `D:\dev\alethe-agents\docs\ARQUITETURA_ECOSSISTEMA_IA.md`
+- Tarefas de UI, Rust ou Tauri: `D:\dev\alethe-agents\docs\memory_tauri.md`
+- Pipelines Scikit-Learn, SQL e Métricas: `D:\Memoria\Memória\LemmaS-Obsidian-Vault\LemmaS-Vault\04-MathAI-e-Dados\padroes_codigo_ml.md`
+- Prioridades Imediatas do Dia: `D:\Memoria\Memória\SPRINT_HOJE.md`

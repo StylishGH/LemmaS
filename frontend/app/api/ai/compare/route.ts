@@ -136,10 +136,11 @@ export async function POST(req: NextRequest) {
       console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (25s):", backendErr);
     }
 
-    // 2. OmniRoute (Azure) — Segunda Opinião com DOIS combos separados (cérebros diferentes)
+    // 2. OmniRoute (Azure) — Segunda Opinião com DOIS modelos NVIDIA distintos (cérebros diferentes)
     if (process.env.OMNIROUTE_API_KEY) {
       try {
-        // Chamada 1 — Resposta Principal (combo math-socratic-1: Gemini -> Llama)
+        // Chamada 1 — Resposta Principal (Modelo A — Rigor Axiomático)
+        // Usa nvidia/nvidia/nemotron-3-ultra-550b-a55b (modelo gigante da NVIDIA, 550B parâmetros)
         const omniRes1 = await generateOmniRouteContent({
           prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere a RESPOSTA PRINCIPAL (Modelo A — Rigor Axiomático e Prova Formal) para a questão matemática abaixo. Desenvolva exclusivamente prova formal dedutiva universal, sem atalhos de concurso, sem fórmulas de memorização rápida.
 
@@ -148,19 +149,20 @@ ${contextoQuestao ? `CONTEXTO: ${contextoQuestao}` : ""}
 
 Retorne EXCLUSIVAMENTE JSON válido com:
 \{
-  "modelo_a": "conteúdo completo do Modelo A com LaTeX em \$\$...\$\$"
+  "modelo_a": "conteúdo completo do Modelo A com LaTeX em \\$\\$...\\$\\$"
 \}`,
-          systemInstruction: "Você é um tutor de matemática especializado em demonstração formal. Responda SOMENTE com JSON válido.",
-          model: "math-socratic-1",
+          systemInstruction: "Você é um tutor de matemática especializado em demonstração formal axiomática. Responda SOMENTE com JSON válido.",
+          model: "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
           temperature: 0.15,
           maxTokens: 2000,
-          timeoutMs: 12000,
+          timeoutMs: 15000,
         });
 
         const parsed1 = safeParseJsonWithLatex(omniRes1.text);
         const modeloA = parsed1?.modelo_a || "";
 
-        // Chamada 2 — Segunda Opinião (combo math-socratic-2: Llama -> Gemini)
+        // Chamada 2 — Segunda Opinião (Modelo B — Intuição Heurística)
+        // Usa nvidia/google/gemma-4-31b-it (modelo Google Gemma hospedado na NVIDIA NIM, 31B parâmetros)
         const omniRes2 = await generateOmniRouteContent({
           prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere a SEGUNDA OPINIÃO (Modelo B — Intuição Heurística) para a mesma questão abaixo. Explore homotetia de figuras primitivas, simetrias e macetes rápidos de tangência. Dê uma abordagem diferente da resposta principal.
 
@@ -169,14 +171,14 @@ ${contextoQuestao ? `CONTEXTO: ${contextoQuestao}` : ""}
 
 Retorne EXCLUSIVAMENTE JSON válido com:
 \{
-  "modelo_b": "conteúdo completo do Modelo B com LaTeX em \$\$...\$\$",
+  "modelo_b": "conteúdo completo do Modelo B com LaTeX em \\$\\$...\\$\\$",
   "sintese": "síntese pedagógica comparando as duas abordagens"
 \}`,
           systemInstruction: "Você é um tutor de matemática especializado em heurística e atalhos cognitivos. Responda SOMENTE com JSON válido.",
-          model: "math-socratic-2",
+          model: "nvidia/google/gemma-4-31b-it",
           temperature: 0.15,
           maxTokens: 2000,
-          timeoutMs: 12000,
+          timeoutMs: 15000,
         });
 
         const parsed2 = safeParseJsonWithLatex(omniRes2.text);
@@ -193,9 +195,9 @@ Retorne EXCLUSIVAMENTE JSON válido com:
               role: "Intuição Heurística & Atalhos Cognitivos",
               content: parsed2?.modelo_b || "",
             },
-            sintese: parsed2?.sintese || "Comparação gerada pelo OmniRoute (Azure) com dois combos separados.",
+            sintese: parsed2?.sintese || "Comparação gerada pelo OmniRoute (Azure) com dois modelos NVIDIA distintos.",
             provider: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI (2 combos separados)",
+            ia_usada: "OmniRoute (Azure) - MathAI (Nemotron 550B + Gemma 31B)",
             model_used: `${omniRes1.model} + ${omniRes2.model}`,
           });
         }
@@ -220,7 +222,8 @@ Seja o problema enquadrado em seu domínio teórico. As hipóteses são explicit
 
 $\\therefore$ A solução decorre diretamente dos axiomas e definições.`;
 
-    const fallbackModelB = `**Modelo B — Intuição Heurística (Contingência)**
+
+const fallbackModelB = `**Modelo B — Intuição Heurística (Contingência)**
 
 Visão rápida: reconheça o padrão clássico. Muitas questões dessa família reduzem-se a figuras notáveis.
 
