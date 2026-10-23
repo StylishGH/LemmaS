@@ -136,48 +136,67 @@ export async function POST(req: NextRequest) {
       console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (25s):", backendErr);
     }
 
-    // 2. OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
+    // 2. OmniRoute (Azure) — Segunda Opinião com DOIS combos separados (cérebros diferentes)
     if (process.env.OMNIROUTE_API_KEY) {
       try {
-        const omniRes = await generateOmniRouteContent({
-          prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere uma comparação entre duas abordagens para a questão matemática abaixo.
-
-MODELO A — Rigor Axiomático e Prova Formal: desenvolva exclusivamente prova formal dedutiva universal, sem atalhos de concurso, sem fórmulas de memorização rápida.
-
-MODELO B — Intuição Heurística: explore homotetia de figuras primitivas, simetrias e macetes rápidos de tangência.
+        // Chamada 1 — Resposta Principal (combo math-socratic-1: Gemini -> Llama)
+        const omniRes1 = await generateOmniRouteContent({
+          prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere a RESPOSTA PRINCIPAL (Modelo A — Rigor Axiomático e Prova Formal) para a questão matemática abaixo. Desenvolva exclusivamente prova formal dedutiva universal, sem atalhos de concurso, sem fórmulas de memorização rápida.
 
 ENUNCIADO: ${enunciado}
 ${contextoQuestao ? `CONTEXTO: ${contextoQuestao}` : ""}
 
 Retorne EXCLUSIVAMENTE JSON válido com:
 \{
-  "model_a": "conteúdo completo do Modelo A com LaTeX em \$\$...\$\$",
-  "model_b": "conteúdo completo do Modelo B com LaTeX em \$\$...\$\$",
-  "sintese": "síntese pedagógica comparando as duas abordagens"
+  "modelo_a": "conteúdo completo do Modelo A com LaTeX em \$\$...\$\$"
 \}`,
-          systemInstruction: "Você é um tutor de matemática especializado em comparação de métodos. Responda SOMENTE com JSON válido.",
+          systemInstruction: "Você é um tutor de matemática especializado em demonstração formal. Responda SOMENTE com JSON válido.",
+          model: "math-socratic-1",
           temperature: 0.15,
           maxTokens: 2000,
           timeoutMs: 12000,
         });
 
-        const parsed = safeParseJsonWithLatex(omniRes.text);
-        if (parsed && (parsed.model_a || parsed.model_b)) {
+        const parsed1 = safeParseJsonWithLatex(omniRes1.text);
+        const modeloA = parsed1?.modelo_a || "";
+
+        // Chamada 2 — Segunda Opinião (combo math-socratic-2: Llama -> Gemini)
+        const omniRes2 = await generateOmniRouteContent({
+          prompt: `Você é o Sistema de Segunda Opinião do LEMMAS (MathAI Engine). Gere a SEGUNDA OPINIÃO (Modelo B — Intuição Heurística) para a mesma questão abaixo. Explore homotetia de figuras primitivas, simetrias e macetes rápidos de tangência. Dê uma abordagem diferente da resposta principal.
+
+ENUNCIADO: ${enunciado}
+${contextoQuestao ? `CONTEXTO: ${contextoQuestao}` : ""}
+
+Retorne EXCLUSIVAMENTE JSON válido com:
+\{
+  "modelo_b": "conteúdo completo do Modelo B com LaTeX em \$\$...\$\$",
+  "sintese": "síntese pedagógica comparando as duas abordagens"
+\}`,
+          systemInstruction: "Você é um tutor de matemática especializado em heurística e atalhos cognitivos. Responda SOMENTE com JSON válido.",
+          model: "math-socratic-2",
+          temperature: 0.15,
+          maxTokens: 2000,
+          timeoutMs: 12000,
+        });
+
+        const parsed2 = safeParseJsonWithLatex(omniRes2.text);
+
+        if ((parsed1?.modelo_a || parsed2?.modelo_b)) {
           return NextResponse.json({
             model_a: {
               name: "Rigor Axiomático e Prova Formal",
               role: "Demonstração Analítica & Invariantes",
-              content: parsed.model_a || "",
+              content: modeloA,
             },
             model_b: {
               name: "Heurística & Atalhos Cognitivos",
               role: "Intuição Heurística & Atalhos Cognitivos",
-              content: parsed.model_b || "",
+              content: parsed2?.modelo_b || "",
             },
-            sintese: parsed.sintese || "Comparação gerada pelo OmniRoute (Azure).",
+            sintese: parsed2?.sintese || "Comparação gerada pelo OmniRoute (Azure) com dois combos separados.",
             provider: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI",
-            model_used: omniRes.model || "math-socratic",
+            ia_usada: "OmniRoute (Azure) - MathAI (2 combos separados)",
+            model_used: `${omniRes1.model} + ${omniRes2.model}`,
           });
         }
       } catch (omniErr) {
