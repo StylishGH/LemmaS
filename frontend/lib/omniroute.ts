@@ -1,20 +1,33 @@
 /**
- * Cliente utilitário para inferência via OmniRoute (Azure Container Apps).
+ * Cliente utilitário para inferência via OmniRoute.
  *
- * O OmniRoute é um gateway de IA com fallback interno (priority strategy) entre
- * múltiplos provedores: NVIDIA NIM (nemotron-3-nano-omni-reasoning),
- * Google Gemini (gemini-3.6-flash) e OpenRouter (llama-3.3-70b-instruct).
- *
- * Endpoint: https://omniroute-mathai.wittypebble-4ffc5c1f.chilecentral.azurecontainerapps.io/v1/chat/completions
- * Autenticação: Authorization: Bearer <OMNIROUTE_API_KEY>
+ * O OmniRoute é um gateway compatível com a API OpenAI. OMNIROUTE_URL deve usar
+ * HTTPS e pode ser a URL base ou o endpoint completo de chat completions.
  */
 
-const OMNIROUTE_URL =
-  process.env.OMNIROUTE_URL ||
-  'https://omniroute-mathai.wittypebble-4ffc5c1f.chilecentral.azurecontainerapps.io/v1/chat/completions';
+const OMNIROUTE_URL = process.env.OMNIROUTE_URL?.trim();
+const OMNIROUTE_API_KEY = process.env.OMNIROUTE_API_KEY?.trim();
 
-const OMNIROUTE_API_KEY =
-  process.env.OMNIROUTE_API_KEY || 'omnimathai-2026-10-23-1792714290';
+function getOmniRouteEndpoint(): string {
+  if (!OMNIROUTE_URL) {
+    throw new Error('OMNIROUTE_URL não configurada.');
+  }
+
+  const url = new URL(OMNIROUTE_URL);
+  if (url.protocol !== 'https:') {
+    throw new Error('OMNIROUTE_URL deve usar HTTPS.');
+  }
+
+  const pathname = url.pathname.replace(/\/+$/, '');
+  url.pathname = pathname || '/';
+  if (!/\/v1\/chat\/completions$/i.test(pathname)) {
+    url.pathname = /\/v1$/i.test(pathname)
+      ? `${pathname}/chat/completions`
+      : `${pathname}/v1/chat/completions`;
+  }
+
+  return url.toString();
+}
 
 export interface OmniRouteContentOptions {
   prompt: string;
@@ -22,7 +35,7 @@ export interface OmniRouteContentOptions {
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;
-  /** Nome do combo no OmniRoute (ex: "math-socratic-1", "math-socratic-2"). Default: "math-socratic" */
+  /** Nome do combo configurado no OmniRoute. Default: "math-socratic". */
   model?: string;
 }
 
@@ -35,6 +48,11 @@ export interface OmniRouteResponse {
 export async function generateOmniRouteContent(
   options: OmniRouteContentOptions
 ): Promise<OmniRouteResponse> {
+  if (!OMNIROUTE_API_KEY) {
+    throw new Error('OMNIROUTE_API_KEY não configurada.');
+  }
+  const endpoint = getOmniRouteEndpoint();
+
   const {
     prompt,
     systemInstruction,
@@ -56,7 +74,7 @@ export async function generateOmniRouteContent(
     max_tokens: maxTokens,
   });
 
-  const res = await fetch(OMNIROUTE_URL, {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

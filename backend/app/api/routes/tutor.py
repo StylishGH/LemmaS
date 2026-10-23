@@ -361,15 +361,13 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         messages=[{"role": "user", "content": prompt}],
         system_prompt=system_instruction,
         temperature=0.2,
-        # O Lightning 30B da NVIDIA responde rapidamente e mantém capacidade
-        # suficiente para produzir duas leituras matemáticas independentes.
-        # Fixar o modelo evita gastar o orçamento da requisição sondando modelos
-        # menos adequados antes de consultar o fallback Gemini.
+        # O OmniRoute seleciona o combo math-socratic; demais provedores são
+        # contingência e mantêm seus modelos padrão.
         max_tokens=1150,
         json_output=True,
         preferred_model="nvidia/nemotron-3.5-lightning-30b-a3b",
         task_type="second_opinion",
-        total_budget_seconds=32.0,
+        total_budget_seconds=18.0,
     )
 
     content_raw = res.get("content", "{}")
