@@ -14,9 +14,11 @@ garantindo observabilidade financeira e integridade de proveniência com hash SH
 """
 
 from abc import ABC, abstractmethod
+from collections import deque
 import json
 import logging
 import re
+from threading import Lock
 import time
 import uuid
 from typing import Any, Dict, List, Optional
@@ -47,6 +49,34 @@ NVIDIA_VISION_MODELS = [
     "meta/llama-3.2-11b-vision-instruct",
     "meta/llama-3.2-90b-vision-instruct",
 ]
+
+COGNITIVE_PROVIDER_TIMEOUTS = {
+    "nvidia": 5.0,
+    "groq": 5.0,
+    "river": 7.0,
+    "openrouter": 7.0,
+}
+
+
+class SlidingWindowRateLimiter:
+    def __init__(self, limit: int, window_seconds: float) -> None:
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._timestamps: deque[float] = deque()
+        self._lock = Lock()
+
+    def allow(self) -> bool:
+        now = time.monotonic()
+        with self._lock:
+            while self._timestamps and now - self._timestamps[0] >= self.window_seconds:
+                self._timestamps.popleft()
+            if len(self._timestamps) >= self.limit:
+                return False
+            self._timestamps.append(now)
+            return True
+
+
+_NVIDIA_REQUEST_LIMITER = SlidingWindowRateLimiter(limit=35, window_seconds=60.0)
 
 
 class BaseLLMProvider(ABC):
@@ -105,6 +135,10 @@ class OpenAICompatibleProvider(BaseLLMProvider):
     def effective_api_key(self) -> str:
         if self.name == "nvidia":
             return settings.NVIDIA_API_KEY or self.api_key
+        elif self.name == "groq":
+            return settings.GROQ_API_KEY or self.api_key
+        elif self.name == "river":
+            return settings.RIVER_API_KEY or self.api_key
         elif self.name == "deepseek":
             return settings.DEEPSEEK_API_KEY or self.api_key
         elif self.name == "openrouter":
@@ -120,14 +154,16 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             return settings.has_local_llm
         elif self.name == "nvidia":
             return settings.has_nvidia
+        elif self.name == "groq":
+            return settings.has_groq
+        elif self.name == "river":
+            return settings.has_river
         elif self.name == "deepseek":
             return settings.has_deepseek
         elif self.name == "openrouter":
             return settings.has_openrouter
         elif self.name == "9router":
             return settings.has_9router
-        elif self.name == "omniroute":
-            return settings.has_omniroute
         return bool(self.effective_base_url and self.effective_api_key)
 
     def complete(
@@ -157,7 +193,12 @@ class OpenAICompatibleProvider(BaseLLMProvider):
         }
         api_key = self.effective_api_key
         if api_key and api_key != "EMPTY":
-            headers["Authorization"] = f"Bearer {api_key}"
+            headers["Authorization"] = "Bearer {}".format(api_key)
+        api_keys = [api_key] if api_key else []
+        if self.name == "nvidia":
+            secondary_key = settings.NVIDIA_API_KEY_2
+            if secondary_key and secondary_key not in api_keys:
+                api_keys.append(secondary_key)
 
         candidate_models = [preferred_model] if preferred_model else self.default_models
         connect_timeout = self.timeout[0] if isinstance(self.timeout, tuple) else 2.0
@@ -188,13 +229,42 @@ class OpenAICompatibleProvider(BaseLLMProvider):
 
             try:
                 logger.info("[CID:%s] AI Provider [%s] call started; model=%s; timeout=%.1fs; task_type=%s", cid, self.name, model, effective_read, task_type)
-                resp = requests.post(endpoint, headers=headers, json=payload, timeout=req_timeout)
+                for key_index, candidate_api_key in enumerate(api_keys):
+                    if candidate_api_key and candidate_api_key != "EMPTY":
+                        headers["Authorization"] = "Bearer {}".format(
+                            candidate_api_key
+                        )
+                    if self.name == "nvidia" and not _NVIDIA_REQUEST_LIMITER.allow():
+                        logger.warning(
+                            "[CID:%s] [nvidia] Limite interno de chamadas por minuto atingido; acionando fallback.",
+                            cid,
+                        )
+                        return None
+                    resp = requests.post(
+                        endpoint,
+                        headers=headers,
+                        json=payload,
+                        timeout=req_timeout,
+                    )
+                    if resp.status_code not in (401, 403) or key_index == len(api_keys) - 1:
+                        break
+                    logger.warning(
+                        "[CID:%s] [nvidia] Chave primária rejeitada com HTTP %s; tentando a credencial reserva.",
+                        cid,
+                        resp.status_code,
+                    )
 
                 # Tratamento de serving engines que rejeitam response_format (ex: HTTP 400)
                 if resp.status_code == 400 and json_output and "response_format" in payload:
                     logger.warning("[CID:%s] [%s] 400 com response_format; tentando sem parâmetro. detail=%s", cid, self.name, resp.text[:200])
                     retry_payload = dict(payload)
                     retry_payload.pop("response_format", None)
+                    if self.name == "nvidia" and not _NVIDIA_REQUEST_LIMITER.allow():
+                        logger.warning(
+                            "[CID:%s] [nvidia] Limite interno de chamadas por minuto atingido antes do retry.",
+                            cid,
+                        )
+                        return None
                     resp = requests.post(endpoint, headers=headers, json=retry_payload, timeout=req_timeout)
 
                 if resp.status_code == 200:
@@ -238,6 +308,18 @@ class OpenAICompatibleProvider(BaseLLMProvider):
                 if resp.status_code == 404:
                     logger.warning("[CID:%s] [%s] Modelo não encontrado HTTP 404: %s. Tentando próximo modelo.", cid, self.name, model)
                     continue
+
+                if resp.status_code in (429, 503) and task_type in (
+                    "socratic_hint",
+                    "second_opinion",
+                ):
+                    logger.warning(
+                        "[CID:%s] [%s] Erro HTTP %s em tarefa cognitiva; acionando próximo provedor.",
+                        cid,
+                        self.name,
+                        resp.status_code,
+                    )
+                    break
 
                 if resp.status_code in (429, 503):
                     logger.warning("[CID:%s] [%s] Erro transiente HTTP %s (sobrecarga/rate-limit) no modelo %s.", cid, self.name, resp.status_code, model)
@@ -452,7 +534,23 @@ class MathAiGateway:
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=settings.NVIDIA_API_KEY,
             default_models=NVIDIA_NIM_MODELS,
-            timeout=(2.0, 24.0),
+            timeout=(2.0, 5.0),
+        )
+
+        self.groq_provider = OpenAICompatibleProvider(
+            name="groq",
+            base_url="https://api.groq.com/openai/v1",
+            api_key=settings.GROQ_API_KEY,
+            default_models=[settings.GROQ_MODEL],
+            timeout=(2.0, 5.0),
+        )
+
+        self.river_provider = OpenAICompatibleProvider(
+            name="river",
+            base_url=settings.RIVER_API_URL,
+            api_key=settings.RIVER_API_KEY,
+            default_models=[settings.RIVER_MODEL],
+            timeout=(2.0, 7.0),
         )
 
         self.deepseek_provider = OpenAICompatibleProvider(
@@ -460,7 +558,7 @@ class MathAiGateway:
             base_url=settings.DEEPSEEK_API_URL,
             api_key=settings.DEEPSEEK_API_KEY,
             default_models=["deepseek-reasoner", "deepseek-chat"],
-            timeout=(2.0, 8.0),
+            timeout=(2.0, 7.0),
         )
 
         self.openrouter_provider = OpenAICompatibleProvider(
@@ -481,21 +579,6 @@ class MathAiGateway:
             api_key=settings.NINEROUTER_API_KEY,
             default_models=["nvidia-fallback"],
             timeout=(0.8, 3.5),
-        )
-
-        omniroute_url = settings.OMNIROUTE_URL.rstrip("/")
-        if omniroute_url and not omniroute_url.endswith("/chat/completions"):
-            omniroute_url = (
-                f"{omniroute_url}/chat/completions"
-                if omniroute_url.endswith("/v1")
-                else f"{omniroute_url}/v1/chat/completions"
-            )
-        self.omniroute_provider = OpenAICompatibleProvider(
-            name="omniroute",
-            base_url=omniroute_url,
-            api_key=settings.OMNIROUTE_API_KEY,
-            default_models=["math-socratic"],
-            timeout=(2.0, 24.0),
         )
 
         self.gemini_provider = GeminiProvider(
@@ -558,11 +641,20 @@ class MathAiGateway:
             # `preferred_model` é específico do provedor. Em Segunda Opinião
             # ele fixa o Nemotron Lightning, sem enviar esse identificador para
             # Gemini, OpenRouter ou DeepSeek caso a contingência seja acionada.
-            provider_preferred_model = (
-                preferred_model
-                if task_type != "second_opinion" or provider.name == "nvidia"
-                else None
-            )
+            if task_type in ("socratic_hint", "second_opinion"):
+                provider_preferred_model = (
+                    preferred_model or NVIDIA_NIM_MODELS[0]
+                    if provider.name == "nvidia"
+                    else None
+                )
+            else:
+                provider_preferred_model = preferred_model
+            provider_time_budget = remaining
+            if task_type in ("socratic_hint", "second_opinion"):
+                provider_time_budget = min(
+                    remaining,
+                    COGNITIVE_PROVIDER_TIMEOUTS.get(provider.name, remaining),
+                )
             result = provider.complete(
                 messages=all_messages,
                 temperature=temperature,
@@ -570,7 +662,7 @@ class MathAiGateway:
                 json_output=json_output,
                 preferred_model=provider_preferred_model,
                 task_type=task_type,
-                time_budget=remaining,
+                time_budget=provider_time_budget,
                 correlation_id=cid,
             )
 
@@ -687,49 +779,35 @@ class MathAiGateway:
         """Resolve a ordem dos provedores conforme a matriz pedagógica e o .env."""
         # Se forçado explicitamente via PRIMARY_AI_PROVIDER
         primary = settings.PRIMARY_AI_PROVIDER
-        if task_type != "second_opinion" and primary == "local_vllm" and self.local_vllm_provider.is_available():
+        cognitive_tasks = ("socratic_hint", "second_opinion")
+        if task_type not in cognitive_tasks and primary == "local_vllm" and self.local_vllm_provider.is_available():
             return [self.local_vllm_provider, self.nvidia_nim_provider, self.openrouter_provider, self.deepseek_provider, self.gemini_provider]
-        if task_type != "second_opinion" and primary == "deepseek" and self.deepseek_provider.is_available():
+        if task_type not in cognitive_tasks and primary == "deepseek" and self.deepseek_provider.is_available():
             return [self.deepseek_provider, self.nvidia_nim_provider, self.openrouter_provider, self.gemini_provider]
-        if task_type != "second_opinion" and primary == "gemini" and self.gemini_provider.is_available():
+        if task_type not in cognitive_tasks and primary == "gemini" and self.gemini_provider.is_available():
             return [self.gemini_provider, self.nvidia_nim_provider, self.openrouter_provider]
 
         cascade: List[BaseLLMProvider] = []
 
         # 1. vLLM / Modelo Aberto Local tem prioridade se configurado
-        if task_type != "second_opinion" and self.local_vllm_provider.is_available():
+        if task_type not in cognitive_tasks and self.local_vllm_provider.is_available():
             cascade.append(self.local_vllm_provider)
 
         # 2. 9Router se explicitamente configurado
-        if task_type != "second_opinion" and settings.has_9router and not settings.has_nvidia:
+        if task_type not in cognitive_tasks and settings.has_9router and not settings.has_nvidia:
             cascade.append(self.ninerouter_provider)
 
-        # 3. Raciocínio Axiomático vs Dica Socrática
-        if task_type == "socratic_hint":
-            # Dicas passam pelo gateway central; priorize o combo pedagógico configurado.
-            if self.omniroute_provider.is_available():
-                cascade.append(self.omniroute_provider)
-            if self.gemini_provider.is_available():
-                cascade.append(self.gemini_provider)
+        # Dicas e Segunda Opinião usam provedores diretos, em sequência e
+        # com limites por tentativa para que um provedor lento não bloqueie o fallback.
+        if task_type in cognitive_tasks:
             if self.nvidia_nim_provider.is_available():
                 cascade.append(self.nvidia_nim_provider)
+            if self.groq_provider.is_available():
+                cascade.append(self.groq_provider)
             if self.openrouter_provider.is_available():
                 cascade.append(self.openrouter_provider)
-            if self.deepseek_provider.is_available():
-                cascade.append(self.deepseek_provider)
-        elif task_type == "second_opinion":
-            # Prioriza o combo pedagógico do OmniRoute; provedores diretos ficam
-            # disponíveis como contingência quando o gateway não responder.
-            if self.omniroute_provider.is_available():
-                cascade.append(self.omniroute_provider)
-            if self.nvidia_nim_provider.is_available():
-                cascade.append(self.nvidia_nim_provider)
-            if self.gemini_provider.is_available():
-                cascade.append(self.gemini_provider)
-            if self.openrouter_provider.is_available():
-                cascade.append(self.openrouter_provider)
-            if self.deepseek_provider.is_available():
-                cascade.append(self.deepseek_provider)
+            if self.river_provider.is_available():
+                cascade.append(self.river_provider)
         else:
             # Raciocínio formal, avaliação cognitiva e tarefas analíticas profundas
             if self.nvidia_nim_provider.is_available():
