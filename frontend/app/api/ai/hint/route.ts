@@ -8,6 +8,7 @@ import {
 import { autoWrapLatexExpressions } from "@/lib/math-parser";
 import { generateGeminiContent } from "@/lib/gemini";
 import { generateNvidiaContent } from "@/lib/nvidia";
+import { generateOmniRouteContent } from "@/lib/omniroute";
 
 // Node.js process types for process.env
 /// <reference types="node" />
@@ -187,6 +188,36 @@ export async function POST(req: NextRequest) {
 
     INSTRUÇÃO: Gere a dica do nível ${level} conforme a pedagogia socrática.`;
 
+        // 2. OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
+        // Chamado ANTES do Gemini/NVIDIA diretos para não travar esperando a NVIDIA demorar
+        if (process.env.OMNIROUTE_API_KEY) {
+          try {
+            const omniRes = await generateOmniRouteContent({
+              prompt: `${hintPrompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido.`,
+              systemInstruction: PROMPT_SISTEMA_HINT,
+              temperature: 0.15,
+              maxTokens: 1024,
+              timeoutMs: 12000, // timeout curto: se travar, cai para o próximo
+            });
+
+            const parsed = JSON.parse(omniRes.text);
+            if (parsed && parsed.hint_text) {
+              return NextResponse.json({
+                nivel: parsed.level || level,
+                dica: autoWrapLatexExpressions(parsed.hint_text),
+                modelo: omniRes.model,
+                provedor: "omniroute-azure",
+                ia_usada: "OmniRoute (Azure) - MathAI",
+                confianca: 0.9,
+                cached: false,
+                cache_key: cacheKey,
+              });
+            }
+          } catch (omniErr) {
+            console.warn("[Tutor Socrático] Fallback OmniRoute falhou:", omniErr);
+          }
+        }
+
         // 2.1 Gemini (primário - rápido, <1.5s)
         try {
           const geminiRes = await generateGeminiContent({
@@ -195,7 +226,7 @@ export async function POST(req: NextRequest) {
             jsonOutput: true,
             temperature: 0.15,
             maxTokens: 1024,
-            timeoutMs: 14000,
+            timeoutMs: 10000, // reduziu de 14000 para 10000
           });
 
           const parsed = JSON.parse(geminiRes.text);
@@ -222,7 +253,7 @@ export async function POST(req: NextRequest) {
               systemInstruction: PROMPT_SISTEMA_HINT,
               temperature: 0.15,
               maxTokens: 1024,
-              timeoutMs: 14000,
+              timeoutMs: 10000, // reduziu de 14000 para 10000
             });
 
             const parsed = JSON.parse(nvidiaRes.text);
@@ -239,6 +270,35 @@ export async function POST(req: NextRequest) {
             }
           } catch (nvidiaErr) {
             console.warn("[Tutor Socrático] Fallback NVIDIA NIM falhou:", nvidiaErr);
+          }
+        }
+
+        // 2.3 OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
+        if (process.env.OMNIROUTE_API_KEY) {
+          try {
+            const omniRes = await generateOmniRouteContent({
+              prompt: `${hintPrompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido.`,
+              systemInstruction: PROMPT_SISTEMA_HINT,
+              temperature: 0.15,
+              maxTokens: 1024,
+              timeoutMs: 18000,
+            });
+
+            const parsed = JSON.parse(omniRes.text);
+            if (parsed && parsed.hint_text) {
+              return NextResponse.json({
+                nivel: parsed.level || level,
+                dica: autoWrapLatexExpressions(parsed.hint_text),
+                modelo: omniRes.model,
+                provedor: "omniroute-azure",
+                ia_usada: "OmniRoute (Azure) - MathAI",
+                confianca: 0.9,
+                cached: false,
+                cache_key: cacheKey,
+              });
+            }
+          } catch (omniErr) {
+            console.warn("[Tutor Socrático] Fallback OmniRoute falhou:", omniErr);
           }
         }
 
