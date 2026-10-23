@@ -22,6 +22,8 @@ export interface OmniRouteContentOptions {
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;
+  /** Nome do combo no OmniRoute (ex: "math-socratic-1", "math-socratic-2"). Default: "math-socratic" */
+  model?: string;
 }
 
 export interface OmniRouteResponse {
@@ -48,7 +50,7 @@ export async function generateOmniRouteContent(
   messages.push({ role: 'user', content: prompt });
 
   const body = JSON.stringify({
-    model: 'math-socratic',
+    model: options.model || 'math-socratic',
     messages,
     temperature,
     max_tokens: maxTokens,
