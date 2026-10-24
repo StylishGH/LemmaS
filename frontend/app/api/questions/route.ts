@@ -112,53 +112,6 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
   },
 ];
 
-const FALLBACK_QUESTOES = [
-  {
-    id: 1234,
-    banca: "ESA",
-    ano: 2026,
-    materia: "Funções",
-    topico: "Funções",
-    subtopico: "Funções Quadráticas",
-    dificuldade: 3,
-    tipo: "objetiva",
-    categoria_banca: "Concurso Militar",
-    tipo_prova: "Oficial",
-    fase_nivel: "Geral",
-    enunciado: "Durante um exercício no Campo de Instrução da Escola de Sargentos das Armas, um robô deve caminhar da origem até A(1,1) e ajustar sua trajetória sobre um arco parabólico f(x) = ax² + bx + c (para x > 1) passando por B(2,0) e C(4,4). Nesse caso, a² + b² + c² + m² é igual a:\n\n(A) 32\n(B) 34\n(C) 36\n(D) 38\n(E) 40",
-    gabarito: "B"
-  },
-  {
-    id: 1253,
-    banca: "EFOMM",
-    ano: 2025,
-    materia: "Álgebra Linear",
-    topico: "Matrizes",
-    subtopico: "Operadores e Identidade",
-    dificuldade: 4,
-    tipo: "objetiva",
-    categoria_banca: "Concurso Militar",
-    tipo_prova: "Oficial",
-    fase_nivel: "Geral",
-    enunciado: "Sejam alfa e lambda pertencentes aos reais, I a matriz identidade de ordem n e J a matriz com todas entradas iguais a 1, de ordem n. Qual o resultado do produto das matrizes B e x, tal que vale a igualdade A + B = alfa * I + J com as propriedades P1: A*x = lambda*x e P2: a soma de xi = 0?\n\n(A) (α + 1 - λ) x\n(B) (α + λ) x\n(C) (α - λ) x\n(D) α x\n(E) λ x",
-    gabarito: "C"
-  },
-  {
-    id: 1526,
-    banca: "CEDERJ",
-    ano: 2021,
-    materia: "Álgebra Linear",
-    topico: "Diagonalização",
-    subtopico: "Autovalores e Autovetores",
-    dificuldade: 3,
-    tipo: "objetiva",
-    categoria_banca: "Vestibular & Superior",
-    tipo_prova: "Oficial",
-    fase_nivel: "Geral",
-    enunciado: "Uma matriz A de ordem n x n é dita diagonalizável se admite n autovetores linearmente independentes. Analise a matriz B = [[1, 1], [0, 1]]. É correto afirmar que:\n\n(A) B é diagonalizável com autovalor duplo.\n(B) B NÃO é diagonalizável: mult. algébrica 2 e geométrica 1.\n(C) B é diagonalizável pois det(B) = 1.\n(D) B NÃO é diagonalizável pois não possui autovalores reais.",
-    gabarito: "B"
-  }
-];
 
 // ============================================================
 // HELPERS MULTI-SELECT
@@ -727,47 +680,13 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erro desconhecido";
     console.error("Exceção no /api/questions:", message);
-    return NextResponse.json({
-      questoes: FALLBACK_QUESTOES,
-      total: 20764,
-      page: 1,
-      limit: 15,
-      total_pages: 1385,
-      bancas: [
-        { name: "Todas", count: 20764, categoria: "Todas" },
-        { name: "HMMT", count: 3221, categoria: "Olimpíadas" },
-        { name: "IMO", count: 1924, categoria: "Olimpíadas" },
-        { name: "ITA", count: 328, categoria: "Concurso Militar" },
-        { name: "ENEM", count: 263, categoria: "Vestibular & Superior" },
-        { name: "EEAR", count: 216, categoria: "Concurso Militar" },
-        { name: "CEDERJ", count: 74, categoria: "Vestibular & Superior" },
-      ],
-      categorias_banca: [
-        { id: "Todas", label: "Todas as Categorias", count: 20764 },
-        { id: "Concurso Militar", label: "Concursos Militares", count: 1603 },
-        { id: "Vestibular & Superior", label: "Vestibulares & Superior", count: 567 },
-        { id: "Olimpíadas", label: "Olimpíadas de Matemática", count: 18594 },
-      ],
-      tipos_prova: [
-        { id: "Todos", label: "Todos os Tipos de Prova", count: 20764 },
-        { id: "Oficial", label: "Oficial", count: 19292 },
-        { id: "Seleção e Treinamento", label: "Seleção e Treinamento", count: 1472 },
-      ],
-      fases: [
-        { id: "Todas", label: "Todas as Fases / Níveis", count: 20764 },
-        { id: "Geral", label: "Geral", count: 18122 },
-        { id: "Final", label: "Final", count: 2035 },
-        { id: "Nível Júnior", label: "Nível Júnior", count: 603 },
-      ],
-      topicos: [
-        { name: "Todos", count: 20764 },
-        { name: "Geometria Plana", count: 4473 },
-        { name: "Probabilidade e Combinatória", count: 4111 },
-        { name: "Álgebra", count: 4082 },
-        { name: "Teoria dos Números", count: 3478 },
-      ],
-      is_fallback: true,
-    });
+    // Sem snapshot fixo: devolver um total antigo como se fosse atual era
+    // a origem do total antigo na vitrine. Em falha, a página mostra estado
+    // vazio ("—") em vez de um número inventado.
+    return NextResponse.json(
+      { error: message, questoes: [], total: 0, total_pages: 1 },
+      { status: 503 }
+    );
   }
 }
 

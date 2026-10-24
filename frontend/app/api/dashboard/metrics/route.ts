@@ -439,7 +439,8 @@ export async function GET(req: NextRequest) {
       taxa_acerto: taxaAcerto,
       tempo_medio: tempoMedioStr,
       streak_dias: streakDias,
-      total_questoes_banco: totalQuestions ?? 20803,
+      // Sem fallback fixo: se a contagem do banco falhar, null — nunca um total antigo.
+      total_questoes_banco: totalQuestions ?? null,
       historico,
       revisoes,
       diagnostico_erros: {
@@ -458,7 +459,7 @@ export async function GET(req: NextRequest) {
       taxa_acerto: 0,
       tempo_medio: "0s",
       streak_dias: 0,
-      total_questoes_banco: 20803,
+      total_questoes_banco: null,
       historico: [],
       revisoes: [],
       diagnostico_erros: { total_erros: 0, conta: 0, interpretacao: 0, lacuna: 0 },

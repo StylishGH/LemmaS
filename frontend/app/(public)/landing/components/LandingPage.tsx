@@ -72,23 +72,31 @@ const AMOSTRA_QUESTOES = [
 
 export function LandingPage() {
   const { isLight, toggleTheme } = useTheme();
-  const [totalQuestions, setTotalQuestions] = useState<number>(20803);
+  // Vitrine: sem número inicial fixo. Enquanto /api/stats não responder,
+  // exibe "—"; se o banco falhar, continua "—" em vez de um número antigo.
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  const [totalLemmas, setTotalLemmas] = useState<number>(0);
 
-  // Buscar contagem total de questões do banco
+  // Buscar contagens reais do banco na fonte única (/api/stats)
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const res = await fetch("/api/questions?limit=1&head=true", { cache: "no-store" });
+        const res = await fetch("/api/stats", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
-          if (data.total) setTotalQuestions(data.total);
+          if (typeof data.total_questoes === "number") setTotalQuestions(data.total_questoes);
+          if (typeof data.total_lemas === "number") setTotalLemmas(data.total_lemas);
         }
       } catch (err) {
-        console.warn("Não foi possível buscar contagem de questões:", err);
+        console.warn("Não foi possível buscar contagem do acervo:", err);
       }
     };
     fetchCount();
   }, []);
+
+  const questionsLabel =
+    totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "—";
+  const lemmasLabel = totalLemmas > 0 ? totalLemmas.toLocaleString("pt-BR") : "—";
 
   // Função para navegação suave e animada sem "teletransporte"
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -153,7 +161,7 @@ export function LandingPage() {
             <span className="lemmas-eyebrow">PLATAFORMA COGNITIVA · POWERED BY MATHAI ENGINE · V1 OFICIAL</span>
             <h1>Aprenda como<br /><em>você pensa.</em></h1>
             <p className="lemmas-hero-lede">
-              Diferente dos bancos de questões convencionais que apenas conferem alternativas, a plataforma <strong>LEMMAS</strong> investiga o seu <strong>desenvolvimento matemático passo a passo</strong> na nova <strong>Bancada Discursiva</strong>, personaliza a tutoria para sua meta real (Licenciatura, Concursos Militares ou Ciência de Dados) e cataloga <strong>20.803 questões</strong> com estética minimalista e rigor conceitual.
+              Diferente dos bancos de questões convencionais que apenas conferem alternativas, a plataforma <strong>LEMMAS</strong> investiga o seu <strong>desenvolvimento matemático passo a passo</strong> na nova <strong>Bancada Discursiva</strong>, personaliza a tutoria para sua meta real (Licenciatura, Concursos Militares ou Ciência de Dados) e cataloga <strong>{questionsLabel} questões</strong> com estética minimalista e rigor conceitual.
             </p>
             <div className="lemmas-hero-actions">
               <Link className="lemmas-cta lemmas-cta-primary" href="/login">
@@ -164,7 +172,7 @@ export function LandingPage() {
               </Link>
             </div>
             <div className="lemmas-hero-note">
-              <span /> 20.803 questões auditadas · 138 lemas matemáticos · Avaliação analítica com 4 vereditos.
+              <span /> {questionsLabel} questões auditadas · {lemmasLabel} lemas matemáticos · Avaliação analítica com 4 vereditos.
             </div>
           </div>
         </section>
@@ -276,7 +284,7 @@ export function LandingPage() {
                 <li>Bancada Discursiva com 4 Vereditos de Ponta a Ponta</li>
                 <li>Roteamento Inteligente: NVIDIA Nemotron, DeepSeek, Gemini e SLMs Locais</li>
                 <li>Telemetria N:1 com rastreabilidade de tokens e latência</li>
-                <li>Acervo indexado com {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} questões e 138 lemas</li>
+                <li>Acervo indexado com {questionsLabel} questões e {lemmasLabel} lemas</li>
               </ul>
             </TechCard>
           </div>
@@ -285,7 +293,7 @@ export function LandingPage() {
         {/* SEÇÃO: VITRINE DE QUESTÕES REAIS DO SUPABASE */}
         <section id="questoes-amostra" className="lemmas-section">
           <div className="lemmas-section-heading">
-            <span className="lemmas-eyebrow">ACERVO VIVO · {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "20.803"} ITENS NO SUPABASE</span>
+            <span className="lemmas-eyebrow">ACERVO VIVO · {questionsLabel} ITENS NO SUPABASE</span>
             <h2>Amostra do Banco de Questões & Lemas</h2>
             <p>
               Problemas matemáticos reais de concursos de elite e graduação com fórmulas em alta definição e diagnósticos passo a passo.
@@ -356,7 +364,7 @@ export function LandingPage() {
               className="lemmas-cta lemmas-cta-primary inline-flex items-center gap-2"
             >
               <BookOpen size={17} />
-              <span>Explorar Todas as {totalQuestions.toLocaleString("pt-BR")} Questões no Acervo Completo</span>
+              <span>Explorar Todas as {questionsLabel} Questões no Acervo Completo</span>
               <ArrowRight size={17} />
             </Link>
           </div>

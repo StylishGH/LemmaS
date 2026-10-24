@@ -47,7 +47,9 @@ interface RevisaoItem {
 
 export default function DashboardPage() {
   const { profile, isAuthenticated, loading: userLoading } = useUserProfile();
-  const [totalQuestions, setTotalQuestions] = useState<number>(20803);
+  // Vitrine: sem número inicial fixo; vem de /api/stats (banco).
+  // Enquanto não carregar, exibe "—" — nunca um total antigo.
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [metricas, setMetricas] = useState({
     total_resolvidas: 0,
     taxa_acerto: 0,
@@ -74,10 +76,12 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    fetch("/api/health")
-      .then((res) => res.json())
+    fetch("/api/stats", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data.total_questions) setTotalQuestions(data.total_questions);
+        if (data && typeof data.total_questoes === "number") {
+          setTotalQuestions(data.total_questoes);
+        }
       })
       .catch(() => {});
 
@@ -239,7 +243,7 @@ export default function DashboardPage() {
               href="/questoes"
               className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-[#1e2329] border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-sm font-semibold transition-colors shadow-sm"
             >
-              <span>Explorar Lemas ({totalQuestions})</span>
+              <span>Explorar Questões ({totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "—"})</span>
             </Link>
           </div>
         </div>
@@ -303,16 +307,16 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* KPI 4: Acervo de Lemas */}
+        {/* KPI 4: Acervo de Questões */}
         <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Lemas</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Questões</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
               <Target className="w-4 h-4" />
             </div>
           </div>
           <div className="font-serif-math text-3xl font-bold text-slate-900 dark:text-[#f5f0df]">
-            {totalQuestions}
+            {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "—"}
           </div>
           <div className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
             Questões indexadas no LEMMAS Core
