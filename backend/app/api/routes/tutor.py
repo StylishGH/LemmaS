@@ -363,7 +363,7 @@ def compare_pedagogical_models(payload: SecondOpinionRequest):
         temperature=0.2,
         max_tokens=2048,
         json_output=True,
-        preferred_model="nvidia/nemotron-3.5-lightning-30b-a3b",
+        preferred_model="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
         task_type="second_opinion",
         total_budget_seconds=18.0,
     )
