@@ -58,6 +58,7 @@ def test_cognitive_tasks_use_nvidia_groq_openrouter_order():
                 gateway.nvidia_nim_provider,
                 gateway.groq_provider,
                 gateway.openrouter_provider,
+                gateway.gemini_provider,
             ]
 
 
@@ -86,6 +87,7 @@ def test_river_is_optional_fallback_after_openrouter():
         patch.object(gateway.groq_provider, "is_available", return_value=True),
         patch.object(gateway.openrouter_provider, "is_available", return_value=True),
         patch.object(gateway.river_provider, "is_available", return_value=True),
+        patch.object(gateway.gemini_provider, "is_available", return_value=True),
     ):
         cascade = gateway._resolve_provider_cascade("second_opinion")
 
@@ -94,6 +96,7 @@ def test_river_is_optional_fallback_after_openrouter():
         gateway.groq_provider,
         gateway.openrouter_provider,
         gateway.river_provider,
+        gateway.gemini_provider,
     ]
 
 

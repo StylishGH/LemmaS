@@ -151,3 +151,5 @@ RELATORIO_*.md
 supabase/.temp/
 data/repertorio/temp_sql/
 
+.vercel
+.env*
