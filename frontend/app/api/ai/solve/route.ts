@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
 import { generateNvidiaContent } from "@/lib/nvidia";
-import { generateOmniRouteContent } from "@/lib/omniroute";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
@@ -276,52 +275,7 @@ INSTRUÇÕES:
 4. Redija um feedback didático estruturado em LaTeX ($...$ e $$...$$) explicando as razões pedagógicas da avaliação.
 5. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`;
 
-    // 2. OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
-    if (process.env.OMNIROUTE_API_KEY && !cleanImage) {
-      try {
-        const omniRes = await generateOmniRouteContent({
-          prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
-          systemInstruction: PROMPT_SISTEMA_AVALIADOR,
-          temperature: 0.15,
-          maxTokens: 1536,
-          timeoutMs: 12000,
-        });
-
-        const parsed = safeParseJsonWithLatex(omniRes.text);
-        if (parsed) {
-          const rawVeredito = isExplanation
-            ? "aprovado"
-            : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
-
-          return NextResponse.json({
-            veredito: rawVeredito,
-            desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
-            resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
-            alternativa_identificada: parsed.alternativa_identificada || parsed.alternativa || null,
-            etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
-            erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
-            feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine via OmniRoute." : "Avaliação matemática concluída com sucesso."),
-            precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
-            transcricao_latex: parsed.transcricao_latex || "",
-            passos: parsed.passos || parsed.etapas_corretas || [],
-            estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
-            status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
-            diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine via OmniRoute.",
-            metodo_alternativo: parsed.metodo_alternativo || null,
-            linha_do_erro: parsed.linha_do_erro || null,
-            dica_proximo_passo: parsed.dica_proximo_passo || null,
-            confianca_diagnostico: parsed.confianca_diagnostico || "alta",
-            modelo: omniRes.model,
-            provedor: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI",
-          });
-        }
-      } catch (omniErr) {
-        console.warn("[Avaliador Cognitivo] Fallback OmniRoute falhou:", omniErr);
-      }
-    }
-
-    // 2.1. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
+    // 2. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
     try {
       const geminiRes = await generateGeminiContent({
         prompt,
@@ -411,51 +365,6 @@ INSTRUÇÕES:
         }
       } catch (nvidiaErr) {
         console.warn("[Avaliador Cognitivo] Fallback NVIDIA NIM falhou:", nvidiaErr);
-      }
-    }
-
-    // 2.3 OmniRoute (Azure) — gateway com fallback interno
-    if (process.env.OMNIROUTE_API_KEY && !cleanImage) {
-      try {
-        const omniRes = await generateOmniRouteContent({
-          prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
-          systemInstruction: PROMPT_SISTEMA_AVALIADOR,
-          temperature: 0.15,
-          maxTokens: 1536,
-          timeoutMs: 20000,
-        });
-
-        const parsed = safeParseJsonWithLatex(omniRes.text);
-        if (parsed) {
-          const rawVeredito = isExplanation
-            ? "aprovado"
-            : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
-
-          return NextResponse.json({
-            veredito: rawVeredito,
-            desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
-            resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
-            alternativa_identificada: parsed.alternativa_identificada || parsed.alternativa || null,
-            etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
-            erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
-            feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine via OmniRoute." : "Avaliação matemática concluída com sucesso."),
-            precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
-            transcricao_latex: parsed.transcricao_latex || "",
-            passos: parsed.passos || parsed.etapas_corretas || [],
-            estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
-            status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
-            diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine via OmniRoute.",
-            metodo_alternativo: parsed.metodo_alternativo || null,
-            linha_do_erro: parsed.linha_do_erro || null,
-            dica_proximo_passo: parsed.dica_proximo_passo || null,
-            confianca_diagnostico: parsed.confianca_diagnostico || "alta",
-            modelo: omniRes.model,
-            provedor: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI",
-          });
-        }
-      } catch (omniErr) {
-        console.warn("[Avaliador Cognitivo] Fallback OmniRoute falhou:", omniErr);
       }
     }
 
