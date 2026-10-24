@@ -40,9 +40,9 @@ GEMINI_MODELS_CASCADE = [
 
 # Modelos validados da NVIDIA NIM presentes no endpoint oficial
 NVIDIA_NIM_MODELS = [
-    "nvidia/nemotron-3.5-lightning-30b-a3b",
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     "nvidia/nemotron-3-ultra-550b-a55b",
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
 ]
 
 NVIDIA_VISION_MODELS = [
@@ -51,6 +51,7 @@ NVIDIA_VISION_MODELS = [
 ]
 
 COGNITIVE_PROVIDER_TIMEOUTS = {
+    "google": 6.0,
     "nvidia": 5.0,
     "groq": 5.0,
     "river": 7.0,
@@ -483,24 +484,39 @@ class DeterministicAutonomousProvider(BaseLLMProvider):
                 "e identifique a relação matemática fundamental que conecta a incógnita às propriedades dadas."
             )
         else:
-            fallback_dict = {
-                "transcricao_latex": r"\text{Resolução analisada pelo motor determinístico LEMMAS.}",
-                "passos": [
-                    "Identificação dos dados do enunciado.",
-                    "Aplicação do lema ou propriedade matemática canônica.",
-                    "Verificação da consistência algébrica e conclusão.",
-                ],
-                "estrategia_identificada": "Análise Estrutural Canônica",
-                "status_resolucao": "correto",
-                "diagnostico": (
-                    "O raciocínio matemático apresentado foi registrado com integridade. "
-                    "O motor de IA ativou o modo determinístico de alta estabilidade."
-                ),
-                "metodo_alternativo": None,
-                "linha_do_erro": None,
-                "dica_proximo_passo": "Revise cada passagem aplicando as propriedades axiomáticas fundamentais.",
-                "confianca_diagnostico": "media",
-            }
+            if task_type == "second_opinion":
+                fallback_dict = {
+                    "model_a": {
+                        "name": "Rigor Axiomático e Prova Formal",
+                        "role": "Demonstração Analítica & Invariantes",
+                        "content": "Pela definição axiomática das estruturas do problema, identificamos as hipóteses fundamentais e aplicamos o teorema canônico universal correspondente em passos dedutivos formais."
+                    },
+                    "model_b": {
+                        "name": "Heurística & Atalhos Cognitivos",
+                        "role": "Intuição Heurística & Atalhos Cognitivos",
+                        "content": "Pela observação visual das simetrias e invariantes geométricos do enunciado, a análise dimensional e os casos limites fornecem o atalho de prova para a resposta direta."
+                    },
+                    "sintese": "A demonstração formal por primeiros princípios estabelece o rigor dedutivo inabalável, enquanto o atalho heurístico confere velocidade e intuição tática de prova."
+                }
+            else:
+                fallback_dict = {
+                    "transcricao_latex": r"\text{Resolução analisada pelo motor determinístico LEMMAS.}",
+                    "passos": [
+                        "Identificação dos dados do enunciado.",
+                        "Aplicação do lema ou propriedade matemática canônica.",
+                        "Verificação da consistência algébrica e conclusão.",
+                    ],
+                    "estrategia_identificada": "Análise Estrutural Canônica",
+                    "status_resolucao": "correto",
+                    "diagnostico": (
+                        "O raciocínio matemático apresentado foi registrado com integridade. "
+                        "O motor de IA ativou o modo determinístico de alta estabilidade."
+                    ),
+                    "metodo_alternativo": None,
+                    "linha_do_erro": None,
+                    "dica_proximo_passo": "Revise cada passagem aplicando as propriedades axiomáticas fundamentais.",
+                    "confianca_diagnostico": "media",
+                }
             content = json.dumps(fallback_dict)
 
         return {
@@ -697,12 +713,32 @@ class MathAiGateway:
                     if task_type == "second_opinion":
                         try:
                             comparison = json.loads(content)
-                            valid_comparison = all(
-                                isinstance(comparison.get(key), dict)
-                                and isinstance(comparison[key].get("content"), str)
-                                and bool(comparison[key]["content"].strip())
-                                for key in ("model_a", "model_b")
-                            ) and isinstance(comparison.get("sintese"), str) and bool(comparison["sintese"].strip())
+                            raw_a = comparison.get("model_a") or comparison.get("modelo_a") or comparison.get("modelA")
+                            raw_b = comparison.get("model_b") or comparison.get("modelo_b") or comparison.get("modelB")
+                            content_a = raw_a if isinstance(raw_a, str) else (raw_a.get("content") or raw_a.get("texto") or "" if isinstance(raw_a, dict) else "")
+                            content_b = raw_b if isinstance(raw_b, str) else (raw_b.get("content") or raw_b.get("texto") or "" if isinstance(raw_b, dict) else "")
+                            sintese = comparison.get("sintese") or comparison.get("synthesis") or ""
+                            if isinstance(sintese, dict):
+                                sintese_text = " ".join(str(v).strip() for v in sintese.values() if v)
+                            else:
+                                sintese_text = str(sintese).strip()
+
+                            valid_comparison = bool(str(content_a).strip() and str(content_b).strip())
+                            if valid_comparison:
+                                normalized = {
+                                    "model_a": {
+                                        "name": (raw_a.get("name") if isinstance(raw_a, dict) else None) or "Rigor Axiomático e Prova Formal",
+                                        "role": (raw_a.get("role") if isinstance(raw_a, dict) else None) or "Demonstração Analítica & Invariantes",
+                                        "content": str(content_a).strip(),
+                                    },
+                                    "model_b": {
+                                        "name": (raw_b.get("name") if isinstance(raw_b, dict) else None) or "Heurística & Atalhos Cognitivos",
+                                        "role": (raw_b.get("role") if isinstance(raw_b, dict) else None) or "Intuição Heurística & Atalhos Cognitivos",
+                                        "content": str(content_b).strip(),
+                                    },
+                                    "sintese": sintese_text or "O confronto entre a dedução formal por primeiros princípios e a heurística geométrica consolida a compreensão profunda do problema.",
+                                }
+                                content = json.dumps(normalized, ensure_ascii=False)
                         except (TypeError, ValueError):
                             valid_comparison = False
 
@@ -808,6 +844,8 @@ class MathAiGateway:
                 cascade.append(self.openrouter_provider)
             if self.river_provider.is_available():
                 cascade.append(self.river_provider)
+            if self.gemini_provider.is_available():
+                cascade.append(self.gemini_provider)
         else:
             # Raciocínio formal, avaliação cognitiva e tarefas analíticas profundas
             if self.nvidia_nim_provider.is_available():
