@@ -289,7 +289,7 @@ INSTRUÇÕES:
           : undefined,
         temperature: 0.15,
         maxTokens: 1536,
-        timeoutMs: 10000, // reduziu de 14000 para 10000
+        timeoutMs: 16000,
       });
 
       const parsed = safeParseJsonWithLatex(geminiRes.text);
@@ -368,50 +368,14 @@ INSTRUÇÕES:
       }
     }
 
-    // 3. Fallback Determinístico Pedagógico (Uptime 100% garantido com DISCURSIVE-VERDICT)
-    if (isExplanation) {
-      return NextResponse.json({
-        veredito: "aprovado",
-        desenvolvimento_presente: true,
-        resultado_final_correto: true,
-        etapas_corretas: ["1. Identificação do enunciado e hipóteses.", "2. Aplicação das propriedades fundamentais."],
-        erros_identificados: [],
-        feedback_latex: `Gabarito oficial de referência: $${gabarito || "Ver enunciado"}$. Consulte a fundamentação teórica para conferir cada passagem.`,
-        precisa_revisao_humana: false,
-        transcricao_latex: rawJustificativa,
-        passos: ["1. Análise axiomática das condições iniciais."],
-        estrategia_identificada: "Dedução Teórica",
-        status_resolucao: "correto",
-        diagnostico: `Resolução da questão: O gabarito oficial é $${gabarito || "indicado no enunciado"}$. Revise as definições conceituais e os lemas fundamentais associados a este tópico.`,
-        metodo_alternativo: null,
-        linha_do_erro: null,
-        dica_proximo_passo: "Identifique as hipóteses explícitas do enunciado e utilize o lema da matéria correspondente.",
-        confianca_diagnostico: "media",
-        modelo: "LEMMAS Core Determinístico",
-        provedor: "lemmas-contingency",
-      });
-    }
-
-    return NextResponse.json({
-      veredito: "inconclusivo",
-      desenvolvimento_presente: true,
-      resultado_final_correto: false,
-      etapas_corretas: ["1. Registro das etapas iniciais da resolução."],
-      erros_identificados: [],
-      feedback_latex: "Seu desenvolvimento foi recebido pela MathAI Engine. Revise as deduções intermediárias em LaTeX e a consistência das hipóteses do problema.",
-      precisa_revisao_humana: true,
-      transcricao_latex: rawJustificativa,
-      passos: ["1. Análise do raciocínio matemático."],
-      estrategia_identificada: "Dedução Analítica",
-      status_resolucao: "incompleto",
-      diagnostico: "Desenvolvimento matemático identificado. Recomenda-se explicitar cada passagem dedutiva e verificar se a conclusão decorre diretamente das hipóteses dadas.",
-      metodo_alternativo: null,
-      linha_do_erro: null,
-      dica_proximo_passo: "Isole a proposição ou incógnita principal e confirme a validade lógica e operatória de cada passo.",
-      confianca_diagnostico: "media",
-      modelo: "LEMMAS Core Determinístico",
-      provedor: "lemmas-contingency",
-    });
+    // 3. Falha real de todos os provedores cognitivos (HTTP 503 sem mascarar com contingência determinística)
+    return NextResponse.json(
+      {
+        error: "O serviço de avaliação da MathAI Engine está temporariamente indisponível. Todos os provedores cognitivos falharam.",
+        status: "unavailable",
+      },
+      { status: 503 }
+    );
   } catch (err: unknown) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Erro interno no MathAI Engine" },
