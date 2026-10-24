@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { 
@@ -344,6 +344,7 @@ function ResolverContent() {
   const [loadingChunk, setLoadingChunk] = useState<boolean>(false);
   const [answeredIndices, setAnsweredIndices] = useState<Set<number>>(new Set());
   const [windowSize, setWindowSize] = useState<number>(20);
+  const sessionGenerationRef = useRef(0);
 
   useEffect(() => {
     const updateSize = () => {
@@ -382,6 +383,7 @@ function ResolverContent() {
 
   // Motor ativo da Lousa de Rascunho (S-Pen 120Hz Dual-Canvas vs Lousa Giz)
   const [lousaEngine, setLousaEngine] = useState<"spen-dual" | "classic">("spen-dual");
+  const [lousaStrokes, setLousaStrokes] = useState<Record<number, any[]>>({});
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -417,6 +419,7 @@ function ResolverContent() {
   // Carregamento de Questões baseado em queryId ou sessão
   useEffect(() => {
     let ignore = false;
+    sessionGenerationRef.current += 1;
     setLoading(true);
 
     const carregarSessao = async () => {
@@ -479,13 +482,24 @@ function ResolverContent() {
 
           // Se forem IDs específicos selecionados manualmente
           if (config && config.ids && config.ids.length > 0) {
+            const selectedSessionGeneration = ++sessionGenerationRef.current;
+            setTreinoFilters(null);
+            setLoadedPages(new Set());
+            setCurrentIndex(0);
+
             const res = await fetch("/api/questions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ids: config.ids }),
             });
             const data = await res.json();
-            if (!ignore && data.questoes && data.questoes.length > 0) {
+            if (
+              !ignore &&
+              selectedSessionGeneration === sessionGenerationRef.current &&
+              data.questoes &&
+              data.questoes.length > 0
+            ) {
+              sessionGenerationRef.current += 1;
               const parsedList = data.questoes.map((q: any) => {
                 const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
                 return { ...q, enunciado_limpo: corpo, alternativas };
@@ -498,6 +512,17 @@ function ResolverContent() {
               setTimeLeft(0);
               return;
             }
+
+            if (!ignore && selectedSessionGeneration === sessionGenerationRef.current) {
+              sessionGenerationRef.current += 1;
+              console.error("Nenhuma questão encontrada para os IDs selecionados:", config.ids);
+              setQuestions([]);
+              setTotalCount(0);
+              setSessionType("treino");
+              setSessionMode("active");
+              return;
+            }
+            return;
           }
 
           // Treino Livre com filtros ou acervo completo (sob demanda de 100 em 100)
@@ -570,6 +595,7 @@ function ResolverContent() {
     if (loadedPages.has(pageNeeded)) return;
 
     let ignore = false;
+    const generation = sessionGenerationRef.current;
     setLoadingChunk(true);
 
     fetch("/api/questions", {
@@ -583,7 +609,7 @@ function ResolverContent() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (ignore) return;
+        if (ignore || generation !== sessionGenerationRef.current) return;
         if (data && data.questoes && Array.isArray(data.questoes)) {
           const parsedBatch = data.questoes.map((q: any) => {
             const { corpo, alternativas } = extrairEnunciadoEAlternativas(q.enunciado);
@@ -603,7 +629,7 @@ function ResolverContent() {
       })
       .catch((err) => console.error("Erro ao carregar lote de questões:", err))
       .finally(() => {
-        if (!ignore) setLoadingChunk(false);
+        if (!ignore && generation === sessionGenerationRef.current) setLoadingChunk(false);
       });
 
     return () => {
@@ -643,6 +669,7 @@ function ResolverContent() {
     setFeedbacks({});
     setJustificativas({});
     setBookmarks(new Set());
+    setLousaStrokes({});
     setTotalTimeInitial(45 * 60);
     setTimeLeft(45 * 60);
   };
@@ -661,6 +688,7 @@ function ResolverContent() {
     setFeedbacks({});
     setJustificativas({});
     setBookmarks(new Set());
+    setLousaStrokes({});
     setTotalTimeInitial(0);
     setTimeLeft(0);
   };
@@ -686,9 +714,9 @@ function ResolverContent() {
   };
 
   // Submissão da questão atual (apenas no Modo Treino)
-  const handleSubmitCurrent = async () => {
+  const handleSubmitCurrent = async (answerOverride?: string, strategyOverride?: string) => {
     const q = questions[currentIndex];
-    const userAns = q ? answers[q.id] : undefined;
+    const userAns = typeof answerOverride === "string" ? answerOverride : (q ? answers[q.id] : undefined);
     if (!q || !userAns || hint5Used[currentIndex]) return;
 
     // Rastreamento telemetria de dicas socráticas utilizadas para responder
@@ -706,11 +734,11 @@ function ResolverContent() {
           aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
           tempo_segundos: timeLeft,
           confianca: confianca[currentIndex] || 4,
-          estrategia_usada: usedHints
+          estrategia_usada: strategyOverride || (usedHints
             ? (estrategias[currentIndex]
                 ? `${estrategias[currentIndex]} [Dica Socrática Nível ${maxHintLevel}]`
                 : `Dica Socrática Nível ${maxHintLevel}`)
-            : (estrategias[currentIndex] || null),
+            : (estrategias[currentIndex] || null)),
           anotacoes: justificativas[currentIndex] || null,
           dica_socratica_usada: usedHints,
           nivel_max_dica: maxHintLevel,
@@ -950,14 +978,25 @@ function ResolverContent() {
       return;
     }
 
+    const justificativaRequest =
+      textoDeducao ||
+      (imageBase64
+        ? ""
+        : origem === "lousa"
+          ? "Resolução manuscrita desenhada na Lousa de Rascunho."
+          : "Construção geométrica desenvolvida na Bancada Euclidiana.");
+
     setLoadingDiscursive(true);
     setLoadingIa(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (session?.access_token) {
-        headers["Authorization"] = "Bearer " + session.access_token;
+      if (!session?.access_token) {
+        setShowAuthModal(true);
+        return;
       }
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      headers["Authorization"] = "Bearer " + session.access_token;
 
       const res = await fetch("/api/ai/solve", {
         method: "POST",
@@ -965,12 +1004,20 @@ function ResolverContent() {
         body: JSON.stringify({
           enunciado: q.enunciado,
           gabarito: q.gabarito || "",
-          justificativa: textoDeducao || (origem === "lousa" ? "Resolução manuscrita desenhada na Lousa de Rascunho." : "Construção geométrica desenvolvida na Bancada Euclidiana."),
+          justificativa: justificativaRequest,
           imagem_base64: imageBase64 || null,
         }),
       });
 
       const data = await res.json();
+      if (res.status === 401) {
+        setShowAuthModal(true);
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(data.error || data.diagnostico || `Falha ao avaliar a resolução (HTTP ${res.status}).`);
+      }
+
       const rawVeredito: "aprovado" | "parcial" | "sem_desenvolvimento" | "incorreto" =
         data.veredito || (data.status_resolucao === "correto" ? "aprovado" : data.status_resolucao === "erro_conta_sinal" ? "parcial" : "incorreto");
 
@@ -1002,8 +1049,55 @@ function ResolverContent() {
         return;
       }
 
-      // Tentativa Válida (aprovado, parcial, incorreto):
-      setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
+      // Identificação e auto-marcação da alternativa (se a questão possuir alternativas)
+      const alts =
+        q.alternativas && Object.keys(q.alternativas).length > 0
+          ? q.alternativas
+          : extrairEnunciadoEAlternativas(q.enunciado).alternativas;
+      const altKeys = Object.keys(alts || {});
+      const hasAlternativas = altKeys.length > 0;
+
+      const rawGab = (q.gabarito || "").trim();
+      const cleanGabMatch = rawGab.match(/(?:^|[([{\s]|\b(?:LETRA|OPÇÃO|OPCAO)\s*)([A-E])(?:\b|[)\]}\s.,;]|$)/i);
+      const cleanGab = cleanGabMatch ? cleanGabMatch[1].toUpperCase() : rawGab.toUpperCase();
+
+      const matchedGabaritoOption =
+        altKeys.find((key) => key.trim().toUpperCase() === cleanGab) ||
+        (["A", "B", "C", "D", "E"].includes(cleanGab) ? cleanGab : undefined);
+
+      const isResolutionCorrect = Boolean(
+        evalResult.resultado_final_correto ||
+        rawVeredito === "aprovado" ||
+        data.status_resolucao === "correto"
+      );
+
+      const rawAltIdentificada = typeof data.alternativa_identificada === "string" 
+        ? data.alternativa_identificada.trim().toUpperCase()
+        : typeof data.alternativa === "string" 
+        ? data.alternativa.trim().toUpperCase() 
+        : null;
+      const cleanIdentifiedMatch = rawAltIdentificada?.match(/([A-E])/i);
+      const identifiedFromAi = cleanIdentifiedMatch ? cleanIdentifiedMatch[1].toUpperCase() : undefined;
+
+      const optionToSelect = (isResolutionCorrect ? matchedGabaritoOption : identifiedFromAi) || (isResolutionCorrect ? cleanGab : undefined);
+
+      let alreadySubmittedInTreino = false;
+      if (hasAlternativas && optionToSelect) {
+        // Auto-marca a alternativa identificada tanto em Simulado quanto em Treino
+        setAnswers((prev) => ({ ...prev, [q.id]: optionToSelect }));
+        setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
+
+        if (sessionType === "treino" && isResolutionCorrect) {
+          await handleSubmitCurrent(
+            optionToSelect,
+            `Resposta identificada na resolução manuscrita (${origem})`
+          );
+          alreadySubmittedInTreino = true;
+        }
+      } else {
+        // Questão puramente discursiva ou sem alternativa identificada
+        setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
+      }
 
       // Telemetria das dicas socráticas utilizadas até a submissão discursiva
       const qHints = hintsHistory[currentIndex] || [];
@@ -1011,33 +1105,36 @@ function ResolverContent() {
       const maxHintLevel = usedHints ? Math.max(...qHints.map((h) => h.nivel)) : 0;
 
       // Persistência em public.tentativas e revisao_espacada via API submit
-      try {
-        const submitRes = await fetch(`/api/questions/${q.id}/submit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tipo_questao: "discursiva",
-            veredito: rawVeredito,
-            resposta: rawVeredito,
-            aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
-            tempo_segundos: timeLeft,
-            confianca: confianca[currentIndex] || 4,
-            estrategia_usada: `Discursiva (${origem})`,
-            anotacoes: evalResult.feedback_latex,
-            dica_socratica_usada: usedHints,
-            nivel_max_dica: maxHintLevel,
-            total_dicas_solicitadas: qHints.length,
-          }),
-        });
-        const submitData = await submitRes.json();
-        if (!submitData.error) {
-          setSubmitResults((prev) => ({ ...prev, [currentIndex]: submitData }));
+      if (!alreadySubmittedInTreino) {
+        try {
+          const submitRes = await fetch(`/api/questions/${q.id}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tipo_questao: "discursiva",
+              veredito: rawVeredito,
+              resposta: rawVeredito,
+              aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
+              tempo_segundos: timeLeft,
+              confianca: confianca[currentIndex] || 4,
+              estrategia_usada: `Discursiva (${origem})`,
+              anotacoes: evalResult.feedback_latex,
+              dica_socratica_usada: usedHints,
+              nivel_max_dica: maxHintLevel,
+              total_dicas_solicitadas: qHints.length,
+            }),
+          });
+          const submitData = await submitRes.json();
+          if (!submitData.error) {
+            setSubmitResults((prev) => ({ ...prev, [currentIndex]: submitData }));
+          }
+        } catch (saveErr) {
+          console.warn("Aviso ao persistir tentativa discursiva:", saveErr);
         }
-      } catch (saveErr) {
-        console.warn("Aviso ao persistir tentativa discursiva:", saveErr);
       }
     } catch (err) {
       console.error("Erro ao avaliar com MathAI Engine:", err);
+      window.alert(err instanceof Error ? err.message : "Não foi possível avaliar sua resolução. Tente novamente.");
     } finally {
       setLoadingDiscursive(false);
       setLoadingIa(false);
@@ -1926,6 +2023,12 @@ function ResolverContent() {
 
           {lousaEngine === "spen-dual" ? (
             <SpenSmartCanvas
+              key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
+              initialStrokes={lousaStrokes[currentIndex] || []}
+              onStrokesChange={(strokes) => {
+                setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
+                setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
+              }}
               onEvaluateOcr={async (b64) => {
                 setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
                 setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
@@ -1936,6 +2039,7 @@ function ResolverContent() {
           ) : (
             <>
               <MathScratchpad
+                key={`scratchpad-q${currentIndex}-${currentQ?.id ?? 'none'}`}
                 onExportBase64={(b64, hasStrokes) => {
                   setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: !!hasStrokes }));
                   setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
@@ -1978,6 +2082,7 @@ function ResolverContent() {
       {bancadaModo === "geometria" && (
         <div className="space-y-3 animate-fadeIn">
           <GeometricCompassBoard
+            key={`geo-board-q${currentIndex}-${currentQ?.id ?? 'none'}`}
             onCommandsChange={(cmds) => setGeometricCommands((prev) => ({ ...prev, [currentIndex]: cmds }))}
             onClose={() => setBancadaModo(null)}
           />
@@ -2905,7 +3010,7 @@ function ResolverContent() {
         {!isSimuladoAtivo && !currentResult && currentQ && answers[currentQ.id] && !hint5Used[currentIndex] && (
           <div className="pt-2">
             <button
-              onClick={handleSubmitCurrent}
+              onClick={() => handleSubmitCurrent()}
               disabled={submitting}
               className="lemmas-gold-cta px-6 py-2.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
             >

@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
 import { generateNvidiaContent } from "@/lib/nvidia";
-import { generateOmniRouteContent } from "@/lib/omniroute";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
 
 export const maxDuration = 30;
+
+interface BackendEvaluationPayload {
+  [key: string]: unknown;
+  veredito?: string;
+  status_resolucao?: string;
+  desenvolvimento_presente?: boolean;
+  resultado_final_correto?: boolean;
+  etapas_corretas?: unknown[];
+  passos?: unknown[];
+  erros_identificados?: unknown[];
+  linha_do_erro?: string | null;
+  feedback_latex?: string;
+  precisa_revisao_humana?: boolean;
+  diagnostico?: string;
+  model_name?: string;
+  model_provider?: string;
+  confianca_diagnostico?: string;
+}
 
 const PROMPT_SISTEMA_AVALIADOR = `Você é o Avaliador Cognitivo e Tutor de Resoluções Matemáticas do LEMMAS (MathAI Engine), especializado em avaliação passo a passo e resolução axiomática de alto nível (IME, ITA, EsPCEx, AFA, EFOMM, OBM, ENEM).
 
@@ -31,6 +48,9 @@ CLASSIFICAÇÃO DO STATUS (status_resolucao):
 - "erro_interpretacao": leitura incorreta do enunciado ou dados.
 - "incompleto": resolução interrompida ou sem elementos suficientes.
 
+ALTERNATIVA IDENTIFICADA (alternativa_identificada):
+- Se a questão for objetiva (múltipla escolha com A, B, C, D, E) e você identificar que a dedução manuscrita/texto chega ou conclui expressamente uma alternativa, indique a letra maiúscula ("A", "B", "C", "D" ou "E"). Caso contrário ou em discursivas puras, retorne null.
+
 REGRAS MANDATÓRIAS DE LATEX E FORMATAÇÃO:
 - Em TODOS os campos de texto do JSON ("feedback_latex", "diagnostico", "dica_proximo_passo", "transcricao_latex", "etapas_corretas", "erros_identificados"), use os delimitadores $...$ (inline) ou $$...$$ (bloco destacado) EXCLUSIVAMENTE para símbolos, números, incógnitas e fórmulas matemáticas.
 - É TERMINANTEMENTE PROIBIDO colocar texto em português, explicações ou frases inteiras dentro de $...$ ou $$...$$, pois o KaTeX apaga todos os espaços entre palavras dentro de $.
@@ -44,6 +64,7 @@ FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
   "veredito": "aprovado | parcial | sem_desenvolvimento | incorreto",
   "desenvolvimento_presente": true,
   "resultado_final_correto": true,
+  "alternativa_identificada": "A | B | C | D | E | null",
   "etapas_corretas": ["Passo 1: ... em $...$", "Passo 2: ..."],
   "erros_identificados": ["Erro identificado: ... em $...$"],
   "feedback_latex": "Feedback pedagógico estruturado para o estudante com equações em $...$ e $$...$$",
@@ -118,6 +139,7 @@ export async function POST(req: NextRequest) {
 
     // 1. No modo de avaliação, tenta o Backend FastAPI (tolerância ágil de 3.5s para evitar congelamento por cold-start)
     if (!isExplanation) {
+      let backendFailure = "O backend não retornou uma avaliação estruturada.";
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         if (authorization?.startsWith("Bearer ")) {
@@ -140,9 +162,9 @@ export async function POST(req: NextRequest) {
 
         if (response.ok) {
           const raw = await response.text();
-          let data: Record<string, any>;
+          let data: BackendEvaluationPayload;
           try {
-            data = safeParseJsonWithLatex(raw);
+            data = safeParseJsonWithLatex<BackendEvaluationPayload>(raw);
           } catch {
             data = { detail: raw.slice(0, 500) };
           }
@@ -153,6 +175,7 @@ export async function POST(req: NextRequest) {
               veredito: rawVeredito,
               desenvolvimento_presente: data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
               resultado_final_correto: data.resultado_final_correto ?? (rawVeredito === "aprovado"),
+              alternativa_identificada: data.alternativa_identificada || data.alternativa || null,
               etapas_corretas: data.etapas_corretas || data.passos || [],
               erros_identificados: data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
               feedback_latex: data.feedback_latex || data.diagnostico || "Avaliação discursiva concluída com sucesso.",
@@ -164,9 +187,51 @@ export async function POST(req: NextRequest) {
               confianca: data.confianca_diagnostico || "alta",
             });
           }
+          backendFailure = "O backend respondeu sem um resultado de avaliação válido.";
+        } else {
+          if (response.status === 401) {
+            return NextResponse.json(
+              { error: "Faça login para enviar sua resolução manuscrita à MathAI Engine." },
+              { status: 401 }
+            );
+          }
+          backendFailure = `O backend da MathAI respondeu com HTTP ${response.status}.`;
         }
-      } catch {
-        // Backend em cold-start ou offline; aciona inferência multimodal Gemini
+      } catch (error) {
+        backendFailure = "O backend da MathAI está indisponível para avaliar a imagem.";
+        console.warn(
+          "[Avaliador Cognitivo] Falha ao encaminhar imagem ao backend:",
+          error instanceof Error ? error.name : "erro desconhecido"
+        );
+      }
+
+      if (hasImage) {
+        const feedback =
+          "Não foi possível enviar sua imagem ao MathAI Engine. Tente novamente; a imagem não foi avaliada.";
+        return NextResponse.json(
+          {
+            veredito: "sem_desenvolvimento",
+            desenvolvimento_presente: false,
+            resultado_final_correto: false,
+            etapas_corretas: [],
+            erros_identificados: [],
+            feedback_latex: feedback,
+            precisa_revisao_humana: true,
+            transcricao_latex: "",
+            passos: [],
+            estrategia_identificada: "OCR indisponível",
+            status_resolucao: "incompleto",
+            diagnostico: feedback,
+            metodo_alternativo: null,
+            linha_do_erro: null,
+            dica_proximo_passo: backendFailure,
+            confianca_diagnostico: "baixa",
+            modelo: "MathAI Engine indisponível",
+            provedor: "backend-unavailable",
+            error: backendFailure,
+          },
+          { status: 503 }
+        );
       }
     }
 
@@ -210,51 +275,7 @@ INSTRUÇÕES:
 4. Redija um feedback didático estruturado em LaTeX ($...$ e $$...$$) explicando as razões pedagógicas da avaliação.
 5. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`;
 
-    // 2. OmniRoute (Azure) — gateway com fallback interno (NVIDIA → Gemini → Llama)
-    if (process.env.OMNIROUTE_API_KEY && !cleanImage) {
-      try {
-        const omniRes = await generateOmniRouteContent({
-          prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
-          systemInstruction: PROMPT_SISTEMA_AVALIADOR,
-          temperature: 0.15,
-          maxTokens: 1536,
-          timeoutMs: 12000,
-        });
-
-        const parsed = safeParseJsonWithLatex(omniRes.text);
-        if (parsed) {
-          const rawVeredito = isExplanation
-            ? "aprovado"
-            : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
-
-          return NextResponse.json({
-            veredito: rawVeredito,
-            desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
-            resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
-            etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
-            erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
-            feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine via OmniRoute." : "Avaliação matemática concluída com sucesso."),
-            precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
-            transcricao_latex: parsed.transcricao_latex || "",
-            passos: parsed.passos || parsed.etapas_corretas || [],
-            estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
-            status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
-            diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine via OmniRoute.",
-            metodo_alternativo: parsed.metodo_alternativo || null,
-            linha_do_erro: parsed.linha_do_erro || null,
-            dica_proximo_passo: parsed.dica_proximo_passo || null,
-            confianca_diagnostico: parsed.confianca_diagnostico || "alta",
-            modelo: omniRes.model,
-            provedor: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI",
-          });
-        }
-      } catch (omniErr) {
-        console.warn("[Avaliador Cognitivo] Fallback OmniRoute falhou:", omniErr);
-      }
-    }
-
-    // 2.1. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
+    // 2. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
     try {
       const geminiRes = await generateGeminiContent({
         prompt,
@@ -281,6 +302,7 @@ INSTRUÇÕES:
           veredito: rawVeredito,
           desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
           resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
+          alternativa_identificada: parsed.alternativa_identificada || parsed.alternativa || null,
           etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
           erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
           feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine." : "Avaliação matemática concluída com sucesso."),
@@ -323,6 +345,7 @@ INSTRUÇÕES:
             veredito: rawVeredito,
             desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
             resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
+            alternativa_identificada: parsed.alternativa_identificada || parsed.alternativa || null,
             etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
             erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
             feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine." : "Avaliação matemática concluída com sucesso."),
@@ -342,50 +365,6 @@ INSTRUÇÕES:
         }
       } catch (nvidiaErr) {
         console.warn("[Avaliador Cognitivo] Fallback NVIDIA NIM falhou:", nvidiaErr);
-      }
-    }
-
-    // 2.3 OmniRoute (Azure) — gateway com fallback interno
-    if (process.env.OMNIROUTE_API_KEY && !cleanImage) {
-      try {
-        const omniRes = await generateOmniRouteContent({
-          prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
-          systemInstruction: PROMPT_SISTEMA_AVALIADOR,
-          temperature: 0.15,
-          maxTokens: 1536,
-          timeoutMs: 20000,
-        });
-
-        const parsed = safeParseJsonWithLatex(omniRes.text);
-        if (parsed) {
-          const rawVeredito = isExplanation
-            ? "aprovado"
-            : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
-
-          return NextResponse.json({
-            veredito: rawVeredito,
-            desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
-            resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
-            etapas_corretas: parsed.etapas_corretas || parsed.passos || [],
-            erros_identificados: parsed.erros_identificados || (parsed.linha_do_erro ? [parsed.linha_do_erro] : []),
-            feedback_latex: parsed.feedback_latex || parsed.diagnostico || (isExplanation ? "Resolução comentada pela MathAI Engine via OmniRoute." : "Avaliação matemática concluída com sucesso."),
-            precisa_revisao_humana: isExplanation ? false : Boolean(parsed.precisa_revisao_humana),
-            transcricao_latex: parsed.transcricao_latex || "",
-            passos: parsed.passos || parsed.etapas_corretas || [],
-            estrategia_identificada: parsed.estrategia_identificada || (isExplanation ? "Resolução Axiomática" : "Raciocínio Analítico"),
-            status_resolucao: isExplanation ? "correto" : (parsed.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto")),
-            diagnostico: parsed.diagnostico || parsed.feedback_latex || "Demonstração matemática analisada pela MathAI Engine via OmniRoute.",
-            metodo_alternativo: parsed.metodo_alternativo || null,
-            linha_do_erro: parsed.linha_do_erro || null,
-            dica_proximo_passo: parsed.dica_proximo_passo || null,
-            confianca_diagnostico: parsed.confianca_diagnostico || "alta",
-            modelo: omniRes.model,
-            provedor: "omniroute-azure",
-            ia_usada: "OmniRoute (Azure) - MathAI",
-          });
-        }
-      } catch (omniErr) {
-        console.warn("[Avaliador Cognitivo] Fallback OmniRoute falhou:", omniErr);
       }
     }
 
