@@ -23,6 +23,8 @@ export interface Stroke {
 export interface SpenSmartCanvasProps {
   onEvaluateOcr: (imageBase64: string) => Promise<void>;
   isEvaluating?: boolean;
+  initialStrokes?: Stroke[];
+  onStrokesChange?: (strokes: Stroke[]) => void;
 }
 
 const COLORS = [
@@ -38,6 +40,8 @@ const WIDTHS = [2, 4, 8, 14];
 export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   onEvaluateOcr,
   isEvaluating = false,
+  initialStrokes,
+  onStrokesChange,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Camada 1: Traços já finalizados (estática durante a escrita)
@@ -45,7 +49,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   // Camada 2: Apenas o traço atual em movimento (incremental O(1))
   const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
   // Histórico mantido em Refs para ZERO re-renders do React durante a escrita
-  const strokesRef = useRef<Stroke[]>([]);
+  const strokesRef = useRef<Stroke[]>(initialStrokes ? [...initialStrokes] : []);
   const redoStackRef = useRef<Stroke[]>([]);
   const currentStrokeRef = useRef<Stroke | null>(null);
   const isDrawingRef = useRef<boolean>(false);
@@ -57,7 +61,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const [activeColor, setActiveColor] = useState<string>(COLORS[0].hex);
   const [activeWidth, setActiveWidth] = useState<number>(2);
   const [stylusMode, setStylusMode] = useState<boolean>(false);
-  const [strokeCount, setStrokeCount] = useState<number>(0);
+  const [strokeCount, setStrokeCount] = useState<number>(initialStrokes ? initialStrokes.length : 0);
 
   // Refs sincronizadas para leitura instantânea nos listeners nativos
   const toolRef = useRef<ToolType>(activeTool);
@@ -247,9 +251,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (strokesRef.current.length !== beforeCount) {
         redrawBaseCanvas();
         setStrokeCount(strokesRef.current.length);
+        onStrokesChange?.([...strokesRef.current]);
       }
     },
-    [redrawBaseCanvas]
+    [redrawBaseCanvas, onStrokesChange]
   );
 
   // Listeners Nativos de Baixa Latência anexados diretamente ao elemento DOM
@@ -365,6 +370,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         strokesRef.current.push(finishedStroke);
         redoStackRef.current = [];
         setStrokeCount(strokesRef.current.length);
+        onStrokesChange?.([...strokesRef.current]);
       }
     };
 
@@ -387,6 +393,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     redoStackRef.current.push(popped);
     redrawBaseCanvas();
     setStrokeCount(strokesRef.current.length);
+    onStrokesChange?.([...strokesRef.current]);
   };
 
   const handleRedo = () => {
@@ -396,6 +403,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const baseCtx = baseCanvasRef.current?.getContext("2d");
     if (baseCtx) drawFullStroke(baseCtx, restored);
     setStrokeCount(strokesRef.current.length);
+    onStrokesChange?.([...strokesRef.current]);
   };
 
   const handleClear = () => {
@@ -403,6 +411,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     redoStackRef.current = [];
     redrawBaseCanvas();
     setStrokeCount(0);
+    onStrokesChange?.([]);
   };
 
   const handleExportAndEvaluate = async () => {
