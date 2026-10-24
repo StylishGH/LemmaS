@@ -184,19 +184,24 @@ INSTRUÇÕES:
       });
 
       const parsed = safeParseJsonWithLatex(geminiRes.text);
-      if (parsed && parsed.model_a && parsed.model_b) {
+      const rawA = parsed?.model_a ?? parsed?.modelo_a ?? parsed?.modelA;
+      const rawB = parsed?.model_b ?? parsed?.modelo_b ?? parsed?.modelB;
+      const contentA = typeof rawA === "string" ? rawA : (rawA?.content || rawA?.texto || "");
+      const contentB = typeof rawB === "string" ? rawB : (rawB?.content || rawB?.texto || "");
+
+      if (contentA && contentB) {
         return NextResponse.json({
           model_a: {
-            name: "Rigor Axiomático e Prova Formal",
-            role: "Demonstração Analítica & Invariantes",
-            content: parsed.model_a,
+            name: (typeof rawA === "object" && rawA?.name) || "Rigor Axiomático e Prova Formal",
+            role: (typeof rawA === "object" && rawA?.role) || "Demonstração Analítica & Invariantes",
+            content: contentA,
           },
           model_b: {
-            name: "Heurística & Atalhos Cognitivos",
-            role: "Intuição Heurística & Atalhos Cognitivos",
-            content: parsed.model_b,
+            name: (typeof rawB === "object" && rawB?.name) || "Heurística & Atalhos Cognitivos",
+            role: (typeof rawB === "object" && rawB?.role) || "Intuição Heurística & Atalhos Cognitivos",
+            content: contentB,
           },
-          sintese: parsed.sintese || "",
+          sintese: parsed.sintese || parsed.synthesis || "",
           provider: "gemini-flash-lite",
           model_used: geminiRes.model,
         });
@@ -217,19 +222,24 @@ INSTRUÇÕES:
         });
 
         const parsed = safeParseJsonWithLatex(nvidiaRes.text);
-        if (parsed && parsed.model_a && parsed.model_b) {
+        const rawA = parsed?.model_a ?? parsed?.modelo_a ?? parsed?.modelA;
+        const rawB = parsed?.model_b ?? parsed?.modelo_b ?? parsed?.modelB;
+        const contentA = typeof rawA === "string" ? rawA : (rawA?.content || rawA?.texto || "");
+        const contentB = typeof rawB === "string" ? rawB : (rawB?.content || rawB?.texto || "");
+
+        if (contentA && contentB) {
           return NextResponse.json({
             model_a: {
-              name: "Rigor Axiomático e Prova Formal",
-              role: "Demonstração Analítica & Invariantes",
-              content: parsed.model_a,
+              name: (typeof rawA === "object" && rawA?.name) || "Rigor Axiomático e Prova Formal",
+              role: (typeof rawA === "object" && rawA?.role) || "Demonstração Analítica & Invariantes",
+              content: contentA,
             },
             model_b: {
-              name: "Heurística & Atalhos Cognitivos",
-              role: "Intuição Heurística & Atalhos Cognitivos",
-              content: parsed.model_b,
+              name: (typeof rawB === "object" && rawB?.name) || "Heurística & Atalhos Cognitivos",
+              role: (typeof rawB === "object" && rawB?.role) || "Intuição Heurística & Atalhos Cognitivos",
+              content: contentB,
             },
-            sintese: parsed.sintese || "",
+            sintese: parsed.sintese || parsed.synthesis || "",
             provider: "nvidia-nemotron",
             model_used: nvidiaRes.model,
           });
@@ -239,53 +249,14 @@ INSTRUÇÕES:
       }
     }
 
-    // 3. Fallback Determinístico (Uptime 100% garantido)
-    const fallbackSintese = "Resposta em modo contingência: Modelo A fornece a demonstração formal universal; Modelo B oferece o atalho visual de concurso. Em produção, a IA geraria pareceres específicos ao enunciado.";
-    const fallbackModelA = `**Modelo A — Rigor Axiomático (Contingência)**
-
-Análise rigorosa do enunciado proposto. Pela definição formal dos objetos matemáticos envolvidos, aplicamos a estrutura axiomática padrão.
-
-Seja o problema enquadrado em seu domínio teórico. As hipóteses são explicitadas e o teorema fundamental aplicável é invocado.
-
-**Demonstração:**
-1. Identificação das condições necessárias e suficientes
-2. Aplicação da propriedade canônica (ex: partição de áreas $S = p \\\\cdot r$ para triângulos)
-3. Encadeamento dedutivo sem saltos lógicos
-4. Conclusão pela validade universal do resultado
-
-$\\\\therefore$ A solução decorre diretamente dos axiomas e definições.`;
-
-    const fallbackModelB = `**Modelo B — Intuição Heurística (Contingência)**
-
-Visão rápida: reconheça o padrão clássico. Muitas questões dessa família reduzem-se a figuras notáveis.
-
-**Macete direto:**
-- Identifique o triângulo 3-4-5 ou homotetia de primitiva
-- Use tangência e simetria: $r = \\\\frac{b+c-a}{2}$ (triângulo retângulo)
-- Área pelo produto dos catetos ou $S = p \\\\cdot r$
-
-**Resolução em 3 passos:**
-1. Desenhe a figura e marque o que é igual
-2. Aplique a relação métrica imediata
-3. Confira no gabarito
-
-O "pulo do gato" está na simetria da configuração.`;
-
-    return NextResponse.json({
-      model_a: {
-        name: "Rigor Axiomático e Prova Formal",
-        role: "Demonstração Analítica & Invariantes",
-        content: fallbackModelA,
+    // 3. Falha real de todos os provedores cognitivos (HTTP 503 sem mascarar com texto estático)
+    return NextResponse.json(
+      {
+        error: "O serviço de Segunda Opinião está temporariamente indisponível. Todos os provedores de cognição estão sobrecarregados.",
+        status: "unavailable",
       },
-      model_b: {
-        name: "Heurística & Atalhos Cognitivos",
-        role: "Intuição Heurística & Atalhos Cognitivos",
-        content: fallbackModelB,
-      },
-      sintese: fallbackSintese,
-      provider: "lemmas-contingency",
-      model_used: "deterministic-fallback",
-    });
+      { status: 503 }
+    );
   } catch {
     return NextResponse.json(
       { error: "Erro interno ao processar a comparação de modelos." },

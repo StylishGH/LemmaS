@@ -8,6 +8,7 @@ import {
 import { autoWrapLatexExpressions } from "@/lib/math-parser";
 import { generateGeminiContent } from "@/lib/gemini";
 import { generateNvidiaContent } from "@/lib/nvidia";
+import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 // Node.js process types for process.env
 /// <reference types="node" />
@@ -198,11 +199,12 @@ export async function POST(req: NextRequest) {
             timeoutMs: 14000,
           });
 
-          const parsed = JSON.parse(geminiRes.text);
-          if (parsed && parsed.hint_text) {
+          const parsed = safeParseJsonWithLatex(geminiRes.text);
+          const hintText = parsed?.hint_text || parsed?.dica || parsed?.hint;
+          if (hintText) {
             return NextResponse.json({
-              nivel: parsed.level || level,
-              dica: autoWrapLatexExpressions(parsed.hint_text),
+              nivel: parsed.level || parsed.nivel || level,
+              dica: autoWrapLatexExpressions(hintText),
               modelo: geminiRes.model,
               provedor: "gemini-flash-lite",
               confianca: 0.9,
@@ -225,11 +227,12 @@ export async function POST(req: NextRequest) {
               timeoutMs: 14000,
             });
 
-            const parsed = JSON.parse(nvidiaRes.text);
-            if (parsed && parsed.hint_text) {
+            const parsed = safeParseJsonWithLatex(nvidiaRes.text);
+            const hintText = parsed?.hint_text || parsed?.dica || parsed?.hint;
+            if (hintText) {
               return NextResponse.json({
-                nivel: parsed.level || level,
-                dica: autoWrapLatexExpressions(parsed.hint_text),
+                nivel: parsed.level || parsed.nivel || level,
+                dica: autoWrapLatexExpressions(hintText),
                 modelo: nvidiaRes.model,
                 provedor: "nvidia-nemotron",
                 confianca: 0.9,
@@ -242,24 +245,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // 3. Fallback Determinístico (Uptime 100% garantido)
-        const fallbackHints: Record<number, string> = {
-          1: "Identifique os símbolos e notações matemáticas no enunciado. O que cada letra representa? Quais são as grandezas conhecidas e desconhecidas?",
-          2: "Escreva o primeiro passo no rascunho: qual teorema, definição ou propriedade se aplica diretamente às hipóteses dadas?",
-          3: "Conecte o passo anterior ao seguinte: como a conclusão parcial leva naturalmente à próxima etapa da demonstração?",
-          4: "Observe a pegadinha: há alguma condição implícita, sinal trocado ou caso especial que a banca costuma explorar neste tópico?",
-          5: `Gabarito oficial: $${cleanedGabarito || "ver enunciado"}$. Resolução completa: 1) Organize os dados. 2) Aplique o teorema fundamental. 3) Execute os cálculos. 4) Verifique a consistência dimensional e sinal. 5) Conclua.`,
-        };
-
-        return NextResponse.json({
-          nivel: level,
-          dica: autoWrapLatexExpressions(fallbackHints[level] || fallbackHints[1]),
-          modelo: "LEMMAS Core Determinístico",
-          provedor: "lemmas-contingency",
-          confianca: 0.7,
-          cached: false,
-          cache_key: cacheKey,
-        });
+        // 3. Falha real de todos os provedores cognitivos (HTTP 503 sem mascarar com texto estático)
+        return NextResponse.json(
+          {
+            error: "O serviço de tutoria socrática está temporariamente indisponível. Todos os provedores cognitivos estão sobrecarregados.",
+            status: "unavailable",
+          },
+          { status: 503 }
+        );
       } catch (err: unknown) {
         return NextResponse.json(
           { error: err instanceof Error ? err.message : "Erro interno no Tutor Socrático" },
