@@ -62,12 +62,29 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     const redirectResponse = NextResponse.redirect(url);
-    
+
     // É obrigatório copiar os cookies atualizados caso haja refresh de token
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);
     });
-    
+
+    return redirectResponse;
+  }
+
+  // Visitante sem sessão que cai na raiz vai para a landing explicativa.
+  // Usuário logado mantém o comportamento atual da raiz (dashboard de
+  // exploração). O clone preserva a query string (ex.: UTM), então a
+  // origem do tráfego não se perde no redirect.
+  if (request.nextUrl.pathname === "/" && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/landing";
+    const redirectResponse = NextResponse.redirect(url);
+
+    // É obrigatório copiar os cookies atualizados caso haja refresh de token
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+
     return redirectResponse;
   }
 
