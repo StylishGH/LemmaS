@@ -48,7 +48,22 @@ class MultimodalVisionProcessor:
         image_bytes, mime_type = self._normalize_image_input(image_data, mime_type)
         input_hash = compute_sha256(image_bytes)
 
-        # 1. NVIDIA NIM Vision (primário)
+        # 1. Google Gemini Multimodal Vision (primário - velocidade < 0.8s e alta acurácia em LaTeX)
+        if settings.has_gemini and settings.GEMINI_FALLBACK_ENABLED:
+            ocr_result = self._call_gemini_vision(image_bytes, mime_type)
+            if ocr_result:
+                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+                ocr_result.update(
+                    {
+                        "latency_ms": latency_ms,
+                        "input_hash": input_hash,
+                        "model_used": "gemini-flash-lite-latest",
+                        "provider": "google",
+                    }
+                )
+                return ocr_result
+
+        # 2. NVIDIA NIM Vision (secundário)
         if settings.has_nvidia:
             for model in NVIDIA_VISION_MODELS:
                 ocr_result = self._call_nvidia_vision(image_bytes, mime_type, model)
@@ -63,21 +78,6 @@ class MultimodalVisionProcessor:
                         }
                     )
                     return ocr_result
-
-        # 2. Google Gemini (fallback de última instância)
-        if settings.has_gemini and settings.GEMINI_FALLBACK_ENABLED:
-            ocr_result = self._call_gemini_vision(image_bytes, mime_type)
-            if ocr_result:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                ocr_result.update(
-                    {
-                        "latency_ms": latency_ms,
-                        "input_hash": input_hash,
-                        "model_used": "gemini-flash-lite-latest",
-                        "provider": "google",
-                    }
-                )
-                return ocr_result
 
         # Fallback honesto: se nenhum provedor multimodal estiver disponível ou funcional,
         # reporta indisponibilidade sem jamais fabricar dados ou equações fictícias (P0-02).
@@ -175,7 +175,7 @@ class MultimodalVisionProcessor:
 
             client = genai.Client(
                 api_key=self.gemini_key,
-                http_options=types.HttpOptions(timeout=30.0),
+                http_options=types.HttpOptions(timeout=15000),
             )
             config = types.GenerateContentConfig(
                 system_instruction=PROMPT_SISTEMA_OCR_MATEMATICO,
