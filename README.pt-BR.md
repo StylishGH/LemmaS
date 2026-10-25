@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/assets/logo.png" alt="Lemmas — metade esquerda no modo dark de lousa, metade direita no modo light de quadro branco" width="480" />
+  <img src="docs/assets/logo.svg" alt="Lemmas — metade esquerda no modo dark de lousa, metade direita no modo light de quadro branco" width="480" />
   <p><strong>Plataforma de aprendizagem matemática adaptativa guiada por dados, psicometria e IA multi-modelo.</strong></p>
   <p>Um projeto de engenharia aplicada na interseção entre Engenharia de Dados, Ciência de Dados / Machine Learning e Design Epistêmico.</p>
   <p><strong>🇧🇷 Português (Brasil)</strong> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English</a></p>
@@ -25,16 +25,33 @@ Dois estudantes podem errar a mesma questão de cálculo por razões fundamental
 
 O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemática pela **Universidade Federal Fluminense (UFF)**. Ele une rigor matemático, Engenharia de Dados moderna e modelagem psicométrica para avaliar demonstrações e resoluções discursivas passo a passo.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       MANDAMENTO EPISTÊMICO FUNDAMENTAL                     │
-│                                                                             │
-│     DADO OBSERVADO            INTERPRETAÇÃO DA IA          DADO VALIDADO    │
-│  [Hash SHA-256 Imutável]  ≠   [Modelo Versionado]   ≠   [Human-in-the-Loop] │
-│     Manuscrito/texto           Hipótese com prompt e     Rótulo conferido   │
-│      fiel do aluno             grau de confiança         para treino de ML  │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+<table align="center">
+  <tr>
+    <td colspan="5" align="center"><strong>MANDAMENTO EPISTÊMICO FUNDAMENTAL</strong></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>DADO OBSERVADO</strong><br />
+      [Hash SHA-256 Imutável]<br />
+      Manuscrito/texto<br />
+      fiel do aluno
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>INTERPRETAÇÃO DA IA</strong><br />
+      [Modelo Versionado]<br />
+      Hipótese com prompt e<br />
+      grau de confiança
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>DADO VALIDADO</strong><br />
+      [Human-in-the-Loop]<br />
+      Rótulo conferido<br />
+      para treino de ML
+    </td>
+  </tr>
+</table>
 
 ---
 
