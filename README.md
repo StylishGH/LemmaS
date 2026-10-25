@@ -1,9 +1,9 @@
 <div align="center">
-  <h1>Lemmas 📐</h1>
+  <img src="docs/assets/logo.svg" alt="Lemmas — left half dark chalkboard mode, right half light whiteboard mode" width="480" />
   <p><strong>Adaptive mathematics learning platform powered by data, psychometrics, and multi-model AI.</strong></p>
   <p>An applied engineering project exploring Data Engineering, Applied Machine Learning, and Epistemic System Design.</p>
   <p><a href="./README.pt-BR.md">🇧🇷 Português (Brasil)</a> &nbsp;|&nbsp; <strong>🇺🇸 English</strong></p>
-  <p><a href="https://lemmas-ochre.vercel.app/dashboard"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
+  <p><a href="https://lemmas.com.br/dashboard"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
@@ -25,30 +25,64 @@ Two students can miss the same calculus problem for completely different reasons
 
 **Lemmas** was architected from first principles by a Mathematics undergraduate at **Universidade Federal Fluminense (UFF)**. It unites mathematical rigor, modern Data Engineering, and psychometric modeling to evaluate discursive mathematical proofs step-by-step.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       CORE EPISTEMIC MANDATE                                │
-│                                                                             │
-│   RAW OBSERVED DATA        AI INTERPRETATION         VALIDATED GROUND TRUTH │
-│  [Immutable SHA-256]   ≠   [Versioned Model]    ≠     [Human-in-the-Loop]   │
-│   Student's verbatim        Hypothesis with            Verified label for   │
-│    handwriting/text          prompt provenance          supervised training │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+<table align="center">
+  <tr>
+    <td colspan="5" align="center"><strong>CORE EPISTEMIC MANDATE</strong></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>RAW OBSERVED DATA</strong><br />
+      [Immutable SHA-256]<br />
+      Student's verbatim<br />
+      handwriting/text
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>AI INTERPRETATION</strong><br />
+      [Versioned Model]<br />
+      Hypothesis with<br />
+      prompt provenance
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>VALIDATED GROUND TRUTH</strong><br />
+      [Human-in-the-Loop]<br />
+      Verified label for<br />
+      supervised training
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## 📸 Product Visual Showcase
 
-| Discursive Workbench & KaTeX Rendering | Multi-Model Second Opinion |
-| :---: | :---: |
-| ![Bancada Discursiva](docs/assets/bancada.png) | ![Segunda Opinião](docs/assets/segunda_opiniao.png) |
-| *Step-by-step proof workbench with canvas scratchpad, compass, and multimodal OCR.* | *Side-by-side comparative debate: Axiomatic Rigor (Nemotron) vs Heuristics.* |
-
-| Metacognitive Dashboard & Mastery Radar | Audited Question & Lemma Repository (20,803 Items) |
-| :---: | :---: |
-| ![Dashboard](docs/assets/dashboard.png) | ![Banco de Questões](docs/assets/banco_questoes.png) |
-| *Retention cycles, domain mastery metrics, and error pattern telemetry.* | *Classified Olympiad & military exam questions rendered in native KaTeX.* |
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <strong>Discursive Workbench &amp; KaTeX Rendering</strong><br />
+      <img src="docs/assets/bancada.png" alt="Bancada Discursiva" width="100%" /><br />
+      <em>Step-by-step proof workbench with canvas scratchpad, compass, and multimodal OCR.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Multi-Model Second Opinion</strong><br />
+      <img src="docs/assets/segunda_opiniao.png" alt="Segunda Opinião" width="100%" /><br />
+      <em>Side-by-side comparative debate: Axiomatic Rigor (Nemotron) vs Heuristics.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Metacognitive Dashboard &amp; Mastery Radar</strong><br />
+      <img src="docs/assets/dashboard.png" alt="Dashboard" width="100%" /><br />
+      <em>Retention cycles, domain mastery metrics, and error pattern telemetry.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Audited Question &amp; Lemma Repository (20,803 Items)</strong><br />
+      <img src="docs/assets/banco_questoes.png" alt="Banco de Questões" width="100%" /><br />
+      <em>Classified Olympiad &amp; military exam questions rendered in native KaTeX.</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -56,54 +90,35 @@ Two students can miss the same calculus problem for completely different reasons
 
 The platform separates user interaction, API contracts, model routing, and persistent storage into isolated layers:
 
-```mermaid
-flowchart TD
-    subgraph Client ["Client Layer · Next.js 16 (App Router + Turbopack + KaTeX)"]
-        UI_Bench["Discursive Workbench (Canvas / OCR / Text)"]
-        UI_Dash["Metacognition Dashboard & Radar"]
-        UI_Repo["Repository (20,803 Questions & Lemmata)"]
-    end
-
-    subgraph Backend ["Engine Layer · FastAPI (Python 3.12)"]
-        Auth["Security Guard (Token & Anon Key Validator)"]
-        HashEngine["Integrity Engine (Deterministic SHA-256 Hash)"]
-        Router["MathAI Multi-Model Gateway Strategy"]
-        Sched["Memory & Psychometrics (FSRS-v4 / SM-2 / IRT-3PL)"]
-    end
-
-    subgraph Providers ["Inference Layer (LLM & Vision Providers)"]
-        Nemo["NVIDIA Nemotron (Axiomatic Proofs & Formal Logic)"]
-        Deep["DeepSeek (Intuitive Heuristics & Alternative Paths)"]
-        Gemini["Google Gemini Flash-Lite (Multimodal OCR & Vision)"]
-    end
-
-    subgraph Storage ["Data Platform · Supabase PostgreSQL"]
-        DB_Raw[("Raw Submissions (Observed, Immutable)")]
-        DB_Eval[("AI Evaluations (Hypotheses & Logs)")]
-        DB_Feedback[("Validated Feedback (Ground Truth)")]
-        DB_Meta[("Student Metacognition & Flashcards")]
-    end
-
-    UI_Bench --> Auth
-    UI_Dash --> Auth
-    UI_Repo --> Auth
-
-    Auth --> HashEngine
-    HashEngine --> DB_Raw
-
-    HashEngine --> Router
-    Router --> Nemo
-    Router --> Deep
-    Router --> Gemini
-
-    Nemo --> DB_Eval
-    Deep --> DB_Eval
-    Gemini --> DB_Eval
-
-    UI_Dash --> Sched
-    Sched --> DB_Meta
-    DB_Eval -.-> DB_Feedback
-```
+<table align="center">
+  <tr>
+    <td align="center">
+      <strong>Client Layer · Next.js 16 (App Router + Turbopack + KaTeX)</strong><br />
+      Discursive Workbench (Canvas / OCR / Text) · Metacognition Dashboard &amp; Radar · Repository (20,803 Questions &amp; Lemmata)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Engine Layer · FastAPI (Python 3.12)</strong><br />
+      Security Guard (Token &amp; Anon Key Validator) · Integrity Engine (Deterministic SHA-256 Hash) · MathAI Multi-Model Gateway Strategy · Memory &amp; Psychometrics (FSRS-v4 / SM-2 / IRT-3PL)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Inference Layer (LLM &amp; Vision Providers)</strong><br />
+      NVIDIA Nemotron (Axiomatic Proofs &amp; Formal Logic) · DeepSeek (Intuitive Heuristics &amp; Alternative Paths) · Google Gemini Flash-Lite (Multimodal OCR &amp; Vision)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Data Platform · Supabase PostgreSQL</strong><br />
+      Raw Submissions (Observed, Immutable) · AI Evaluations (Hypotheses &amp; Logs) · Validated Feedback (Ground Truth) · Student Metacognition &amp; Flashcards
+    </td>
+  </tr>
+</table>
 
 ---
 
