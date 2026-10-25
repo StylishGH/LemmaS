@@ -584,7 +584,7 @@ class MathAiGateway:
             default_models=[settings.OPENROUTER_MODEL],
             timeout=(2.0, 8.0),
             extra_headers={
-                "HTTP-Referer": "https://lemmas-ochre.vercel.app",
+                "HTTP-Referer": "https://lemmas.com.br",
                 "X-Title": "LemmaS",
             },
         )
