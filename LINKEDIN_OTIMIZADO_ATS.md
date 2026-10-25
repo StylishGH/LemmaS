@@ -146,7 +146,7 @@ Principais entregas e impacto mensurável:
 *Adicione um item na seção "Em Destaque" (Featured) do seu perfil com link e imagem:*
 
 - **Título:** LEMMAS — Plataforma Educacional Adaptativa com Multi-Model AI & Psicométrica
-- **Link:** `https://lemmas-ochre.vercel.app/dashboard`
+- **Link:** `https://lemmas.com.br/dashboard`
 - **Descrição Curta:**
   > Sistema educacional de alta complexidade construído com Next.js 16, FastAPI (Python 3.12) e Supabase PostgreSQL. Apresenta acervo de +22.100 questões com taxonomia matemática em PT-BR, motor de repetição espaçada SuperMemo-2 (SM-2), OCR multimodal de cadernos com Google Gemini e NVIDIA NIM, tutor socrático com Chain-of-Thought e telemetria de inferência N:1 com controle de custos e tokens.
 

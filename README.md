@@ -3,7 +3,7 @@
   <p><strong>Adaptive mathematics learning platform powered by data, psychometrics, and multi-model AI.</strong></p>
   <p>An applied engineering project exploring Data Engineering, Applied Machine Learning, and Epistemic System Design.</p>
   <p><a href="./README.pt-BR.md">🇧🇷 Português (Brasil)</a> &nbsp;|&nbsp; <strong>🇺🇸 English</strong></p>
-  <p><a href="https://lemmas-ochre.vercel.app/dashboard"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
+  <p><a href="https://lemmas.com.br/dashboard"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
