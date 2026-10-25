@@ -69,6 +69,63 @@ html {
   flex-shrink: 0;
 }
 
+/* Menu móvel da landing: só existe abaixo de 1040px, que é onde os
+   links do topo somem. No desktop o botão não aparece. */
+.lemmas-nav-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgb(255 255 255 / .14);
+  background: rgb(255 255 255 / .04);
+  color: #ded9c8;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.lemmas-nav-mobile-menu {
+  width: min(1120px, calc(100% - 40px));
+  margin: -8px auto 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 16px;
+  border: 1px solid rgb(255 255 255 / .14);
+  background: rgb(20 18 34 / .96);
+  position: relative;
+  z-index: 20;
+}
+
+.lemmas-nav-mobile-menu a {
+  color: #ded9c8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.lemmas-nav-mobile-menu a:hover {
+  background: rgb(255 255 255 / .06);
+}
+
+.lemmas-nav-mobile-menu .lemmas-nav-mobile-cta {
+  text-align: center;
+  border: 1px solid rgb(255 255 255 / .18);
+  margin-top: 6px;
+}
+
+.lemmas-nav-mobile-menu .lemmas-nav-mobile-cta-primary {
+  background: #e8b93e;
+  border-color: #e8b93e;
+  color: #1a1608;
+}
+
 .lemmas-hero {
   position: relative;
   z-index: 2;
@@ -548,6 +605,14 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   .lemmas-nav-links {
     display: none;
   }
+  /* Sem isso, logo + Explorar + tema + hambúrguer não cabem em 375px.
+     O Explorar volta dentro do menu móvel. */
+  .lemmas-nav-actions .lemmas-nav-auth-btn {
+    display: none;
+  }
+  .lemmas-nav-mobile-toggle {
+    display: inline-flex;
+  }
 }
 
 @media(max-width: 980px) {
@@ -558,6 +623,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 @media(max-width: 768px) {
   .lemmas-nav,
+  .lemmas-nav-mobile-menu,
   .lemmas-hero,
   .lemmas-footer {
     width: calc(100% - 28px);
