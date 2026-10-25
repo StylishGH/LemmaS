@@ -2,6 +2,24 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        // Quem acessar o endereço antigo da Vercel vai para o domínio novo,
+        // mantendo o caminho e a query (ex.: /dashboard -> https://lemmas.com.br/dashboard).
+        // O host muda, então não há loop: no domínio novo essa regra não casa.
+        source: "/:path*",
+        destination: "https://lemmas.com.br/:path*",
+        permanent: true,
+        has: [
+          {
+            type: "host",
+            value: "lemmas-ochre.vercel.app",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     const backendUrl =
       process.env.BACKEND_API_URL ||
