@@ -200,7 +200,8 @@ export default function AppNavbar() {
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="xl:hidden p-2 rounded-xl text-slate-700 dark:text-[#f5f0df] hover:bg-slate-100 dark:hover:bg-zinc-800/60 border border-slate-200 dark:border-amber-500/20 transition"
-            aria-label="Abrir menu de navegação"
+            aria-label={mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
