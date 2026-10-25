@@ -57,6 +57,7 @@ app.add_exception_handler(
 cors_origins = [o.strip() for o in settings.CORS_ORIGINS if o.strip() and o.strip() != "*"]
 if not cors_origins:
     cors_origins = [
+        "https://lemmas.com.br",
         "https://lemmas-ochre.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",

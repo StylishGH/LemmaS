@@ -656,7 +656,11 @@ export default function BancoQuestoesPage() {
       </div>
 
       {/* LINHA 1: TRILHAS RÁPIDAS DE 1 CLIQUE */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+      {/* Trilhas rápidas: antes era uma fileira com rolagem horizontal
+          sem barra visível — no celular as últimas trilhas sumiam para a
+          direita sem pista de que dava para arrastar. Agora quebra em
+          linhas, então todas ficam visíveis. */}
+      <div className="flex flex-wrap items-center gap-1.5 pb-1 text-xs">
         <button
           type="button"
           onClick={() => aplicarTrilhaRapida("todas")}

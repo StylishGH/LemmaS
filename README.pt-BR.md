@@ -1,9 +1,9 @@
 <div align="center">
-  <h1>Lemmas 📐</h1>
+  <img src="docs/assets/logo.svg" alt="Lemmas — metade esquerda no modo dark de lousa, metade direita no modo light de quadro branco" width="480" />
   <p><strong>Plataforma de aprendizagem matemática adaptativa guiada por dados, psicometria e IA multi-modelo.</strong></p>
   <p>Um projeto de engenharia aplicada na interseção entre Engenharia de Dados, Ciência de Dados / Machine Learning e Design Epistêmico.</p>
   <p><strong>🇧🇷 Português (Brasil)</strong> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English</a></p>
-  <p><a href="https://lemmas-ochre.vercel.app/dashboard"><strong>🚀 Acesse a Demonstração ao Vivo do Lemmas</strong></a></p>
+  <p><a href="https://lemmas.com.br/dashboard"><strong>🚀 Acesse a Demonstração ao Vivo do Lemmas</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
@@ -25,30 +25,64 @@ Dois estudantes podem errar a mesma questão de cálculo por razões fundamental
 
 O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemática pela **Universidade Federal Fluminense (UFF)**. Ele une rigor matemático, Engenharia de Dados moderna e modelagem psicométrica para avaliar demonstrações e resoluções discursivas passo a passo.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       MANDAMENTO EPISTÊMICO FUNDAMENTAL                     │
-│                                                                             │
-│     DADO OBSERVADO            INTERPRETAÇÃO DA IA          DADO VALIDADO    │
-│  [Hash SHA-256 Imutável]  ≠   [Modelo Versionado]   ≠   [Human-in-the-Loop] │
-│     Manuscrito/texto           Hipótese com prompt e     Rótulo conferido   │
-│      fiel do aluno             grau de confiança         para treino de ML  │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+<table align="center">
+  <tr>
+    <td colspan="5" align="center"><strong>MANDAMENTO EPISTÊMICO FUNDAMENTAL</strong></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>DADO OBSERVADO</strong><br />
+      [Hash SHA-256 Imutável]<br />
+      Manuscrito/texto<br />
+      fiel do aluno
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>INTERPRETAÇÃO DA IA</strong><br />
+      [Modelo Versionado]<br />
+      Hipótese com prompt e<br />
+      grau de confiança
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>DADO VALIDADO</strong><br />
+      [Human-in-the-Loop]<br />
+      Rótulo conferido<br />
+      para treino de ML
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## 📸 Demonstração Visual do Produto
 
-| Bancada Discursiva & Renderização KaTeX | Segunda Opinião Multi-Modelo |
-| :---: | :---: |
-| ![Bancada Discursiva](docs/assets/bancada.png) | ![Segunda Opinião](docs/assets/segunda_opiniao.png) |
-| *Bancada de resolução analítica com lousa de rascunho, compasso euclidiano e OCR multimodal.* | *Debate comparativo: Rigor Axiomático (Nemotron) vs Heurísticas e Atalhos Cognitivos.* |
-
-| Painel de Metacognição & Radar de Domínio | Acervo de 20.803 Questões & Teoremas |
-| :---: | :---: |
-| ![Dashboard](docs/assets/dashboard.png) | ![Banco de Questões](docs/assets/banco_questoes.png) |
-| *Ciclos de repetição espaçada, telemetria de erros e radar de domínio por matéria.* | *Questões auditadas de olimpíadas e vestibulares militares renderizadas em KaTeX nativo.* |
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <strong>Bancada Discursiva &amp; Renderização KaTeX</strong><br />
+      <img src="docs/assets/bancada.png" alt="Bancada Discursiva" width="100%" /><br />
+      <em>Bancada de resolução analítica com lousa de rascunho, compasso euclidiano e OCR multimodal.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Segunda Opinião Multi-Modelo</strong><br />
+      <img src="docs/assets/segunda_opiniao.png" alt="Segunda Opinião" width="100%" /><br />
+      <em>Debate comparativo: Rigor Axiomático (Nemotron) vs Heurísticas e Atalhos Cognitivos.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Painel de Metacognição &amp; Radar de Domínio</strong><br />
+      <img src="docs/assets/dashboard.png" alt="Dashboard" width="100%" /><br />
+      <em>Ciclos de repetição espaçada, telemetria de erros e radar de domínio por matéria.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Acervo de 20.803 Questões &amp; Teoremas</strong><br />
+      <img src="docs/assets/banco_questoes.png" alt="Banco de Questões" width="100%" /><br />
+      <em>Questões auditadas de olimpíadas e vestibulares militares renderizadas em KaTeX nativo.</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -56,54 +90,35 @@ O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemá
 
 A plataforma desacopla a interação do usuário, contratos de API, roteamento de modelos e persistência relacional em camadas bem definidas:
 
-```mermaid
-flowchart TD
-    subgraph Client ["Camada Cliente · Next.js 16 (App Router + Turbopack + KaTeX)"]
-        UI_Bench["Bancada Discursiva (Lousa / OCR / Texto)"]
-        UI_Dash["Painel de Metacognição & Radar"]
-        UI_Repo["Acervo (20.803 Questões & Lemas)"]
-    end
-
-    subgraph Backend ["Motor Backend · FastAPI (Python 3.12)"]
-        Auth["Guarda de Segurança (Validador de Token e Anon Key)"]
-        HashEngine["Motor de Integridade (Hash SHA-256 Determinístico)"]
-        Router["Gateway Multi-Modelo MathAI"]
-        Sched["Psicometria & Memória (FSRS-v4 / SM-2 / TRI-3PL)"]
-    end
-
-    subgraph Providers ["Camada de Inferência (Provedores LLM & Visão)"]
-        Nemo["NVIDIA Nemotron (Provas Axiomáticas & Lógica Formal)"]
-        Deep["DeepSeek (Heurísticas & Caminhos Alternativos)"]
-        Gemini["Google Gemini Flash-Lite (OCR Multimodal & Visão)"]
-    end
-
-    subgraph Storage ["Plataforma de Dados · Supabase PostgreSQL"]
-        DB_Raw[("Tentativas Brutas (Dado Observado Imutável)")]
-        DB_Eval[("Avaliações da IA (Hipóteses & Logs)")]
-        DB_Feedback[("Feedback Humano Validado (Ground Truth)")]
-        DB_Meta[("Metacognição & Flashcards")]
-    end
-
-    UI_Bench --> Auth
-    UI_Dash --> Auth
-    UI_Repo --> Auth
-
-    Auth --> HashEngine
-    HashEngine --> DB_Raw
-
-    HashEngine --> Router
-    Router --> Nemo
-    Router --> Deep
-    Router --> Gemini
-
-    Nemo --> DB_Eval
-    Deep --> DB_Eval
-    Gemini --> DB_Eval
-
-    UI_Dash --> Sched
-    Sched --> DB_Meta
-    DB_Eval -.-> DB_Feedback
-```
+<table align="center">
+  <tr>
+    <td align="center">
+      <strong>Camada Cliente · Next.js 16 (App Router + Turbopack + KaTeX)</strong><br />
+      Bancada Discursiva (Lousa / OCR / Texto) · Painel de Metacognição &amp; Radar · Acervo (20.803 Questões &amp; Lemas)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Motor Backend · FastAPI (Python 3.12)</strong><br />
+      Guarda de Segurança (Validador de Token e Anon Key) · Motor de Integridade (Hash SHA-256 Determinístico) · Gateway Multi-Modelo MathAI · Psicometria &amp; Memória (FSRS-v4 / SM-2 / TRI-3PL)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Camada de Inferência (Provedores LLM &amp; Visão)</strong><br />
+      NVIDIA Nemotron (Provas Axiomáticas &amp; Lógica Formal) · DeepSeek (Heurísticas &amp; Caminhos Alternativos) · Google Gemini Flash-Lite (OCR Multimodal &amp; Visão)
+    </td>
+  </tr>
+  <tr><td align="center">⬇</td></tr>
+  <tr>
+    <td align="center">
+      <strong>Plataforma de Dados · Supabase PostgreSQL</strong><br />
+      Tentativas Brutas (Dado Observado Imutável) · Avaliações da IA (Hipóteses &amp; Logs) · Feedback Humano Validado (Ground Truth) · Metacognição &amp; Flashcards
+    </td>
+  </tr>
+</table>
 
 ---
 
