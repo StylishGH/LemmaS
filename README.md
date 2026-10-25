@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/assets/logo.png" alt="Lemmas — left half dark chalkboard mode, right half light whiteboard mode" width="480" />
+  <img src="docs/assets/logo.svg" alt="Lemmas — left half dark chalkboard mode, right half light whiteboard mode" width="480" />
   <p><strong>Adaptive mathematics learning platform powered by data, psychometrics, and multi-model AI.</strong></p>
   <p>An applied engineering project exploring Data Engineering, Applied Machine Learning, and Epistemic System Design.</p>
   <p><a href="./README.pt-BR.md">🇧🇷 Português (Brasil)</a> &nbsp;|&nbsp; <strong>🇺🇸 English</strong></p>
@@ -25,16 +25,33 @@ Two students can miss the same calculus problem for completely different reasons
 
 **Lemmas** was architected from first principles by a Mathematics undergraduate at **Universidade Federal Fluminense (UFF)**. It unites mathematical rigor, modern Data Engineering, and psychometric modeling to evaluate discursive mathematical proofs step-by-step.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       CORE EPISTEMIC MANDATE                                │
-│                                                                             │
-│   RAW OBSERVED DATA        AI INTERPRETATION         VALIDATED GROUND TRUTH │
-│  [Immutable SHA-256]   ≠   [Versioned Model]    ≠     [Human-in-the-Loop]   │
-│   Student's verbatim        Hypothesis with            Verified label for   │
-│    handwriting/text          prompt provenance          supervised training │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+<table align="center">
+  <tr>
+    <td colspan="5" align="center"><strong>CORE EPISTEMIC MANDATE</strong></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>RAW OBSERVED DATA</strong><br />
+      [Immutable SHA-256]<br />
+      Student's verbatim<br />
+      handwriting/text
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>AI INTERPRETATION</strong><br />
+      [Versioned Model]<br />
+      Hypothesis with<br />
+      prompt provenance
+    </td>
+    <td align="center">≠</td>
+    <td align="center">
+      <strong>VALIDATED GROUND TRUTH</strong><br />
+      [Human-in-the-Loop]<br />
+      Verified label for<br />
+      supervised training
+    </td>
+  </tr>
+</table>
 
 ---
 
