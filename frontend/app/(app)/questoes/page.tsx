@@ -187,38 +187,17 @@ export default function BancoQuestoesPage() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Facets dinâmicos carregados da API
-  const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number; categoria?: string }[]>([
-    { name: VAL_TODAS, count: 20764, categoria: "Todas" },
-    { name: "HMMT", count: 3221, categoria: "Olimpíadas" },
-    { name: "IMO", count: 1924, categoria: "Olimpíadas" },
-    { name: "ITA", count: 328, categoria: "Concurso Militar" },
-    { name: "ENEM", count: 263, categoria: "Vestibular & Superior" },
-    { name: "EEAR", count: 216, categoria: "Concurso Militar" },
-    { name: "CEDERJ", count: 74, categoria: "Vestibular & Superior" },
-  ]);
+  // Facets dinâmicos carregados da API — começam vazios, como as demais
+  // facets da página, e são preenchidos pelo primeiro retorno da API.
+  // Antes, um snapshot antigo (snapshot antigo) ficava visível antes do
+  // carregamento e permanecia se a API falhasse.
+  const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number; categoria?: string }[]>([]);
 
-  const [categoriasBancaDisponiveis, setCategoriasBancaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
-    { id: "Todas", label: "Todas as Categorias", count: 20764 },
-    { id: "Concurso Militar", label: "Concursos Militares", count: 1603 },
-    { id: "Vestibular & Superior", label: "Vestibulares & Superior", count: 567 },
-    { id: "Olimpíadas", label: "Olimpíadas de Matemática", count: 18594 },
-  ]);
+  const [categoriasBancaDisponiveis, setCategoriasBancaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
-  const [tiposProvaDisponiveis, setTiposProvaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
-    { id: VAL_TODOS, label: "Todos os Tipos de Prova", count: 20764 },
-    { id: "Oficial", label: "Oficial", count: 19292 },
-    { id: "Seleção e Treinamento", label: "Seleção e Treinamento", count: 1472 },
-  ]);
+  const [tiposProvaDisponiveis, setTiposProvaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
-  const [fasesDisponiveis, setFasesDisponiveis] = useState<{ id: string; label: string; count: number }[]>([
-    { id: VAL_TODAS, label: "Todas as Fases / Níveis", count: 20803 },
-    { id: "Geral", label: "Geral", count: 17984 },
-    { id: "Final", label: "Fase Final", count: 2035 },
-    { id: "Nível Júnior", label: "Nível Júnior", count: 603 },
-    { id: "Nível 2", label: "Nível 2", count: 122 },
-    { id: "Nível 3", label: "Nível 3", count: 59 },
-  ]);
+  const [fasesDisponiveis, setFasesDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
   const [categoriaBancaFiltro, setCategoriaBancaFiltro] = useState<string>("Todas");
   const [tipoProvaFiltro, setTipoProvaFiltro] = useState<string[]>([VAL_TODOS]);
@@ -668,7 +647,7 @@ export default function BancoQuestoesPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{total > 0 ? total.toLocaleString("pt-BR") : "20.764"} Questões Auditadas · MathAI Engine</span>
+            <span>{total > 0 ? total.toLocaleString("pt-BR") : "—"} Questões Auditadas · MathAI Engine</span>
           </div>
           <h1 className="font-serif-math text-2xl sm:text-3xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
             Banco de <em className="italic text-blue-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
@@ -1602,7 +1581,7 @@ export default function BancoQuestoesPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:text-[#d9b452] dark:hover:bg-amber-500/20 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Ver todas as {total > 0 ? total.toLocaleString("pt-BR") : "20.764"} questões</span>
+              <span>Ver todas as {total > 0 ? total.toLocaleString("pt-BR") : "—"} questões</span>
             </button>
           </div>
         ) : (
