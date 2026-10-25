@@ -3,6 +3,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_SUPABASE_URL, getSafeAnonKey } from "@/lib/supabase";
 
 export async function middleware(request: NextRequest) {
+  // Redirecionamento do endereço antigo para o domínio novo, antes de
+  // qualquer trabalho de sessão: quem entrar por lemmas-ochre.vercel.app
+  // vai para lemmas.com.br mantendo caminho e query, com 308 permanente.
+  // A regra do next.config.ts cobre as rotas fora do matcher (api etc.);
+  // esta cobre as páginas. O host muda, então não há loop.
+  if (request.nextUrl.hostname === "lemmas-ochre.vercel.app") {
+    const url = request.nextUrl.clone();
+    url.hostname = "lemmas.com.br";
+    url.protocol = "https:";
+    return NextResponse.redirect(url, 308);
+  }
+
   // Proteção contra cookies inflados que excedem o limite de 32KB de headers do Vercel
   const allCookies = request.cookies.getAll();
   const totalCookieSize = allCookies.reduce((acc, c) => acc + c.name.length + c.value.length, 0);
