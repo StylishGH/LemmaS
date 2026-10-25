@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  ArrowRight, 
-  BrainCircuit, 
-  Moon, 
-  Sun, 
-  LineChart, 
+import {
+  ArrowRight,
+  BrainCircuit,
+  Moon,
+  Sun,
+  LineChart,
   Layers,
   BookOpen,
   Play,
   PenTool,
   Target,
   Cpu,
-  FileText
+  FileText,
+  Menu,
+  X
 } from "lucide-react";
 import AppBackground from "@/components/AppBackground";
 import { BoardFrame } from "./BoardFrame";
@@ -76,6 +78,19 @@ export function LandingPage() {
   // exibe "—"; se o banco falhar, continua "—" em vez de um número antigo.
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [totalLemmas, setTotalLemmas] = useState<number>(0);
+  // Menu móvel da landing: abaixo de 1040px os links do topo somem no CSS
+  // e não havia nenhum substituto — o visitante de celular perdia a
+  // navegação por seção. O botão só aparece nessa faixa (ver CSS).
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileNavLinks = [
+    { href: "#metodo", label: "Método" },
+    { href: "#bancada", label: "Bancada" },
+    { href: "#segunda-opiniao", label: "Segunda Opinião" },
+    { href: "#arquitetura", label: "Arquitetura" },
+    { href: "#questoes-amostra", label: "Acervo" },
+    { href: "#roadmap", label: "Roadmap" },
+    { href: "#contato", label: "Vamos Conversar" },
+  ];
 
   // Buscar contagens reais do banco na fonte única (/api/stats)
   useEffect(() => {
@@ -101,6 +116,7 @@ export function LandingPage() {
   // Função para navegação suave e animada sem "teletransporte"
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
+    setMobileMenuOpen(false);
     const elem = document.getElementById(targetId);
     if (elem) {
       elem.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -143,17 +159,46 @@ export function LandingPage() {
             <Link href="/questoes" className="lemmas-nav-auth-btn">
               Explorar Questões →
             </Link>
-            <button 
-              type="button" 
-              className="lemmas-theme-toggle" 
-              onClick={toggleTheme} 
+            <button
+              type="button"
+              className="lemmas-theme-toggle"
+              onClick={toggleTheme}
               aria-label={isLight ? "Ativar Lousa de Giz Clássica (Dark)" : "Ativar Quadro Branco Moderno (Light)"}
               title={isLight ? "Mudar para Lousa de Giz (Dark)" : "Mudar para Quadro Branco (Light)"}
             >
               {isLight ? <Moon size={17} /> : <Sun size={17} />}
             </button>
+            <button
+              type="button"
+              className="lemmas-nav-mobile-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </nav>
+
+        {mobileMenuOpen && (
+          <div className="lemmas-nav-mobile-menu">
+            {mobileNavLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => scrollToSection(e, link.href.slice(1))}
+              >
+                {link.label}
+              </a>
+            ))}
+            <Link href="/questoes" onClick={() => setMobileMenuOpen(false)} className="lemmas-nav-mobile-cta">
+              Explorar Questões →
+            </Link>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="lemmas-nav-mobile-cta lemmas-nav-mobile-cta-primary">
+              Começar Gratuitamente →
+            </Link>
+          </div>
+        )}
         
         {/* HERO SECTION EDITORIAL LIMPO & ALINHADO */}
         <section className="lemmas-section lemmas-hero">
