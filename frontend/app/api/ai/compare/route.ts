@@ -10,6 +10,24 @@ const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onre
 
 export const maxDuration = 30;
 
+// Orçamento global da rota: os fallbacks em sequência (backend 8s +
+// Gemini 3 modelos + NVIDIA 3 modelos) somavam mais de 70s e estouravam
+// o maxDuration da Vercel, então o cliente nunca recebia o 503 JSON e
+// a página caía no catch genérico ("Falha de conexão"). Cada etapa
+// abaixo corre dentro do orçamento restante, e a rota sempre responde
+// JSON antes de 28s.
+const ROUTE_BUDGET_MS = 28000;
+
+function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Deadline excedido: ${label}`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 // Guardrail: palavras-chave que indicam conteúdo NÃO matemático ou spam/bate-papo
 const NON_MATH_KEYWORDS = [
   "olá", "ola", "oi", "tudo bem", "como vai", "bom dia", "boa tarde", "boa noite", "tchau", "adeus",
@@ -68,6 +86,8 @@ function isMathRelated(text: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const routeStartedAt = Date.now();
+  const remainingMs = () => ROUTE_BUDGET_MS - (Date.now() - routeStartedAt);
   try {
     const body = await req.json();
     const { enunciado, contextoQuestao } = body;
@@ -174,14 +194,18 @@ INSTRUÇÕES:
 
     // 2.1 Gemini (primário - rápido, <1.5s)
     try {
-      const geminiRes = await generateGeminiContent({
-        prompt: comparePrompt,
-        systemInstruction: PROMPT_SISTEMA_COMPARE,
-        jsonOutput: true,
-        temperature: 0.2,
-        maxTokens: 3072,
-        timeoutMs: 14000,
-      });
+      const geminiRes = await withDeadline(
+        generateGeminiContent({
+          prompt: comparePrompt,
+          systemInstruction: PROMPT_SISTEMA_COMPARE,
+          jsonOutput: true,
+          temperature: 0.2,
+          maxTokens: 3072,
+          timeoutMs: 10000,
+        }),
+        Math.max(2000, Math.min(12000, remainingMs())),
+        "gemini"
+      );
 
       const parsed = safeParseJsonWithLatex(geminiRes.text);
       const rawA = parsed?.model_a ?? parsed?.modelo_a ?? parsed?.modelA;
@@ -211,15 +235,20 @@ INSTRUÇÕES:
     }
 
     // 2.2 NVIDIA NIM (secundário - Nemotron Reasoning)
-    if (process.env.NVIDIA_API_KEY) {
+    // Só tenta se ainda houver orçamento na rota; senão vai direto ao 503.
+    if (process.env.NVIDIA_API_KEY && remainingMs() > 4000) {
       try {
-        const nvidiaRes = await generateNvidiaContent({
-          prompt: `${comparePrompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown.`,
-          systemInstruction: PROMPT_SISTEMA_COMPARE,
-          temperature: 0.2,
-          maxTokens: 3072,
-          timeoutMs: 14000,
-        });
+        const nvidiaRes = await withDeadline(
+          generateNvidiaContent({
+            prompt: `${comparePrompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown.`,
+            systemInstruction: PROMPT_SISTEMA_COMPARE,
+            temperature: 0.2,
+            maxTokens: 3072,
+            timeoutMs: 10000,
+          }),
+          Math.max(2000, remainingMs()),
+          "nvidia"
+        );
 
         const parsed = safeParseJsonWithLatex(nvidiaRes.text);
         const rawA = parsed?.model_a ?? parsed?.modelo_a ?? parsed?.modelA;
