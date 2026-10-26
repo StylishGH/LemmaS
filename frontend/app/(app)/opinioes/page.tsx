@@ -42,25 +42,50 @@ export default function OpinioesPage() {
     setErrorMsg(null);
     setLoading(true);
 
+    // Timeout próprio: sem ele, um serviço cognitivo lento deixa a página
+    // esperando até a função da Vercel morrer sem resposta, e o usuário só
+    // via o erro genérico de conexão. Com 40s, o erro passa a ser explícito.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 40000);
+
     try {
       const res = await fetch("/api/ai/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enunciado: problemText }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
-      if (res.ok) {
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+      if (res.ok && data) {
         if (data.model_a) setModelA(data.model_a);
         if (data.model_b) setModelB(data.model_b);
         if (data.sintese) setSintese(data.sintese);
         if (data.provider) setProviderUsed(data.provider);
+      } else if (res.status === 503) {
+        setErrorMsg(
+          data?.error ||
+            "O serviço de Segunda Opinião está temporariamente indisponível. Tente novamente em alguns minutos — o exemplo abaixo continua disponível."
+        );
       } else {
-        setErrorMsg(data.error || "Não foi possível comparar as abordagens no momento.");
+        setErrorMsg(data?.error || "Não foi possível comparar as abordagens no momento.");
       }
-    } catch {
-      setErrorMsg("Falha de conexão com o serviço cognitivo. Tente novamente.");
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        setErrorMsg(
+          "O serviço de Segunda Opinião demorou mais que o esperado e a comparação foi interrompida. Tente novamente — o exemplo abaixo continua disponível."
+        );
+      } else {
+        setErrorMsg("Falha de conexão com o serviço cognitivo. Tente novamente.");
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }
