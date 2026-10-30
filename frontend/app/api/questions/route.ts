@@ -36,13 +36,58 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
     },
   },
   {
-    name: "Álgebra Linear",
-    filter: "materia.ilike.%Álgebra Linear%,materia.ilike.%Geometria Analítica e Álgebra Linear%,topico.ilike.%Álgebra Linear%,topico.ilike.%Geometria Analítica e Álgebra Linear%",
-    matcher: (m) => {
-      const lower = m.toLowerCase();
-      return lower.includes("álgebra linear") || lower.includes("algebra linear") || lower.includes("geometria analítica e álgebra linear");
+      name: "Cálculo 3",
+      filter: "materia.ilike.%Cálculo 3%,topico.ilike.%Funções Vetoriais%,topico.ilike.%Curvas Parametrizadas%,topico.ilike.%Curvas no Espaço%,topico.ilike.%Limites de Funções Vetoriais%,topico.ilike.%Continuidade de Funções Vetoriais%,topico.ilike.%Diferenciabilidade%,topico.ilike.%Plano Tangente%,topico.ilike.%Regra da Cadeia%,topico.ilike.%Derivada Direcional%,topico.ilike.%Derivadas Parciais%,topico.ilike.%Máximos e Mínimos%,topico.ilike.%Multiplicadores de Lagrange%",
+      matcher: (m) => {
+        const lower = m.toLowerCase();
+        return lower.includes("cálculo 3") || lower.includes("calculo 3") || lower.includes("cálculo iii") || lower.includes("calculo iii");
+      },
     },
-  },
+    {
+      name: "Álgebra Linear I",
+      filter: "materia.ilike.%Álgebra Linear I%,topico.ilike.%Matrizes%,topico.ilike.%Determinantes%,topico.ilike.%Sistemas Lineares%,topico.ilike.%Espaços Vetoriais%,topico.ilike.%Subespaços%,topico.ilike.%Base e Dimensão%,topico.ilike.%Transformações Lineares%,subtopico.ilike.%Matrizes%,subtopico.ilike.%Determinantes%,subtopico.ilike.%Sistemas Lineares%,subtopico.ilike.%Espaços Vetoriais%,subtopico.ilike.%Subespaços%,subtopico.ilike.%Base e Dimensão%,subtopico.ilike.%Transformações Lineares%",
+      matcher: (m) => {
+        const lower = m.toLowerCase();
+        return (
+          lower.includes("matrizes") ||
+          lower.includes("determinantes") ||
+          lower.includes("sistemas lineares") ||
+          lower.includes("espaços vetoriais") ||
+          lower.includes("espaços vetoriais") ||
+          lower.includes("subespaços") ||
+          lower.includes("base e dimensão") ||
+          lower.includes("base e dimensao") ||
+          lower.includes("transformações lineares") ||
+          lower.includes("transformacoes lineares")
+        );
+      },
+    },
+    {
+      name: "Álgebra Linear II",
+      filter: "topico.ilike.%Produto Interno%,topico.ilike.%Gram-Schmidt%,topico.ilike.%Autovalores%,topico.ilike.%Diagonalização%,topico.ilike.%Formas Quadráticas%,subtopico.ilike.%Produto Interno%,subtopico.ilike.%Gram-Schmidt%,subtopico.ilike.%Autovalores%,subtopico.ilike.%Diagonalização%,subtopico.ilike.%Formas Quadráticas%",
+      matcher: (m) => {
+        const lower = m.toLowerCase();
+        return (
+          lower.includes("produto interno") ||
+          lower.includes("gram-schmidt") ||
+          lower.includes("gram schmidt") ||
+          lower.includes("autovalores") ||
+          lower.includes("autovetores") ||
+          lower.includes("diagonalização") ||
+          lower.includes("diagonalizacao") ||
+          lower.includes("formas quadráticas") ||
+          lower.includes("formas quadraticas")
+        );
+      },
+    },
+    {
+      name: "Álgebra Linear",
+      filter: "materia.ilike.%Álgebra Linear%,materia.ilike.%Geometria Analítica e Álgebra Linear%,topico.ilike.%Álgebra Linear%,topico.ilike.%Geometria Analítica e Álgebra Linear%",
+      matcher: (m) => {
+        const lower = m.toLowerCase();
+        return lower.includes("álgebra linear") || lower.includes("algebra linear") || lower.includes("geometria analítica e álgebra linear");
+      },
+    },
   {
     name: "Funções",
     filter: "materia.ilike.%Funções%,materia.ilike.%Função%,topico.ilike.%Funç%,topico.ilike.%Afim%,topico.ilike.%Quadrátic%,topico.ilike.%Exponencial%,topico.ilike.%Logarítm%,topico.ilike.%Modular%,topico.ilike.%Funciona%,and(materia.ilike.%Álgebra%,enunciado.ilike.%f(x)%)",
