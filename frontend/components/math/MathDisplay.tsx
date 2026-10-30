@@ -168,7 +168,23 @@ export function MathBlock({ latex, className = "" }: MathBlockProps) {
 export function sanitizeMathText(raw: string): string {
   if (!raw || typeof raw !== "string") return "";
 
-  let text = raw.replace(/\r\n/g, "\n");
+  // 1. Normaliza quebras de linha literais (\n, \r\n como dois caracteres) para quebras reais
+  let text = raw
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n");
+
+  // Converte equações matemáticas delimitadas por $ que contêm quebras de linha internas para blocos $$ ... $$
+  text = text.replace(/\$([^\$]+?)\$/g, (match, inner) => {
+    if (inner.includes("\n")) {
+      const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
+      const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
+      if (words.length <= 2) {
+        return `\n$$${inner.trim()}$$\n`;
+      }
+    }
+    return match;
+  });
   // Remove tags <img> HTML com src vazio, nulo ou inválido
   text = text.replace(/<img[^>]*src=["']\s*(?:null|undefined)?\s*["'][^>]*>/gi, "");
   text = text.replace(/<img[^>]*src=["']\s*["'][^>]*>/gi, "");
