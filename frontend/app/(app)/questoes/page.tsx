@@ -263,27 +263,33 @@ export default function BancoQuestoesPage() {
   }, [bancasDisponiveis, abaBancaPopover, buscaBancaInterna]);
 
   // Aplicar Trilhas Rápidas de 1 Clique
-  const aplicarTrilhaRapida = (tipoTrilha: string) => {
-    setPage(1);
-    if (tipoTrilha === "todas") {
-      limparFiltros();
-    } else if (tipoTrilha === "militares") {
-      limparFiltros();
-      setCategoriaBancaFiltro("Concurso Militar");
-    } else if (tipoTrilha === "geometria") {
-      limparFiltros();
-      setMateriaFiltro(["Geometria Plana"]);
-    } else if (tipoTrilha === "calculo") {
-      limparFiltros();
-      setMateriaFiltro(["Cálculo"]);
-    } else if (tipoTrilha === "olimpiadas") {
-      limparFiltros();
-      setCategoriaBancaFiltro("Olimpíadas");
-    } else if (tipoTrilha === "vestibulares") {
-      limparFiltros();
-      setCategoriaBancaFiltro("Vestibular & Superior");
-    }
-  };
+    const aplicarTrilhaRapida = (tipoTrilha: string) => {
+      setPage(1);
+      if (tipoTrilha === "todas") {
+        limparFiltros();
+      } else if (tipoTrilha === "militares") {
+        limparFiltros();
+        setCategoriaBancaFiltro("Concurso Militar");
+      } else if (tipoTrilha === "geometria") {
+        limparFiltros();
+        setMateriaFiltro(["Geometria Plana"]);
+      } else if (tipoTrilha === "calculo") {
+        limparFiltros();
+        setMateriaFiltro(["Cálculo"]);
+      } else if (tipoTrilha === "calculo-3") {
+        limparFiltros();
+        setMateriaFiltro(["Cálculo 3"]);
+      } else if (tipoTrilha === "algebra-linear-1") {
+        limparFiltros();
+        setMateriaFiltro(["Álgebra Linear I"]);
+      } else if (tipoTrilha === "olimpiadas") {
+        limparFiltros();
+        setCategoriaBancaFiltro("Olimpíadas");
+      } else if (tipoTrilha === "vestibulares") {
+        limparFiltros();
+        setCategoriaBancaFiltro("Vestibular & Superior");
+      }
+    };
 
   const toggleExpandMateria = (nome: string) => {
     setExpandedMaterias((prev) => {
@@ -700,21 +706,47 @@ export default function BancoQuestoesPage() {
         </button>
 
         <button
-          type="button"
-          onClick={() => aplicarTrilhaRapida("calculo")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
-            materiaFiltro.includes("Cálculo")
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
-          }`}
-        >
-          <span>∫</span>
-          <span>Cálculo & Álgebra Linear</span>
-        </button>
+                  type="button"
+                  onClick={() => aplicarTrilhaRapida("calculo")}
+                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+                    materiaFiltro.includes("Cálculo")
+                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
+                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+                  }`}
+                >
+                  <span>∫</span>
+                  <span>Cálculo</span>
+                </button>
 
-        <button
-          type="button"
-          onClick={() => aplicarTrilhaRapida("olimpiadas")}
+                <button
+                  type="button"
+                  onClick={() => aplicarTrilhaRapida("calculo-3")}
+                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+                    materiaFiltro.includes("Cálculo 3")
+                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
+                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+                  }`}
+                >
+                  <span>∂</span>
+                  <span>Cálculo 3 (CEDERJ)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => aplicarTrilhaRapida("algebra-linear-1")}
+                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+                    materiaFiltro.includes("Álgebra Linear I")
+                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
+                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+                  }`}
+                >
+                  <span>📐</span>
+                  <span>Álgebra Linear I (CEDERJ)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => aplicarTrilhaRapida("olimpiadas")}
           className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Olimpíadas"
               ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
