@@ -216,6 +216,23 @@ export async function POST(
         const fallbackLevel = typeof avaliacao.fallback_level === "number" ? Math.max(0, Math.floor(avaliacao.fallback_level)) : 0;
         const latenciaMs = typeof avaliacao.latencia_ms === "number" ? Math.max(0, Math.round(avaliacao.latencia_ms)) : null;
 
+        // Cálculo e enriquecimento estruturado de tokens consumidos
+        const tokensInfo = (avaliacao.tokens && typeof avaliacao.tokens === "object")
+          ? (avaliacao.tokens as Record<string, number>)
+          : {
+              prompt: typeof avaliacao.prompt_tokens === "number" ? avaliacao.prompt_tokens : Math.ceil(((typeof questao.estrategias_esperadas === "string" ? questao.estrategias_esperadas : "") + (typeof body.resposta === "string" ? body.resposta : "")).length / 4),
+              completion: typeof avaliacao.completion_tokens === "number" ? avaliacao.completion_tokens : Math.ceil(String(avaliacao.feedback_latex || avaliacao.diagnostico || "").length / 4),
+              total: 0,
+            };
+        if (!tokensInfo.total) {
+          tokensInfo.total = (tokensInfo.prompt || 0) + (tokensInfo.completion || 0);
+        }
+
+        const outputEstruturado = {
+          ...avaliacao,
+          tokens: tokensInfo,
+        };
+
         const { error: avaliacaoErr } = await supabase.from("avaliacoes_ia").insert({
           tentativa_id: tentativaId,
           provedor_modelo: provedorModelo,
@@ -226,7 +243,7 @@ export async function POST(
           latencia_ms: latenciaMs,
           input_hash: avaliacao.input_hash ? String(avaliacao.input_hash) : null,
           output_raw: avaliacao.output_raw ? String(avaliacao.output_raw) : (typeof avaliacao.feedback_latex === "string" ? avaliacao.feedback_latex : null),
-          output_estruturado: avaliacao,
+          output_estruturado: outputEstruturado,
           confianca: confiancaVal,
         });
 
@@ -235,6 +252,52 @@ export async function POST(
         }
       } catch (saveAvaliacaoErr) {
         console.warn("[Submit Route] Falha ao persistir avaliação de IA em avaliacoes_ia:", saveAvaliacaoErr);
+      }
+    }
+
+    // Persistência da rendição de Nível 5 em public.avaliacoes_ia (auditoria pedagógica e rastreabilidade total)
+    if (tentativaId && isRendicaoNivel5) {
+      try {
+        const promptEstimado = Math.ceil(((questao.estrategias_esperadas || "") + " [Dica 5 Socrática / Rendição]").length / 4);
+        const completionEstimado = Math.ceil("Gabarito e resolução oficial revelados via 5ª Dica Socrática. Rendição do estudante.".length / 4);
+        const rendicaoOutput = {
+          tipo_evento: "rendicao_nivel_5",
+          veredito: "rendicao_nivel_5",
+          status_resolucao: "rendicao_nivel_5",
+          resultado_final_correto: false,
+          desenvolvimento_presente: false,
+          nivel_max_dica: 5,
+          total_dicas_solicitadas: totalDicasFinal,
+          diagnostico: "Estudante solicitou a 5ª Dica Socrática (revelação da resolução completa). Tentativa computada como rendição pedagógica.",
+          feedback_latex: "Resolução revelada via 5ª Dica Socrática. Questão agendada para revisão prioritária no SM-2.",
+          etapas_corretas: [],
+          erros_identificados: ["Rendição pedagógica no Nível 5"],
+          tokens: {
+            prompt: promptEstimado,
+            completion: completionEstimado,
+            total: promptEstimado + completionEstimado,
+          },
+        };
+
+        const { error: rendicaoErr } = await supabase.from("avaliacoes_ia").insert({
+          tentativa_id: tentativaId,
+          provedor_modelo: "mathai_socratic_tutor",
+          nome_modelo: "socratic-ladder-polya-level5",
+          versao_modelo: "5.0",
+          versao_prompt: "v1.0-socratic-ladder",
+          fallback_level: 5,
+          latencia_ms: 0,
+          input_hash: null,
+          output_raw: "Resolução oficial revelada via 5ª Dica Socrática (Rendição do estudante). Tentativa zerada no SM-2 para consolidação pedagógica prioritária.",
+          output_estruturado: rendicaoOutput,
+          confianca: 1.0,
+        });
+
+        if (rendicaoErr) {
+          console.warn("[Submit Route] Aviso ao gravar rendição em public.avaliacoes_ia:", rendicaoErr);
+        }
+      } catch (saveRendicaoErr) {
+        console.warn("[Submit Route] Falha ao persistir rendição de IA em avaliacoes_ia:", saveRendicaoErr);
       }
     }
 

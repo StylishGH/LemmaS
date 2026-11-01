@@ -185,6 +185,11 @@ export async function POST(req: NextRequest) {
               modelo: data.model_name || "MathAI Engine",
               provedor: data.model_provider || "fastapi-backend",
               confianca: data.confianca_diagnostico || "alta",
+              tokens: (data as any).tokens || {
+                prompt: Math.ceil(((enunciado || "") + (justificativa || "")).length / 4),
+                completion: Math.ceil((String(data.feedback_latex || data.diagnostico || "")).length / 4),
+                total: Math.ceil(((enunciado || "") + (justificativa || "") + String(data.feedback_latex || "")).length / 4),
+              },
             });
           }
           backendFailure = "O backend respondeu sem um resultado de avaliação válido.";
@@ -318,6 +323,11 @@ INSTRUÇÕES:
           confianca_diagnostico: parsed.confianca_diagnostico || "alta",
           modelo: geminiRes.model,
           provedor: "gemini-flash-lite",
+          tokens: geminiRes.tokens || {
+            prompt: Math.ceil((prompt || "").length / 4),
+            completion: Math.ceil((geminiRes.text || "").length / 4),
+            total: Math.ceil(((prompt || "") + (geminiRes.text || "")).length / 4),
+          },
         });
       }
     } catch (geminiErr) {
@@ -361,6 +371,11 @@ INSTRUÇÕES:
             confianca_diagnostico: parsed.confianca_diagnostico || "alta",
             modelo: nvidiaRes.model,
             provedor: "nvidia-nemotron",
+            tokens: nvidiaRes.tokens || {
+              prompt: Math.ceil((prompt || "").length / 4),
+              completion: Math.ceil((nvidiaRes.text || "").length / 4),
+              total: Math.ceil(((prompt || "") + (nvidiaRes.text || "")).length / 4),
+            },
           });
         }
       } catch (nvidiaErr) {
