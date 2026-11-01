@@ -192,6 +192,52 @@ export async function POST(
       console.warn("[Submit Route] Falha ao gravar em public.tentativas:", saveErr);
     }
 
+    // Persistência da avaliação completa da IA na tabela public.avaliacoes_ia (apenas para discursiva com veredito válido)
+    if (tentativaId && isDiscursiva && !isRendicaoNivel5 && body.avaliacao_ia) {
+      try {
+        const avaliacao = typeof body.avaliacao_ia === "object" && body.avaliacao_ia !== null
+          ? (body.avaliacao_ia as Record<string, unknown>)
+          : {};
+
+        let confiancaVal: number | null = null;
+        if (typeof avaliacao.confianca === "number" && !isNaN(avaliacao.confianca)) {
+          confiancaVal = Math.max(0, Math.min(1, avaliacao.confianca));
+        } else if (avaliacao.confianca_diagnostico === "alta") {
+          confiancaVal = 0.95;
+        } else if (avaliacao.confianca_diagnostico === "media") {
+          confiancaVal = 0.70;
+        } else if (avaliacao.confianca_diagnostico === "baixa") {
+          confiancaVal = 0.40;
+        }
+
+        const nomeModelo = String(avaliacao.modelo || avaliacao.nome_modelo || "mathai_evaluator");
+        const provedorModelo = String(avaliacao.provedor || avaliacao.provedor_modelo || "mathai_gateway");
+        const versaoPrompt = String(avaliacao.versao_prompt || "v1.0");
+        const fallbackLevel = typeof avaliacao.fallback_level === "number" ? Math.max(0, Math.floor(avaliacao.fallback_level)) : 0;
+        const latenciaMs = typeof avaliacao.latencia_ms === "number" ? Math.max(0, Math.round(avaliacao.latencia_ms)) : null;
+
+        const { error: avaliacaoErr } = await supabase.from("avaliacoes_ia").insert({
+          tentativa_id: tentativaId,
+          provedor_modelo: provedorModelo,
+          nome_modelo: nomeModelo,
+          versao_modelo: avaliacao.versao_modelo ? String(avaliacao.versao_modelo) : null,
+          versao_prompt: versaoPrompt,
+          fallback_level: fallbackLevel,
+          latencia_ms: latenciaMs,
+          input_hash: avaliacao.input_hash ? String(avaliacao.input_hash) : null,
+          output_raw: avaliacao.output_raw ? String(avaliacao.output_raw) : (typeof avaliacao.feedback_latex === "string" ? avaliacao.feedback_latex : null),
+          output_estruturado: avaliacao,
+          confianca: confiancaVal,
+        });
+
+        if (avaliacaoErr) {
+          console.warn("[Submit Route] Aviso ao gravar em public.avaliacoes_ia:", avaliacaoErr);
+        }
+      } catch (saveAvaliacaoErr) {
+        console.warn("[Submit Route] Falha ao persistir avaliação de IA em avaliacoes_ia:", saveAvaliacaoErr);
+      }
+    }
+
     // Registro na tabela pública de telemetria de inferência de IA (ai_inference_logs)
     if (usouDicaFinal) {
       try {
