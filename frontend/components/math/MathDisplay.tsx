@@ -85,7 +85,6 @@ export function MathDisplay({
           "\\undefined": "",
           "\\or": "\\lor",
           "\\and": "\\land",
-          "\\not": "\\neg",
           "\\xor": "\\oplus",
           "\\implies": "\\Longrightarrow",
           "\\iff": "\\Longleftrightarrow",
@@ -203,7 +202,7 @@ export function sanitizeMathText(raw: string): string {
     }
     const token = `___LEMMAS_MATH_BLOCK_${blockCounter++}___`;
     blockMap.set(token, `$$${inner.trim()}$$`);
-    return `\n\n${token}\n\n`;
+    return `\n${token}\n`;
   });
 
   // Converte equações matemáticas inline delimitadas por $ que contêm quebras de linha internas para blocos $$ ... $$
@@ -318,17 +317,23 @@ export function renderMathText(text: string) {
   const blockRegex = /\$\$([\s\S]+?)\$\$/g;
   let lastIndex = 0;
   let match;
-  
+
   while ((match = blockRegex.exec(preprocessed)) !== null) {
     if (match.index > lastIndex) {
-      stage1Parts.push({ type: "text", content: preprocessed.slice(lastIndex, match.index) });
+      const textChunk = preprocessed.slice(lastIndex, match.index).replace(/\n+$/, "");
+      if (textChunk) {
+        stage1Parts.push({ type: "text", content: textChunk });
+      }
     }
     stage1Parts.push({ type: "block", content: match[1] });
     lastIndex = match.index + match[0].length;
   }
-  
+
   if (lastIndex < preprocessed.length) {
-    stage1Parts.push({ type: "text", content: preprocessed.slice(lastIndex) });
+    const textChunk = preprocessed.slice(lastIndex).replace(/^\n+/, "");
+    if (textChunk) {
+      stage1Parts.push({ type: "text", content: textChunk });
+    }
   }
   
   // 3. Nos trechos de texto que estão fora de $$, extrai ambientes matemáticos isolados (\begin{...}...\end{...})
