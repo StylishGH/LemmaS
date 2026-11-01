@@ -168,23 +168,12 @@ export function MathBlock({ latex, className = "" }: MathBlockProps) {
 export function sanitizeMathText(raw: string): string {
   if (!raw || typeof raw !== "string") return "";
 
-  // 1. Normaliza quebras de linha literais (\n, \r\n como dois caracteres) para quebras reais
+  // 1. Normaliza quebras de linha literais (\n, \r\n) preservando comandos LaTeX que começam com \n (\neq, \notin, \nu, \nabla, etc)
   let text = raw
     .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
+    .replace(/\\n(?![a-zA-Z])/g, "\n")
     .replace(/\r\n/g, "\n");
 
-  // Converte equações matemáticas delimitadas por $ que contêm quebras de linha internas para blocos $$ ... $$
-  text = text.replace(/\$([^\$]+?)\$/g, (match, inner) => {
-    if (inner.includes("\n")) {
-      const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
-      const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
-      if (words.length <= 2) {
-        return `\n$$${inner.trim()}$$\n`;
-      }
-    }
-    return match;
-  });
   // Remove tags <img> HTML com src vazio, nulo ou inválido
   text = text.replace(/<img[^>]*src=["']\s*(?:null|undefined)?\s*["'][^>]*>/gi, "");
   text = text.replace(/<img[^>]*src=["']\s*["'][^>]*>/gi, "");
@@ -201,18 +190,29 @@ export function sanitizeMathText(raw: string): string {
   text = text.replace(/(?:\\\[|\\\\\[)([\s\S]+?)(?:\\\]|\\\\\])/g, (_, math) => `$$${math.trim()}$$`);
   text = text.replace(/(?:\\\(|\\\\\()([\s\S]+?)(?:\\\)|\\\\\))/g, (_, math) => `$${math.trim()}$`);
 
-  // Desembrulha blocos $...$ ou $$...$$ que modelos LLM erroneamente colocam ao redor de frases inteiras em português
-  // No KaTeX, qualquer texto em linguagem natural colocado dentro de $ tem seus espaços colapsados e vira uma maçaroca ilegível.
-  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (fullMatch, inner) => {
+  // --- PROTEÇÃO DE BLOCOS $$...$$ ---
+  // Extrai blocos $$...$$ existentes para nunca serem rompidos ou violados por regexes de inline math ($...$)
+  const blockMap = new Map<string, string>();
+  let blockCounter = 0;
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match, inner) => {
+    // Desembrulha blocos $$...$$ que modelos LLM erroneamente colocam ao redor de frases inteiras em português (texto puro)
     const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
     const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
     if (words.length >= 3) {
       return "\n" + autoWrapLatexExpressions(inner.trim()) + "\n";
     }
-    return fullMatch;
+    const token = `___LEMMAS_MATH_BLOCK_${blockCounter++}___`;
+    blockMap.set(token, `$$${inner.trim()}$$`);
+    return `\n\n${token}\n\n`;
   });
 
-  text = text.replace(/\$([^\$\n]+)\$/g, (fullMatch, inner) => {
+  // Converte equações matemáticas inline delimitadas por $ que contêm quebras de linha internas para blocos $$ ... $$
+  text = text.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)/g, (match, inner) => {
+    return match;
+  });
+
+  // Desembrulha inline $...$ que contém frases em português (apenas com delimitadores estritos de inline)
+  text = text.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)/g, (fullMatch, inner) => {
     const withoutLatex = inner.replace(/\\text\{[^}]*\}/g, "").replace(/\\[a-zA-Z]+/g, "");
     const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
     if (words.length >= 2) {
@@ -224,7 +224,7 @@ export function sanitizeMathText(raw: string): string {
   // Corrige $ não fechado em variáveis pontuais seguido de palavra em português (ex: "$QS intersectando-se" -> "$QS$ intersectando-se")
   text = text.replace(/(^|[^\\$])\$([A-Za-z]{1,2}(?:_[0-9a-zA-Z]+)?|\d+(?:\.\d+)?)\s+([a-zA-ZÀ-ÿ]{2,})/g, '$1$$$2$$ $3');
 
-  // Envolve expressões matemáticas e comandos soltos usando o autoWrapLatexExpressions
+  // Envolve expressões matemáticas e comandos soltos usando o autoWrapLatexExpressions nos trechos fora de blocos protegidos
   text = autoWrapLatexExpressions(text);
 
   // Processa linha a linha identificando fórmulas isoladas sem delimitadores
@@ -232,6 +232,7 @@ export function sanitizeMathText(raw: string): string {
   const processedLines = lines.map((line) => {
     const l = line.trim();
     if (!l) return line;
+    if (l.startsWith("___LEMMAS_MATH_BLOCK_")) return line;
 
     // Pula títulos markdown, blockquotes ou marcadores de lista (incluindo bullets unicode)
     if (/^(?:#{1,6}\s+|>\s+|\*\s+|-\s+|\+\s+|\d+\.\s+|[•·-]\s*)/.test(l)) {
@@ -255,23 +256,19 @@ export function sanitizeMathText(raw: string): string {
 
       const dollarCount = (l.match(/\$/g) || []).length;
       if (dollarCount % 2 === 0 && dollarCount > 0) {
-        // Já possui delimitadores matemáticos balanceados
         return line;
       }
 
-      // Caso 1: Fórmula isolada terminando com $ sem abrir $ (ex: `r = \frac{a+b-c}{2}$`)
       if (!l.startsWith("$") && l.endsWith("$")) {
         const clean = l.slice(0, -1).trim();
         return `$$${clean}$$`;
       }
 
-      // Caso 2: Fórmula isolada abrindo com $ sem fechar $
       if (l.startsWith("$") && !l.endsWith("$")) {
         const clean = l.slice(1).trim();
         return `$$${clean}$$`;
       }
 
-      // Caso 3: Linha que é puramente uma fórmula isolada sem $
       if (dollarCount === 0 && (hasLatexCmd || l.includes("="))) {
         return `$$${l}$$`;
       }
@@ -281,31 +278,17 @@ export function sanitizeMathText(raw: string): string {
 
   text = processedLines.join("\n");
 
-  // Corrige linhas onde a fórmula termina com $ e emenda imediatamente em texto: `... 2 \text{ cm}$ (pois...`
+  // Corrige linhas onde a fórmula termina com $ e emenda imediatamente em texto
   text = text.replace(/(\b\d+\s*\\text\{[a-zA-Z]+\})\$\s*(\(?\s*[a-zA-ZÀ-ÿ])/g, "$1$$ $2");
 
-  // Balanceia $ ímpares soltos em trechos fora de blocos $$...$$
-  const parts = text.split(/(\$\$[\s\S]+?\$\$)/g);
-  for (let i = 0; i < parts.length; i++) {
-    if (parts[i].startsWith("$$") && parts[i].endsWith("$$")) continue;
-    const dollarMatches = parts[i].match(/\$/g);
-    if (dollarMatches && dollarMatches.length % 2 !== 0) {
-      parts[i] = parts[i].replace(/([^$\n]+)\$\s*(?=\n|$)/, (m, p1) => {
-        const p1Words = p1.replace(/\\[a-zA-Z]+(?:\{[^}]*\})?/g, "").match(/[a-zA-ZÀ-ÿ]{3,}/g) || [];
-        if (p1Words.length === 0 && /\\(?:frac|sqrt|cdot|times|text|implies)\b/.test(p1)) {
-          return `$$${p1.trim()}$$`;
-        }
-        return p1;
-      });
-    }
+  // RESTAURAÇÃO DOS BLOCOS $$...$$
+  for (const [token, block] of blockMap.entries()) {
+    text = text.replace(token, () => block);
   }
 
-  return parts.join("");
+  return text;
 }
 
-/**
- * Renderiza texto misto (markdown editorial + LaTeX inline $...$ e blocos $$...$$)
- */
 export function renderMathText(text: string) {
   if (!text || typeof text !== "string") return [];
 
