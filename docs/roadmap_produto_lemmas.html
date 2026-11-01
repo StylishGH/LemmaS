@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap de Produto & Engenharia — LemmaS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page: #050814;
+      --bg-card: #0b1120;
+      --bg-card-subtle: #131d33;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-soft: #64748b;
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(99, 102, 241, 0.35);
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-gold: #f59e0b;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --font-title: 'Instrument Serif', Georgia, serif;
+      --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-soft: #94a3b8;
+      --border-card: rgba(15, 23, 42, 0.1);
+      --border-highlight: rgba(99, 102, 241, 0.4);
+      --accent-primary: #4f46e5;
+      --accent-secondary: #7c3aed;
+      --accent-cyan: #0891b2;
+      --accent-gold: #d97706;
+      --accent-emerald: #059669;
+      --accent-rose: #e11d48;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+    }
+
+    header {
+      margin-bottom: 3.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border-card);
+      padding-bottom: 2rem;
+    }
+
+    .header-text .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-secondary);
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: var(--font-title);
+      font-size: 3.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 span {
+      font-style: italic;
+      color: var(--accent-primary);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-1px);
+    }
+
+    /* Roadmap Timeline */
+    .timeline {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 2rem;
+      bottom: 2rem;
+      left: 2rem;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent-emerald) 0%, var(--accent-cyan) 30%, var(--accent-primary) 60%, var(--accent-gold) 100%);
+      border-radius: 9999px;
+      z-index: 0;
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: 4rem 1fr;
+      gap: 2rem;
+      align-items: flex-start;
+      z-index: 1;
+    }
+
+    .stage-marker {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 1.25rem;
+      background: var(--bg-card);
+      border: 2px solid var(--stage-color, var(--accent-primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--stage-color, var(--accent-primary));
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.15);
+      transition: transform 0.2s ease;
+    }
+
+    .stage:hover .stage-marker {
+      transform: scale(1.08);
+    }
+
+    .stage-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .stage-content:hover {
+      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+    }
+
+    .stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .stage-title-wrap h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.25rem;
+      color: var(--text-main);
+    }
+
+    .stage-title-wrap .market-hook {
+      font-size: 0.9rem;
+      color: var(--stage-color, var(--accent-primary));
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .status-done {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-emerald);
+    }
+
+    .status-live {
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    .status-next {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--accent-primary);
+    }
+
+    .status-future {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--accent-gold);
+    }
+
+    .stage-desc {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-size: 0.975rem;
+    }
+
+    /* Modules Grid */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .module-card {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-card);
+      border-radius: 0.85rem;
+      padding: 1.25rem;
+    }
+
+    .module-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .module-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .module-list li {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .module-list li::before {
+      content: '✔';
+      color: var(--stage-color, var(--accent-primary));
+      font-size: 0.75rem;
+      margin-top: 0.15rem;
+    }
+
+    .module-list.future-list li::before {
+      content: '▹';
+      color: var(--stage-color, var(--accent-primary));
+      font-size: 0.9rem;
+      margin-top: 0;
+    }
+
+    /* Practical Milestone */
+    .milestone-box {
+      border-top: 1px dashed var(--border-card);
+      padding-top: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .milestone-text {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .milestone-icon {
+      font-size: 1.25rem;
+    }
+
+    .milestone-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-soft);
+    }
+
+    .milestone-val {
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .deliverable-chip {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: var(--accent-primary);
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 4rem;
+      border-top: 1px solid var(--border-card);
+      padding-top: 2rem;
+      text-align: center;
+      color: var(--text-soft);
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+    }
+
+    @media (max-width: 768px) {
+      .timeline::before { left: 1rem; }
+      .stage { grid-template-columns: 2.5rem 1fr; gap: 1rem; }
+      .stage-marker { width: 2.5rem; height: 2.5rem; font-size: 0.9rem; border-radius: 0.75rem; }
+      h1 { font-size: 2.25rem; }
+      header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-text">
+        <div class="badge">
+          <span>●</span> Roadmap Oficial de Engenharia & Produto · LemmaS EdTech
+        </div>
+        <h1>Roadmap de Produto: <span>LemmaS</span></h1>
+        <p class="subtitle">
+          Estratégia de desenvolvimento e consolidação da plataforma socrática de matemática avançada: 
+          do banco canônico e lousa digital até o lançamento comercial e retenção por repetição espaçada.
+        </p>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☼</span> Alternar Tema
+      </button>
+    </header>
+
+    <div class="timeline">
+
+      <!-- FASE 1 -->
+      <div class="stage" style="--stage-color: #10b981;">
+        <div class="stage-marker">01</div>
+        <div class="stage-content">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h2>Fundação Canônica & Lousa Digital</h2>
+              <span class="market-hook">A infraestrutura essencial de dados e interface tátil</span>
+            </div>
+            <span class="status-badge status-done">● Concluído & Estável</span>
+          </div>
+          <p class="stage-desc">
+            Base sólida e proprietária construída no Supabase (PostgreSQL) com curadoria canônica dos lemas matemáticos 
+            e experiência de desenho de altíssima fidelidade para estudantes em tablets.
+          </p>
+
+          <div class="modules-grid">
+            <div class="module-card">
+              <div class="module-title">🏛️ Catálogo dos 2.000 Lemas</div>
+              <ul class="module-list">
+                <li>2.000 Lemas axiomáticos e táticos cadastrados em <code>public.lemmas</code></li>
+                <li>Mapeamento em 100% das 21.272 questões militares do banco</li>
+                <li>Componente LemaBadge com Popover, fórmula em KaTeX e filtro por lema</li>
+                <li>Taxonomia de 12 Grandes Áreas Canônicas (AFA, EFOMM, IME, ITA, EsPCEx)</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">🖊️ Lousa S-Pen Dual-Canvas (120Hz)</div>
+              <ul class="module-list">
+                <li>Arquitetura Dual-Canvas (baseCanvas estático + inkCanvas desynchronized)</li>
+                <li>Interpolação Bézier quadrática e desenho incremental O(1) sem input lag</li>
+                <li>Rejeição estrita de palma (palm rejection) e botão de borracha lateral</li>
+                <li>Trava de DPR em Math.min(DPR, 2) protegendo a VRAM do Galaxy Tab/iPad</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">📐 Renderização KaTeX Anti-Crash</div>
+              <ul class="module-list">
+                <li>Tratamento de delimitadores $ soltos sem quebrar parágrafos em vermelho</li>
+                <li>Proteção contra contrabarras não escapadas em retornos JSON da IA</li>
+                <li>Preservação de figuras geométricas originais dos exames militares</li>
+                <li>Suporte a comandos trigonométricos brasileiros (\tg, \sen, \operatorname)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="milestone-box">
+            <div class="milestone-text">
+              <span class="milestone-icon">✅</span>
+              <div>
+                <div class="milestone-label">Entrega Consolidada</div>
+                <div class="milestone-val">21k questões militares catalogadas com lousa responsiva a 120Hz</div>
+              </div>
+            </div>
+            <span class="deliverable-chip" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--accent-emerald);">Fundação Pronta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 2 -->
+      <div class="stage" style="--stage-color: #06b6d4;">
+        <div class="stage-marker">02</div>
+        <div class="stage-content">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h2>Motor Socrático & Cascata de IA Resiliente</h2>
+              <span class="market-hook">A inteligência pedagógica que ensina a pensar sem dar respostas fáceis</span>
+            </div>
+            <span class="status-badge status-live">● Operando / Produção</span>
+          </div>
+          <p class="stage-desc">
+            Diferente de IAs genéricas que simplesmente cospem a resposta final, o LemmaS guia o raciocínio do estudante 
+            por degraus cognitivos, combinando prova formal dedutiva com intuição tática de banca.
+          </p>
+
+          <div class="modules-grid">
+            <div class="module-card">
+              <div class="module-title">🪜 Escada Socrática em 5 Níveis</div>
+              <ul class="module-list">
+                <li>N1: Simbologia & Notação (clareza dos entes matemáticos da questão)</li>
+                <li>N2: Primeiro Passo no Rascunho (o ponto de partida canônico)</li>
+                <li>N3: Encadeamento Dedutivo Intermediário (estruturação da prova)</li>
+                <li>N4: Pulo do Gato / Tática de Banca (a simetria ou atalho elegante)</li>
+                <li>N5: Resolução Oficial Definitiva (com penalidade formal no SM-2)</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">⚖️ Segunda Opinião Ortogonal</div>
+              <ul class="module-list">
+                <li>Modelo A: Rigor Axiomático dedutivo puro (partição canônica, demonstração)</li>
+                <li>Modelo B: Intuição Heurística (macetes de tangência, figuras primitivas)</li>
+                <li>Regra estrita de não-canibalização: cada modelo cumpre seu papel sem roubar o outro</li>
+                <li>Retorno determinístico estruturado em objetos <code>{name, role, content}</code></li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">⚡ Cascata Multi-Provedor (&lt; 1.5s)</div>
+              <ul class="module-list">
+                <li>1º: Google Gemini Flash REST (latência ultra-baixa de 0.6s)</li>
+                <li>2º: NVIDIA NIM (Nemotron 3.5 Lightning / Reasoning)</li>
+                <li>3º: FastAPI no Render (/api/tutor/hint com autenticação Supabase)</li>
+                <li>4º: Contingência determinística formatada (garantia de zero tela preta)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="milestone-box">
+            <div class="milestone-text">
+              <span class="milestone-icon">⚡</span>
+              <div>
+                <div class="milestone-label">Entrega Consolidada</div>
+                <div class="milestone-val">Tutor Socrático ativo com SM-2 integrado e cascata multi-IA blindada</div>
+              </div>
+            </div>
+            <span class="deliverable-chip" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.3); color: var(--accent-cyan);">Inteligência Viva</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 3 -->
+      <div class="stage" style="--stage-color: #6366f1;">
+        <div class="stage-marker">03</div>
+        <div class="stage-content">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h2>Retenção, Simulados & Métricas do Aluno</h2>
+              <span class="market-hook">O que fazer a seguir: a esteira que transforma usuários em alunos fiéis</span>
+            </div>
+            <span class="status-badge status-next">● Próximos Passos Imediatos</span>
+          </div>
+          <p class="stage-desc">
+            Transformar a plataforma de uma ferramenta de consulta em um ambiente diário de preparação para a aprovação, 
+            medindo gaps de conhecimento e forçando a repetição ativa de conceitos fracos.
+          </p>
+
+          <div class="modules-grid">
+            <div class="module-card">
+              <div class="module-title">📊 Radar de Habilidades & Diagnóstico</div>
+              <ul class="module-list future-list">
+                <li>Gráfico Radar dos 6 Eixos Temáticos (Álgebra, Geometria, Cálculo, etc.)</li>
+                <li>Mapeamento visual de pontos cegos: quais bancas e lemas o aluno mais erra</li>
+                <li>Métrica de Dependência de Dicas: % de questões resolvidas sem pedir Nível 4/5</li>
+                <li>Histórico de evolução temporal da proficiência matemática</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">⏱️ Modo Simulado Militar Realista</div>
+              <ul class="module-list future-list">
+                <li>Montagem de cadernos de prova oficiais (ex: 20 questões da AFA em 4 horas)</li>
+                <li>Cronômetro contínuo com alerta de tempo médio por questão (meta 4.5 min)</li>
+                <li>Cartão-Resposta digital com simulação de nota de corte histórica</li>
+                <li>Geração de relatório pós-simulado apontando exatamente os lemas que faltaram</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">📓 Caderno de Erros Inteligente (SM-2)</div>
+              <ul class="module-list future-list">
+                <li>Fila dinâmica de revisão: questões erradas ou penalizadas voltam no dia seguinte</li>
+                <li>Filtro 'Dominar Lemas Fracos': gera lista de questões do mesmo lema que o aluno errou</li>
+                <li>Exportação para Anki / PDF com resolução comentada e rascunho salvo da lousa</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="milestone-box">
+            <div class="milestone-text">
+              <span class="milestone-icon">🚀</span>
+              <div>
+                <div class="milestone-label">Meta da Fase 3</div>
+                <div class="milestone-val">Dashboard com Radar + Modo Simulado cronometrado operacional</div>
+              </div>
+            </div>
+            <span class="deliverable-chip">Próxima Release</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 4 -->
+      <div class="stage" style="--stage-color: #8b5cf6;">
+        <div class="stage-marker">04</div>
+        <div class="stage-content">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h2>Gamificação, Comunidade & Mobile First</h2>
+              <span class="market-hook">Criação de hábitos de estudo diários e senso de pertencimento</span>
+            </div>
+            <span class="status-badge status-future">● Fase de Engajamento</span>
+          </div>
+          <p class="stage-desc">
+            A jornada de concursos militares e vestibulares pesados é solitária e extenuante. A gamificação baseada 
+            em disciplina militar mantém o estudante engajado todos os dias.
+          </p>
+
+          <div class="modules-grid">
+            <div class="module-card">
+              <div class="module-title">🎖️ Patentes & Ranks Militares</div>
+              <ul class="module-list future-list">
+                <li>Sistema de progressão: Cadete ➔ Aspirante ➔ Tenente ➔ Capitão ➔ Coronel</li>
+                <li>Critério de avanço baseado em domínio de Lemas e resolução em tempo hábil</li>
+                <li>Badges colecionáveis por conquistas raras (ex: 'Mestre da Regiomontanus')</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">🔥 Streaks & Desafio Diário</div>
+              <ul class="module-list future-list">
+                <li>Streak counter de dias consecutivos resolvendo ao menos 3 questões</li>
+                <li>'Questão do Dia' comentada simultaneamente por todos os estudantes</li>
+                <li>Ranking semanal anônimo por banca (ex: Top 10 IME / ITA da semana)</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">📱 App PWA Otimizado para Tablets</div>
+              <ul class="module-list future-list">
+                <li>Suporte a Progressive Web App (PWA) instalável em Galaxy Tab e iPad</li>
+                <li>Modo tela cheia sem barras de navegador para maximizar o espaço da lousa</li>
+                <li>Sincronização offline de rascunhos com upload automático no reconectar</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="milestone-box">
+            <div class="milestone-text">
+              <span class="milestone-icon">🎖️</span>
+              <div>
+                <div class="milestone-label">Meta da Fase 4</div>
+                <div class="milestone-val">Alunos estudando diariamente impulsionados por patentes e streaks</div>
+              </div>
+            </div>
+            <span class="deliverable-chip">Engajamento Q1/Q2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 5 -->
+      <div class="stage" style="--stage-color: #f59e0b;">
+        <div class="stage-marker">05</div>
+        <div class="stage-content">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h2>Monetização, Assinaturas & Go-To-Market</h2>
+              <span class="market-hook">Transformando o produto em um negócio sustentável e lucrativo</span>
+            </div>
+            <span class="status-badge status-future">● Escala Comercial</span>
+          </div>
+          <p class="stage-desc">
+            O fechamento do ciclo: precificação justa para estudantes, gateway de pagamento nacional transparente 
+            e canais de aquisição focados no público de alta performance.
+          </p>
+
+          <div class="modules-grid">
+            <div class="module-card">
+              <div class="module-title">💳 Planos & Gateways (Asaas / Stripe)</div>
+              <ul class="module-list future-list">
+                <li>Plano Básico (Gratuito): Acesso ao banco de questões e lousa com 3 dicas/dia</li>
+                <li>Plano LemmaS Pro (Mensal/Anual): Tutor Socrático ilimitado, SM-2 e Simulados</li>
+                <li>Checkout transparente com PIX e Cartão com liberação em tempo real no Supabase</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">📣 Aquisição de Alunos & Marketing</div>
+              <ul class="module-list future-list">
+                <li>Copywriting de Guerra: Foco na dor do estudante travado nas resoluções tradicionais</li>
+                <li>Vídeos curtos de resolução socrática no Instagram/TikTok mostrando a lousa e os lemas</li>
+                <li>Parcerias com turmas ITA/IME de cursos preparatórios e professores de matemática</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">🏢 B2B para Cursos Preparatórios</div>
+              <ul class="module-list future-list">
+                <li>Painel do Professor: monitoramento do desempenho e pontos fracos da turma</li>
+                <li>Atribuição de listas de exercícios customizadas com o motor socrático LemmaS</li>
+                <li>White-label / Licenciamento para grandes colégios militares e pré-vestibulares</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="milestone-box">
+            <div class="milestone-text">
+              <span class="milestone-icon">🏆</span>
+              <div>
+                <div class="milestone-label">Marco Final de Negócio</div>
+                <div class="milestone-val">Primeiros 500 assinantes pagantes e validação do modelo de receita recorrente (MRR)</div>
+              </div>
+            </div>
+            <span class="deliverable-chip" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--accent-gold);">Go-to-Market</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      LemmaS EdTech · Roadmap de Engenharia & Estratégia de Produto · Gerado via Antigravity & Diagram Design
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('theme-icon').textContent = next === 'dark' ? '☼' : '☾';
+    }
+  </script>
+</body>
+</html>
