@@ -1122,6 +1122,7 @@ function ResolverContent() {
               dica_socratica_usada: usedHints,
               nivel_max_dica: maxHintLevel,
               total_dicas_solicitadas: qHints.length,
+              avaliacao_ia: data,
             }),
           });
           const submitData = await submitRes.json();
