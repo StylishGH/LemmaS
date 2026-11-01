@@ -153,3 +153,7 @@ data/repertorio/temp_sql/
 
 .vercel
 .env*
+
+# Anki packages e flashcards pessoais
+*.apkg
+flashcards_*.txt
