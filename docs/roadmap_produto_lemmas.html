@@ -424,9 +424,18 @@
               <div class="module-title">🏛️ Catálogo dos 2.000 Lemas</div>
               <ul class="module-list">
                 <li>2.000 Lemas axiomáticos e táticos cadastrados em <code>public.lemmas</code></li>
-                <li>Mapeamento em 100% das 21.272 questões militares do banco</li>
+                <li>Mapeamento em 100% das 21.272 questões do banco</li>
                 <li>Componente LemaBadge com Popover, fórmula em KaTeX e filtro por lema</li>
                 <li>Taxonomia de 12 Grandes Áreas Canônicas (AFA, EFOMM, IME, ITA, EsPCEx)</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">🌐 Acervo Multidisciplinar (AoPS & CEDERJ)</div>
+              <ul class="module-list">
+                <li>315 Questões olímpicas AoPS (100 de limites/cálculo + 215 desigualdades)</li>
+                <li>Questões universitárias CEDERJ (Cálculo 3 e Álgebra Linear I)</li>
+                <li>Prova recente da Escola Naval 2026 curada em lote com KaTeX</li>
+                <li>Classificação e trilhas rápidas de acesso em 1 clique</li>
               </ul>
             </div>
             <div class="module-card">
@@ -435,14 +444,14 @@
                 <li>Arquitetura Dual-Canvas (baseCanvas estático + inkCanvas desynchronized)</li>
                 <li>Interpolação Bézier quadrática e desenho incremental O(1) sem input lag</li>
                 <li>Rejeição estrita de palma (palm rejection) e botão de borracha lateral</li>
-                <li>Trava de DPR em Math.min(DPR, 2) protegendo a VRAM do Galaxy Tab/iPad</li>
+                <li>Trava de DPR em Math.min(DPR, 2) e isolamento de traços por questão</li>
               </ul>
             </div>
             <div class="module-card">
               <div class="module-title">📐 Renderização KaTeX Anti-Crash</div>
               <ul class="module-list">
                 <li>Tratamento de delimitadores $ soltos sem quebrar parágrafos em vermelho</li>
-                <li>Proteção contra contrabarras não escapadas em retornos JSON da IA</li>
+                <li>Proteção contra contrabarras não escapadas e preservação de \neq, \nu</li>
                 <li>Preservação de figuras geométricas originais dos exames militares</li>
                 <li>Suporte a comandos trigonométricos brasileiros (\tg, \sen, \operatorname)</li>
               </ul>
@@ -505,6 +514,15 @@
                 <li>2º: NVIDIA NIM (Nemotron 3.5 Lightning / Reasoning)</li>
                 <li>3º: FastAPI no Render (/api/tutor/hint com autenticação Supabase)</li>
                 <li>4º: Contingência determinística formatada (garantia de zero tela preta)</li>
+              </ul>
+            </div>
+            <div class="module-card">
+              <div class="module-title">📊 Telemetria N:1 & Vitrine Viva</div>
+              <ul class="module-list">
+                <li>Persistência completa de avaliações em <code>public.avaliacoes_ia</code></li>
+                <li>Rastreamento de tokens de entrada (prompt) e saída (completion)</li>
+                <li>Vitrine (/landing) consumindo /api/stats ao vivo sem números estáticos</li>
+                <li>Domínio oficial lemmas.com.br e listener local do Hermes ativo</li>
               </ul>
             </div>
           </div>
