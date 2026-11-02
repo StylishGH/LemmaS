@@ -260,6 +260,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Filtro por ID único (ex: busca por #1827)
+    const idParam = searchParams.get("id");
+    if (idParam) {
+      const singleId = parseInt(idParam.trim(), 10);
+      if (!isNaN(singleId)) {
+        query = query.eq("id", singleId);
+      }
+    }
+
     // Filtro por Banca (multi-select: "EFOMM,CEDERJ")
     const bancaValues = splitValues(banca);
     if (bancaValues.length > 0) {

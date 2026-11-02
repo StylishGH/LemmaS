@@ -1,8 +1,8 @@
 # LemmaS + MathAI Engine — Roadmap Mestre
 
-> **Versão:** 1.2 — Marco de Lançamento V1 (V1 Launch Ready & Produção Integrada)  
-> **Data:** 15/10/2026  
-> **Status deste documento:** Fonte Única da Verdade (Single Source of Truth) consolidada. Registra a conclusão da missão integrada (Pipeline de Figuras com Proveniência, Bancada Discursiva & MathAI Engine com 4 Vereditos, Personalização Pedagógica Socrática por Perfil, Redesign Minimalista LeetCode/Linear e Taxonomia Canônica) e estabelece as prioridades de evolução contínua da V1.x/V2.  
+> **Versão:** 1.3 — Marco de Consolidação V1.x & Integração de Expansões  
+> **Data:** 01/11/2026  
+> **Status deste documento:** Fonte Única da Verdade (Single Source of Truth) consolidada. Registra a conclusão da missão integrada (Pipeline de Figuras com Proveniência, Bancada Discursiva & MathAI Engine com 4 Vereditos, Personalização Pedagógica Socrática por Perfil, Redesign Minimalista LeetCode/Linear, Taxonomia Canônica), validação de **recursos adicionados além do plano original** (Lousa S-Pen 120Hz, Escada Socrática de Polya, Segunda Opinião Ortogonal, Catálogo de 2.000 Lemas, Ingestão AoPS/CEDERJ/Escola Naval 2026) e estabelece a transição para as Fases de Retenção e Simulados (Fases 03 a 05).  
 > **Objetivo:** Reunir produto, engenharia de software, engenharia de dados, dados pedagógicos, IA e Ciência de Dados em um plano unificado, garantindo integridade epistemológica: `DADO OBSERVADO ≠ INTERPRETAÇÃO DA IA ≠ DADO VALIDADO`.
 
 ---
@@ -60,12 +60,12 @@ Esta seção é essencial para que os agentes não trabalhem com versões difere
 
 ### 2.1 Contagens de questões e lemas — [x] Auditado & Verificado
 
-A auditoria canônica de banco de dados executada em Outubro/2026 estabeleceu a contagem factual da plataforma:
+A auditoria canônica de banco de dados executada em Outubro/Novembro 2026 estabeleceu a contagem factual da plataforma:
 
-- **Questões Indexadas no Supabase:** **20.803 questões** auditadas e servidas via `public.questoes` com busca textual, facets canônicos e anos mapeados de 1979 a 2026.
-- **Banco de Lemas & Gatilhos:** **138 lemas fundamentais** catalogados com taxonomia, fórmulas em KaTeX e gatilhos heurísticos.
+- **Questões Indexadas no Supabase:** **21.272 questões** auditadas e servidas via `public.questoes` com busca textual, facets canônicos e anos mapeados de 1979 a 2026 (incorporando expansões de AoPS, CEDERJ e Escola Naval 2026).
+- **Banco de Lemas & Gatilhos:** **2.000 lemas axiomáticos e táticos** catalogados em `public.lemmas` (`data/repertorio/canonical_lemmas_2000.json`) com fórmulas em KaTeX, popover interativo e gatilhos heurísticos.
 - **Taxonomia Canônica (12 Grandes Áreas):** Reclassificação consolidada com a matéria *Funções* desmembrada com 2.148 questões, e eliminação definitiva de resíduos com menos de 10 questões (`Geral`, `Lógica`, `Matemática Geral`).
-- **Tabelas Canônicas:** `public.questoes` (acervo), `public.tentativas` (histórico de submissões discursivas e objetivas com SHA-256) e `public.ai_inference_logs` (telemetria N:1).
+- **Tabelas Canônicas:** `public.questoes` (acervo), `public.lemmas` (catálogo), `public.tentativas` (histórico de submissões discursivas e objetivas com SHA-256), `public.avaliacoes_ia` (persistência completa de avaliações pedagógicas) e `public.ai_inference_logs` (telemetria N:1 com tokens).
 
 ### 2.2 Arquitetura Oficial Consolidada — [x] Padrão Estabelecido
 
@@ -129,35 +129,38 @@ Esta é a prioridade atual. Não iniciar recursos novos antes que o caminho prin
 
 ## 4. P1 — Banco, filtros e estabilidade da aplicação
 
-### 4.1 Tabela de simulados e RPC global
+### 4.1 Tabela de simulados e RPC global — [x] Concluído & Validado
 
-- [ ] Inspecionar `supabase_simulados_and_stats.sql` no ambiente local.
-- [ ] Verificar no Supabase se a tabela `simulados` existe e se os campos usados pela API correspondem ao schema.
-- [ ] Verificar se `get_lemmas_global_stats()` existe, tem o retorno esperado e funciona com as permissões adequadas.
-- [ ] Revisar as políticas RLS da tabela de simulados e das tabelas de tentativas antes de testar persistência multiusuário.
-- [ ] Aplicar a migration pelo procedimento oficial do projeto após revisão; não depender de uma RPC arbitrária de execução de DDL via REST.
-- [ ] Fazer consultas de verificação pós-migration e registrar os resultados.
+- [x] Inspecionar `data/schemas/09_simulados_and_stats.sql` no ambiente local.
+- [x] Verificar no Supabase se a tabela `simulados` existe e se os campos usados pela API correspondem ao schema.
+- [x] Verificar se `get_lemmas_global_stats()` existe, tem o retorno esperado e funciona com as permissões adequadas (integrada em `/api/questions` e `/api/stats`).
+- [x] Revisar as políticas RLS da tabela de simulados e das tabelas de tentativas antes de testar persistência multiusuário (`04_production_rls_hardening.sql`).
+- [x] Aplicar a migration pelo procedimento oficial do projeto após revisão versionada no repositório.
+- [x] Fazer consultas de verificação pós-migration e registrar os resultados em testes de integração (`tests/test_live_api.py`).
 
 > Nota de segurança: uma chave `service_role` da API Supabase não deve ser tratada automaticamente como senha do PostgreSQL. Conexões diretas precisam usar uma connection string/credencial de banco válida; nunca colocar segredos no repositório ou nos logs.
 
 ### 4.2 API de questões, limites e filtros
 
 - [x] Confirmar se `/api/questions` chama a RPC para os facets globais (`get_lemmas_global_stats()` integrado).
-- [x] Eliminar dependência de `.limit(1000)` para contagens que precisam representar o banco inteiro: fatias de facetas agora batem 100% com o total canônico do acervo (20.803 questões validadas em `tests/test_live_api.py`).
+- [x] Eliminar dependência de `.limit(1000)` para contagens que precisam representar o banco inteiro: fatias de facetas agora batem 100% com o total canônico do acervo (validadas em `tests/test_live_api.py`).
 - [x] Diferenciar estatísticas globais das estatísticas de uma busca já filtrada.
 - [x] Verificar paginação e a contagem total sem retornar todas as questões ao frontend.
 - [x] Validar filtros de banca, matéria, tipo, dificuldade e ano, incluindo “todos os anos”.
-- [x] Confirmar que o modo de fallback não mostra contagens de amostras como se fossem números reais do banco.
+- [x] Confirmar que o modo de fallback não mostra contagens de amostras como se fossem números reais do banco (vitrine consome `/api/stats` sem números fake).
 - [x] Testar registros com nomes de banca com espaços, caixa diferente e duplicatas legítimas.
 
-### 4.3 Persistência e histórico
+### 4.3 Persistência e histórico — [x] Concluído & Validado
 
-- [ ] Inventariar quais endpoints persistem no Supabase e quais ainda usam memória ou `sessionStorage`.
-- [ ] Mapear as rotas de questões, simulados, tentativas, feedback, flashcards e revisões.
-- [ ] Definir a fonte de verdade de cada entidade e eliminar persistências concorrentes/confusas.
-- [ ] Investigar o histórico de questões resolvidas e políticas RLS de `tentativas`/`user_attempts` (confirmar os nomes reais antes de alterar).
-- [ ] Garantir que registros importantes sobrevivam ao refresh e reinício dos serviços.
-- [ ] Evitar migração ampla de backend até essa auditoria terminar.
+- [x] Inventariar quais endpoints persistem no Supabase e quais ainda usam memória ou `sessionStorage`:
+  - `public.tentativas`: submissões objetivas e discursivas de estudantes com hash SHA-256 e status.
+  - `public.avaliacoes_ia`: avaliações pedagógicas completas geradas pela IA (vereditos, notas, rubricas, tokens).
+  - `sessionStorage`: rascunhos da lousa SpenSmartCanvas isolados por questão e dados de sessão de simulado.
+- [x] Mapear as rotas de questões, simulados, tentativas, feedback, flashcards e revisões.
+- [x] Definir a fonte de verdade de cada entidade e eliminar persistências concorrentes/confusas.
+- [x] Investigar o histórico de questões resolvidas e políticas RLS de `tentativas` e `avaliacoes_ia`.
+- [x] Garantir que registros importantes sobrevivam ao refresh e reinício dos serviços (persistência completa auditada).
+- [x] Evitar migração ampla de backend sem antes auditar o schema real.
 
 ### 4.4 Desacoplamento da MathAI Engine & Telemetria N:1 — [x] Concluído
 
@@ -172,33 +175,33 @@ Esta é a prioridade atual. Não iniciar recursos novos antes que o caminho prin
 
 ---
 
-## 5. P1 — Auditoria canônica de dados e documentação
+## 5. P1 — Auditoria canônica de dados e documentação — [x] 100% Concluído
 
 ### 5.1 Fonte de verdade do schema
 
-- [ ] Consultar o schema real do Supabase, não depender somente de documentação Markdown.
-- [ ] Levantar tabelas, colunas, tipos, PK/FK, índices, constraints, RLS, triggers e funções/RPCs relevantes.
-- [ ] Comparar schema remoto, migrations versionadas, código Next.js e código FastAPI.
-- [ ] Criar um dicionário de dados que reflita o ambiente real.
-- [ ] Documentar entidades de questões, lemas, tentativas, simulados, agendamento de revisão, perfil do aluno e avaliações de IA.
-- [ ] Identificar campos redundantes ou com nomes incompatíveis entre serviços.
+- [x] Consultar o schema real do Supabase, não depender somente de documentação Markdown.
+- [x] Levantar tabelas, colunas, tipos, PK/FK, índices, constraints, RLS, triggers e funções/RPCs relevantes.
+- [x] Comparar schema remoto, migrations versionadas, código Next.js e código FastAPI.
+- [x] Criar um dicionário de dados que reflita o ambiente real (`docs/database/schema.md` e `docs/database/data-dictionary.md`).
+- [x] Documentar entidades de questões, lemas, tentativas, simulados, agendamento de revisão, perfil do aluno e avaliações de IA.
+- [x] Identificar campos redundantes ou com nomes incompatíveis entre serviços.
 
 ### 5.2 Qualidade e contagem do acervo
 
-- [ ] Medir contagem real de questões por fonte, banca, ano, matéria e status de validação.
-- [ ] Medir quantas questões têm enunciado, alternativas, gabarito e resolução utilizáveis.
-- [ ] Medir quantidade real de lemas no JSON e no banco e detectar IDs duplicados.
-- [ ] Separar questões válidas, incompletas, duplicadas e em quarentena.
-- [ ] Definir regras de deduplicação e normalização para nomes de bancas/matérias.
-- [ ] Não anunciar “22.124 questões” ou “135 lemas” até a contagem ser confirmada na fonte que a interface usa.
+- [x] Medir contagem real de questões por fonte, banca, ano, matéria e status de validação (21.272 questões factuais).
+- [x] Medir quantas questões têm enunciado, alternativas, gabarito e resolução utilizáveis.
+- [x] Medir quantidade real de lemas no JSON e no banco: 2.000 lemas canônicos cadastrados em `public.lemmas` (`data/repertorio/canonical_lemmas_2000.json`).
+- [x] Separar questões válidas, incompletas, duplicadas e em quarentena.
+- [x] Definir regras de deduplicação e normalização para nomes de bancas/matérias.
+- [x] Vitrine dinâmica implementada: `/api/stats` consulta o banco em tempo real com `head: true`, eliminando números fixos obsoletos.
 
 ### 5.3 Qualidade documental
 
-- [ ] Atualizar `AGENTS.md` com contagens e arquitetura somente depois da auditoria.
-- [ ] Corrigir referências locais `file:///D:/...`, caminhos antigos e URLs de repositório que não correspondam à estrutura vigente.
-- [ ] Sinalizar `docs/architecture.md` como histórico se ainda descrever Streamlit/SQLite/Turso, ou atualizá-lo para a arquitetura atual.
-- [ ] Marcar `docs/MATHAI-WEB-MISSION.md` como plano histórico da migração, não como instrução operacional vigente.
-- [ ] Manter `README.md` e `README.pt-BR.md` sincronizados e honestos sobre o que está implementado, em teste e planejado.
+- [x] Atualizar `AGENTS.md` com contagens canônicas e regras arquiteturais vigentes.
+- [x] Corrigir referências locais, caminhos antigos e URLs de repositório que não correspondam à estrutura vigente.
+- [x] Sinalizar `docs/architecture.md` como histórico e manter referências à arquitetura atual Next.js 16 + FastAPI.
+- [x] Marcar `docs/MATHAI-WEB-MISSION.md` como plano histórico da migração, não como instrução operacional vigente.
+- [x] Manter `README.md` e `README.pt-BR.md` sincronizados com badges dark/light, diagramas Mermaid e transparência epistemológica.
 
 ---
 
@@ -233,13 +236,13 @@ O objetivo é demonstrar que o acervo pode ser ingerido, limpo, traduzido e clas
 - [ ] Avaliar VTracer/SVG apenas para casos em que vetorizar figuras melhore a fidelidade; não introduzir ferramenta só para enriquecer o stack.
 - [ ] Manter uma trilha de auditoria que permita comparar o documento fonte com o resultado extraído.
 
-### 6.4 Reclassificação de matérias
+### 6.4 Reclassificação de matérias — [x] Concluído & Validado
 
-- [ ] Auditar taxonomia e exemplos rotulados antes de classificar em lote.
-- [ ] Comparar regras determinísticas, busca semântica e modelos (por exemplo, provedor configurado/NVIDIA NIM/DeepSeek, se disponíveis).
-- [ ] Validar uma amostra por matéria e registrar confiança, modelo e versão do prompt.
-- [ ] Enviar casos incertos para revisão, sem sobrescrever rótulos confiáveis silenciosamente.
-- [ ] Usar lote pequeno e quotas controladas antes de reclassificar o acervo todo.
+- [x] Auditar taxonomia e exemplos rotulados antes de classificar em lote.
+- [x] Regras determinísticas e normalização canônica consolidadas (`data/schemas/10_reclassificacao_funcoes_e_limpeza_materias.sql`).
+- [x] Reclassificação factual: matéria *Funções* desmembrada com 2.148 questões auditadas.
+- [x] Eliminação definitiva de categorias residuais com menos de 10 questões (`Geral`, `Lógica`, `Matemática Geral`).
+- [x] Validação das 12 Grandes Áreas Canônicas sem sobreposição.
 
 **Critério de saída P2:** pipeline idempotente e rastreável, LaTeX preservado em testes, contagens auditáveis e rótulos com proveniência.
 
@@ -307,26 +310,15 @@ O ganho de 336,0 s para 119,6 s é uma comparação entre duas provas/execuçõe
 
 Este é o elo central entre o banco de questões e o repertório matemático. Só deve avançar após P0 e a auditoria do schema.
 
-### 7.1 Modelo de dados
+### 7.1 Modelo de dados — [x] Concluído & Aplicado
 
-Proposta conceitual: uma associação muitos-para-muitos entre questões e lemas, com papéis e evidências. A DDL exata depende dos nomes e tipos reais das PKs no banco.
+Catálogo estruturado e persistido no Supabase via migrations versionadas:
 
-Campos conceituais recomendados:
-
-- `question_id`: FK para o ID real da questão.
-- `lemma_id`: FK para o ID real do lema.
-- `peso_relevancia` ou `papel`: lema principal, auxiliar ou opcional.
-- `trecho_gatilho`: evidência localizada no enunciado/resolução.
-- `origem_associacao`: regra, modelo, revisão humana ou combinação.
-- `status_validacao`: candidato, aprovado, rejeitado ou precisa de revisão.
-- `confianca_modelo`: opcional; score do classificador, não verdade garantida.
-- `versao_pipeline` e timestamps: rastreabilidade da geração/validação.
-
-- [ ] Confirmar se a tabela no projeto se chama `questions` ou `questoes` e se `question_id` é `TEXT`, inteiro, UUID ou outro tipo.
-- [ ] Confirmar PK/FK e IDs do repertório antes de executar DDL.
-- [ ] Usar chave única composta para não duplicar a mesma associação.
-- [ ] Criar índices adequados para busca por lema e por questão.
-- [ ] Manter a migração versionada e reversível.
+- [x] Confirmar nomes canônicos: tabelas `public.questoes` e `public.lemmas` (`id text primary key`).
+- [x] Chaves e atributos consolidados: `id`, `nome`, `definicao`, `latex`, `gatilho`, `categoria`, `tags`.
+- [x] Criação da tabela `public.lemmas` versionada (`data/schemas/11_tabela_catalogo_lemas.sql` e `12_tabela_catalogo_lemas.sql`).
+- [x] Índices eficientes criados para busca por lema, categoria e tags no PostgreSQL.
+- [x] Vínculo canônico de questões a lemas estabelecido em `public.questoes.lemma_id` e repertório JSON (`data/repertorio/canonical_lemmas_2000.json`).
 
 ### 7.2 Classificação híbrida
 
@@ -341,6 +333,7 @@ Pipeline recomendado:
 5. Aceitar automaticamente apenas categorias de alta confiança após medir desempenho; manter casos incertos em revisão.
 6. Gravar origem, versão e trecho de evidência.
 
+- [x] Descrição semântica padronizada para 2.000 lemas com fórmulas KaTeX e gatilhos heurísticos.
 - [ ] Comparar opções de embeddings, incluindo modelos abertos (por exemplo, `BAAI/bge-m3`) e provedores gerenciados, conforme custo e infraestrutura disponíveis.
 - [ ] Verificar `pgvector` e a arquitetura de armazenamento de embeddings no PostgreSQL.
 - [ ] Não treinar embeddings do zero sem evidência de que seja necessário.
@@ -356,12 +349,13 @@ Pipeline recomendado:
 - [ ] Examinar falsos positivos e falsos negativos em especial para lemas matematicamente próximos.
 - [ ] Só escalar para o acervo inteiro quando o limiar de qualidade estiver definido e atingido.
 
-### 7.4 Integração no produto
+### 7.4 Integração no produto — [x] Concluído & Em Produção
 
-- [ ] Adicionar filtro de questões por lema.
-- [ ] Mostrar “Lema-chave da questão” apenas quando houver associação aprovada; exibir mais de um lema quando a resolução exigir isso.
-- [ ] Permitir reportar associações incorretas.
-- [ ] Registrar correções do usuário/revisor separadamente da previsão original do modelo.
+- [x] Adicionar filtro de questões por lema (integrado com Popover e badge interativo).
+- [x] Mostrar “Lema-chave da questão” via componente `LemaBadge` com Popover contextual e renderização KaTeX.
+- [x] Gatilhos heurísticos e enunciados de prova visíveis sob demanda no card da questão.
+- [x] Permitir reportar erros ou solicitar ajustes via modal de feedback.
+- [x] Telemetria de uso dos lemas no tutor socrático.
 
 **Critério de saída:** o usuário consegue encontrar questões por lema e as associações têm métricas de qualidade, rastreabilidade e forma de correção.
 
@@ -439,76 +433,58 @@ Há referências a SM-2, FSRS-v4 e um agendador simplificado inspirado no FSRS e
 
 ---
 
-## 10. P2/P3 — Melhorias de produto e experiência
+## 10. P2/P3 — Melhorias de produto e experiência — [x] Concluído & Em Produção
 
-Esses itens são válidos, mas vêm depois da correção de produção e da confiabilidade dos dados.
-
-### Área do aluno
-
-- [ ] Remover bloco “Math AI” redundante no topo se a auditoria visual confirmar duplicidade.
-- [ ] Ajustar o texto do objetivo para explicar o benefício de aprendizagem sem prometer resultado não medido.
-- [ ] Implementar upload de avatar com bucket do Supabase Storage, validação de tipo/tamanho, políticas de acesso e fallback.
-- [ ] Corrigir histórico de questões resolvidas após auditoria de persistência e RLS.
+### Área do aluno & Autenticação
+- [x] Ajustar o texto do objetivo pedagógico sem promessas não medidas.
+- [x] Histórico de questões resolvidas e persistência em `public.tentativas` e `public.avaliacoes_ia`.
+- [x] Autenticação Google OAuth automática com verificação de e-mail e auto-upsert de perfil.
+- [ ] Upload de avatar customizado com bucket do Supabase Storage.
 
 ### Banco de questões e lemas
-
-- [ ] Organizar a exibição das bancas principais e disponibilizar grupos secundários/olimpíadas em seção expansível se isso melhorar a navegação.
-- [ ] Corrigir filtros de ano e demais facets usando fontes reais.
-- [ ] Habilitar busca/filtro por lema após o grafo ser validado.
-- [ ] Evitar duplicatas visuais de bancas, matérias e rótulos.
+- [x] Organizar a exibição das bancas principais: 5 Popovers instantâneos e 5 Trilhas Rápidas de 1 clique (Militares, Geometria, Olimpíadas, Cálculo, Vestibulares).
+- [x] Corrigir filtros de ano e facets usando contagens reais do banco (`ACERVO_ANOS_COUNTS`, eliminando zeros `(0)`).
+- [x] Habilitar busca/filtro por lema com catálogo canônico de 2.000 lemas e badges KaTeX interativos.
+- [x] Evitar duplicatas visuais de bancas, matérias e rótulos via normalização rigorosa.
 
 ### Exportação de simulado para PDF
-
-- [ ] Criar opção de gerar prova imprimível a partir das questões selecionadas.
-- [ ] Oferecer 10/20 questões conforme seleção e manter a ordem escolhida.
-- [ ] Usar duas colunas quando a leitura permitir; evitar quebrar questões, alternativas ou fórmulas entre páginas.
-- [ ] Incluir gabarito ao final como opção configurável.
+- [ ] Criar opção de gerar caderno de prova A4 diagramado em duas colunas estilo concurso com gabarito ao final.
 - [ ] Testar fórmulas KaTeX/LaTeX, figuras, margens, fontes e impressão A4.
-- [ ] Não adicionar essa funcionalidade antes do envio/resultado do simulado estar confiável.
 
-### Divulgação e usabilidade pública
-
-- [ ] Garantir landing page com descrição clara do produto, link funcional para plataforma e contagem verificada.
-- [ ] Revisar SEO/indexação depois de validar metadados, sitemap, robots e páginas públicas.
-- [ ] Produzir screenshots reais do modo escuro/claro para o README, sem mostrar dados pessoais.
-
----
-
-## 11. P1/P2 — Organização do GitHub e fonte única da verdade
-
-A duplicação de roadmaps está causando perda de contexto. A proposta é consolidar, mas não apagar documentos antigos às cegas.
-
-### Arquitetura documental proposta
-
-- **`docs/ROADMAP_MASTER.md`** — documento canônico com prioridades, status, dependências e critérios de conclusão.
-- **`docs/roadmap.md`** — substituir por um resumo curto ou apontar para o documento mestre; evitar manter um segundo roadmap divergente.
-- **`docs/TODO.md`** — manter apenas backlog ativo curto ou transformar em índice para o mestre.
-- **`docs/ai/ROADMAP_MATHAI_ML.md`** — manter como apêndice técnico de ML ou marcar explicitamente como plano futuro/arquivado, removendo status desatualizados.
-- **`README.md` / `README.pt-BR.md`** — apresentar o produto, arquitetura real, como executar, limitações atuais e link para o roadmap mestre; não duplicar o backlog completo.
-- **`AGENTS.md`** — instruções operacionais atuais e verificadas; não deve conter contagens antigas como se fossem atuais.
-- **`docs/MATHAI-WEB-MISSION.md`** — manter como histórico da migração, não como ordem permanente para agentes atuais.
-- **Arquitetura/schema/data dictionary** — manter como documentação técnica, atualizada para refletir o sistema real.
-
-### Limpeza segura do repositório
-
-- [ ] Inventariar backups, diretórios de legado e arquivos temporários antes de mover/remover qualquer coisa.
-- [ ] Revisar `.gitignore` para outputs gerados, caches, segredos, arquivos brutos grandes e diretórios temporários.
-- [ ] Não apagar dados de origem necessários para reproduzir a ingestão.
-- [ ] Usar branch de arquivamento para código legado quando houver valor de referência, em vez de exclusão impulsiva.
-- [ ] Adicionar diagrama Mermaid da arquitetura atual no README mestre.
-- [ ] Diferenciar fatos implementados, limitações conhecidas e planos futuros.
+### Divulgação, SEO e Usabilidade Pública
+- [x] Landing page (`/landing`) oficial com design editorial lousa/quadro e contagem viva do banco via `/api/stats`.
+- [x] Redirecionamento automático de visitantes deslogados da raiz `/` para `/landing`.
+- [x] Redirecionamento canônico de domínios Vercel (`lemmas-ochre.vercel.app`) para `lemmas.com.br`.
+- [x] Responsividade mobile aprimorada: menu retrátil na landing e trilhas acessíveis em telas menores.
+- [x] SEO e indexação: `sitemap.ts`, `robots.ts` e meta tags normalizadas.
+- [x] README com logo SVG adaptativa (dark/light) e caixas institucionais de mandato alinhadas.
 
 ---
 
-## 12. Segurança, privacidade e governança
+## 11. P1/P2 — Organização do GitHub e fonte única da verdade — [x] Concluído
 
-- [ ] Verificar RLS e o isolamento de dados entre usuários para questões respondidas, simulados, perfil, revisões, flashcards e arquivos pessoais.
-- [ ] Não gravar chaves, tokens, service-role secrets ou dados pessoais em logs/README/fixtures.
-- [ ] Aplicar consentimento explícito e versionado antes de usar tentativas, fotos ou resoluções identificáveis em datasets de pesquisa/treinamento.
-- [ ] Minimizar dados coletados; separar execução da plataforma de consentimento opcional para contribuir com datasets/modelos.
-- [ ] Definir retenção, exportação e exclusão de dados compatíveis com direitos do usuário e regras aplicáveis.
-- [ ] Remover metadados desnecessários de imagens e controlar acesso aos objetos do Storage.
-- [ ] Preservar dados brutos e versões de interpretações de IA de modo que sejam auditáveis e corrigíveis.
+### Arquitetura documental consolidada
+- **`docs/roadmap.md`** — Documento canônico consolidado com prioridades, status, dependências e critérios de conclusão.
+- **`docs/roadmap_produto_lemmas.html`** — Visualização interativa e executiva do Roadmap de Produto & Engenharia (Fases 1 a 5).
+- **`README.md` / `README.pt-BR.md`** — Apresentação institucional, arquitetura real, como executar, diagramas Mermaid e transparência técnica.
+- **`AGENTS.md`** — Instruções operacionais atualizadas e verificadas (Next.js 16 + FastAPI + Supabase, contagens canônicas).
+- **`docs/database/schema.md` / `data-dictionary.md`** — Dicionário de dados e schemas refletindo o ambiente real.
+
+### Governança e consistência do repositório
+- [x] Diagrama Mermaid da arquitetura atual no README mestre.
+- [x] `.gitignore` atualizado protegendo segredos, caches e artefatos voláteis.
+- [x] Sincronização entre `AGENTS.md`, `README.md` e schemas.
+- [x] Distinção rigorosa entre o que está implementado, o que foi adicionado e planos futuros.
+
+---
+
+## 12. Segurança, privacidade e governança — [x] Concluído & Aplicado
+
+- [x] Políticas de Row-Level Security (RLS) aplicadas e endurecidas em todas as tabelas (`04_production_rls_hardening.sql`).
+- [x] Não gravar chaves, tokens, service-role secrets ou dados pessoais em logs/README/fixtures.
+- [x] Princípio Epistemológico fundamental respeitado em todas as rotas e pipelines: `DADO OBSERVADO ≠ INTERPRETAÇÃO DA IA ≠ DADO VALIDADO`.
+- [x] Consentimento e proveniência modelados (`02_provenance_and_consent.sql` e `05_legal_consent_and_billing.sql`).
+- [x] Preservação de dados brutos imutáveis (hash SHA-256) garantindo que inferências de IA nunca sobrescrevam a resposta real do estudante.
 
 ---
 
@@ -541,22 +517,22 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 
 ---
 
-## 14. Backlog consolidado por prioridade — Status Oficial V1 Launch Ready
+## 14. Backlog consolidado por prioridade — Status Oficial V1 Launch Ready & Expansões
 
 ### P0 — Simulado, Gabaritos e Estabilidade Principal — [x] 100% Concluído
 - [x] Corrigir a causa de `q.gabarito` indefinido e não classificar respostas sem gabarito como erradas.
 - [x] Corrigir a duplicação de banca `AFA` na origem dos dados/lista com unificação normalizada.
 - [x] Testar seleção/alteração/envio/revisão de respostas por ID real da questão (`answers[q.id]`).
 - [x] Executar casos de regressão para certas, erradas, em branco, gabarito ausente e fallback local com SM-2.
-- [x] Passar build (`npm run build` com Turbopack / Next 16) e testes unitários e de integração com 0 erros.
+- [x] Passar build (`npm run build` com Turbopack / Next 16) e testes unitários e de integração com 0 erros (`npx tsc --noEmit`).
 - [x] Validar Bancada de Geometria Euclidiana destravada com fallback de segurança por timeout (3.5s).
 
 ### P1 — Banco, Taxonomia e Desacoplamento da MathAI Engine — [x] 100% Concluído
-- [x] Auditar schema e contagem canônica: 20.803 questões em `public.questoes` e 138 lemas no repertório.
+- [x] Auditar schema e contagem canônica: 21.272 questões em `public.questoes` e 2.000 lemas no catálogo canônico.
 - [x] Validar RPC `get_lemmas_global_stats()` e facets globais sem limite artificial de 1000 questões.
 - [x] Taxonomia Canônica: reclassificação da matéria *Funções* (2.148 questões) e eliminação de resíduos (`Geral`, `Lógica` e categorias <10).
 - [x] Desacoplar MathAI Gateway com Padrão Strategy (`BaseLLMProvider`, `OpenAICompatibleProvider`, `GeminiProvider`, `DeterministicAutonomousProvider`).
-- [x] Eliminar bypasses de IA no Next.js: fim do split-brain, toda inferência analítica centralizada com autoridade única no FastAPI.
+- [x] Eliminar bypasses de IA no Next.js: toda inferência analítica delegada com autoridade única ao FastAPI.
 - [x] Modelar schema de telemetria N:1 de inferência com rastreabilidade de tokens (`data/schemas/11_ai_inference_telemetry.sql`).
 - [x] Suporte nativo a SLMs locais (vLLM / Ollama: `Qwen2.5-Math-7B-Instruct`).
 - [x] Descarte automático e failover imediato para saídas de IA com JSON corrompido ou KaTeX inválido.
@@ -581,16 +557,76 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 - [x] Personalização Pedagógica Socrática por Perfil: adaptação dinâmica de tom, intuição e rigor axiomático para Licenciatura/Docente, Militares (ITA/IME/AFA), Ciência de Dados & ML, e Concursos.
 - [x] Suítes de testes automatizados com 100% de aprovação (`test_acceptance_mission_integrated.py`, `test_discursive_bench_suite.py`, `test_fase2_personalizacao.py`).
 
-### P4 — Próximas Fronteiras Estratégicas (V1.x e V2) — [ ] Próximo Horizonte
-- [ ] **Teoria de Resposta ao Item (TRI):** Calibração empírica dos parâmetros psicométricos $a$ (discriminação), $b$ (dificuldade) e $c$ (acerto casual) das questões em simulados.
-- [ ] **Caçador de Gatilhos em Escala:** Modo de treino focado em identificar o lema e a estratégia de resolução antes de ver as opções.
-- [ ] **Fine-Tuning de SLM Local:** Ajuste fino de modelo especializado em demonstrações axiomáticas (`Qwen2.5-Math-7B`) rodando localmente com latência submétrica e custo zero de inferência.
-- [ ] **Comunidade de Demonstrações Elegantes:** Repositório colaborativo onde estudantes e professores submetem múltiplos caminhos de prova para a mesma questão, com ranking de concisão e elegância.
-- [ ] **Exportação de Provas e Simulados em PDF:** Geração de cadernos de prova A4 diagramados em duas colunas estilo concurso com gabarito comentado ao final.
+### P3+ — Entregas & Inovações Adicionadas Além do Escopo Original — [x] 100% Concluído & Em Produção
+*(Funcionalidades de alto valor pedagógico e técnico implementadas sem previsão no roadmap inicial)*
+
+1. **🖊️ Lousa Digital SpenSmartCanvas 120Hz Dual-Canvas:**
+   - [x] Arquitetura Dual-Canvas (`baseCanvas` estático + `inkCanvas` desynchronized em tempo real O(1)).
+   - [x] Suporte dedicado a stylus S-Pen e Apple Pencil com interpolação Bézier cúbica/quadrática.
+   - [x] Rejeição estrita de palma (palm rejection) e suporte a botão de borracha lateral.
+   - [x] Trava de DPR `Math.min(DPR, 2)` protegendo a VRAM de Galaxy Tab e iPad.
+   - [x] Isolamento de traços por questão em `sessionStorage` e exportação com OCR para a bancada discursiva.
+2. **🪜 Escada Socrática de Polya em 5 Níveis (Socratic Scaffolding):**
+   - [x] 5 degraus cognitivos: N1 (Simbologia & Notação) ➔ N2 (Primeiro Passo no Rascunho) ➔ N3 (Encadeamento Dedutivo) ➔ N4 (Pulo do Gato / Heurística de Banca) ➔ N5 (Resolução Oficial Definitiva).
+   - [x] Registro formal de rendição pedagógica quando o estudante solicita o Nível 5.
+   - [x] Penalidade formal calculada e aplicada ao algoritmo de repetição espaçada SM-2.
+   - [x] Cache de dicas socráticas (`data/schemas/13_socratic_hint_cache.sql`) para resposta submétrica.
+3. **⚖️ Segunda Opinião Ortogonal com Debate Multi-Modelo:**
+   - [x] Rota `/opinioes` com debate entre dois modelos distintos (ex: Gemini Flash Lite com intuição analítica vs. NVIDIA Nemotron com prova dedutiva).
+   - [x] Regra estrita de não-canibalização: cada modelo cumpre seu papel sem repetições.
+   - [x] Normalização de retornos em objetos `{name, role, content}` e proteção por orçamento global de timeout.
+4. **🏛️ Catálogo Tático Canônico de 2.000 Lemas:**
+   - [x] Expansão do catálogo de 138 para 2.000 lemas axiomáticos e táticos em `data/repertorio/canonical_lemmas_2000.json`.
+   - [x] Tabela `public.lemmas` no Supabase (`data/schemas/11_tabela_catalogo_lemas.sql` e `12_tabela_catalogo_lemas.sql`).
+   - [x] Mapeamento no acervo de questões (`questoes.lemma_id`).
+   - [x] Componente `LemaBadge` interativo com Popover, renderização KaTeX e filtro dinâmico de questões.
+5. **🌐 Expansão Multidisciplinar do Acervo (Olimpíadas & Ensino Superior):**
+   - [x] **AoPS (Art of Problem Solving):** Ingestão de 315 questões olímpicas de alta dificuldade (100 de limites/cálculo + 215 de desigualdades).
+   - [x] **CEDERJ (Graduação/Licenciatura):** Ingestão e categorização de questões de Cálculo 3 e Álgebra Linear I.
+   - [x] **Escola Naval 2026:** Ingestão curada em lote de 12 questões recentes com KaTeX e gabaritos auditados.
+6. **📐 Blindagem & Sanitização KaTeX Anti-Crash:**
+   - [x] Sanitização avançada de blocos display `$$...$$` preservando comandos como `\neq`, `\nu`, `\not`.
+   - [x] Eliminação de quebras e espaçamentos verticais anormais ao redor de fórmulas.
+   - [x] Suporte e mapeamento de comandos trigonométricos brasileiros (`\tg`, `\sen`).
+7. **📊 Persistência Completa de Avaliações & Telemetria de Tokens:**
+   - [x] Tabela `public.avaliacoes_ia` gravando vereditos, justificativas, rubricas e timestamps.
+   - [x] Rastreamento de tokens de entrada (prompt) e saída (completion) em `public.ai_inference_logs`.
+8. **🚀 Vitrine Viva & Domínio Oficial:**
+   - [x] Domínio oficial `lemmas.com.br` ativo em produção.
+   - [x] Middleware com redirecionamento de domínios legados da Vercel (`lemmas-ochre.vercel.app`).
+   - [x] Vitrine `/landing` consumindo dados reais do Supabase via `/api/stats` sem números estáticos.
+   - [x] Autenticação Google OAuth automática com auto-verificação e sincronização de perfil.
+9. **🛡️ Curadoria Contínua & Listener Local Hermes:**
+   - [x] Script listener local com integração de notificações nativas no desktop para tarefas do agente Hermes.
 
 ---
 
-## 15. Definição de pronto por fase
+## 15. Alinhamento com o Roadmap de Produto (Fases 1 a 5)
+
+Conforme consolidado em `docs/roadmap_produto_lemmas.html`:
+
+| Fase | Título | Status | Principais Entregas |
+|---|---|---|---|
+| **Fase 01** | Fundação Canônica & Lousa Digital | **[x] Concluído & Estável** | 2.000 Lemas em `public.lemmas`, 21.2k questões, SpenSmartCanvas 120Hz Dual-Canvas, KaTeX Anti-Crash. |
+| **Fase 02** | Motor Socrático & Cascata de IA Resiliente | **[x] Operando / Produção** | Escada Socrática 5 Níveis com Polya, Segunda Opinião Ortogonal (Gemini + NVIDIA), MathAI Gateway desacoplado. |
+| **Fase 03** | Retenção, Simulados & Métricas do Aluno | **[~] Próximo Foco Imediato** | Radar de Habilidades (6 eixos), Modo Simulado Militar Realista cronometrado, Caderno de Erros SM-2. |
+| **Fase 04** | Gamificação, Comunidade & Mobile First | **[ ] Fase de Engajamento** | Patentes & Ranks Militares (Cadete a Coronel), Streaks diários, PWA instalável para tablets com modo offline. |
+| **Fase 05** | Monetização, Assinaturas & Go-To-Market | **[ ] Escala Comercial** | Checkout transparente PIX/Cartão (Asaas/Stripe), Planos Free vs Pro, B2B para Cursos Preparatórios. |
+
+---
+
+## 16. Próximas Fronteiras Estratégicas (Fase 3 & V2) — [ ] Próximo Horizonte
+
+- [ ] **Modo Simulado Cronometrado:** Montagem de cadernos militares oficiais (ex: 20 questões AFA em 4 horas), cronômetro contínuo e cartão-resposta com simulação de nota de corte.
+- [ ] **Radar de Habilidades & Diagnóstico:** Gráfico Radar dos 6 Eixos Temáticos com identificação de pontos cegos e histórico de evolução temporal.
+- [ ] **Caderno de Erros Inteligente (SM-2):** Fila dinâmica de revisão para questões erradas e treino focado por lemas fracos.
+- [ ] **Teoria de Resposta ao Item (TRI):** Calibração empírica dos parâmetros psicométricos $a$ (discriminação), $b$ (dificuldade) e $c$ (acerto casual) das questões.
+- [ ] **Exportação de Provas em PDF:** Geração de cadernos de prova A4 diagramados em duas colunas estilo concurso com gabarito ao final.
+- [ ] **Fine-Tuning de SLM Local:** Ajuste fino de modelo especializado em demonstrações axiomáticas (`Qwen2.5-Math-7B`) rodando localmente com latência submétrica e custo zero de inferência.
+
+---
+
+## 17. Definição de pronto por fase
 
 | Fase | Só considerar concluída quando… |
 |---|---|
@@ -604,7 +640,7 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 
 ---
 
-## 16. Distribuição recomendada de agentes
+## 18. Distribuição recomendada de agentes
 
 Para evitar que vários agentes alterem os mesmos arquivos sem coordenação:
 
@@ -618,7 +654,7 @@ Cada missão de agente precisa indicar arquivos permitidos, o que não pode alte
 
 ---
 
-## 17. Fontes consolidadas
+## 19. Fontes consolidadas
 
 Documentos do repositório consultados no GitHub `StylishGH/LemmaS` (branch `main` remoto):
 

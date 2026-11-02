@@ -392,7 +392,15 @@ export default function BancoQuestoesPage() {
     if (tipoParam) params.set("tipo", tipoParam);
     const dificuldadeParam = paramFromFiltro(dificuldadeFiltro);
     if (dificuldadeParam) params.set("dificuldade", dificuldadeParam);
-    if (busca.trim()) params.set("search", busca.trim());
+    // Se a busca começar com # e o resto for numérico, envia como filtro por ID
+    const buscaTrim = busca.trim();
+    if (buscaTrim) {
+      if (buscaTrim.startsWith("#") && /^\d+$/.test(buscaTrim.slice(1))) {
+        params.set("id", buscaTrim.slice(1));
+      } else {
+        params.set("search", buscaTrim);
+      }
+    }
     if (lemaFiltro) params.set("lema", lemaFiltro);
 
     fetch(`/api/questions?${params.toString()}`)
