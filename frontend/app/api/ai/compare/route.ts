@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
-import { generateNvidiaContent } from "@/lib/nvidia";
+import { generateNvidiaContent, getNvidiaApiKeys } from "@/lib/nvidia";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 // Node.js process types for process.env
@@ -10,12 +10,6 @@ const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onre
 
 export const maxDuration = 30;
 
-// Orçamento global da rota: os fallbacks em sequência (backend 8s +
-// Gemini 3 modelos + NVIDIA 3 modelos) somavam mais de 70s e estouravam
-// o maxDuration da Vercel, então o cliente nunca recebia o 503 JSON e
-// a página caía no catch genérico ("Falha de conexão"). Cada etapa
-// abaixo corre dentro do orçamento restante, e a rota sempre responde
-// JSON antes de 28s.
 const ROUTE_BUDGET_MS = 28000;
 
 function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -127,7 +121,7 @@ export async function POST(req: NextRequest) {
       backendHeaders["Authorization"] = authorization;
     }
 
-    // 1. Backend FastAPI (timeout curto 8s para evitar sequestro do maxDuration da Vercel)
+    // 1. Backend FastAPI (timeout curto de 3.5s para evitar sequestro do maxDuration da Vercel)
     try {
       const backendResp = await fetch(`${BACKEND_URL}/api/tutor/compare`, {
         method: "POST",
@@ -136,14 +130,13 @@ export async function POST(req: NextRequest) {
           enunciado,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(3500),
         cache: "no-store",
       });
 
       if (backendResp.ok) {
         const backendData = await backendResp.json();
-        if (backendData.model_a && backendData.model_b) {
-          // Backend já retorna no formato correto (objetos com name/role/content)
+        if (backendData.model_a && backendData.model_b && backendData.provider !== "fallback") {
           return NextResponse.json({
             model_a: backendData.model_a,
             model_b: backendData.model_b,
@@ -153,13 +146,12 @@ export async function POST(req: NextRequest) {
           });
         }
       }
-      // Se backend falhou (não ok), cai para fallback direto
-      console.warn("[Segunda Opinião] Backend falhou ou timeout, acionando fallback Gemini direto");
+      console.warn("[Segunda Opinião] Backend falhou ou timeout (3.5s), acionando inferência direta.");
     } catch (backendErr) {
-      console.warn("[Segunda Opinião] Falha ou timeout na chamada ao backend (8s), acionando fallback:", backendErr);
+      console.warn("[Segunda Opinião] Timeout na chamada ao backend (3.5s), acionando inferência direta:", backendErr instanceof Error ? backendErr.message : backendErr);
     }
 
-    // 2. Fallback Primário: Gemini REST API (Segunda Opinião - dois modelos ortogonais)
+    // 2. Inferência Direta: Gemini REST API -> NVIDIA NIM (Segunda Opinião - dois modelos ortogonais)
     const PROMPT_SISTEMA_COMPARE = `Você é o comparador de modelos do LEMMAS (MathAI Engine).
 Sua tarefa é gerar DOIS pareceres ORTOGONAIS sobre a mesma questão matemática.
 
@@ -192,7 +184,7 @@ INSTRUÇÕES:
 3. NUNCA coloque texto explicativo em português dentro de $...$
 4. Retorne EXCLUSIVAMENTE o objeto JSON especificado`;
 
-    // 2.1 Gemini (primário - rápido, <1.5s)
+    // 2.1 Gemini (primário - rápido, ~1.8s)
     try {
       const geminiRes = await withDeadline(
         generateGeminiContent({
@@ -226,17 +218,16 @@ INSTRUÇÕES:
             content: contentB,
           },
           sintese: parsed.sintese || parsed.synthesis || "",
-          provider: "gemini-flash-lite",
+          provider: "google",
           model_used: geminiRes.model,
         });
       }
     } catch (geminiErr) {
-      console.warn("[Segunda Opinião] Gemini indisponível, acionando NVIDIA NIM:", geminiErr);
+      console.warn("[Segunda Opinião] Gemini indisponível, acionando NVIDIA NIM:", geminiErr instanceof Error ? geminiErr.message : geminiErr);
     }
 
     // 2.2 NVIDIA NIM (secundário - Nemotron Reasoning)
-    // Só tenta se ainda houver orçamento na rota; senão vai direto ao 503.
-    if (process.env.NVIDIA_API_KEY && remainingMs() > 4000) {
+    if (getNvidiaApiKeys().length > 0 && remainingMs() > 4000) {
       try {
         const nvidiaRes = await withDeadline(
           generateNvidiaContent({
@@ -274,7 +265,7 @@ INSTRUÇÕES:
           });
         }
       } catch (nvidiaErr) {
-        console.warn("[Segunda Opinião] Fallback NVIDIA NIM falhou:", nvidiaErr);
+        console.warn("[Segunda Opinião] Fallback NVIDIA NIM falhou:", nvidiaErr instanceof Error ? nvidiaErr.message : nvidiaErr);
       }
     }
 

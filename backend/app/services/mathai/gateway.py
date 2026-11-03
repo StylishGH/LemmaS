@@ -32,21 +32,21 @@ logger = logging.getLogger(__name__)
 
 # Modelos canônicos permitidos pela diretriz de estabilidade (AGENTS.md)
 GEMINI_MODELS_CASCADE = [
+    "gemini-3-flash-preview",
     "gemini-flash-lite-latest",
     "gemini-3.5-flash-lite",
-    "gemini-3-flash-preview",
     "gemini-3.6-flash",
 ]
 
 # Modelos validados da NVIDIA NIM presentes no endpoint oficial
 NVIDIA_NIM_MODELS = [
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-    "nvidia/nemotron-3-ultra-550b-a55b",
     "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "nvidia/nemotron-3-ultra-550b-a55b",
 ]
 
 NVIDIA_VISION_MODELS = [
-    "meta/llama-3.2-11b-vision-instruct",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b",
     "meta/llama-3.2-90b-vision-instruct",
 ]
 
@@ -227,6 +227,8 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             }
             if json_output:
                 payload["response_format"] = {"type": "json_object"}
+            if self.name == "nvidia" or "nemotron" in str(model).lower():
+                payload["chat_template_kwargs"] = {"enable_thinking": False}
 
             try:
                 logger.info("[CID:%s] AI Provider [%s] call started; model=%s; timeout=%.1fs; task_type=%s", cid, self.name, model, effective_read, task_type)
@@ -390,11 +392,17 @@ class GeminiProvider(BaseLLMProvider):
                     user_parts.append(f"[{role.upper()}]: {m.get('content', '')}")
 
             prompt_text = "\n\n".join(user_parts)
+            thinking_cfg = (
+                types.ThinkingConfig(thinking_budget=0)
+                if hasattr(types, "ThinkingConfig")
+                else None
+            )
             config = types.GenerateContentConfig(
                 system_instruction=sys_prompt if sys_prompt else None,
                 temperature=temperature,
                 max_output_tokens=max_tokens,
                 response_mime_type="application/json" if json_output else "text/plain",
+                **({"thinking_config": thinking_cfg} if thinking_cfg else {}),
             )
 
             candidate_models = [preferred_model] if preferred_model else self.models_cascade
@@ -447,11 +455,9 @@ class GeminiProvider(BaseLLMProvider):
                     if any(code in err_str for code in ("402", "prepayment credits are depleted")):
                         logger.error("[CID:%s] [Gemini] Erro 402 permanente: créditos esgotados. Interrompendo provedor.", cid, err_str[:150])
                         break
-                    # Erros transientes ou modelo não encontrado -> Tenta próximo da cascata
-                    if any(code in err_str for code in ("404", "429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
-                        logger.warning("[CID:%s] [Gemini] Erro transiente (%s) no modelo %s. Tentando próximo da cascata.", cid, err_str[:100], model_name)
-                        continue
-                    break
+                    # Erros transientes, timeout ou modelo não encontrado -> Tenta próximo da cascata
+                    logger.warning("[CID:%s] [Gemini] Erro/timeout (%s) no modelo %s. Tentando próximo da cascata.", cid, err_str[:100], model_name)
+                    continue
         except Exception as err:
             logger.warning("[CID:%s] [Gemini SDK] Falha de inicialização: %s", cid, str(err)[:200])
 
