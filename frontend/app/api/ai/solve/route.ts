@@ -67,7 +67,7 @@ FORMATO DE RESPOSTA OBRIGATÓRIO (JSON PURO):
   "alternativa_identificada": "A | B | C | D | E | null",
   "etapas_corretas": ["Passo 1: ... em $...$", "Passo 2: ..."],
   "erros_identificados": ["Erro identificado: ... em $...$"],
-  "feedback_latex": "Feedback pedagógico estruturado para o estudante com equações em $...$ e $$...$$",
+  "feedback_latex": "Veredito curto e direto (1 a 2 frases sintetizando a validação ou a falha principal, SEM repetir passo a passo as contas que já constam em etapas_corretas ou no gabarito), com expressões em $...$",
   "precisa_revisao_humana": false,
   "transcricao_latex": "equação ou desenvolvimento transcrito em LaTeX delimitado por $...$ ou $$...$$",
   "passos": ["Passo 1: ...", "Passo 2: ..."],
@@ -264,7 +264,7 @@ INSTRUÇÕES:
 1. Se houver imagem, transcreva fielmente as passagens matemáticas manuscritas para LaTeX no campo "transcricao_latex".
 2. Identifique os passos corretos e eventuais falhas (erros de conta, sinal, álgebra ou conceito).
 3. Atribua o veredito estrito: "aprovado", "parcial", "sem_desenvolvimento" ou "incorreto".
-4. Redija um feedback didático estruturado em LaTeX ($...$ e $$...$$) explicando as razões pedagógicas da avaliação.
+4. No campo "feedback_latex", escreva um veredito curto e direto (máximo de 1 a 2 frases sintetizando a validação ou o erro central) em LaTeX ($...$), SEM narrar novamente passo a passo as contas que já estão listadas em "etapas_corretas".
 5. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`;
 
     // 2.1. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
