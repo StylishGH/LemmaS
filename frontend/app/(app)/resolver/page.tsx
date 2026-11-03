@@ -310,6 +310,22 @@ function renderDificuldadeBadge(dificuldade?: number | null) {
   );
 }
 
+function resumirVereditoAprovado(feedback: string | null | undefined, temPassos: boolean): string {
+  const clean = (feedback || "").trim();
+  if (!clean || !temPassos) return clean;
+  // Corta narrativas redundantes que repetem o passo a passo já listado em Passos Verificados
+  const stepIntroRegex = /\s+(?:Primeiro,|Primeiramente,|Inicialmente,|No primeiro passo|Para isso,|Você partiu|Ele partiu|Ao expandir|Como a expressão)/i;
+  const match = clean.match(stepIntroRegex);
+  if (match && match.index && match.index >= 20) {
+    const candidate = clean.slice(0, match.index).trim();
+    const dollarCount = (candidate.match(/\$/g) || []).length;
+    if (dollarCount % 2 === 0) {
+      return candidate;
+    }
+  }
+  return clean;
+}
+
 function ResolverContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1501,26 +1517,39 @@ function ResolverContent() {
   // TELA DE RESULTADOS DO SIMULADO (PÓS-PROVA)
   // ==========================================
   if (sessionMode === "result") {
+    const getQuestionOutcome = (q: Question, idx: number): "acerto" | "erro" | "em_branco" => {
+      const resp = answers[q.id];
+      if (hint5Used[idx] || resp === "DICA_5_REVELADA") {
+        return "erro";
+      }
+      const discEval = discursiveEvaluations[q.id];
+      if (discEval && !discEval.precisa_revisao_humana && discEval.veredito !== "sem_desenvolvimento") {
+        return discEval.veredito === "aprovado" || discEval.resultado_final_correto ? "acerto" : "erro";
+      }
+      const subRes = submitResults[idx];
+      if (subRes) {
+        return subRes.acertou ? "acerto" : "erro";
+      }
+      const rawGab = (q.gabarito || "").trim();
+      if (!resp || !rawGab) {
+        return "em_branco";
+      }
+      return resp.trim().toUpperCase() === rawGab.toUpperCase() ? "acerto" : "erro";
+    };
+
     let acertos = 0;
     let erros = 0;
     let emBranco = 0;
 
-    questions.forEach((q) => {
-              const resp = answers[q.id];
-              const gabarito = (q.gabarito || "").trim().toUpperCase();
-              if (!resp) {
-                emBranco++;
-              } else if (!gabarito) {
-                // Gabarito ausente: não conta como acerto nem erro, preserva distinção
-                emBranco++;
-              } else if (resp.toUpperCase() === gabarito) {
-                acertos++;
-              } else {
-                erros++;
-              }
-            });
+    questions.forEach((q, idx) => {
+      const outcome = getQuestionOutcome(q, idx);
+      if (outcome === "acerto") acertos++;
+      else if (outcome === "erro") erros++;
+      else emBranco++;
+    });
 
-    const taxa = Math.round((acertos / (questions.length || 1)) * 100);
+    const totalQuestoesResultado = questions.length || 1;
+    const taxa = Math.round((acertos / totalQuestoesResultado) * 100);
     const tempoGastoSegundos = sessionType === "simulado" 
       ? Math.max(0, totalTimeInitial - timeLeft)
       : timeLeft;
@@ -1528,14 +1557,13 @@ function ResolverContent() {
     const tempoSeg = tempoGastoSegundos % 60;
 
     // Filtra questões para exibição na lista de revisão
-    const questoesRevisao = questions.filter((q) => {
-          const resp = answers[q.id];
-          const gabarito = (q.gabarito || "").trim().toUpperCase();
-          if (reviewFilter === "acertos") return resp && gabarito && resp.toUpperCase() === gabarito;
-          if (reviewFilter === "erros") return resp && gabarito && resp.toUpperCase() !== gabarito;
-          if (reviewFilter === "em_branco") return !resp || !gabarito;
-          return true;
-        });
+    const questoesRevisao = questions.filter((q, idx) => {
+      const outcome = getQuestionOutcome(q, idx);
+      if (reviewFilter === "acertos") return outcome === "acerto";
+      if (reviewFilter === "erros") return outcome === "erro";
+      if (reviewFilter === "em_branco") return outcome === "em_branco";
+      return true;
+    });
 
     return (
       <div className="max-w-4xl mx-auto py-8 space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
@@ -1545,7 +1573,7 @@ function ResolverContent() {
             🏆
           </div>
           <h2 className="font-serif-math text-3xl font-semibold text-slate-900 dark:text-[#f5f0df]">
-            Simulado Finalizado!
+            {sessionType === "treino" ? "Treino Finalizado!" : "Simulado Finalizado!"}
           </h2>
           <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 max-w-xl mx-auto">
             Confira o seu aproveitamento, a distribuição de acertos e analise agora cada questão com a <strong>MathAI Engine</strong> para entender as pegadinhas e os lemas teóricos.
@@ -1571,7 +1599,7 @@ function ResolverContent() {
               {erros}
             </div>
             <div className="text-xs font-semibold text-rose-800 dark:text-rose-300">
-              Erros ({Math.round((erros / questions.length) * 100)}%)
+              Erros ({Math.round((erros / totalQuestoesResultado) * 100)}%)
             </div>
             <div className="text-[10px] text-rose-600/80">Divergências do Gabarito</div>
           </div>
@@ -1582,7 +1610,7 @@ function ResolverContent() {
               {emBranco}
             </div>
             <div className="text-xs font-semibold text-amber-800 dark:text-[#d9b452]">
-              Em Branco ({Math.round((emBranco / questions.length) * 100)}%)
+              Em Branco ({Math.round((emBranco / totalQuestoesResultado) * 100)}%)
             </div>
             <div className="text-[10px] text-amber-600/80">Não respondidas</div>
           </div>
@@ -1595,7 +1623,9 @@ function ResolverContent() {
             <div className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               Tempo Gasto
             </div>
-            <div className="text-[10px] text-slate-400">Duração da prova</div>
+            <div className="text-[10px] text-slate-400">
+              {sessionType === "treino" ? "Duração do treino" : "Duração da prova"}
+            </div>
           </div>
         </div>
 
@@ -1668,11 +1698,18 @@ function ResolverContent() {
           {/* LISTA DAS QUESTÕES REVISADAS */}
           <div className="space-y-4">
             {questoesRevisao.map((q) => {
-                          const originalIndex = questions.findIndex((item) => item.id === q.id);
-                          const alunoResp = answers[q.id];
-                          const gabarito = (q.gabarito || "").trim().toUpperCase();
-                          const acertou = alunoResp && gabarito && alunoResp.toUpperCase() === gabarito;
-                          const isEmBranco = !alunoResp;
+              const originalIndex = questions.findIndex((item) => item.id === q.id);
+              const idx = originalIndex >= 0 ? originalIndex : 0;
+              const outcome = getQuestionOutcome(q, idx);
+              const acertou = outcome === "acerto";
+              const isEmBranco = outcome === "em_branco";
+              const discEval = discursiveEvaluations[q.id];
+              const isHint5 = Boolean(hint5Used[idx] || answers[q.id] === "DICA_5_REVELADA");
+              const rawAlunoResp = answers[q.id];
+              const alunoResp = rawAlunoResp && rawAlunoResp !== "DICA_5_REVELADA" ? rawAlunoResp : undefined;
+              const rawGabarito = (q.gabarito || "").trim();
+              const isSingleLetterGab = /^[A-E]$/i.test(rawGabarito);
+              const gabaritoUpper = isSingleLetterGab ? rawGabarito.toUpperCase() : rawGabarito;
               const isExpanded = expandedReviewId === q.id;
               const iaResult = resolucoesIa[q.id];
               const isCarregandoIa = loadingResolucaoIa[q.id];
@@ -1691,7 +1728,7 @@ function ResolverContent() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <span className="font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 font-bold">
-                        Questão #{originalIndex + 1}
+                        Questão #{idx + 1}
                       </span>
                       <span className="text-xs text-slate-500 font-semibold">
                         {q.banca} {q.ano} · {q.materia} ({q.topico})
@@ -1703,18 +1740,35 @@ function ResolverContent() {
 
                     <div className="flex items-center gap-2">
                       {acertou ? (
-                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold">
-                                                <CheckCircle2 className="w-3.5 h-3.5" /> Acertou ({alunoResp})
-                                              </span>
-                                            ) : isEmBranco ? (
-                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/30 text-xs font-bold">
-                                                <HelpCircle className="w-3.5 h-3.5" /> Em Branco {gabarito ? `(Correta: ${gabarito})` : `(Sem gabarito)`}
-                                              </span>
-                                            ) : (
-                                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold">
-                                                <XCircle className="w-3.5 h-3.5" /> Errou: Marcou ({alunoResp}) {gabarito ? `· Correta (${gabarito})` : `· Sem gabarito`}
-                                              </span>
-                                            )}
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{alunoResp ? `Acertou (${alunoResp})` : "Acertou (Discursiva Validada)"}</span>
+                        </span>
+                      ) : isEmBranco ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/30 text-xs font-bold">
+                          <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {isSingleLetterGab
+                              ? `Em Branco (Correta: ${gabaritoUpper})`
+                              : rawGabarito
+                              ? "Em Branco"
+                              : "Em Branco (Sem gabarito)"}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold">
+                          <XCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {isSingleLetterGab && alunoResp
+                              ? `Errou: Marcou (${alunoResp}) · Correta (${gabaritoUpper})`
+                              : isHint5
+                              ? "Errou (Consulta Nível 5)"
+                              : discEval?.veredito === "parcial"
+                              ? "Crédito Parcial"
+                              : "Desenvolvimento Incorreto"}
+                          </span>
+                        </span>
+                      )}
 
                       <button
                         type="button"
@@ -1731,6 +1785,34 @@ function ResolverContent() {
                   <div className="text-sm font-medium text-slate-800 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
                     <MathText text={q.enunciado_limpo || q.enunciado} />
                   </div>
+
+                  {/* GABARITO KATEX PARA QUESTÕES DISCURSIVAS OU COM EXPRESSÃO MATEMÁTICA */}
+                  {!isSingleLetterGab && rawGabarito && (
+                    <div
+                      className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                        isEmBranco
+                          ? "bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border-amber-500/30"
+                          : acertou
+                          ? "bg-emerald-500/10 text-slate-800 dark:text-[#f5f0df] border-emerald-500/30"
+                          : "bg-rose-500/10 text-slate-800 dark:text-[#f5f0df] border-rose-500/30"
+                      }`}
+                    >
+                      <span
+                        className={`font-bold block text-[11px] uppercase tracking-wider ${
+                          isEmBranco
+                            ? "text-amber-700 dark:text-[#d9b452]"
+                            : acertou
+                            ? "text-emerald-700 dark:text-emerald-400"
+                            : "text-rose-700 dark:text-rose-400"
+                        }`}
+                      >
+                        {isEmBranco ? "Correta / Gabarito Oficial:" : "Gabarito / Resolução de Referência Oficial:"}
+                      </span>
+                      <div className="text-slate-800 dark:text-[#dedbd0] leading-relaxed whitespace-pre-line">
+                        <MathText text={rawGabarito} />
+                      </div>
+                    </div>
+                  )}
 
                   {/* ÁREA EXPANDIDA COM IA */}
                   {isExpanded && (
@@ -2207,7 +2289,7 @@ function ResolverContent() {
         </div>
       )}
 
-      {currentDiagnostico && (
+      {currentDiagnostico && !isDiscursiva && (
         <div className="text-left p-5 rounded-xl bg-white dark:bg-[var(--bg-card)] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-purple-500/20">
             <div className="flex items-center gap-2">
@@ -2239,7 +2321,7 @@ function ResolverContent() {
             <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-purple-500/20 space-y-1">
               <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
               <div className="text-slate-800 dark:text-zinc-200">
-                <MathText text={currentDiagnostico.transcricao_latex} />
+                <MathText text={currentDiagnostico.transcricao_latex.replace(/^\\+\s*/gm, "")} />
               </div>
             </div>
           )}
@@ -2612,10 +2694,7 @@ function ResolverContent() {
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      [DISCURSIVA VALIDADA]
-                    </span>
-                    <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400">
-                      ✓ Discursiva Validada pela Banca
+                      Demonstração Validada
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2624,22 +2703,33 @@ function ResolverContent() {
                         {discursiveEval.modelo}
                       </span>
                     )}
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
-                      Demonstração Validada
-                    </span>
+                    {discursiveEval.confianca !== undefined && (
+                      <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        Confiança: {typeof discursiveEval.confianca === "number" ? `${Math.round(discursiveEval.confianca * 100)}%` : discursiveEval.confianca}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="leading-relaxed space-y-1">
-                  <strong className="text-emerald-700 dark:text-emerald-400 block text-xs">Parecer da Banca:</strong>
+                  <strong className="text-emerald-700 dark:text-emerald-400 block text-xs">Veredito da Banca:</strong>
                   <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
-                    <MathText text={discursiveEval.feedback_latex} />
+                    <MathText text={resumirVereditoAprovado(discursiveEval.feedback_latex, discursiveEval.etapas_corretas.length > 0)} />
                   </div>
                 </div>
 
+                {discursiveEval.transcricao_latex && (
+                  <div className="p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-emerald-500/20 space-y-1">
+                    <span className="font-bold text-[10px] text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
+                    <div className="text-slate-800 dark:text-zinc-200">
+                      <MathText text={discursiveEval.transcricao_latex.replace(/^\\+\s*/gm, "")} />
+                    </div>
+                  </div>
+                )}
+
                 {discursiveEval.etapas_corretas.length > 0 && (
                   <div className="space-y-1 pt-1.5 border-t border-emerald-500/20">
-                    <strong className="text-emerald-700 dark:text-emerald-400 block font-semibold text-[11px]">Passos Verificados pela Banca:</strong>
+                    <strong className="text-emerald-700 dark:text-emerald-400 block font-semibold text-[11px]">Passos Verificados:</strong>
                     <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
                       {discursiveEval.etapas_corretas.map((etapa, idx) => (
                         <li key={idx}><MathText text={etapa} /></li>
@@ -2657,15 +2747,14 @@ function ResolverContent() {
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      [CRÉDITO PARCIAL]
-                    </span>
-                    <span className="font-bold text-xs text-amber-700 dark:text-[#d9b452]">
-                      ⚠ Crédito Parcial Atribuído
+                      Crédito Parcial
                     </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 border border-amber-500/40 text-amber-700 dark:text-amber-300">
-                    Validação Parcial
-                  </span>
+                  {discursiveEval.modelo && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-amber-500/20 font-mono">
+                      {discursiveEval.modelo}
+                    </span>
+                  )}
                 </div>
 
                 <div className="leading-relaxed space-y-1">
@@ -2719,15 +2808,14 @@ function ResolverContent() {
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white shadow-xs">
                         <XCircle className="w-3.5 h-3.5" />
-                        [DESENVOLVIMENTO INCORRETO]
-                      </span>
-                      <span className="font-bold text-xs text-rose-700 dark:text-rose-400">
-                        ✗ Desenvolvimento Incorreto
+                        Desenvolvimento Incorreto
                       </span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 border border-rose-500/40 text-rose-700 dark:text-rose-300">
-                      Demonstração Não Validada
-                    </span>
+                    {discursiveEval.modelo && (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-rose-500/20 font-mono">
+                        {discursiveEval.modelo}
+                      </span>
+                    )}
                   </div>
 
                   <div className="leading-relaxed space-y-1">
@@ -2751,24 +2839,39 @@ function ResolverContent() {
               )
             )}
 
-            {/* GABARITO DE REFERÊNCIA & CRONOGRAMA SM-2 (UNIFICADO NO CONTAINER DISCURSIVO) */}
-            <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2 text-xs">
-              {currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex] && (
-                <div className="space-y-1">
-                  <span className="font-bold text-slate-700 dark:text-zinc-200 text-xs block">
-                    Gabarito / Resolução de Referência Oficial:
-                  </span>
-                  <div className="text-slate-800 dark:text-zinc-300 leading-relaxed text-xs p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
-                    <MathText text={currentQ.gabarito} />
+            {/* GABARITO DE REFERÊNCIA & CRONOGRAMA SM-2 (EXIBIDO 1X SÓ) */}
+            {((currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex]) || currentResult?.sm2) && (
+              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2 text-xs">
+                {currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex] && (
+                  <div className="space-y-1">
+                    <span className="font-bold text-slate-700 dark:text-zinc-200 text-xs block">
+                      Gabarito / Resolução de Referência Oficial:
+                    </span>
+                    <div className="text-slate-800 dark:text-zinc-300 leading-relaxed text-xs p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
+                      <MathText text={currentQ.gabarito} />
+                    </div>
                   </div>
+                )}
+                {currentResult?.sm2 && (
+                  <div className="text-xs text-slate-600 dark:text-zinc-400 pt-1.5 border-t border-slate-200/50 dark:border-white/10">
+                    SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* LEMA / PRÓXIMO PASSO EM BOX SEPARADO */}
+            {discursiveEval.dica_proximo_passo && !hint5Used[currentIndex] && (
+              <div className="p-4 rounded-xl border border-indigo-500/25 dark:border-amber-500/25 bg-indigo-500/5 dark:bg-amber-500/5 space-y-1.5 text-xs">
+                <span className="font-bold text-indigo-700 dark:text-[#d9b452] uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Lema / Próximo Passo:
+                </span>
+                <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+                  <MathText text={discursiveEval.dica_proximo_passo} />
                 </div>
-              )}
-              {currentResult?.sm2 && (
-                <div className="text-xs text-slate-600 dark:text-zinc-400 pt-1.5 border-t border-slate-200/50 dark:border-white/10">
-                  SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -2890,8 +2993,8 @@ function ResolverContent() {
           )
         )}
 
-        {/* MODO TREINO: FEEDBACK IMEDIATO DE SUBMISSÃO E GABARITO OFICIAL */}
-        {!isSimuladoAtivo && currentResult && (
+        {/* MODO TREINO: FEEDBACK IMEDIATO DE SUBMISSÃO E GABARITO OFICIAL (APENAS OBJETIVAS) */}
+        {!isSimuladoAtivo && currentResult && !isDiscursiva && (
           <div className="space-y-3">
             {!isDiscursiva && (
               <div className={`p-4 rounded-xl border space-y-2 ${
