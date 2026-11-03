@@ -5,12 +5,14 @@ convertendo a caligrafia em notação matemática LaTeX padronizada e segmentada
 """
 
 import base64
+import json
 import time
 from typing import Any, Dict, Optional, Tuple
 
 from app.core.config import settings
+from app.core.json_safe import safe_parse_json_with_latex
 from app.core.security import compute_sha256
-from app.services.mathai.gateway import NVIDIA_VISION_MODELS
+from app.services.mathai.gateway import GEMINI_MODELS_CASCADE, NVIDIA_VISION_MODELS
 
 PROMPT_SISTEMA_OCR_MATEMATICO = r"""Você é o Especialista em Visão Multimodal e OCR Matemático do MathAI.
 Sua única tarefa é ler e transcrever fielmente as resoluções e equações manuscritas na imagem para LaTeX limpo.
@@ -48,7 +50,7 @@ class MultimodalVisionProcessor:
         image_bytes, mime_type = self._normalize_image_input(image_data, mime_type)
         input_hash = compute_sha256(image_bytes)
 
-        # 1. Google Gemini Multimodal Vision (primário - velocidade < 0.8s e alta acurácia em LaTeX)
+        # 1. Google Gemini Multimodal Vision (primário - alta acurácia em LaTeX)
         if settings.has_gemini and settings.GEMINI_FALLBACK_ENABLED:
             ocr_result = self._call_gemini_vision(image_bytes, mime_type)
             if ocr_result:
@@ -57,13 +59,13 @@ class MultimodalVisionProcessor:
                     {
                         "latency_ms": latency_ms,
                         "input_hash": input_hash,
-                        "model_used": "gemini-flash-lite-latest",
+                        "model_used": ocr_result.get("model_used") or "gemini-3-flash-preview",
                         "provider": "google",
                     }
                 )
                 return ocr_result
 
-        # 2. NVIDIA NIM Vision (secundário)
+        # 2. NVIDIA NIM Vision (secundário - Nemotron Super VL / Llama Vision)
         if settings.has_nvidia:
             for model in NVIDIA_VISION_MODELS:
                 ocr_result = self._call_nvidia_vision(image_bytes, mime_type, model)
@@ -110,13 +112,39 @@ class MultimodalVisionProcessor:
         # String base64 pura
         return base64.b64decode(image_data), mime_type
 
+    def _parse_ocr_json(self, text: str) -> Optional[Dict[str, Any]]:
+        if not text:
+            return None
+        try:
+            data = safe_parse_json_with_latex(text)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+        start, end = text.find("{"), text.rfind("}")
+        if start != -1 and end > start:
+            try:
+                data = json.loads(text[start : end + 1])
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                pass
+        return None
+
     def _call_nvidia_vision(
         self, image_bytes: bytes, mime_type: str, model: str
     ) -> Optional[Dict[str, Any]]:
-        """Executa a transcrição OCR via NVIDIA NIM (Llama 3.2 Vision)."""
+        """Executa a transcrição OCR via NVIDIA NIM (Nemotron VL / Llama Vision) com rotação de chaves."""
         try:
-            import json
             import requests
+
+            api_keys = [
+                k for k in (settings.NVIDIA_API_KEY, settings.NVIDIA_API_KEY_2) if k
+            ]
+            # Deduplica preservando ordem
+            api_keys = list(dict.fromkeys(api_keys))
+            if not api_keys:
+                return None
 
             b64 = base64.b64encode(image_bytes).decode("ascii")
             payload = {
@@ -139,22 +167,30 @@ class MultimodalVisionProcessor:
                 ],
                 "temperature": 0.1,
                 "max_tokens": 1536,
+                "chat_template_kwargs": {"enable_thinking": False},
             }
-            resp = requests.post(
-                "https://integrate.api.nvidia.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-                timeout=(3.0, 25.0),
-            )
-            if resp.status_code != 200:
+
+            resp = None
+            for idx, key in enumerate(api_keys):
+                resp = requests.post(
+                    "https://integrate.api.nvidia.com/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                    timeout=(3.0, 12.0),
+                )
+                if resp.status_code not in (401, 403) or idx == len(api_keys) - 1:
+                    break
+
+            if not resp or resp.status_code != 200:
                 return None
-            text = (resp.json()["choices"][0]["message"].get("content") or "").strip()
-            start, end = text.find("{"), text.rfind("}")
-            if start != -1 and end > start:
-                data = json.loads(text[start : end + 1])
+
+            msg = resp.json()["choices"][0]["message"]
+            text = (msg.get("content") or msg.get("reasoning_content") or "").strip()
+            data = self._parse_ocr_json(text)
+            if data:
                 return {
                     "transcricao_latex": data.get("transcricao_latex", ""),
                     "passos_detectados": data.get("passos_detectados", []),
@@ -167,43 +203,50 @@ class MultimodalVisionProcessor:
     def _call_gemini_vision(
         self, image_bytes: bytes, mime_type: str
     ) -> Optional[Dict[str, Any]]:
-        """Executa a transcrição OCR via SDK oficial do Google Gemini."""
+        """Executa a transcrição OCR via SDK oficial do Google Gemini com cascata resiliente."""
         try:
             from google import genai
             from google.genai import types
-            import json
 
             client = genai.Client(
                 api_key=self.gemini_key,
-                http_options=types.HttpOptions(timeout=15000),
+                http_options=types.HttpOptions(timeout=7500),
+            )
+            thinking_cfg = (
+                types.ThinkingConfig(thinking_budget=0)
+                if hasattr(types, "ThinkingConfig")
+                else None
             )
             config = types.GenerateContentConfig(
                 system_instruction=PROMPT_SISTEMA_OCR_MATEMATICO,
                 response_mime_type="application/json",
-                temperature=0.1,  # Máxima fidelidade na transcrição
+                temperature=0.1,
+                max_output_tokens=1536,
+                **({"thinking_config": thinking_cfg} if thinking_cfg else {}),
             )
 
             part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
             prompt = "Transcreva fielmente para LaTeX toda a caligrafia e equações desta folha de caderno ou tablet."
 
-            # Prioriza gemini-flash-lite-latest conforme regra AGENTS.md
-            response = client.models.generate_content(
-                model="gemini-flash-lite-latest",
-                contents=[part, prompt],
-                config=config,
-            )
+            for model_name in GEMINI_MODELS_CASCADE[:3]:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[part, prompt],
+                        config=config,
+                    )
 
-            if response and response.text:
-                text = response.text.strip()
-                start = text.find("{")
-                end = text.rfind("}")
-                if start != -1 and end != -1 and end > start:
-                    data = json.loads(text[start : end + 1])
-                    return {
-                        "transcricao_latex": data.get("transcricao_latex", ""),
-                        "passos_detectados": data.get("passos_detectados", []),
-                        "legibilidade": data.get("legibilidade", "media"),
-                    }
+                    if response and response.text:
+                        data = self._parse_ocr_json(response.text.strip())
+                        if data:
+                            return {
+                                "transcricao_latex": data.get("transcricao_latex", ""),
+                                "passos_detectados": data.get("passos_detectados", []),
+                                "legibilidade": data.get("legibilidade", "media"),
+                                "model_used": model_name,
+                            }
+                except Exception:
+                    continue
         except Exception:
             pass
         return None
