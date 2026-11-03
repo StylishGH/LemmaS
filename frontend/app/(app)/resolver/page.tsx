@@ -787,8 +787,21 @@ function ResolverContent() {
     setLoadingHint(true);
     setHintError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
+      let accessToken: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        accessToken = session?.access_token || null;
+        if (!accessToken) {
+          const { data: refreshed } = await supabase.auth.refreshSession();
+          accessToken = refreshed?.session?.access_token || null;
+        }
+      } catch {
+        // Prossegue se autenticado via perfil/cookie local
+      }
+      if (!accessToken && !isAuthenticated && profile?.isGuest) {
+        setShowAuthModal(true);
+        throw new Error("Faça login para consultar o Tutor Socrático.");
+      }
 
       let prefPedagogica = profile?.pedagogicalPreference || "conceitual";
       const motivacoes = profile?.motivacoesSelecionadas || [];
@@ -805,9 +818,12 @@ function ResolverContent() {
         prefPedagogica = "competitivo";
       }
 
+      const hintHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (accessToken) hintHeaders["Authorization"] = "Bearer " + accessToken;
+
       const res = await fetch("/api/ai/hint", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+        headers: hintHeaders,
         body: JSON.stringify({
           exercise_id: q.id,
           id: q.id,
@@ -989,14 +1005,26 @@ function ResolverContent() {
     setLoadingDiscursive(true);
     setLoadingIa(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      let accessToken: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        accessToken = session?.access_token || null;
+        if (!accessToken) {
+          const { data: refreshed } = await supabase.auth.refreshSession();
+          accessToken = refreshed?.session?.access_token || null;
+        }
+      } catch {
+        // Prossegue se autenticado via perfil/cookie local
+      }
+      if (!accessToken && !isAuthenticated && profile?.isGuest) {
         setShowAuthModal(true);
         return;
       }
 
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      headers["Authorization"] = "Bearer " + session.access_token;
+      if (accessToken) {
+        headers["Authorization"] = "Bearer " + accessToken;
+      }
 
       const res = await fetch("/api/ai/solve", {
         method: "POST",
