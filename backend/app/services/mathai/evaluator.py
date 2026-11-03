@@ -287,13 +287,22 @@ Instruções:
             text = "\n".join(lines).strip()
 
         parsed: Optional[Dict[str, Any]] = None
-        start = text.find("{")
-        end = text.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            try:
-                parsed = json.loads(text[start : end + 1])
-            except Exception:
-                parsed = None
+        try:
+            from app.core.json_safe import safe_parse_json_with_latex
+            candidate_parsed = safe_parse_json_with_latex(text)
+            if isinstance(candidate_parsed, dict):
+                parsed = candidate_parsed
+        except Exception:
+            parsed = None
+
+        if not parsed:
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                try:
+                    parsed = json.loads(text[start : end + 1])
+                except Exception:
+                    parsed = None
 
         clean_input = fallback_text.strip()
         has_verifiable_development, is_inconclusive, reason = detect_mathematical_development(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
-import { generateNvidiaContent } from "@/lib/nvidia";
+import { generateNvidiaContent, getNvidiaApiKeys } from "@/lib/nvidia";
 import { safeParseJsonWithLatex } from "@/lib/json-safe";
 
 const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
@@ -137,14 +137,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1. No modo de avaliação, tenta o Backend FastAPI (tolerância ágil de 3.5s para evitar congelamento por cold-start)
-    if (!isExplanation) {
-      let backendFailure = "O backend não retornou uma avaliação estruturada.";
+    // 1. No modo de avaliação, tenta o Backend FastAPI (tolerância curta de 4.0s para não bloquear o fallback direto)
+    if (!isExplanation && authorization?.startsWith("Bearer ")) {
       try {
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (authorization?.startsWith("Bearer ")) {
-          headers["Authorization"] = authorization;
-        }
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          Authorization: authorization,
+        };
 
         const response = await fetch(BACKEND_URL + "/api/tutor/evaluate", {
           method: "POST",
@@ -156,7 +155,7 @@ export async function POST(req: NextRequest) {
             imagem_base64: cleanImage,
             mime_type: mimeType,
           }),
-          signal: AbortSignal.timeout(25000),
+          signal: AbortSignal.timeout(4000),
           cache: "no-store",
         });
 
@@ -168,79 +167,67 @@ export async function POST(req: NextRequest) {
           } catch {
             data = { detail: raw.slice(0, 500) };
           }
-          if (data.veredito || data.status_resolucao) {
-            const rawVeredito = data.veredito || (data.status_resolucao === "correto" ? "aprovado" : data.status_resolucao === "erro_conta_sinal" ? "parcial" : "incorreto");
+          // Só retorna se o backend de fato produziu um veredito válido (e não um fallback inconclusivo por falha de chave antiga no Render)
+          if (
+            (data.veredito || data.status_resolucao) &&
+            data.model_provider !== "fallback" &&
+            !data.precisa_revisao_humana
+          ) {
+            const rawVeredito =
+              data.veredito ||
+              (data.status_resolucao === "correto"
+                ? "aprovado"
+                : data.status_resolucao === "erro_conta_sinal"
+                  ? "parcial"
+                  : "incorreto");
             return NextResponse.json({
               ...data,
               veredito: rawVeredito,
-              desenvolvimento_presente: data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
-              resultado_final_correto: data.resultado_final_correto ?? (rawVeredito === "aprovado"),
+              desenvolvimento_presente:
+                data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
+              resultado_final_correto:
+                data.resultado_final_correto ?? (rawVeredito === "aprovado"),
               alternativa_identificada: data.alternativa_identificada || data.alternativa || null,
               etapas_corretas: data.etapas_corretas || data.passos || [],
-              erros_identificados: data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
-              feedback_latex: data.feedback_latex || data.diagnostico || "Avaliação discursiva concluída com sucesso.",
+              erros_identificados:
+                data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
+              feedback_latex:
+                data.feedback_latex ||
+                data.diagnostico ||
+                "Avaliação discursiva concluída com sucesso.",
               precisa_revisao_humana: Boolean(data.precisa_revisao_humana),
-              status_resolucao: data.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto"),
-              diagnostico: data.diagnostico || data.feedback_latex || "Não foi possível produzir um diagnóstico detalhado.",
+              status_resolucao:
+                data.status_resolucao || (rawVeredito === "aprovado" ? "correto" : "incompleto"),
+              diagnostico:
+                data.diagnostico ||
+                data.feedback_latex ||
+                "Não foi possível produzir um diagnóstico detalhado.",
               modelo: data.model_name || "MathAI Engine",
               provedor: data.model_provider || "fastapi-backend",
               confianca: data.confianca_diagnostico || "alta",
               tokens: (data as any).tokens || {
                 prompt: Math.ceil(((enunciado || "") + (justificativa || "")).length / 4),
-                completion: Math.ceil((String(data.feedback_latex || data.diagnostico || "")).length / 4),
-                total: Math.ceil(((enunciado || "") + (justificativa || "") + String(data.feedback_latex || "")).length / 4),
+                completion: Math.ceil(
+                  String(data.feedback_latex || data.diagnostico || "").length / 4
+                ),
+                total: Math.ceil(
+                  ((enunciado || "") +
+                    (justificativa || "") +
+                    String(data.feedback_latex || "")).length / 4
+                ),
               },
             });
           }
-          backendFailure = "O backend respondeu sem um resultado de avaliação válido.";
-        } else {
-          if (response.status === 401) {
-            return NextResponse.json(
-              { error: "Faça login para enviar sua resolução manuscrita à MathAI Engine." },
-              { status: 401 }
-            );
-          }
-          backendFailure = `O backend da MathAI respondeu com HTTP ${response.status}.`;
         }
       } catch (error) {
-        backendFailure = "O backend da MathAI está indisponível para avaliar a imagem.";
         console.warn(
-          "[Avaliador Cognitivo] Falha ao encaminhar imagem ao backend:",
-          error instanceof Error ? error.name : "erro desconhecido"
-        );
-      }
-
-      if (hasImage) {
-        const feedback =
-          "Não foi possível enviar sua imagem ao MathAI Engine. Tente novamente; a imagem não foi avaliada.";
-        return NextResponse.json(
-          {
-            veredito: "sem_desenvolvimento",
-            desenvolvimento_presente: false,
-            resultado_final_correto: false,
-            etapas_corretas: [],
-            erros_identificados: [],
-            feedback_latex: feedback,
-            precisa_revisao_humana: true,
-            transcricao_latex: "",
-            passos: [],
-            estrategia_identificada: "OCR indisponível",
-            status_resolucao: "incompleto",
-            diagnostico: feedback,
-            metodo_alternativo: null,
-            linha_do_erro: null,
-            dica_proximo_passo: backendFailure,
-            confianca_diagnostico: "baixa",
-            modelo: "MathAI Engine indisponível",
-            provedor: "backend-unavailable",
-            error: backendFailure,
-          },
-          { status: 503 }
+          "[Avaliador Cognitivo] Timeout/indisponibilidade no backend FastAPI (4s), acionando inferência multimodal direta:",
+          error instanceof Error ? error.message : "erro desconhecido"
         );
       }
     }
 
-    // 2. Montagem do prompt para inferência de alta precisão
+    // 2. Montagem do prompt para inferência de alta precisão (Texto + Visão Multimodal OCR)
     const prompt = isExplanation
       ? `Você é o Professor e Tutor de Matemática do LEMMAS (MathAI Engine).
 Apresente a resolução comentada detalhada e explicação axiomática passo a passo para a seguinte questão:
@@ -271,16 +258,16 @@ ${gabarito || "Não informado"}
 
 DESENVOLVIMENTO FORNECIDO PELO ESTUDANTE:
 ${rawJustificativa ? `Justificativa/Dedução em texto:\n${rawJustificativa}` : "(Sem texto digitado; consulte a imagem/rascunho anexado)"}
-${hasImage ? "\n(Foi anexada uma imagem com o rascunho/caligrafia da resolução. Realize a transcrição OCR das equações manuscritas no campo 'transcricao_latex' e avalie os cálculos)." : ""}
+${hasImage ? "\n(Foi anexada uma imagem com o rascunho/caligrafia da resolução. Realize a transcrição OCR fiel das equações manuscritas no campo 'transcricao_latex' e avalie os passos matemáticos)." : ""}
 
 INSTRUÇÕES:
-1. Se houver imagem, transcreva fielmente as passagens matemáticas manuscritas para LaTeX.
+1. Se houver imagem, transcreva fielmente as passagens matemáticas manuscritas para LaTeX no campo "transcricao_latex".
 2. Identifique os passos corretos e eventuais falhas (erros de conta, sinal, álgebra ou conceito).
-3. Atribua o veredito estrito: "aprovado", "parcial" ou "incorreto".
+3. Atribua o veredito estrito: "aprovado", "parcial", "sem_desenvolvimento" ou "incorreto".
 4. Redija um feedback didático estruturado em LaTeX ($...$ e $$...$$) explicando as razões pedagógicas da avaliação.
 5. Retorne EXCLUSIVAMENTE o objeto JSON no formato especificado.`;
 
-    // 2. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
+    // 2.1. Inferência Primária via Gemini REST API (Multimodal com OCR e KaTeX)
     try {
       const geminiRes = await generateGeminiContent({
         prompt,
@@ -293,8 +280,8 @@ INSTRUÇÕES:
             }
           : undefined,
         temperature: 0.15,
-        maxTokens: 1536,
-        timeoutMs: 16000,
+        maxTokens: 2048,
+        timeoutMs: 12000,
       });
 
       const parsed = safeParseJsonWithLatex(geminiRes.text);
@@ -322,7 +309,7 @@ INSTRUÇÕES:
           dica_proximo_passo: parsed.dica_proximo_passo || null,
           confianca_diagnostico: parsed.confianca_diagnostico || "alta",
           modelo: geminiRes.model,
-          provedor: "gemini-flash-lite",
+          provedor: "google",
           tokens: geminiRes.tokens || {
             prompt: Math.ceil((prompt || "").length / 4),
             completion: Math.ceil((geminiRes.text || "").length / 4),
@@ -331,18 +318,24 @@ INSTRUÇÕES:
         });
       }
     } catch (geminiErr) {
-      console.warn("[Avaliador Cognitivo] Gemini indisponível, acionando NVIDIA NIM:", geminiErr);
+      console.warn("[Avaliador Cognitivo] Gemini indisponível, acionando NVIDIA NIM:", geminiErr instanceof Error ? geminiErr.message : geminiErr);
     }
 
-    // 2.2. Inferência de Resiliência via NVIDIA NIM (Nemotron Reasoning / DeepSeek)
-    if (process.env.NVIDIA_API_KEY && !cleanImage) {
+    // 2.2. Inferência de Resiliência via NVIDIA NIM (Suporta Texto via Nemotron e Imagem via Nemotron Super VL)
+    if (getNvidiaApiKeys().length > 0) {
       try {
         const nvidiaRes = await generateNvidiaContent({
           prompt: `${prompt}\n\nIMPORTANTE: Retorne EXCLUSIVAMENTE o objeto JSON válido, sem texto introdutório ou blocos markdown de fechamento fora do JSON.`,
           systemInstruction: PROMPT_SISTEMA_AVALIADOR,
+          inlineImage: cleanImage
+            ? {
+                mimeType,
+                base64Data: cleanImage,
+              }
+            : undefined,
           temperature: 0.15,
-          maxTokens: 1536,
-          timeoutMs: 14000,
+          maxTokens: 2048,
+          timeoutMs: 12000,
         });
 
         const parsed = safeParseJsonWithLatex(nvidiaRes.text);
@@ -379,7 +372,7 @@ INSTRUÇÕES:
           });
         }
       } catch (nvidiaErr) {
-        console.warn("[Avaliador Cognitivo] Fallback NVIDIA NIM falhou:", nvidiaErr);
+        console.warn("[Avaliador Cognitivo] Fallback NVIDIA NIM falhou:", nvidiaErr instanceof Error ? nvidiaErr.message : nvidiaErr);
       }
     }
 

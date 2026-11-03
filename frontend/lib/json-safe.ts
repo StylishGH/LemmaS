@@ -15,6 +15,13 @@ export function safeParseJsonWithLatex<T = any>(raw: string): T {
     clean = clean.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
   }
 
+  // Isola o primeiro objeto JSON { ... } caso o modelo tenha incluído texto introdutório ou conclusivo
+  const firstBrace = clean.indexOf("{");
+  const lastBrace = clean.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    clean = clean.slice(firstBrace, lastBrace + 1);
+  }
+
   // Tenta o parsing nativo direto primeiro (caso o LLM já tenha escapado corretamente)
   try {
     return JSON.parse(clean);
