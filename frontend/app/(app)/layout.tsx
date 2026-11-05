@@ -3,6 +3,8 @@ import "../globals.css";
 import AppNavbar from "@/components/AppNavbar";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import AppBackground from "@/components/AppBackground";
+import FeedbackButton from "@/components/FeedbackButton";
+import FeedbackPopup from "@/components/FeedbackPopup";
 import { BoardFrame } from "../(public)/landing/components/BoardFrame";
 import "../(public)/landing/components/BoardFrame.css";
 
@@ -33,6 +35,9 @@ export default function AppLayout({
 
         {/* BANNER DE ALERTA DE E-MAIL NÃO VERIFICADO */}
         <EmailVerificationBanner />
+
+        <FeedbackButton />
+        <FeedbackPopup />
 
         {/* CONTEÚDO PRINCIPAL CENTRALIZADO */}
         <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
