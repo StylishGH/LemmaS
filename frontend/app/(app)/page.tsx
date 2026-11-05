@@ -33,6 +33,24 @@ interface HistoricoItem {
   confianca: string;
 }
 
+// Objective answers are a single option letter (A–E). Discursive items carry the
+// full model resolution (raw LaTeX) in `gabarito`, which must not be shown inline.
+function formatGabarito(gabarito: string | null | undefined): string | null {
+  const g = (gabarito ?? "").trim();
+  return /^[A-Ea-e]$/.test(g) ? g.toUpperCase() : null;
+}
+
+// Strips internal tags such as "[veredito=aprovado]" and, when the label is long,
+// the trailing parenthetical detail. The full text stays available as a tooltip.
+function formatEstrategia(estrategia: string | null | undefined): { label: string; full: string } {
+  const full = (estrategia ?? "").trim();
+  let label = full.replace(/\s*\[[^\]]*\]\s*/g, " ").trim();
+  if (label.length > 22) {
+    label = label.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  }
+  return { label: label || "—", full };
+}
+
 interface RevisaoItem {
   questao_id: number;
   materia: string;
@@ -594,37 +612,44 @@ export default function DashboardPage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 uppercase tracking-wider text-[10px]">
-                    <th className="pb-2.5 font-semibold">Momento</th>
-                    <th className="pb-2.5 font-semibold">Questão & Assunto</th>
-                    <th className="pb-2.5 font-semibold">Resultado</th>
-                    <th className="pb-2.5 font-semibold">Tempo</th>
-                    <th className="pb-2.5 font-semibold">Estratégia</th>
+                    <th className="pb-2.5 pr-4 font-semibold whitespace-nowrap">Momento</th>
+                    <th className="pb-2.5 pr-4 font-semibold">Questão & Assunto</th>
+                    <th className="pb-2.5 pr-4 font-semibold whitespace-nowrap">Resultado</th>
+                    <th className="pb-2.5 pr-4 font-semibold whitespace-nowrap">Tempo</th>
+                    <th className="pb-2.5 font-semibold whitespace-nowrap">Estratégia</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
-                  {historico.map((h, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-[#1a172c] transition-colors">
-                      <td className="py-3 text-slate-400 dark:text-zinc-500 font-mono text-[11px]">{h.data}</td>
-                      <td className="py-3 font-medium text-slate-800 dark:text-[#f5f0df]">{h.questao}</td>
-                      <td className="py-3">
-                        {h.resultado ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Acertou ({h.gabarito})
+                  {historico.map((h, i) => {
+                    const letra = formatGabarito(h.gabarito);
+                    const estrategia = formatEstrategia(h.estrategia);
+                    return (
+                      <tr key={h.id ?? i} className="hover:bg-slate-50/50 dark:hover:bg-[#1a172c] transition-colors">
+                        <td className="py-3 pr-4 align-middle whitespace-nowrap text-slate-400 dark:text-zinc-500 font-mono text-[11px]">{h.data}</td>
+                        <td className="py-3 pr-4 align-middle font-medium text-slate-800 dark:text-[#f5f0df]">{h.questao}</td>
+                        <td className="py-3 pr-4 align-middle whitespace-nowrap">
+                          {h.resultado ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Acertou{letra ? ` (${letra})` : ""}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold text-[11px]">
+                              <XCircle className="w-3.5 h-3.5 shrink-0" /> Errou
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 pr-4 align-middle whitespace-nowrap font-mono text-slate-600 dark:text-zinc-400">{h.tempo}</td>
+                        <td className="py-3 align-middle">
+                          <span
+                            title={estrategia.full}
+                            className="inline-block whitespace-nowrap px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-[10px] font-medium border border-transparent dark:border-zinc-700"
+                          >
+                            {estrategia.label}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold text-[11px]">
-                            <XCircle className="w-3.5 h-3.5" /> Errou
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 font-mono text-slate-600 dark:text-zinc-400">{h.tempo}</td>
-                      <td className="py-3">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-[10px] font-medium border border-transparent dark:border-zinc-700">
-                          {h.estrategia}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (

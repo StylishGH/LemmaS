@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
           id,
           materia,
           topico,
-          gabarito
+          gabarito,
+          tipo
         )
       `)
       .order("data_hora", { ascending: false });
@@ -144,14 +145,26 @@ export async function GET(req: NextRequest) {
       const tempoSec = (t.tempo_segundos || 0) % 60;
       const tempoFmt = tempoMin > 0 ? `${tempoMin}m ${tempoSec}s` : `${tempoSec}s`;
 
+      // Decode legacy metadata without modifying stored attempts.
+      const estrategiaRaw = String(t.estrategia_usada || "");
+      const veredito = estrategiaRaw.match(/\[veredito=([^\]]+)\]/i)?.[1]?.trim() || null;
+      const estrategia = estrategiaRaw.replace(/\[veredito=[^\]]*\]/gi, "").trim();
+      const tipo = q?.tipo || null;
+      const resposta = String(q?.gabarito || "").trim();
+      const gabarito = tipo !== "discursiva" && /^[A-E]$/i.test(resposta)
+        ? resposta.toUpperCase()
+        : null;
+
       return {
         id: t.id,
         data: momentoStr,
         questao: `Lema #${t.questao_id} · ${q?.materia || "Matemática"} • ${q?.topico || "Tópico Geral"}`,
-        gabarito: q?.gabarito || "—",
+        gabarito,
+        tipo,
+        veredito,
         resultado: t.acertou === 1,
         tempo: tempoFmt,
-        estrategia: t.estrategia_usada || (t.acertou === 1 ? "Resolução Direta" : "Revisão Necessária"),
+        estrategia: estrategia || (t.acertou === 1 ? "Resolução Direta" : "Revisão Necessária"),
         confianca: `${t.confianca_aluno || 4}/5`,
       };
     });
