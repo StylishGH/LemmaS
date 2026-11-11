@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useUserProfile } from "@/lib/use-user";
 import LemaBadge from "@/components/math/LemaBadge";
-import { MathText } from "@/components/math/MathDisplay";
+import { MathPreview } from "@/components/math/MathPreview";
 import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 
 interface HistoricoItem {
@@ -427,7 +427,6 @@ export default function DashboardPage() {
         ) : questoesRecomendadas.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             {questoesRecomendadas.map((q) => {
-              const preview = q.enunciado ? q.enunciado.slice(0, 140) + (q.enunciado.length > 140 ? "..." : "") : "";
               return (
                 <div
                   key={q.id}
@@ -449,8 +448,8 @@ export default function DashboardPage() {
                       {q.topico || q.materia}
                     </div>
 
-                    <div className="text-xs text-slate-600 dark:text-zinc-400 line-clamp-3 leading-relaxed">
-                      <MathText text={preview} />
+                    <div className="text-xs text-slate-600 dark:text-zinc-400 max-h-28 overflow-hidden leading-relaxed">
+                      <MathPreview text={q.enunciado || ""} />
                     </div>
                   </div>
 
