@@ -37,6 +37,20 @@ INSERT INTO public.analytics_admins (email)
 VALUES ('guiguimendes2002@gmail.com')
 ON CONFLICT (email) DO NOTHING;
 
+CREATE OR REPLACE FUNCTION public.is_analytics_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $function$
+    SELECT auth.uid() IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM public.analytics_admins a
+        WHERE a.email = lower(coalesce(auth.jwt() ->> 'email', ''))
+    );
+$function$;
+
 CREATE OR REPLACE FUNCTION public.admin_get_analytics(p_hours INTEGER DEFAULT 24)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -127,3 +141,5 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.admin_get_analytics(INTEGER) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_get_analytics(INTEGER) TO authenticated;
+REVOKE ALL ON FUNCTION public.is_analytics_admin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_analytics_admin() TO authenticated;
