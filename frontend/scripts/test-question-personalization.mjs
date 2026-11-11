@@ -57,3 +57,16 @@ test("subject and combined preferences preserve catalog count, including missing
   assert(combined.questoes.every(q => q.banca === "Escola Naval"));
   assert.equal(new Set(combined.questoes.map(q => q.id)).size, combined.questoes.length);
 });
+
+
+test("deep pages translate offsets correctly after exhausting the preferred cohort", async () => {
+  const preferred = await questions({ banca: "Escola Naval", limit: "1" });
+  const page = Math.ceil(preferred.total / 15) + 1;
+  const remainderIndex = (page - 1) * 15 - preferred.total;
+  const [ranked, reference] = await Promise.all([
+    questions({ banca: "Escola Naval,ENEM", prefer_banca: "Escola Naval", page: String(page) }),
+    questions({ banca: "ENEM", prefer_banca: "Escola Naval", page: String(remainderIndex + 1), limit: "1" }),
+  ]);
+  assert(ranked.questoes.length > 0);
+  assert.equal(ranked.questoes[0].id, reference.questoes[0].id);
+});
