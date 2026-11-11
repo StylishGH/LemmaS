@@ -193,12 +193,12 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "15", 10);
     const offset = (page - 1) * limit;
 
-    const buildBaseQuery = (head = false) => {
+    const buildBaseQuery = (head = false, exactCount = true) => {
       let query = supabase
             .from("questoes")
             .select(
               "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas, lema_id, lema_codigo",
-              { count: "exact", head }
+              { count: exactCount ? "exact" : undefined, head }
             );
 
       // Filtro por Categoria de Banca (ex: "Concurso Militar,Vestibular & Superior,Olimpíadas")
@@ -391,24 +391,39 @@ export async function GET(req: NextRequest) {
     const ordered = (q: typeof query) => q.order("ano", { ascending: false, nullsFirst: false }).order("id", { ascending: false });
     const loadPage = async () => {
       if (!preference) return ordered(query).range(offset, offset + fetchLimit - 1);
-      const counts = await Promise.all(cohorts.map(cohort => buildBaseQuery(true).query.or(cohort)));
-      const failed = counts.find(result => result.error);
-      if (failed) return failed;
-      let start = 0;
-      const pages = [];
-      for (let index = 0; index < cohorts.length; index++) {
-        const size = counts[index].count || 0;
-        const localStart = Math.max(0, offset - start);
-        const localEnd = Math.min(size, offset + limit - start);
-        if (localStart < localEnd) {
-          pages.push(ordered(buildBaseQuery().query.or(cohorts[index])).range(localStart, localEnd - 1));
+      // Fetch the page directly. Counting every cohort first makes even page 1
+      // wait for expensive complementary text searches across the full catalog.
+      const loadRankedRows = async () => {
+        const rows = [];
+        let remainingOffset = offset;
+        for (const cohort of cohorts) {
+          const remaining = limit - rows.length;
+          if (remaining === 0) break;
+          const result = await ordered(buildBaseQuery(false, false).query.or(cohort))
+            .range(remainingOffset, remainingOffset + remaining - 1);
+          if (result.error && result.error.code !== "PGRST103") return result;
+          if (result.error || (remainingOffset > 0 && !result.data?.length)) {
+            // A deep page can lie beyond this cohort. Only then is its exact
+            // size needed to translate the offset into the following cohort.
+            const size = await buildBaseQuery(true).query.or(cohort);
+            if (size.error) return size;
+            remainingOffset = Math.max(0, remainingOffset - (size.count || 0));
+            continue;
+          }
+          rows.push(...(result.data || []));
+          // Fewer rows than requested means this cohort is exhausted.
+          remainingOffset = 0;
         }
-        start += size;
-      }
-      const results = await Promise.all(pages);
-      const failedPage = results.find(result => result.error);
-      if (failedPage) return failedPage;
-      return { ...counts[0], data: results.flatMap(result => result.data || []), count: start };
+        return { data: rows, error: null };
+      };
+      // The total depends on explicit filters, never on profile preferences.
+      const [totalResult, ranked] = await Promise.all([
+        buildBaseQuery(true).query,
+        loadRankedRows(),
+      ]);
+      if (totalResult.error) return totalResult;
+      if (ranked.error) return ranked;
+      return { ...totalResult, data: ranked.data };
     };
 
     // Ordenação padrão inteligente por ano mais recente e id desc (NUNCA id ASC)

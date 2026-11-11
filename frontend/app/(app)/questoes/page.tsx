@@ -168,6 +168,13 @@ export default function BancoQuestoesPage() {
   // Rótulo amigável do foco pedagógico ativo no momento
   const [personalizationEnabled, setPersonalizationEnabled] = useState(true);
   const profilePreferences = useMemo(() => obterFiltrosApiPerfil(profile), [profile]);
+  const profilePreferenceQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (profilePreferences.banca?.length) params.set("prefer_banca", profilePreferences.banca.join(","));
+    if (profilePreferences.materia?.length) params.set("prefer_materia", profilePreferences.materia.join(","));
+    if (profilePreferences.categoria_banca) params.set("prefer_categoria_banca", profilePreferences.categoria_banca);
+    return params.toString();
+  }, [profilePreferences]);
   const perfilAtivoDescricao = personalizationEnabled ? profilePreferences.origemDescricao : null;
   const initialFiltersAppliedRef = useRef(false);
 
@@ -412,6 +419,7 @@ export default function BancoQuestoesPage() {
       return;
     }
     let ignore = false;
+    const controller = new AbortController();
     setLoading(true);
     setLoadError(null);
 
@@ -451,13 +459,11 @@ export default function BancoQuestoesPage() {
     }
     if (lemaFiltro) params.set("lema", lemaFiltro);
     if (personalizationEnabled) {
-      if (profilePreferences.banca?.length) params.set("prefer_banca", profilePreferences.banca.join(","));
-      if (profilePreferences.materia?.length) params.set("prefer_materia", profilePreferences.materia.join(","));
-      if (profilePreferences.categoria_banca) params.set("prefer_categoria_banca", profilePreferences.categoria_banca);
+      new URLSearchParams(profilePreferenceQuery).forEach((value, key) => params.set(key, value));
     }
 
 
-    fetch(`/api/questions?${params.toString()}`)
+    fetch(`/api/questions?${params.toString()}`, { signal: controller.signal })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok || data.error) throw new Error("Não foi possível carregar as questões. Tente novamente.");
@@ -518,6 +524,7 @@ export default function BancoQuestoesPage() {
         }
       })
       .catch((err) => {
+        if (controller.signal.aborted) return;
         console.error("Erro ao carregar questões:", err);
         if (!ignore) {
           setLoadError("Não foi possível carregar as questões. Seus filtros foram mantidos.");
@@ -531,6 +538,7 @@ export default function BancoQuestoesPage() {
 
     return () => {
       ignore = true;
+      controller.abort();
     };
   }, [
     categoriaBancaFiltro,
@@ -548,7 +556,7 @@ export default function BancoQuestoesPage() {
     userLoading,
     retryCount,
     personalizationEnabled,
-    profilePreferences,
+    profilePreferenceQuery,
   ]);
 
   const toggleGabarito = (id: number) => {
