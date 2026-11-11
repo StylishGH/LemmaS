@@ -3,7 +3,7 @@
   <p><strong>Adaptive mathematics learning platform powered by data, psychometrics, and multi-model AI.</strong></p>
   <p>An applied engineering project exploring Data Engineering, Applied Machine Learning, and Epistemic System Design.</p>
   <p><a href="./README.pt-BR.md">🇧🇷 Português (Brasil)</a> &nbsp;|&nbsp; <strong>🇺🇸 English</strong></p>
-  <p><a href="https://lemmas.com.br/dashboard"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
+  <p><a href="https://lemmas.com.br/landing"><strong>🚀 Try Lemmas Live Demo</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/badge/AI%20Gateway-Nemotron%20%7C%20DeepSeek%20%7C%20Gemini-76B900" alt="Multi-Model Gateway" />
     <img src="https://img.shields.io/badge/Psychometrics-SM--2%20(Live)%20%7C%20FSRS--v4%20%26%20IRT%20(Roadmap)-blue" alt="SM-2 & Psychometrics" />
     <img src="https://img.shields.io/badge/Data%20Integrity-SHA--256%20Provenance-orange" alt="SHA-256 Provenance" />
-    <img src="https://img.shields.io/badge/Status-V1%20Launch%20Ready-success" alt="V1 Launch Ready" />
+    <img src="https://img.shields.io/badge/Status-Live-success" alt="Live" />
   </p>
 </div>
 
@@ -55,6 +55,25 @@ Two students can miss the same calculus problem for completely different reasons
 
 ---
 
+## Released on November 11, 2026
+
+**LEMMAS**, powered by the **MathAI Engine**, is live at [lemmas.com.br](https://lemmas.com.br). [PR #83](https://github.com/StylishGH/LemmaS/pull/83) delivers:
+
+- **Immersive Focus Mode:** a digital canvas or GeoGebra, a draggable question panel, answer choices, and resolution evaluation.
+- **Socratic hints inside Focus Mode:** the same history and five levels as the regular workbench. Level 5 requires confirmation, reveals the solution, and records surrender with an SM-2 penalty. Hints remain disabled during active mock exams.
+- **Personalized ordering:** profile preferences rank the full catalog without selecting filters. Choosing Escola Naval puts its questions first while other banks remain available. Manual and URL filters restrict results.
+- **Learning profile:** primary and secondary goals, selected content separated from recommendations, daily availability, and preserved learning preferences.
+- **Landing and technical portfolio:** larger product captures, corrected formulas, and explicit implementation, experiment, and research status.
+
+| Production catalog | Observed on November 11, 2026 |
+|---|---:|
+| Questions | 21,578 |
+| Lemmas | 3,000 |
+
+Source: [statistics API](https://lemmas.com.br/api/stats). Counts change with curation. The landing queries the API and displays “—” when counts are unavailable. Record counts do not establish individual validation of every item.
+
+![Production Focus Mode with the Socratic hints panel](docs/assets/modo_foco_dicas.png)
+
 ## 📸 Product Visual Showcase
 
 <table align="center">
@@ -77,7 +96,7 @@ Two students can miss the same calculus problem for completely different reasons
       <em>Retention cycles, domain mastery metrics, and error pattern telemetry.</em>
     </td>
     <td align="center" width="50%">
-      <strong>Audited Question &amp; Lemma Repository (20,803 Items)</strong><br />
+      <strong>Question &amp; Lemma Repository</strong><br />
       <img src="docs/assets/banco_questoes.png" alt="Banco de Questões" width="100%" /><br />
       <em>Classified Olympiad &amp; military exam questions rendered in native KaTeX.</em>
     </td>
@@ -94,14 +113,14 @@ The platform separates user interaction, API contracts, model routing, and persi
   <tr>
     <td align="center">
       <strong>Client Layer · Next.js 16 (App Router + Turbopack + KaTeX)</strong><br />
-      Discursive Workbench (Canvas / OCR / Text) · Metacognition Dashboard &amp; Radar · Repository (20,803 Questions &amp; Lemmata)
+      Discursive Workbench (Canvas / OCR / Text) · Metacognition Dashboard &amp; Radar · Question and lemma repository
     </td>
   </tr>
   <tr><td align="center">⬇</td></tr>
   <tr>
     <td align="center">
       <strong>Engine Layer · FastAPI (Python 3.12)</strong><br />
-      Security Guard (Token &amp; Anon Key Validator) · Integrity Engine (Deterministic SHA-256 Hash) · MathAI Multi-Model Gateway Strategy · Memory &amp; Psychometrics (FSRS-v4 / SM-2 / IRT-3PL)
+      Security Guard (Token &amp; Anon Key Validator) · Integrity Engine (Deterministic SHA-256 Hash) · MathAI Multi-Model Gateway Strategy · SM-2 Review · FSRS-inspired scheduling (experimental) · IRT 3PL (research)
     </td>
   </tr>
   <tr><td align="center">⬇</td></tr>
@@ -133,11 +152,11 @@ In the current live deployment, retention schedules for questions and lemmata ar
   Where $q \in [0, 5]$ is the performance grade mapped from the four qualitative verdicts.
 - Persistent state is written immediately to `public.revisao_espacada` on Supabase PostgreSQL.
 
-### 2. Algorithmic Prototype: FSRS-v4 (Free Spaced Repetition Scheduler)
+### 2. Experimental FSRS-inspired scheduler
 For flashcard and lemmata decay modeling, the backend provides an initial implementation inspired by the modern FSRS formulation:
 $$R(t) = \left(1 + F \cdot \frac{t}{S}\right)^{-1}$$
-- Memory stability ($S$) and difficulty ($D$) data contracts are implemented in `app/services/mathai/flashcards.py`.
-- *Status:* Operational in prototype mode with heuristic constants; empirical parameter optimization via maximum likelihood estimation is planned once user interaction volume increases.
+- Memory stability ($S$) and difficulty ($D$) data contracts are implemented in `backend/app/services/mathai/flashcards.py`.
+- *Status:* Prototype with approximate constants. Consolidating the scheduling source of truth and validating persistence and regressions must precede replacing SM-2. Empirical calibration is planned; this is not a complete, calibrated FSRS-v4 implementation.
 
 ### 3. Scientific Research Target: Item Response Theory (IRT / TRI 3PL)
 To evolve beyond ordinal difficulty tags (1 to 5) into continuous psychometrics, future offline data science experiments will calibrate items using the Three-Parameter Logistic Model:
@@ -157,7 +176,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 - **Relational Integrity with Row Level Security (RLS):** 20 PostgreSQL tables hosted on Supabase enforce multi-tenant isolation so no student data can ever leak across sessions.
 - **Multi-Model Strategy Pattern:** A dynamic routing gateway decouples application code from concrete AI providers:
   - **NVIDIA Nemotron 70B/120B:** Formal derivation and rigorous verification.
-  - **Google Gemini Flash-Lite:** Low-latency (<600ms) OCR of handwritten student notebook pages.
+  - **Google Gemini Flash-Lite:** OCR of handwritten student notebook pages; latency depends on the model, input, and provider availability.
   - **DeepSeek:** Conceptual suggestions and creative heuristic shortcuts.
 
 ---
@@ -170,8 +189,8 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **Backend** | Python 3.12, FastAPI, Pydantic V2, Uvicorn |
 | **Database & Auth** | Supabase (PostgreSQL with RLS), deterministic SHA-256 hashing |
 | **Applied AI & Vision** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
-| **Psychometrics & Memory**| SM-2 Engine (Active in production), FSRS-v4 (Prototype), IRT 3PL (Research Roadmap) |
-| **Testing & Quality** | pytest (Backend & Core architecture), Vitest (Frontend components) |
+| **Psychometrics & Memory**| SM-2 Engine (Active in production), FSRS-inspired scheduler (Experimental), IRT 3PL (Research Roadmap) |
+| **Testing & Quality** | pytest (Backend & Core architecture), TypeScript, Next.js builds, Node.js API integration tests, and browser checks |
 
 ---
 
@@ -219,13 +238,27 @@ npm run dev
 - [x] **Monorepo Architecture:** Next.js 16 frontend + FastAPI backend.
 - [x] **Epistemic Data Pipeline:** SHA-256 hashing and raw submission isolation.
 - [x] **Discursive Workbench & Multimodal OCR:** KaTeX parsing of handwritten drafts.
-- [x] **Audited Question Bank:** 20,803 classified math problems.
+- [x] **Searchable catalog:** Current counts from `/api/stats`, manual filters, and ordering based on profile preferences.
 - [x] **Multi-Model Gateway:** Rerouting between Nemotron, Gemini, and DeepSeek.
 - [ ] **Full Database Migration:** Replacing remaining prototype in-memory stores with durable PostgreSQL tables.
 - [ ] **Empirical Calibration:** Fine-tuning FSRS parameters with real student interaction logs.
 - [ ] **Model Evals Harness:** Systematic latency, cost, and hallucination benchmark suite across mathematical task types.
 
 ---
+
+## Release verification
+
+- Production build and TypeScript passed CI alongside backend tests.
+- 14 pedagogical engine tests and four ordering regressions passed. API regressions also passed against the production domain.
+- Browser checks covered hints in training, level-5 confirmation above Focus Mode, tablet layout, and the mock-exam restriction. They did not call live AI providers or measure stylus refresh rate.
+- Next: validate authenticated hints and persistence after reload, measure provider latency/cost, and consolidate review scheduling. See the [master roadmap](docs/roadmap.md).
+
+To repeat ordering regressions with the local frontend running:
+
+```bash
+cd frontend
+node --test scripts/test-question-personalization.mjs
+```
 
 ## 👨‍💻 About the Author
 
