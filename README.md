@@ -57,7 +57,7 @@ Two students can miss the same calculus problem for completely different reasons
 
 ## Released on November 11, 2026
 
-**LEMMAS**, powered by the **MathAI Engine**, is live at [lemmas.com.br](https://lemmas.com.br). [PR #83](https://github.com/StylishGH/LemmaS/pull/83) delivers:
+**LEMMAS**, powered by the **MathAI Engine**, is live at [lemmas.com.br](https://lemmas.com.br). Current features include the release in [PR #83](https://github.com/StylishGH/LemmaS/pull/83) and [background loading from PR #87](https://github.com/StylishGH/LemmaS/pull/87):
 
 - **Immersive Focus Mode:** a digital canvas or GeoGebra, a draggable question panel, answer choices, and resolution evaluation.
 - **Socratic hints inside Focus Mode:** the same history and five levels as the regular workbench. Level 5 requires confirmation, reveals the solution, and records surrender with an SM-2 penalty. Hints remain disabled during active mock exams.
