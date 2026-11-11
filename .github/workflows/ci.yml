@@ -51,7 +51,7 @@ jobs:
         run: npm ci
       - name: Test question page prefetch cache
         working-directory: frontend
-        run: node --test scripts/test-question-page-cache.mjs
+        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs
       - name: Build Next.js 16 (Turbopack)
         working-directory: frontend
         env:
