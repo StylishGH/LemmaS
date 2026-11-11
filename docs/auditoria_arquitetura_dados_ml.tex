@@ -1,0 +1,236 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[most]{tcolorbox}
+
+% Definições de Cores Editoriais do LEMMAS
+\definecolor{lemmasNavy}{RGB}{15, 23, 42}
+\definecolor{lemmasGold}{RGB}{217, 180, 82}
+\definecolor{lemmasDarkGold}{RGB}{180, 140, 40}
+\definecolor{lemmasAccent}{RGB}{14, 116, 144}
+\definecolor{alertRed}{RGB}{190, 24, 24}
+\definecolor{alertRedBg}{RGB}{254, 242, 242}
+\definecolor{successGreen}{RGB}{22, 101, 52}
+\definecolor{successGreenBg}{RGB}{240, 253, 244}
+\definecolor{boxBorder}{RGB}{226, 232, 240}
+\definecolor{boxBg}{RGB}{248, 250, 252}
+
+% Configuração de Links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=lemmasAccent,
+    urlcolor=lemmasAccent,
+    citecolor=lemmasNavy
+}
+
+% Cabeçalho e Rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textbf{\textsf{LEMMAS Core $\times$ MathAI Engine}} \quad \textcolor{gray}{|} \quad \footnotesize Auditoria de Arquitetura de Dados}
+\fancyhead[R]{\small\textsf{Novembro / 2026}}
+\fancyfoot[C]{\textsf{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Caixas de Destaque
+\newtcolorbox{criticoBox}[1]{
+    colback=alertRedBg,
+    colframe=alertRed,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    arc=2mm,
+    boxrule=1pt,
+    left=4mm, right=4mm, top=3mm, bottom=3mm
+}
+
+\newtcolorbox{sucessoBox}[1]{
+    colback=successGreenBg,
+    colframe=successGreen,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    arc=2mm,
+    boxrule=1pt,
+    left=4mm, right=4mm, top=3mm, bottom=3mm
+}
+
+\newtcolorbox{teoriaBox}[1]{
+    colback=boxBg,
+    colframe=lemmasNavy,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    arc=2mm,
+    boxrule=1pt,
+    left=4mm, right=4mm, top=3mm, bottom=3mm
+}
+
+\newtcolorbox{acaoBox}[1]{
+    colback=boxBg,
+    colframe=lemmasDarkGold,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    arc=2mm,
+    boxrule=1pt,
+    left=4mm, right=4mm, top=3mm, bottom=3mm
+}
+
+\titleformat{\section}{\large\bfseries\sffamily\color{lemmasNavy}}{\thesection.}{0.5em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\sffamily\color{lemmasAccent}}{\thesubsection}{0.5em}{}
+
+\begin{document}
+
+% Capa / Cabeçalho Principal
+\begin{center}
+    {\LARGE\bfseries\sffamily LEMMAS (Powered by MathAI Engine)}\\[0.3em]
+    {\large\bfseries\color{lemmasNavy} Relatório Executivo de Auditoria Arquitetural de Dados}\\[0.2em]
+    {\normalsize\textcolor{gray}{Avaliação Forense da Esteira de Dados Ponta a Ponta para Fine-Tuning (SFT/DPO), TRI e Ciência de Dados}}\\[0.8em]
+    \textbf{Autor:} Lead Data Architect \& Machine Learning Engineer \quad | \quad \textbf{Data:} 11 de Novembro de 2026\\[0.2em]
+    \textbf{Foco Profissional:} Ciência de Dados, Modelagem Psicometria/TRI e LLMs Especializados
+\end{center}
+
+\vspace{0.3cm}
+\hrule
+\vspace{0.4cm}
+
+\section{Sumário Executivo e Diagnóstico Geral}
+
+A presente auditoria teve como objetivo inspecionar \textbf{todo o ciclo de vida dos dados} gerados na plataforma LEMMAS: desde a resolução de questões pelo estudante na interface web/tablet até o armazenamento em banco relacional e inferência de inteligência artificial.
+
+\begin{criticoBox}{Veredito Geral do Arquiteto de Dados}
+\textbf{A modelagem teórica e relacional nos esquemas SQL é excelente, mas o fluxo de execução prática (runtime) descarta dados fundamentais de entrada antes de gravá-los no banco.}
+Atualmente, se exportássemos a base para treinar um modelo de visão/raciocínio ou calibrar um modelo de psicometria, o treinamento seria \textbf{inviável} porque a plataforma salva o parecer da IA, mas \textbf{descarta a resolução original do aluno} (tanto a letra marcada em objetivas quanto a imagem desenhada/fotografada na lousa).
+\end{criticoBox}
+
+---
+
+\section{Fundamentação Teórica: Como Dados Alimentam Fine-Tuning e ML}
+
+Na Ciência de Dados aplicada a LLMs educacionais, a coleta de dados divide-se em três paradigmas de aprendizagem:
+
+\subsection{1. Supervised Fine-Tuning (SFT)}
+O modelo aprende a resolver e avaliar itens matemáticos através de pares supervisionados de entrada e saída:
+\begin{equation}
+    \mathcal{D}_{\text{SFT}} = \Big\{ \big(x_i, y_i\big) \Big\}_{i=1}^N, \quad x_i = (E_i, R_i^{\text{bruto}}), \quad y_i = (\text{Veredito}, \text{Diagnóstico}, \text{Linha do Erro})
+\end{equation}
+Onde $E_i$ é o enunciado da questão e $R_i^{\text{bruto}}$ é a \textbf{resolução real enviada pelo aluno} (texto manuscrito, imagem de caderno ou traços no tablet). Se o sistema descarta $R_i^{\text{bruto}}$, a IA só tem $y_i$ para treinar sobre si mesma, gerando \textit{model collapse} (degradação epistêmica por alucinação cumulativa).
+
+\subsection{2. Direct Preference Optimization (DPO / RLHF)}
+Para ensinar a IA a dar dicas pedagógicas socráticas que realmente ajudam o estudante sem entregar a resposta, o alinhamento é treinado por preferência:
+\begin{equation}
+    \mathcal{D}_{\text{DPO}} = \Big\{ \big(x_i, y_{i, w}, y_{i, l}\big) \Big\}_{i=1}^M
+\end{equation}
+Onde $y_{i, w}$ é a explicação que o aluno achou útil e concordou, e $y_{i, l}$ é o parecer rejeitado. Isso \textbf{exige} uma chave estrangeira ligando o feedback do aluno diretamente ao ID da avaliação de IA correspondente.
+
+\subsection{3. Psicometria e Teoria de Resposta ao Item (TRI)}
+Em questões objetivas de concursos de alto nível (IME, ITA, EsPCEx, ENEM), o modelo estatístico de 3 parâmetros (3PL) calibra a probabilidade de acerto do aluno com proficiência $\theta$:
+\begin{equation}
+    P_i(\theta) = c_i + \frac{1 - c_i}{1 + e^{-a_i(\theta - b_i)}}
+\end{equation}
+Onde $a_i$ é a discriminação do item, $b_i$ é a dificuldade e $c_i$ é o acerto casual. \textbf{A Análise de Distratores} requer saber exatamente qual letra errada (A, B, C, D ou E) o aluno assinalou para identificar armadilhas e vícios de raciocínio.
+
+---
+
+\section{Topologia Operacional Mapeada na Aplicação}
+
+O rastreamento do código revelou a seguinte distribuição entre rotas, componentes e tabelas:
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{p{2.4cm} p{4.1cm} p{3.4cm} X}
+\toprule
+\textbf{Origem do Dado} & \textbf{Endpoint / Rota} & \textbf{Tabela Destino} & \textbf{Status de Integridade} \\
+\midrule
+Questão Objetiva & \texttt{POST /api/questions/}\newline\texttt{[id]/submit} & \texttt{public.tentativas} & \textcolor{alertRed}{\textbf{Crítico}}: Descarta a letra marcada. \\
+Questão Discursiva (OCR) & \texttt{POST /api/ai/solve} & \textit{Memória RAM / HTTP} & \textcolor{alertRed}{\textbf{Crítico}}: Descarta imagem e dedução. \\
+Parecer da IA & \texttt{POST /api/questions/}\newline\texttt{[id]/submit} & \texttt{public.avaliacoes\_ia} & \textcolor{successGreen}{\textbf{Excelente}}: JSONB estruturado. \\
+Dica Socrática & \texttt{POST /api/ai/hint} & \texttt{socratic\_hint\_cache} & \textcolor{successGreen}{\textbf{Excelente}}: Cache determinístico. \\
+Repetição Espaçada & \texttt{POST /api/questions/}\newline\texttt{[id]/submit} & \texttt{revisao\_espacada} & \textcolor{successGreen}{\textbf{Excelente}}: SM-2 determinístico. \\
+Feedback do Aluno & \texttt{POST /api/feedback} & \texttt{feedbacks\_aluno} & \textcolor{lemmasDarkGold}{\textbf{Alerta}}: Tabela paralela sem FK. \\
+\bottomrule
+\end{tabularx}
+\caption{Mapeamento ponta a ponta dos dados gerados na plataforma.}
+\end{table}
+
+---
+
+\section{Diagnóstico Detalhado dos 4 Gargalos Críticos}
+
+\subsection{Gargalo 1: A Alternativa Marcada na Questão Objetiva é descartada}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Evidência no Código:} No arquivo \texttt{frontend/app/api/questions/[id]/submit/route.ts} (linhas 83 e 107), o servidor recebe \texttt{body.resposta} (ex: \texttt{"B"}), compara com o gabarito oficial e atribui booleano \texttt{acertou = (respostaAluno === gabaritoOficial)}.
+    \item \textbf{A Falha:} Ao executar o \texttt{INSERT} na tabela \texttt{public.tentativas}, são salvos apenas \texttt{acertou: 1 ou 0}, \texttt{tempo\_segundos} e metadados. \textbf{A alternativa assinalada pelo estudante ("B") não é gravada em nenhuma coluna}.
+    \item \textbf{Consequência:} Impossível treinar classificadores de padrões de erro conceitual ou calcular curvas de atratividade de distratores em Python/Pandas.
+\end{itemize}
+
+\subsection{Gargalo 2: A Resolução Bruta da Lousa/Caderno (Imagem e Traços) é descartada}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Evidência no Código:} No componente \texttt{resolver/page.tsx} (linha 1113), quando o estudante desenha no canvas digital (\texttt{SpenSmartCanvas}) ou envia foto do caderno, a imagem é enviada via base64 para \texttt{/api/ai/solve}.
+    \item \textbf{A Falha:} Após o retorno da IA, o navegador chama \texttt{/api/questions/[id]/submit} enviando o resultado da avaliação (\texttt{avaliacao\_ia}), mas \textbf{a imagem em base64 e o texto digitado são descartados}. A coluna \texttt{imagem\_resolucao\_path} na tabela \texttt{tentativas} permanece \texttt{NULL}.
+    \item \textbf{Consequência:} Perda irreversível de dados multimodais para Fine-Tuning de visão computacional e OCR matemático.
+\end{itemize}
+
+\subsection{Gargalo 3: Desconexão Arquitetural entre FastAPI e Next.js}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Evidência no Código:} No backend Python (\texttt{backend/app/api/routes/attempts.py}), existe a classe \texttt{Attempt} imutável com hash criptográfico SHA-256 (\texttt{input\_hash}). Contudo, ela salva em um dicionário volátil em memória (\texttt{\_ATTEMPTS\_STORE = \{\}}).
+    \item \textbf{A Falha:} O frontend em produção na Vercel grava direto no Supabase através das rotas TypeScript, ignorando o modelo imutável do backend Python.
+    \item \textbf{Consequência:} O princípio epistêmico de auditoria criptográfica não é mantido no banco em nuvem.
+\end{itemize}
+
+\subsection{Gargalo 4: Desalinhamento nas Tabelas de Feedback para RLHF / DPO}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Evidência no Código:} O esquema relacional canônico (\texttt{02\_provenance\_and\_consent.sql}) projetou a tabela \texttt{public.feedback\_tentativa} com \texttt{tentativa\_id} e \texttt{avaliacao\_ia\_id}.
+    \item \textbf{A Falha:} As rotas \texttt{/api/feedback} e \texttt{/api/report} gravam em uma tabela descolada chamada \texttt{public.feedbacks\_aluno}, onde não há chave estrangeira para o parecer exato da IA que gerou o feedback.
+    \item \textbf{Consequência:} Dificulta a montagem de datasets de preferência ($y_w$ vs $y_l$) para alinhamento fino de modelos.
+\end{itemize}
+
+---
+
+\section{O que já está em Alto Nível de Maturidade}
+
+\begin{sucessoBox}{Pontos Fortes da Arquitetura Atual}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Tabela \texttt{avaliacoes\_ia}:} Grava com riqueza extrema o \texttt{output\_estruturado} em JSONB, contagem precisa de tokens (\textit{prompt}, \textit{completion}, \textit{total}), provedor (\textit{nvidia-nemotron}, \textit{google}, \textit{deepseek}), latência em milissegundos e veredito padronizado.
+    \item \textbf{Motor Determinístico SM-2 (\texttt{revisao\_espacada}):} O agendamento espaçado opera de forma estrita, garantindo que o fator de facilidade ($EF \ge 1.3$) e repetições sejam atualizados a cada submissão, com penalidade máxima para a rendição pedagógica da Dica 5.
+    \item \textbf{Cache Socrático de Lemas (\texttt{socratic\_hint\_cache}):} Evita custos desnecessários de API armazenando dicas canônicas por hash de enunciado e solução.
+    \item \textbf{Log de Inferências (\texttt{ai\_inference\_logs}):} Permite rastrear custo financeiro em dólares e métricas de conversão de acertos com dicas.
+\end{enumerate}
+\end{sucessoBox}
+
+---
+
+\section{Plano de Ação e Engenharia de Dados (Roadmap)}
+
+\begin{acaoBox}{Ações Prioritárias Recomendadas}
+\begin{itemize}[leftmargin=*]
+    \item[\textbf{P0:}] \textbf{Adicionar \texttt{resposta\_aluno TEXT} na tabela \texttt{public.tentativas}:} Modificar a rota \texttt{submit/route.ts} para gravar a letra exata ("A", "B", etc.) em vez de apenas 0 ou 1.
+    \item[\textbf{P0:}] \textbf{Ativar Bucket no Supabase Storage para Resoluções Manuscritas:} Criar o bucket \texttt{resolucoes-estudantes/} e salvar a imagem PNG com nome determinístico baseado no hash SHA-256 da imagem, gravando a URL pública/assinada em \texttt{imagem\_resolucao\_path}.
+    \item[\textbf{P1:}] \textbf{Persistir o Texto de Justificativa/Dedução do Aluno:} Incluir o campo \texttt{texto\_resolucao} em \texttt{tentativas} para preservar o raciocínio digitado pelo estudante antes da avaliação da IA.
+    \item[\textbf{P1:}] \textbf{Unificar a Tabela de Feedback com FK para \texttt{avaliacoes\_ia}:} Garantir que cada avaliação de utilidade tenha o apontador direto para o parecer do modelo para treino de DPO.
+    \item[\textbf{P2:}] \textbf{Pipeline de Exportação Automática (Parquet / HuggingFace):} Criar script em Python que faz o \texttt{JOIN} das 3 camadas e exporta arquivos \texttt{.parquet} particionados prontos para treino e dashboards de psicometria.
+\end{itemize}
+\end{acaoBox}
+
+\vspace{0.4cm}
+\begin{center}
+    \small\textcolor{gray}{Documento compilado e gerado automaticamente pelo núcleo Antigravity Lead Engine $\cdot$ LEMMAS Core 2026}
+\end{center}
+
+\end{document}

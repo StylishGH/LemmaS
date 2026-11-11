@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       if (acertou) acertos++;
       else erros++;
 
-      // Prepara tentativa para a tabela tentativas (aluno_id numérico BIGINT)
+      // Prepara tentativa para a tabela tentativas (aluno_id numérico BIGINT) com preservação da resposta marcada
       tentativasParaInserir.push({
         questao_id: question.id,
         aluno_id: validAlunoId,
@@ -146,7 +146,8 @@ export async function POST(req: NextRequest) {
         tipo_erro: acertou ? "nenhum" : "simulado_incorreto",
         estrategia_usada: "Modo Simulado",
         confianca_aluno: 4,
-        anotacoes: simuladoId ? `Simulado ${simuladoId}` : "Simulado Cronometrado",
+        resposta_aluno: respostaUpper,
+        anotacoes: `${simuladoId ? `Simulado ${simuladoId}` : "Simulado Cronometrado"} [RESPOSTA:${respostaUpper}]`,
       });
 
       // Atualiza repetição espaçada SM-2 para a questão resolvida
@@ -205,14 +206,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Grava todas as tentativas no Supabase
+    // 5. Grava todas as tentativas no Supabase com fallback resiliente para schema legado
     if (tentativasParaInserir.length > 0) {
       const { error: attemptError } = await supabase
         .from("tentativas")
         .insert(tentativasParaInserir);
 
       if (attemptError) {
-        console.error("Erro crítico ao gravar tentativas do simulado:", attemptError);
+        console.warn("Aviso ao gravar tentativas no simulado, acionando fallback de compatibilidade:", attemptError.message);
+        const fallbackTentativas = tentativasParaInserir.map(({ resposta_aluno, ...rest }) => rest);
+        const { error: fallbackError } = await supabase
+          .from("tentativas")
+          .insert(fallbackTentativas);
+        if (fallbackError) {
+          console.error("Erro crítico ao gravar tentativas do simulado no fallback:", fallbackError);
+        }
       }
     }
 

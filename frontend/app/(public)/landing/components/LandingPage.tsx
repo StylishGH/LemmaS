@@ -57,45 +57,45 @@ interface ArchitectureNode {
 }
 
 const ARCH_NODES: Record<string, ArchitectureNode> = {
-  frontend: {
-    key: "frontend",
-    badge: "UI ↗",
-    title: "01 · Interface & Experiência",
-    subtitle: "Next.js 16 · Turbopack · KaTeX · Tailwind v4",
-    detailTitle: "Interface conectada ao domínio matemático",
-    detailDesc: "App Router com renderização híbrida (SSR/SSG), renderização de expressões vetoriais com KaTeX, lousa interativa com suporte a caneta e rejeição de palma e barra de navegação estilo LeetCode.",
-    url: "https://github.com/StylishGH/MathAI/tree/main/frontend",
-    linkLabel: "Abrir código do frontend ↗"
+  data: {
+    key: "data",
+    badge: "DADOS ↗",
+    title: "01 · Ciência de Dados & Governança",
+    subtitle: "Python · SQL Analítico · SHA-256 · PostgreSQL",
+    detailTitle: "Fundação Empírica: Dado Observado ≠ Inferência ≠ Validado",
+    detailDesc: "Pipeline de ingestão e normalização de 21.000+ questões com 12 grandes áreas matemáticas. Telemetria comportamental de tentativas (tempo de resolução, rascunhos em lousa, acertos/erros) preservada com integridade criptográfica SHA-256 e Row Level Security (RLS).",
+    url: "https://github.com/StylishGH/MathAI/blob/main/docs/data-pipeline.md",
+    linkLabel: "Ler arquitetura do data pipeline ↗"
   },
-  api: {
-    key: "api",
-    badge: "API ↗",
-    title: "02 · Contratos e Regras de Domínio",
-    subtitle: "FastAPI · Pydantic v2 · Clean Architecture",
-    detailTitle: "Backend desacoplado com contratos explícitos",
-    detailDesc: "FastAPI em Python 3.12 com validação estrita de esquemas via Pydantic v2, separando a lógica de negócios da experiência de interface e blindando as rotas contra dados mal-formados.",
-    url: "https://github.com/StylishGH/MathAI/tree/main/backend/app",
-    linkLabel: "Inspecionar serviços da API ↗"
+  ml: {
+    key: "ml",
+    badge: "ML ↗",
+    title: "02 · Machine Learning & NLP Híbrido",
+    subtitle: "BGE-M3 · TF-IDF LaTeX · Cosine Sim · GPU L4",
+    detailTitle: "Vetorização ontológica e ancoragem semântica de 3.000 Lemas",
+    detailDesc: "Pipeline de NLP combinando representação densa (BGE-M3) e esparsa (TF-IDF sobre o esqueleto sintático de LaTeX). Ancoragem vetorial por similaridade de cosseno para mapear lemas a exercícios, executada com aceleração em GPU NVIDIA L4 e quantização AWQ.",
+    url: "https://github.com/StylishGH/MathAI/blob/main/data/notebooks/classifica%C3%A7%C3%A3o_lemas_quest%C3%B5es.ipynb",
+    linkLabel: "Inspecionar notebook de vetorização e ML ↗"
   },
   mathai: {
     key: "mathai",
-    badge: "AI ↗",
-    title: "03 · MathAI Cognitive Engine",
-    subtitle: "Padrão Strategy · Nemotron · DeepSeek · Gemini",
-    detailTitle: "Roteamento inteligente e orquestração multi-LLM",
-    detailDesc: "Motor cognitivo modular: NVIDIA Nemotron para rigor formal, DeepSeek para atalhos intuitivos e Gemini Flash Lite para visão computacional / OCR de cadernos físicos. Telemetria N:1 de latência e tokens.",
+    badge: "GEN AI ↗",
+    title: "03 · GenAI & MathAI Cognitive Engine",
+    subtitle: "Nemotron (Rigor) · DeepSeek (Heurística) · Gemini (Visão)",
+    detailTitle: "Roteamento multi-LLM especializado com contratos tipados",
+    detailDesc: "Orquestração multi-modelo com padrão Strategy: NVIDIA Nemotron para demonstração axiomática formal, DeepSeek para intuição e atalhos conceituais, e Gemini Flash Lite para OCR multimodal de cadernos físicos. Saída estruturada via Pydantic para blindar contra alucinações.",
     url: "https://github.com/StylishGH/MathAI/blob/main/backend/app/services/mathai/gateway.py",
-    linkLabel: "Ler gateway.py no GitHub ↗"
+    linkLabel: "Inspecionar gateway.py no GitHub ↗"
   },
-  data: {
-    key: "data",
-    badge: "DB ↗",
-    title: "04 · Dados, Proveniência & Persistência",
-    subtitle: "Supabase · PostgreSQL · SHA-256 · RLS",
-    detailTitle: "Governança estrita: Dado Observado ≠ Inferência ≠ Validado",
-    detailDesc: "PostgreSQL com 20 tabelas relacionais, Row Level Security (RLS) e hashing criptográfico SHA-256 das tentativas e traços. O dado bruto original do aluno nunca é sobrescrito por alucinações de modelos.",
-    url: "https://github.com/StylishGH/MathAI/blob/main/docs/roadmap.md",
-    linkLabel: "Ler auditoria de dados no roadmap ↗"
+  engineering: {
+    key: "engineering",
+    badge: "PROD ↗",
+    title: "04 · Engenharia de Software & Entrega",
+    subtitle: "FastAPI · Next.js 16 · Turbopack · KaTeX",
+    detailTitle: "Arquitetura desacoplada de alto desempenho",
+    detailDesc: "Backend modular assíncrono em Python 3.12 com Clean Architecture e contratos Pydantic v2. Frontend em Next.js 16 com renderização vetorial KaTeX e lousa digital para captura de evidências de resolução em tempo real.",
+    url: "https://github.com/StylishGH/MathAI/tree/main",
+    linkLabel: "Inspecionar monorepo no GitHub ↗"
   }
 };
 
@@ -886,16 +886,16 @@ export function LandingPage() {
                 <div className="lemmas-hero-copy">
                   <span className="lemmas-eyebrow">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />
-                    CASE DE ENGENHARIA · PORTFÓLIO DE DADOS & ML
+                    CASE PRÁTICO · CIÊNCIA DE DADOS, ML & GEN AI
                   </span>
 
                   <h1 id="tech-title">
-                    Uma plataforma real.<br />
-                    <em>Problemas de engenharia reais.</em>
+                    Matemática rigorosa.<br />
+                    <em>Dados, Machine Learning & GenAI.</em>
                   </h1>
 
                   <p className="lemmas-hero-lede">
-                    O LEMMAS combina educação matemática, engenharia de dados relacionais, repetição espaçada e IA generativa multi-modelo. O diferencial técnico não é apenas chamar LLMs: é construir um pipeline que separa rigidamente a tentativa do aluno da inferência do modelo.
+                    O LEMMAS resolve o desafio da personalização educacional unindo o tripé analítico moderno: <strong>Ciência de Dados</strong> para governança e telemetria analítica de 21.000+ questões; <strong>Machine Learning & NLP</strong> para vetorização ontológica e ancoragem de 3.000 lemas matemáticos; e <strong>IA Generativa (GenAI)</strong> para orquestração socrática multi-modelo com contratos estritos e sem alucinações.
                   </p>
 
                   <div className="lemmas-hero-actions">
@@ -915,22 +915,22 @@ export function LandingPage() {
                         if (elem) elem.scrollIntoView({ behavior: "smooth" });
                       }}
                     >
-                      Explorar arquitetura ↓
+                      Explorar a tríade técnica ↓
                     </button>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-6">
                     <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Next.js 16 · Turbopack
+                      Ciência de Dados (Python & SQL)
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      FastAPI · Pydantic v2
+                      Machine Learning & NLP (BGE-M3 + LaTeX)
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Supabase · RLS
+                      GenAI Multi-LLM (Nemotron · DeepSeek · Gemini)
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Gateway Multi-LLM
+                      Governança SHA-256 & Supabase RLS
                     </span>
                   </div>
 
@@ -955,28 +955,28 @@ export function LandingPage() {
                     <div className="lemmas-term-divider" />
 
                     <div className="lemmas-term-stage">
-                      01 / <b>DADO OBSERVADO</b>
-                      <small>texto bruto • traços da lousa • imagem do caderno • hash SHA-256</small>
+                      01 / <b>DADO OBSERVADO (CIÊNCIA DE DADOS)</b>
+                      <small>telemetria de resolução • tempo de tela • lousa vetorial • SHA-256</small>
                     </div>
 
                     <div className="lemmas-term-arrow">↓</div>
 
                     <div className="lemmas-term-stage">
-                      02 / <b>INTERPRETAÇÃO MATHAI</b>
-                      <small>gateway multi-modelo • prompt versionado • metadados • confiança</small>
+                      02 / <b>MACHINE LEARNING & NLP</b>
+                      <small>embeddings BGE-M3 • TF-IDF de LaTeX • similaridade de cosseno • GPU L4</small>
                     </div>
 
                     <div className="lemmas-term-arrow">↓</div>
 
                     <div className="lemmas-term-stage">
-                      03 / <b>VALIDAÇÃO (GROUND TRUTH)</b>
-                      <small>gabarito confiável • revisão de especialista humano • active learning</small>
+                      03 / <b>GEN AI & TUTORIA SOCRÁTICA</b>
+                      <small>gateway multi-LLM (Nemotron/DeepSeek) • visão multimodal • JSON Schema</small>
                     </div>
 
                     <div className="lemmas-term-divider" />
 
                     <div className="flex items-center justify-between text-[11px]">
-                      <span>status: <span className="lemmas-term-accent">arquitetura documentada</span></span>
+                      <span>status: <span className="lemmas-term-accent">tríade analítica integrada</span></span>
                       <span className="lemmas-term-comment">telemetria N:1 no gateway</span>
                     </div>
                   </div>
@@ -1056,23 +1056,23 @@ export function LandingPage() {
             <section id="architecture" className="lemmas-section">
               <div className="lemmas-demo-box">
                 <div>
-                  <span className="lemmas-eyebrow">SYSTEM.MAP CLICÁVEL</span>
+                  <span className="lemmas-eyebrow">SYSTEM.MAP CLICÁVEL · PIPELINE MULTICAMADA</span>
                   <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 dark:text-[#f5f0df] my-3">
-                    Do frontend até a inferência matemática.
+                    Do pipeline de dados à inferência multi-modelo.
                   </h2>
                   <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed mb-4">
-                    O LEMMAS distingue plataforma web, núcleo de aprendizagem determinístico e MathAI Engine. A arquitetura possui camadas verificáveis no código, com contratos explícitos e isolamento de responsabilidades.
+                    O LEMMAS integra Ciência de Dados, Machine Learning e GenAI em uma arquitetura desacoplada: governança estrita de telemetria, representação vetorial em NLP e agentes generativos socráticos com contratos explícitos.
                   </p>
                   <p className="text-xs text-slate-500 dark:text-zinc-400">
-                    Clique em qualquer componente ao lado para entender a decisão técnica e inspecionar o arquivo correspondente no GitHub.
+                    Clique em qualquer camada ao lado para entender a decisão técnica e inspecionar os arquivos e notebooks correspondentes.
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-4">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">Python · Pandas · NumPy</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">SQL Analítico · PostgreSQL</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">NLP · BGE-M3 + TF-IDF</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">GenAI Multi-LLM</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">FastAPI · Pydantic</span>
                     <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">Next.js 16</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">FastAPI</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">PostgreSQL</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">Pydantic v2</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">RLS</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">KaTeX</span>
                   </div>
                 </div>
 
@@ -1125,60 +1125,60 @@ export function LandingPage() {
               </div>
             </section>
 
-            {/* SEÇÃO 4: OS 3 CASOS DE ENGENHARIA DE DADOS & MACHINE LEARNING */}
+            {/* SEÇÃO 4: A TRÍADE APLICADA · CIÊNCIA DE DADOS, ML & GEN AI */}
             <section className="lemmas-section">
               <div className="lemmas-section-heading">
-                <span className="lemmas-eyebrow">DESAFIOS TÉCNICOS & ENGENHARIA DE DADOS</span>
-                <h2>Decisões técnicas, não uma lista de buzzwords.</h2>
-                <p>Três pontos do repositório ajudam a demonstrar o rigor do projeto para análise de dados, engenharia de software e IA aplicada:</p>
+                <span className="lemmas-eyebrow">A TRÍADE APLICADA · CIÊNCIA DE DADOS, ML & GEN AI</span>
+                <h2>Decisões técnicas e rigor analítico, não buzzwords.</h2>
+                <p>Como a Ciência de Dados, o Machine Learning representacional e a IA Generativa operam de forma integrada na plataforma:</p>
               </div>
 
               <div className="lemmas-case-grid">
                 <article className="lemmas-case-card">
                   <div>
                     <div className="top-line">
-                      <span>CASE 01 / DATA QUALITY & ENGINEERING</span>
+                      <span>CASE 01 / CIÊNCIA DE DADOS & PIPELINES</span>
                       <Database size={14} />
                     </div>
-                    <h3>Um acervo precisa ser confiável.</h3>
+                    <h3>Qualidade, Ingestão e Telemetria de 21.000+ Questões</h3>
                     <p>
-                      Taxonomia canônica, normalização de bancas militares, tratamento de imagens de enunciados oficiais, filtros compostos e contagens globais. O problema vai muito além de guardar enunciados em uma tabela simples.
+                      Normalização e sanitização de acervo de bancas militares e vestibulares, taxonomia em 12 áreas matemáticas, deduplicação e telemetria analítica de resolução (tempo de tela, rascunhos em lousa, taxas de acerto). Isolamento estrito: Dado Observado (SHA-256) ≠ Inferência ≠ Validado.
                     </p>
                   </div>
-                  <a className="link-inline" href="https://github.com/StylishGH/MathAI/blob/main/frontend/app/api/questions/route.ts" target="_blank" rel="noreferrer">
-                    Ver pipeline de questões ↗
+                  <a className="link-inline" href="https://github.com/StylishGH/MathAI/blob/main/docs/data-pipeline.md" target="_blank" rel="noreferrer">
+                    Ver arquitetura do data pipeline ↗
                   </a>
                 </article>
 
                 <article className="lemmas-case-card">
                   <div>
                     <div className="top-line">
-                      <span>CASE 02 / AI ENGINEERING & SYSTEM DESIGN</span>
-                      <Workflow size={14} />
+                      <span>CASE 02 / MACHINE LEARNING & NLP HÍBRIDO</span>
+                      <BrainCircuit size={14} />
                     </div>
-                    <h3>O modelo não é o juiz final.</h3>
+                    <h3>Vetorização Ontológica & Ancoragem de 3.000 Lemas</h3>
                     <p>
-                      Gateway com interface abstrata de provedores (Padrão Strategy), cascatas de fallback, rate limiting e telemetria por tentativa. A hipótese gerada é desacoplada da informação original submetida pelo aluno.
+                      Pipeline de NLP combinando representação densa (BGE-M3) e esparsa (TF-IDF sobre o esqueleto sintático de LaTeX). Similaridade de cossenos para ancoragem ontológica entre questões e lemas teóricos, com aceleração em GPU NVIDIA L4 (24 GB) e quantização AWQ.
+                    </p>
+                  </div>
+                  <a className="link-inline" href="https://github.com/StylishGH/MathAI/blob/main/data/notebooks/classifica%C3%A7%C3%A3o_lemas_quest%C3%B5es.ipynb" target="_blank" rel="noreferrer">
+                    Inspecionar notebook de ML e classificação ↗
+                  </a>
+                </article>
+
+                <article className="lemmas-case-card">
+                  <div>
+                    <div className="top-line">
+                      <span>CASE 03 / GEN AI & MATHAI COGNITIVE ENGINE</span>
+                      <Sparkles size={14} />
+                    </div>
+                    <h3>Roteamento Multi-LLM & Tutoria Socrática Especializada</h3>
+                    <p>
+                      Orquestração desacoplada por papéis via Padrão Strategy: NVIDIA Nemotron para demonstração axiomática formal, DeepSeek para intuição matemática/atalhos e Gemini Flash Lite para OCR de rascunhos físicos. Validação estrita via Pydantic para eliminar alucinações.
                     </p>
                   </div>
                   <a className="link-inline" href="https://github.com/StylishGH/MathAI/blob/main/backend/app/services/mathai/gateway.py" target="_blank" rel="noreferrer">
-                    Inspecionar gateway.py ↗
-                  </a>
-                </article>
-
-                <article className="lemmas-case-card">
-                  <div>
-                    <div className="top-line">
-                      <span>CASE 03 / APPLIED ML & CIÊNCIA DE DADOS</span>
-                      <BarChart3 size={14} />
-                    </div>
-                    <h3>Revisão não é adivinhação.</h3>
-                    <p>
-                      O projeto contém revisão por SM-2 e um agendador experimental inspirado em FSRS. O roadmap prevê consolidar a fonte de verdade do agendamento e validar a persistência antes de trocar de algoritmo. A calibração empírica de TRI 3PL é pesquisa futura.
-                    </p>
-                  </div>
-                  <a className="link-inline" href="https://github.com/StylishGH/MathAI/blob/main/backend/app/services/mathai/flashcards.py" target="_blank" rel="noreferrer">
-                    Inspecionar agendamento experimental ↗
+                    Inspecionar gateway.py no GitHub ↗
                   </a>
                 </article>
               </div>

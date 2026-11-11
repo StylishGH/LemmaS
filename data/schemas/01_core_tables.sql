@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS public.tentativas (
         tipo_erro IN ('nenhum', 'conta_sinal', 'manipulacao_algebrica', 'conceitual', 'interpretacao', 'outro', 'simulado_incorreto')
     ),
     confianca_aluno INTEGER CHECK (confianca_aluno BETWEEN 1 AND 5),
+    resposta_aluno TEXT,
+    texto_resolucao TEXT,
     anotacoes TEXT,
     imagem_resolucao_path TEXT
 );

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server";
 import { calcularProximoIntervaloSM2 } from "@/lib/sm2";
 
@@ -20,6 +21,9 @@ export async function POST(
       nivel_max_dica = 0,
       total_dicas_solicitadas = 0,
       rendicao_nivel_5 = false,
+      justificativa_texto,
+      imagem_base64,
+      origem = "bancada",
     } = body;
     // 1. Resolve o ID real do aluno a partir da sessão Supabase (cookies)
     let validAlunoId = 9999;
@@ -159,6 +163,38 @@ export async function POST(
       }
     }
 
+    // 1. Processamento e upload resiliente de imagem de resolução (Lousa / Foto de Caderno)
+    let imagemResolucaoPath: string | null = null;
+    let imgHash: string | null = null;
+    if (typeof imagem_base64 === "string" && imagem_base64.length > 50) {
+      try {
+        const cleanB64 = imagem_base64.includes(",") ? imagem_base64.split(",")[1] : imagem_base64;
+        const imgBuffer = Buffer.from(cleanB64, "base64");
+        imgHash = crypto.createHash("sha256").update(imgBuffer).digest("hex");
+        const fileName = `aluno_${validAlunoId}/q${qId}_${imgHash.slice(0, 16)}_${Date.now()}.png`;
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from("resolucoes")
+          .upload(fileName, imgBuffer, {
+            contentType: "image/png",
+            upsert: true,
+          });
+
+        if (!uploadErr && uploadData?.path) {
+          const { data: pubUrl } = supabase.storage.from("resolucoes").getPublicUrl(uploadData.path);
+          imagemResolucaoPath = pubUrl?.publicUrl || uploadData.path;
+        } else {
+          // Fallback resiliente: grava o hash criptográfico determinístico SHA-256
+          imagemResolucaoPath = `sha256:${imgHash}`;
+        }
+      } catch (storageErr) {
+        console.warn("[Submit Route] Aviso ao tentar upload de resolução no storage:", storageErr);
+        if (imgHash) {
+          imagemResolucaoPath = `sha256:${imgHash}`;
+        }
+      }
+    }
+
     // Telemetria estruturada nos logs e anotações para recuperação de dados
     const nivelFinalDica = isRendicaoNivel5 ? 5 : (Number(nivel_max_dica) || 0);
     const usouDicaFinal = Boolean(dica_socratica_usada || isRendicaoNivel5 || nivelFinalDica > 0);
@@ -168,25 +204,46 @@ export async function POST(
       ? `[TELEMETRIA_SOCRATICA: usou_dica=true, nivel_max=${nivelFinalDica}, acertou=${acertou}, total_dicas=${totalDicasFinal}${isRendicaoNivel5 ? ', rendicao=true' : ''}]`
       : `[TELEMETRIA_SOCRATICA: usou_dica=false, acertou=${acertou}]`;
 
+    // Preservação canônica da alternativa marcada e da dedução bruta (SFT / TRI / Distratores)
+    const respostaTag = `[RESPOSTA:${respostaAluno}]`;
+    const rawJustificativaAluno = (justificativa_texto || "").trim();
+    const justificativaTag = rawJustificativaAluno ? `[JUSTIFICATIVA_BRUTA:${rawJustificativaAluno}]` : "";
+
     const anotacoesFormatadas = isDiscursiva
-      ? `${telemetriaTag} [VEREDITO:${body.veredito}] ${body.anotacoes || body.feedback_latex || ""}`.trim()
-      : (body.anotacoes ? `${telemetriaTag} ${body.anotacoes}`.trim() : telemetriaTag);
+      ? `${respostaTag} ${telemetriaTag} ${justificativaTag} [VEREDITO:${body.veredito}] ${body.anotacoes || body.feedback_latex || ""}`.trim()
+      : (body.anotacoes ? `${respostaTag} ${telemetriaTag} ${justificativaTag} ${body.anotacoes}`.trim() : `${respostaTag} ${telemetriaTag} ${justificativaTag}`.trim());
 
     let tentativaId: any = null;
+    const tentativaPayload: Record<string, any> = {
+      questao_id: qId,
+      aluno_id: validAlunoId,
+      tempo_segundos: Math.max(0, parseInt(String(tempo_segundos), 10) || 0),
+      acertou: acertou ? 1 : 0,
+      estrategia_usada: estrategiaFormatada,
+      tipo_erro: tipoErro,
+      confianca_aluno: isRendicaoNivel5 ? 1 : confianca,
+      anotacoes: anotacoesFormatadas,
+      imagem_resolucao_path: imagemResolucaoPath,
+    };
+
     try {
+      // 1ª Tentativa: insere com resposta_aluno e texto_resolucao (schema enriquecido)
       const { data: tentativaInserida, error: tentativaErr } = await supabase.from("tentativas").insert({
-        questao_id: qId,
-        aluno_id: validAlunoId,
-        tempo_segundos: Math.max(0, parseInt(String(tempo_segundos), 10) || 0),
-        acertou: acertou ? 1 : 0,
-        estrategia_usada: estrategiaFormatada,
-        tipo_erro: tipoErro,
-        confianca_aluno: isRendicaoNivel5 ? 1 : confianca,
-        anotacoes: anotacoesFormatadas,
+        ...tentativaPayload,
+        resposta_aluno: respostaAluno,
+        texto_resolucao: rawJustificativaAluno || null,
       }).select("id").single();
 
       if (!tentativaErr && tentativaInserida) {
         tentativaId = tentativaInserida.id;
+      } else if (tentativaErr) {
+        // Fallback resiliente: se a coluna resposta_aluno ainda não existir no schema remoto
+        const { data: fallbackInserida, error: fallbackErr } = await supabase.from("tentativas").insert(tentativaPayload).select("id").single();
+        if (!fallbackErr && fallbackInserida) {
+          tentativaId = fallbackInserida.id;
+        } else if (fallbackErr) {
+          console.warn("[Submit Route] Falha no fallback de public.tentativas:", fallbackErr);
+        }
       }
     } catch (saveErr) {
       console.warn("[Submit Route] Falha ao gravar em public.tentativas:", saveErr);
@@ -228,9 +285,25 @@ export async function POST(
           tokensInfo.total = (tokensInfo.prompt || 0) + (tokensInfo.completion || 0);
         }
 
+        const inputHashFinal = avaliacao.input_hash
+          ? String(avaliacao.input_hash)
+          : imgHash
+          ? imgHash
+          : rawJustificativaAluno
+          ? crypto.createHash("sha256").update(rawJustificativaAluno).digest("hex")
+          : crypto.createHash("sha256").update(`${qId}:${respostaAluno}`).digest("hex");
+
         const outputEstruturado = {
           ...avaliacao,
           tokens: tokensInfo,
+          raw_input_aluno: {
+            tipo_questao: isDiscursiva ? "discursiva" : "objetiva",
+            resposta_enviada: respostaAluno,
+            justificativa_texto: rawJustificativaAluno || null,
+            imagem_resolucao_path: imagemResolucaoPath,
+            input_hash: inputHashFinal,
+            origem: origem || (imagem_base64 ? "lousa" : "texto"),
+          },
         };
 
         const { error: avaliacaoErr } = await supabase.from("avaliacoes_ia").insert({
@@ -241,7 +314,7 @@ export async function POST(
           versao_prompt: versaoPrompt,
           fallback_level: fallbackLevel,
           latencia_ms: latenciaMs,
-          input_hash: avaliacao.input_hash ? String(avaliacao.input_hash) : null,
+          input_hash: inputHashFinal,
           output_raw: avaliacao.output_raw ? String(avaliacao.output_raw) : (typeof avaliacao.feedback_latex === "string" ? avaliacao.feedback_latex : null),
           output_estruturado: outputEstruturado,
           confianca: confiancaVal,
@@ -397,6 +470,7 @@ export async function POST(
       resposta_enviada: respostaAluno,
       sm2: novoSm2,
       estrategias_esperadas: questao.estrategias_esperadas,
+      imagem_resolucao_path: imagemResolucaoPath,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erro interno";
