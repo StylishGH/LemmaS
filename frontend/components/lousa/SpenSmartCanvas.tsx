@@ -3,6 +3,7 @@
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Undo2, Redo2, Trash2 } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 export type ToolType = "pen" | "highlighter" | "stroke-eraser";
 
@@ -25,14 +26,25 @@ export interface SpenSmartCanvasProps {
   isEvaluating?: boolean;
   initialStrokes?: Stroke[];
   onStrokesChange?: (strokes: Stroke[]) => void;
+  canvasHeightClass?: string;
+  hideFooterEvaluate?: boolean;
+  exportCanvasRef?: React.MutableRefObject<(() => string | null) | null>;
 }
 
-const COLORS = [
+const COLORS_DARK = [
   { name: "Amarelo Ouro", hex: "#EAB308" },
   { name: "Branco Giz", hex: "#F8FAFC" },
   { name: "Azul Ciano", hex: "#38BDF8" },
   { name: "Rosa Coral", hex: "#F43F5E" },
   { name: "Verde Esmeralda", hex: "#10B981" },
+];
+
+const COLORS_LIGHT = [
+  { name: "Preto Carvão", hex: "#1A1A1A" },
+  { name: "Azul Escuro", hex: "#1D4ED8" },
+  { name: "Vermelho", hex: "#DC2626" },
+  { name: "Verde", hex: "#16A34A" },
+  { name: "Roxo", hex: "#7C3AED" },
 ];
 
 const WIDTHS = [2, 4, 8, 14];
@@ -42,7 +54,13 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   isEvaluating = false,
   initialStrokes,
   onStrokesChange,
+  canvasHeightClass = "h-[420px]",
+  hideFooterEvaluate = false,
+  exportCanvasRef,
 }) => {
+  const { isLight } = useTheme();
+  const COLORS = isLight ? COLORS_LIGHT : COLORS_DARK;
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Camada 1: Traços já finalizados (estática durante a escrita)
   const baseCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -59,6 +77,72 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   // Estados leves apenas para a barra de ferramentas
   const [activeTool, setActiveTool] = useState<ToolType>("pen");
   const [activeColor, setActiveColor] = useState<string>(COLORS[0].hex);
+
+  // Quando o tema muda: (1) reseta cor ativa, (2) remapeia cores dos traços existentes e redesenha
+  useEffect(() => {
+    // Paleta de saída (de onde veio) e de chegada (para onde vai)
+    const fromColors = isLight ? COLORS_DARK : COLORS_LIGHT;
+    const toColors   = isLight ? COLORS_LIGHT : COLORS_DARK;
+
+    // Mapa direto hex→hex entre as duas paletas (por índice de posição)
+    const colorMap = new Map<string, string>();
+    fromColors.forEach((c, i) => {
+      if (toColors[i]) colorMap.set(c.hex.toUpperCase(), toColors[i].hex);
+    });
+
+    // Remapeia cada traço: cor conhecida da paleta → equivalente na nova paleta
+    // Cor desconhecida (custom) → mantém
+    strokesRef.current = strokesRef.current.map((stroke) => {
+      const mapped = colorMap.get(stroke.color.toUpperCase());
+      return mapped ? { ...stroke, color: mapped } : stroke;
+    });
+
+    // Reseta a cor ativa para o default do novo tema
+    setActiveColor(toColors[0].hex);
+    colorRef.current = toColors[0].hex;
+
+    // Redesenha o canvas base com as novas cores
+    // (pequeno timeout deixa o DOM atualizar o fundo primeiro)
+    setTimeout(() => {
+      const canvas = baseCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const dpr = dprRef.current;
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      for (const stroke of strokesRef.current) {
+        // drawFullStroke usa strokesRef diretamente via closure — precisa ctx inline aqui
+        const pts = stroke.points;
+        if (pts.length === 0) return;
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = stroke.color;
+        ctx.fillStyle = stroke.color;
+        ctx.globalAlpha = stroke.tool === "highlighter" ? 0.35 : 1.0;
+        if (pts.length < 3) {
+          ctx.beginPath();
+          const r = (stroke.baseWidth * (pts[0].pressure || 0.7)) / 2;
+          ctx.arc(pts[0].x, pts[0].y, Math.max(1, r), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          return;
+        }
+        ctx.beginPath();
+        ctx.lineWidth = stroke.baseWidth;
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          ctx.quadraticCurveTo(p1.x, p1.y, (p1.x + p2.x) * 0.5, (p1.y + p2.y) * 0.5);
+        }
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLight]);
   const [activeWidth, setActiveWidth] = useState<number>(2);
   const [stylusMode, setStylusMode] = useState<boolean>(false);
   const [strokeCount, setStrokeCount] = useState<number>(initialStrokes ? initialStrokes.length : 0);
@@ -414,24 +498,41 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     onStrokesChange?.([]);
   };
 
-  const handleExportAndEvaluate = async () => {
+  const getCanvasBase64 = useCallback((): string | null => {
     const baseCanvas = baseCanvasRef.current;
-    if (!baseCanvas) return;
+    if (!baseCanvas) return null;
     const exportCanvas = document.createElement("canvas");
     exportCanvas.width = baseCanvas.width;
     exportCanvas.height = baseCanvas.height;
     const ctx = exportCanvas.getContext("2d");
-    if (!ctx) return;
-    ctx.fillStyle = "#0B0914";
+    if (!ctx) return null;
+    ctx.fillStyle = isLight ? "#FFFFFF" : "#0B0914";
     ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     ctx.drawImage(baseCanvas, 0, 0);
-    await onEvaluateOcr(exportCanvas.toDataURL("image/png"));
+    return exportCanvas.toDataURL("image/png");
+  }, []);
+
+  useEffect(() => {
+    if (exportCanvasRef) {
+      exportCanvasRef.current = getCanvasBase64;
+    }
+  }, [exportCanvasRef, getCanvasBase64]);
+
+  const handleExportAndEvaluate = async () => {
+    const b64 = getCanvasBase64();
+    if (b64) {
+      await onEvaluateOcr(b64);
+    }
   };
 
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-[#0D0B18] p-4 shadow-xl">
+    <div className={`rounded-xl border p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
+      isLight
+        ? "border-slate-300 bg-white"
+        : "border-amber-500/20 bg-[#0D0B18]"
+    }`}>
       {/* Barra de Ferramentas */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+      <div className={`mb-3 flex flex-wrap items-center justify-between gap-3 border-b pb-3 ${isLight ? "border-slate-200" : "border-white/10"}`}>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -439,6 +540,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               activeTool === "pen"
                 ? "bg-amber-400 text-black font-bold"
+                : isLight
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 : "bg-white/5 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -450,6 +553,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               activeTool === "highlighter"
                 ? "bg-amber-400 text-black font-bold"
+                : isLight
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 : "bg-white/5 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -461,20 +566,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               activeTool === "stroke-eraser"
                 ? "bg-amber-400 text-black font-bold"
+                : isLight
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 : "bg-white/5 text-gray-300 hover:bg-white/10"
             }`}
           >
             Borracha
           </button>
 
-          <div className="ml-2 flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1">
+          <div className={`ml-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 ${isLight ? "bg-slate-100" : "bg-white/5"}`}>
             {COLORS.map((c) => (
               <button
                 key={c.hex}
                 type="button"
                 onClick={() => setActiveColor(c.hex)}
                 className={`h-5 w-5 rounded-full transition-transform ${
-                  activeColor === c.hex ? "scale-125 ring-2 ring-white" : "opacity-75"
+                  activeColor === c.hex
+                    ? `scale-125 ${isLight ? "ring-2 ring-slate-400" : "ring-2 ring-white"}`
+                    : "opacity-75"
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -490,7 +599,9 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
                 onClick={() => setActiveWidth(w)}
                 className={`rounded px-2 py-1 ${
                   activeWidth === w
-                    ? "bg-amber-500/20 font-bold text-amber-300"
+                    ? "bg-amber-500/20 font-bold text-amber-600 dark:text-amber-300"
+                    : isLight
+                    ? "text-slate-500 hover:text-slate-900"
                     : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -506,7 +617,9 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             onClick={() => setStylusMode((prev) => !prev)}
             className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
               stylusMode
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-bold"
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold"
+                : isLight
+                ? "border-slate-300 bg-slate-100 text-slate-500"
                 : "border-white/10 bg-white/5 text-gray-400"
             }`}
           >
@@ -517,7 +630,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             type="button"
             onClick={handleUndo}
             disabled={strokeCount === 0}
-            className="rounded p-1.5 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 transition"
+            className={`rounded p-1.5 disabled:opacity-30 transition ${isLight ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900" : "text-gray-400 hover:bg-white/10 hover:text-white"}`}
             title="Desfazer"
           >
             <Undo2 className="w-4 h-4" />
@@ -526,7 +639,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={handleRedo}
-            className="rounded p-1.5 text-gray-400 hover:bg-white/10 hover:text-white transition"
+            className={`rounded p-1.5 transition ${isLight ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900" : "text-gray-400 hover:bg-white/10 hover:text-white"}`}
             title="Refazer"
           >
             <Redo2 className="w-4 h-4" />
@@ -536,7 +649,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             type="button"
             onClick={handleClear}
             disabled={strokeCount === 0}
-            className="rounded p-1.5 text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 transition"
+            className="rounded p-1.5 text-rose-500 hover:bg-rose-500/10 disabled:opacity-30 transition"
             title="Limpar Lousa"
           >
             <Trash2 className="w-4 h-4" />
@@ -547,7 +660,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       {/* Container Dual-Canvas (Camada Base + Camada de Tinta Rápida) */}
       <div
         ref={containerRef}
-        className="relative h-[420px] w-full overflow-hidden rounded-lg border border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
+        className={`relative w-full overflow-hidden rounded-lg border transition-colors ${
+          isLight
+            ? "border-slate-200 bg-white bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
+            : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
+        } ${canvasHeightClass}`}
       >
         <canvas
           ref={baseCanvasRef}
@@ -565,22 +682,28 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-        <div className="text-xs text-gray-300">
-          <strong className="text-amber-300">Avaliação do Rascunho da Lousa:</strong> Submete o
-          desenvolvimento manuscrito para transcrição LaTeX e validação passo a passo.
+      {!hideFooterEvaluate && (
+        <div className={`mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 ${
+          isLight
+            ? "border-amber-500/30 bg-amber-50 text-slate-700"
+            : "border-amber-500/20 bg-amber-500/5 text-gray-300"
+        }`}>
+          <div className="text-xs">
+            <strong className={isLight ? "text-amber-700" : "text-amber-300"}>Avaliação do Rascunho da Lousa:</strong> Submete o
+            desenvolvimento manuscrito para transcrição LaTeX e validação passo a passo.
+          </div>
+          <button
+            type="button"
+            disabled={isEvaluating || strokeCount === 0}
+            onClick={handleExportAndEvaluate}
+            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-amber-300 disabled:opacity-50 cursor-pointer"
+          >
+            {isEvaluating
+              ? "Analisando Manuscrito..."
+              : "⚡ Avaliar Rascunho da Lousa com MathAI Engine"}
+          </button>
         </div>
-        <button
-          type="button"
-          disabled={isEvaluating || strokeCount === 0}
-          onClick={handleExportAndEvaluate}
-          className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-amber-300 disabled:opacity-50 cursor-pointer"
-        >
-          {isEvaluating
-            ? "Analisando Manuscrito..."
-            : "⚡ Avaliar Rascunho da Lousa com MathAI Engine"}
-        </button>
-      </div>
+      )}
     </div>
   );
 };

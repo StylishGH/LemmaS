@@ -35,6 +35,8 @@ import { CriarSimuladoModal } from "@/components/CriarSimuladoModal";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 import { useTheme } from "@/components/theme-provider";
+import { useUserProfile } from "@/lib/use-user";
+import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 
 interface Question {
   id: number;
@@ -151,6 +153,7 @@ export default function BancoQuestoesPage() {
   const router = useRouter();
   const { isLight } = useTheme();
   const isDarkMode = !isLight;
+  const { profile, loading: userLoading } = useUserProfile();
 
   // Estado dos filtros — todos multi-select (arrays)
   const [bancaFiltro, setBancaFiltro] = useState<string[]>([VAL_TODAS]);
@@ -162,16 +165,55 @@ export default function BancoQuestoesPage() {
   const [busca, setBusca] = useState<string>("");
   const [lemaFiltro, setLemaFiltro] = useState<string | null>(null);
 
-  // Lê parâmetro de URL inicial (?lema=LEMA-0042)
+  // Rótulo amigável do foco pedagógico ativo no momento
+  const [personalizationEnabled, setPersonalizationEnabled] = useState(true);
+  const profilePreferences = useMemo(() => obterFiltrosApiPerfil(profile), [profile]);
+  const perfilAtivoDescricao = personalizationEnabled ? profilePreferences.origemDescricao : null;
+  const initialFiltersAppliedRef = useRef(false);
+
+  // URL parameters are explicit filters; profile preferences only affect ranking.
   useEffect(() => {
+    if (userLoading) return;
+    if (initialFiltersAppliedRef.current) return;
+    initialFiltersAppliedRef.current = true;
+
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
       const urlLema = sp.get("lema") || sp.get("lema_codigo");
-      if (urlLema) {
-        setLemaFiltro(urlLema.trim().toUpperCase());
+      const urlMateria = sp.get("materia");
+      const urlBanca = sp.get("banca");
+      const urlCategoriaBanca = sp.get("categoria_banca");
+      const urlTopico = sp.get("topico");
+      const urlTipoProva = sp.get("tipo_prova");
+      const urlFaseNivel = sp.get("fase_nivel");
+      const urlAno = sp.get("ano");
+      const urlTipo = sp.get("tipo");
+      const urlDificuldade = sp.get("dificuldade");
+      const urlBusca = sp.get("search") || sp.get("q");
+
+      const hasUrlFilters = !!(
+        urlLema || urlMateria || urlBanca || urlCategoriaBanca ||
+        urlTopico || urlTipoProva || urlFaseNivel || urlAno ||
+        urlTipo || urlDificuldade || urlBusca
+      );
+
+      if (hasUrlFilters) {
+        if (urlLema) setLemaFiltro(urlLema.trim().toUpperCase());
+        if (urlMateria) setMateriaFiltro(urlMateria.split(",").map((s) => s.trim()));
+        if (urlBanca) setBancaFiltro(urlBanca.split(",").map((s) => s.trim()));
+        if (urlCategoriaBanca) setCategoriaBancaFiltro(urlCategoriaBanca.trim());
+        if (urlTopico) setTopicoFiltro(urlTopico.split(",").map((s) => s.trim()));
+        if (urlTipoProva) setTipoProvaFiltro(urlTipoProva.split(",").map((s) => s.trim()));
+        if (urlFaseNivel) setFaseNivelFiltro(urlFaseNivel.split(",").map((s) => s.trim()));
+        if (urlAno) setAnoFiltro(urlAno.split(",").map((s) => s.trim()));
+        if (urlTipo) setTipoFiltro(urlTipo.split(",").map((s) => s.trim()));
+        if (urlDificuldade) setDificuldadeFiltro(urlDificuldade.split(",").map((s) => s.trim()));
+        if (urlBusca) setBusca(urlBusca.trim());
+        return;
       }
+
     }
-  }, []);
+  }, [userLoading, profile, profilePreferences]);
 
   const [gabaritosRevelados, setGabaritosRevelados] = useState<Set<number>>(new Set());
 
@@ -186,6 +228,8 @@ export default function BancoQuestoesPage() {
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Facets dinâmicos carregados da API — começam vazios, como as demais
   // facets da página, e são preenchidos pelo primeiro retorno da API.
@@ -364,8 +408,12 @@ export default function BancoQuestoesPage() {
 
   // Carregamento de questões com parâmetros sincronizados
   useEffect(() => {
+    if (userLoading && !initialFiltersAppliedRef.current) {
+      return;
+    }
     let ignore = false;
     setLoading(true);
+    setLoadError(null);
 
     const params = new URLSearchParams({
       page: page.toString(),
@@ -402,9 +450,19 @@ export default function BancoQuestoesPage() {
       }
     }
     if (lemaFiltro) params.set("lema", lemaFiltro);
+    if (personalizationEnabled) {
+      if (profilePreferences.banca?.length) params.set("prefer_banca", profilePreferences.banca.join(","));
+      if (profilePreferences.materia?.length) params.set("prefer_materia", profilePreferences.materia.join(","));
+      if (profilePreferences.categoria_banca) params.set("prefer_categoria_banca", profilePreferences.categoria_banca);
+    }
+
 
     fetch(`/api/questions?${params.toString()}`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error("Não foi possível carregar as questões. Tente novamente.");
+        return data;
+      })
       .then((data) => {
         if (!ignore) {
           if (data && data.questoes) {
@@ -462,6 +520,7 @@ export default function BancoQuestoesPage() {
       .catch((err) => {
         console.error("Erro ao carregar questões:", err);
         if (!ignore) {
+          setLoadError("Não foi possível carregar as questões. Seus filtros foram mantidos.");
           setQuestoes([]);
           setTotal(0);
         }
@@ -486,6 +545,10 @@ export default function BancoQuestoesPage() {
     busca,
     lemaFiltro,
     page,
+    userLoading,
+    retryCount,
+    personalizationEnabled,
+    profilePreferences,
   ]);
 
   const toggleGabarito = (id: number) => {
@@ -1567,6 +1630,27 @@ export default function BancoQuestoesPage() {
 
       {/* 3. LISTA DE QUESTÕES */}
       <div className="space-y-4">
+        {/* BANNER DE PERSONALIZAÇÃO PEDAGÓGICA */}
+        {perfilAtivoDescricao && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs text-slate-800 dark:text-[#f5f0df] shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
+              <span>
+                Todo o acervo, com prioridade para o seu plano: <strong className="font-semibold text-blue-700 dark:text-[#d9b452]">{perfilAtivoDescricao}</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPersonalizationEnabled(false);
+                setPage(1);
+              }}
+              className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white underline font-semibold shrink-0 transition-colors self-end sm:self-auto"
+            >
+              Usar ordem padrão
+            </button>
+          </div>
+        )}
         {/* PAGINAÇÃO SUPERIOR COMPACTA */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-[#a9aaa1] font-medium px-1">
@@ -1602,6 +1686,13 @@ export default function BancoQuestoesPage() {
           <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#141222] rounded-2xl border border-slate-200/80 dark:border-zinc-800">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-amber-500" />
             <span className="text-sm font-medium">Filtrando questões no Supabase...</span>
+          </div>
+        ) : loadError ? (
+          <div role="alert" className="py-12 px-6 text-center rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
+            <p className="font-semibold">{loadError}</p>
+            <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 rounded-lg border border-amber-500/40 font-semibold">
+              Tentar novamente
+            </button>
           </div>
         ) : questoes.length === 0 ? (
           <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-slate-500 space-y-4">

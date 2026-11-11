@@ -10,7 +10,8 @@ import {
   Minimize2,
   X,
   Code2,
-  BookOpen
+  BookOpen,
+  RefreshCw,
 } from "lucide-react";
 
 interface GeometricCompassBoardProps {
@@ -28,6 +29,11 @@ declare global {
 }
 
 const PRESET_CONSTRUCTIONS = [
+  {
+    nome: "Quadro em Branco (Construção Livre)",
+    descricao: "Comece uma nova construção euclidiana do zero com régua e compasso.",
+    comandos: [],
+  },
   {
     nome: "Mediatriz Euclidiana (Régua & Compasso)",
     descricao: "Construção clássica da reta mediatriz perpendicular ao segmento AB.",
@@ -99,6 +105,18 @@ export default function GeometricCompassBoard({
 }: GeometricCompassBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appletId = useRef(`ggb-applet-${Math.random().toString(36).substring(2, 9)}`).current;
+  const initializedRef = useRef(false);
+  const onCommandsChangeRef = useRef(onCommandsChange);
+  const initialCommandsRef = useRef(initialCommands);
+
+  useEffect(() => {
+    onCommandsChangeRef.current = onCommandsChange;
+  }, [onCommandsChange]);
+
+  useEffect(() => {
+    initialCommandsRef.current = initialCommands;
+  }, [initialCommands]);
+
   const [appletLoaded, setAppletLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [customCommand, setCustomCommand] = useState("");
@@ -109,42 +127,107 @@ export default function GeometricCompassBoard({
   // Executa comando no GeoGebra
   const runGGBCommand = useCallback((cmd: string) => {
     if (!cmd || !cmd.trim()) return;
+    const trimmed = cmd.trim();
     try {
       const ggbApplet = window[appletId];
       if (ggbApplet && typeof ggbApplet.evalCommand === "function") {
-        ggbApplet.evalCommand(cmd.trim());
-        setScriptLog((prev) => {
-          const updated = [...prev.slice(-15), `✓ ${cmd.trim()}`];
-          if (onCommandsChange) {
-            onCommandsChange(updated.filter((c) => c.startsWith("✓ ")).map((c) => c.slice(2)));
-          }
-          return updated;
-        });
+        ggbApplet.evalCommand(trimmed);
+        setScriptLog((prev) => [...prev.slice(-15), `✓ ${trimmed}`]);
       } else {
-        console.warn("Applet GeoGebra ainda não inicializado para executar:", cmd);
+        console.warn("Applet GeoGebra ainda não inicializado para executar:", trimmed);
       }
     } catch (err) {
       console.error("Erro ao executar comando GeoGebra:", err);
-      setScriptLog((prev) => [...prev.slice(-15), `✗ Erro: ${cmd.trim()}`]);
+      setScriptLog((prev) => [...prev.slice(-15), `✗ Erro: ${trimmed}`]);
     }
-  }, [appletId, onCommandsChange]);
+  }, [appletId]);
 
-  // Executa lote de comandos
+  // Executa lote de comandos com reset prévio determinístico
   const runBatchCommands = useCallback((commands: string[]) => {
     const ggbApplet = window[appletId];
-    if (ggbApplet && typeof ggbApplet.reset === "function") {
-      ggbApplet.reset();
+    if (ggbApplet) {
+      if (typeof ggbApplet.newConstruction === "function") {
+        ggbApplet.newConstruction();
+      } else if (typeof ggbApplet.reset === "function") {
+        ggbApplet.reset();
+      }
     }
+    if (!commands || commands.length === 0) {
+      setScriptLog([]);
+      return;
+    }
+    const newLogs: string[] = [];
     commands.forEach((c) => {
-      runGGBCommand(c);
+      if (!c || !c.trim()) return;
+      const trimmed = c.trim();
+      try {
+        if (ggbApplet && typeof ggbApplet.evalCommand === "function") {
+          ggbApplet.evalCommand(trimmed);
+          newLogs.push(`✓ ${trimmed}`);
+        }
+      } catch (err) {
+        console.error("Erro ao executar comando GeoGebra:", err);
+        newLogs.push(`✗ Erro: ${trimmed}`);
+      }
     });
-  }, [appletId, runGGBCommand]);
+    setScriptLog(newLogs);
+  }, [appletId]);
 
-  // Inicialização do Script Oficial do GeoGebra com Timeout de Contingência Seguro
+  // Sincroniza objetos construídos diretamente no GeoGebra (via mouse / régua / compasso)
+  const syncGeoGebraObjects = useCallback(() => {
+    try {
+      const ggbApplet = window[appletId];
+      if (!ggbApplet || typeof ggbApplet.getAllObjectNames !== "function") return;
+      const names: string[] = ggbApplet.getAllObjectNames();
+      if (!names || names.length === 0) return;
+
+      const extracted: string[] = [];
+      for (const name of names) {
+        const cmd = typeof ggbApplet.getCommandString === "function" ? ggbApplet.getCommandString(name) : "";
+        const def = typeof ggbApplet.getDefinitionString === "function" ? ggbApplet.getDefinitionString(name) : "";
+        const val = typeof ggbApplet.getValueString === "function" ? ggbApplet.getValueString(name) : "";
+
+        if (cmd && cmd.trim()) {
+          extracted.push(`${name} = ${cmd.trim()}`);
+        } else if (def && def.trim()) {
+          extracted.push(`${name} = ${def.trim()}`);
+        } else if (val && val.trim()) {
+          extracted.push(val.trim());
+        }
+      }
+
+      if (extracted.length > 0) {
+        setScriptLog((prev) => {
+          const existingSet = new Set(prev);
+          const newEntries = extracted
+            .map((c) => `✓ ${c}`)
+            .filter((item) => !existingSet.has(item));
+          if (newEntries.length === 0) return prev;
+          return [...prev, ...newEntries].slice(-30);
+        });
+      }
+    } catch (err) {
+      console.warn("Falha ao sincronizar objetos do GeoGebra:", err);
+    }
+  }, [appletId]);
+
+  // Notifica o componente pai sobre mudanças nos comandos sem gerar ciclo
+  useEffect(() => {
+    if (onCommandsChangeRef.current) {
+      const valid = scriptLog
+        .filter((c) => c.startsWith("✓ "))
+        .map((c) => c.slice(2));
+      onCommandsChangeRef.current(valid);
+    }
+  }, [scriptLog]);
+
+  // Inicialização do Script Oficial do GeoGebra (executa EXATAMENTE UMA VEZ no mount)
   useEffect(() => {
     let isMounted = true;
 
-    // Timer de segurança: se a injeção do GeoGebra demorar mais de 12s (rede lenta/bloqueio), chaveia para iframe
+    if (initializedRef.current) return;
+
+    // Timer de segurança: se a injeção do GeoGebra demorar mais de 12s, chaveia para iframe
     const fallbackTimer = setTimeout(() => {
       if (isMounted) {
         setUseIframeFallback((prev) => {
@@ -162,6 +245,11 @@ export default function GeometricCompassBoard({
       if (!isMounted) return;
       if (window.GGBApplet) {
         try {
+          const container = document.getElementById(appletId);
+          if (!container) return;
+
+          initializedRef.current = true;
+
           const params = {
             id: appletId,
             appName: "geometry",
@@ -181,11 +269,37 @@ export default function GeometricCompassBoard({
               if (isMounted) {
                 clearTimeout(fallbackTimer);
                 setAppletLoaded(true);
+
+                // Conecta listener para objetos criados interativamente na tela
+                try {
+                  const ggbApplet = window[appletId];
+                  if (ggbApplet && typeof ggbApplet.registerAddListener === "function") {
+                    ggbApplet.registerAddListener((objName: string) => {
+                      if (!isMounted || !objName) return;
+                      try {
+                        const cmd = typeof ggbApplet.getCommandString === "function" ? ggbApplet.getCommandString(objName) : "";
+                        const val = typeof ggbApplet.getValueString === "function" ? ggbApplet.getValueString(objName) : "";
+                        const item = cmd ? `${objName} = ${cmd}` : val || objName;
+                        if (item) {
+                          setScriptLog((prev) => {
+                            const entry = `✓ ${item}`;
+                            if (prev.includes(entry)) return prev;
+                            return [...prev.slice(-25), entry];
+                          });
+                        }
+                      } catch {
+                        // ignore listener extraction errors
+                      }
+                    });
+                  }
+                } catch {
+                  // ignore
+                }
+
                 // Executa comandos iniciais se houver
-                if (initialCommands && initialCommands.length > 0) {
-                  initialCommands.forEach((c) => runGGBCommand(c));
-                } else if (PRESET_CONSTRUCTIONS[0]) {
-                  PRESET_CONSTRUCTIONS[0].comandos.forEach((c) => runGGBCommand(c));
+                const initial = initialCommandsRef.current;
+                if (initial && initial.length > 0) {
+                  runBatchCommands(initial);
                 }
               }
             },
@@ -222,7 +336,6 @@ export default function GeometricCompassBoard({
     } else if (window.GGBApplet) {
       initGeoGebra();
     } else {
-      // Se o script já está no DOM aguardando load
       const existing = document.getElementById("ggb-script");
       if (existing) {
         existing.addEventListener("load", () => initGeoGebra());
@@ -238,8 +351,16 @@ export default function GeometricCompassBoard({
     return () => {
       isMounted = false;
       clearTimeout(fallbackTimer);
+      try {
+        if (window[appletId]?.destroy) {
+          window[appletId].destroy();
+        }
+        delete window[appletId];
+      } catch {
+        // ignore
+      }
     };
-  }, [appletId, initialCommands, runGGBCommand]);
+  }, [appletId, runBatchCommands]);
 
   const handleApplyPreset = (index: number) => {
     setSelectedPreset(index);
@@ -251,12 +372,17 @@ export default function GeometricCompassBoard({
 
   const handleReset = () => {
     const ggbApplet = window[appletId];
-    if (ggbApplet && typeof ggbApplet.reset === "function") {
-      ggbApplet.reset();
-      setScriptLog(["✓ Quadro Geométrico reiniciado"]);
-      if (onCommandsChange) {
-        onCommandsChange([]);
+    if (ggbApplet) {
+      if (typeof ggbApplet.newConstruction === "function") {
+        ggbApplet.newConstruction();
+      } else if (typeof ggbApplet.reset === "function") {
+        ggbApplet.reset();
       }
+    }
+    setSelectedPreset(0);
+    setScriptLog([]);
+    if (onCommandsChangeRef.current) {
+      onCommandsChangeRef.current([]);
     }
   };
 
@@ -355,21 +481,26 @@ export default function GeometricCompassBoard({
         
         {/* CONTAINER DO GEOGEBRA */}
         <div className="relative flex-1 h-full min-h-[380px] bg-slate-50 flex items-center justify-center overflow-hidden">
-          {useIframeFallback ? (
+          {useIframeFallback && (
             <iframe
               src="https://www.geogebra.org/geometry?embed"
               title="GeoGebra Geometry Suite"
-              className="w-full h-full border-0"
+              className="absolute inset-0 w-full h-full border-0 z-10"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               onLoad={() => setAppletLoaded(true)}
             />
-          ) : (
-            <div id={appletId} className="w-full h-full flex items-center justify-center" />
           )}
 
-          {!appletLoaded && !useIframeFallback && (
-            <div className="absolute inset-0 bg-[#0e0d16]/90 flex flex-col items-center justify-center gap-3 z-10 text-[#d9b452] p-4 text-center">
+          <div
+            id={appletId}
+            className={`w-full h-full flex items-center justify-center ${
+              useIframeFallback ? "invisible pointer-events-none" : ""
+            }`}
+          />
+
+          {!appletLoaded && (
+            <div className="absolute inset-0 bg-[#0e0d16]/90 flex flex-col items-center justify-center gap-3 z-20 text-[#d9b452] p-4 text-center">
               <Compass className="w-8 h-8 animate-spin" />
               <p className="text-xs font-mono">Calibrando Régua e Compasso Euclidiano...</p>
               <button
@@ -388,9 +519,19 @@ export default function GeometricCompassBoard({
 
         {/* CONSOLE DE COMANDOS FORMAIS (SCRIPTING DE LEMAS) */}
         <div className="w-full md:w-72 bg-[#110f1e] border-t md:border-t-0 md:border-l border-amber-500/20 p-3 flex flex-col gap-2.5 text-xs">
-          <div className="flex items-center gap-1.5 text-zinc-300 font-semibold">
-            <Code2 className="w-3.5 h-3.5 text-amber-500" />
-            <span>Execução de Lemas Geométricos</span>
+          <div className="flex items-center justify-between text-zinc-300 font-semibold">
+            <div className="flex items-center gap-1.5">
+              <Code2 className="w-3.5 h-3.5 text-amber-500" />
+              <span>Execução de Lemas Geométricos</span>
+            </div>
+            <button
+              type="button"
+              onClick={syncGeoGebraObjects}
+              className="p-1 rounded-md text-zinc-400 hover:text-[#d9b452] hover:bg-zinc-800 transition-colors"
+              title="Sincronizar objetos construídos com régua/compasso no GeoGebra"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">

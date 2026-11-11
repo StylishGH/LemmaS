@@ -557,6 +557,23 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 - [x] Personalização Pedagógica Socrática por Perfil: adaptação dinâmica de tom, intuição e rigor axiomático para Licenciatura/Docente, Militares (ITA/IME/AFA), Ciência de Dados & ML, e Concursos.
 - [x] Suítes de testes automatizados com 100% de aprovação (`test_acceptance_mission_integrated.py`, `test_discursive_bench_suite.py`, `test_fase2_personalizacao.py`).
 
+### P3.1 — Personalização Pedagógica Inteligente V2 (Motor Determinístico & Explicável) — [x] 100% Concluído & Validado
+- [x] **P1 (Soberania da Preferência Manual):** A preferência explícita do estudante (`pedagogicalPreference`) nunca mais é sobrescrita silenciosamente por objetivos ou bancas em `resolver/page.tsx`. Objetivos sugerem preferências apenas quando o campo estiver nulo ou indefinido.
+- [x] **P2 (Motor de Recomendação V1 Determinístico & Explicável):** Implementado `frontend/lib/pedagogical-engine.ts` sob função de pontuação ponderada $S(t) = w_1 G(t) + w_2 P(t) + w_3 A(t) + w_4 D(t)$, classificando conteúdos em `prioritaria`, `complementar` e `futura` com geração de justificativas em linguagem natural ("Por que recomendamos:").
+- [x] **P2.1 (Grafo de Pré-Requisitos Matemáticos - DAG):** Grafo direcionado acíclico mapeando a cadeia de dependências epistemológicas (Matemática Básica ➔ Álgebra ➔ Funções ➔ Trigonometria & Geometria Analítica ➔ Cálculo ➔ Álgebra Linear ➔ Otimização & Análise Real) sem ciclos.
+- [x] **P3 (Nova Modelagem do Perfil & Desacoplamento Selecionado vs. Recomendado):**
+  - Distinção rigorosa entre `objetivoPrincipal` (exclusivo) e `objetivosSecundarios` (opcionais).
+  - Separação entre sugestões do motor (`conteudosRecomendados`) e a escolha ativa do estudante (`conteudosSelecionados`), eliminando auto-seleção forçada.
+  - Sinalização honesta de trilhas conceituais e bancas em planejamento (0 questões no banco) sem promessas falsas.
+  - Calibração de disponibilidade diária em minutos e meta ajustável (`questoes` vs. `sessoes`), corrigindo rótulos como "lemas/dia" e estimativas estáticas irreais.
+- [x] **Compatibilidade Retroativa:** Estrutura persistida em JSON dentro de `usuarios.motivos` sem quebra de migrações ou perda de perfis antigos.
+- [x] **Interface do Perfil Reestruturada em 5 Etapas:** (1) Seus Objetivos; (2) Como Deseja Aprender; (3) Sua Trilha Sugerida; (4) Ajustes Avançados & Catálogo; (5) Sua Rotina.
+- [x] **Suíte de Testes Automatizados:** 18 testes automatizados aprovados (`tests/test_fase2_personalizacao.py` e `tests/test_fase2_recomendacao_pedagogica_v2.py`).
+- [x] **P3.2 (Feed de Questões Alinhado ao Perfil Pedagógico em Toda a Plataforma):**
+  - **Banco de Questões (`/questoes`):** Preferências do perfil ordenam o acervo completo, priorizando bancas e matérias alinhadas ao plano sem selecionar filtros automaticamente. Filtros manuais e parâmetros explícitos de URL restringem a lista. Paginação entre grupos sem duplicatas, contagem integral e opção de usar a ordem padrão.
+  - **Área de Resolução (`/resolver`):** Carregamento de questões em Standby e geração de "Simulado Rápido" (15 questões) calibrados dinamicamente para o foco do perfil, com identificação visual do foco ativo.
+  - **Dashboard (`/`):** Seção interativa "Questões Recomendadas para o seu Perfil" com 3 cartões prioritários contextualizados com fórmulas matemáticas renderizadas via KaTeX (`MathText`), metadados de banca/dificuldade e atalho de resolução imediata.
+
 ### P3+ — Entregas & Inovações Adicionadas Além do Escopo Original — [x] 100% Concluído & Em Produção
 *(Funcionalidades de alto valor pedagógico e técnico implementadas sem previsão no roadmap inicial)*
 
