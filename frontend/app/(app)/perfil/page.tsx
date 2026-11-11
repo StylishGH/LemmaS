@@ -36,6 +36,7 @@ import {
   CheckCheck
 } from "lucide-react";
 import { useUserProfile, getInitials, inferirMotivacoes } from "@/lib/use-user";
+import { AdminAnalyticsShortcut } from "@/components/AdminAnalyticsShortcut";
 import {
   TRILHAS_MOTIVACOES,
   TRILHAS_CONCEITUAIS_CATALOGO,
@@ -572,6 +573,8 @@ export default function PerfilPage() {
           </div>
         </div>
       </div>
+
+      <AdminAnalyticsShortcut />
 
       {/* 2. NAVEGAÇÃO POR ABAS */}
       <div className="flex border-b border-slate-200 dark:border-amber-500/20 gap-2 overflow-x-auto">
