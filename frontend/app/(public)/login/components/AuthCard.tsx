@@ -29,14 +29,14 @@ export function AuthCard() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Tab inicial a partir da query param: ?tab=signup ou ?tab=signin
+  // Tab inicial a partir da query param: ?tab=signup ou ?tab=signin ou ?tab=forgot
   const tabParam = searchParams.get("tab");
-  const [tab, setTab] = useState<"signup" | "signin">(
-    tabParam === "signin" ? "signin" : "signup"
+  const [tab, setTab] = useState<"signup" | "signin" | "forgot">(
+    tabParam === "signin" ? "signin" : tabParam === "forgot" ? "forgot" : "signup"
   );
 
   useEffect(() => {
-    if (tabParam === "signin" || tabParam === "signup") {
+    if (tabParam === "signin" || tabParam === "signup" || tabParam === "forgot") {
       setTab(tabParam);
     }
   }, [tabParam]);
@@ -61,7 +61,7 @@ export function AuthCard() {
 
   const requisitosSenha = validarRequisitosSenha(senha);
 
-  const alternarTab = (novaTab: "signup" | "signin") => {
+  const alternarTab = (novaTab: "signup" | "signin" | "forgot") => {
     setTab(novaTab);
     setErro(null);
     setMensagemSucesso(null);
@@ -205,6 +205,31 @@ export function AuthCard() {
       setErro(err?.message || "Não foi possível reenviar o e-mail agora. Tente novamente em instantes.");
     } finally {
       setReenviando(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro(null);
+    setMensagemSucesso(null);
+    if (!email || !email.includes("@")) {
+      setErro("Por favor, informe o e-mail cadastrado na sua conta.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const redirectUri = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=/perfil&type=recovery`
+        : "/auth/callback?next=/perfil&type=recovery";
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: redirectUri,
+      });
+      if (error) throw error;
+      setMensagemSucesso(`Link de redefinição enviado para ${email.trim()}. Verifique sua caixa de entrada (e spam).`);
+    } catch (err: any) {
+      setErro(err?.message || "Não foi possível enviar o e-mail agora. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -514,6 +539,8 @@ export function AuthCard() {
               <h2 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
                 {tab === "signup" ? (
                   <>Criar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
+                ) : tab === "forgot" ? (
+                  <>Redefinir sua senha</>
                 ) : (
                   <>Acessar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
                 )}
@@ -521,10 +548,54 @@ export function AuthCard() {
               <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
                 {tab === "signup"
                   ? "Entre rapidamente e calibre seu plano de estudo socrático."
+                  : tab === "forgot"
+                  ? "Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha."
                   : "Bem-vindo de volta! Acesse suas listas de estudo e simulados."}
               </p>
             </div>
 
+            {/* ── TELA DE RECUPERAÇÃO DE SENHA ── */}
+            {tab === "forgot" ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="forgot-email" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
+                    <Mail size={14} className="text-blue-500 dark:text-amber-500" /> Endereço de E-mail
+                  </label>
+                  <input
+                    type="email"
+                    id="forgot-email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu.email@exemplo.com"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-60"
+                >
+                  {loading ? (
+                    <><Loader2 size={16} className="animate-spin" /> Enviando...</>
+                  ) : (
+                    <><KeyRound size={15} /> Enviar link de redefinição</>
+                  )}
+                </button>
+
+                <div className="text-center text-xs text-slate-500 dark:text-zinc-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => alternarTab("signin")}
+                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                  >
+                    ← Voltar para o login
+                  </button>
+                </div>
+              </form>
+            ) : (
+            <>
             {/* Alternância de Abas (Tabs) */}
             <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-bold">
               <button
@@ -617,14 +688,25 @@ export function AuthCard() {
                   <label htmlFor="password" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
                     <Lock size={14} className="text-blue-500 dark:text-amber-500" /> Senha de Acesso
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setMostrarSenha(!mostrarSenha)}
-                    className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1"
-                  >
-                    {mostrarSenha ? <EyeOff size={13} /> : <Eye size={13} />}
-                    {mostrarSenha ? "Ocultar" : "Mostrar"}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {tab === "signin" && (
+                      <button
+                        type="button"
+                        onClick={() => alternarTab("forgot")}
+                        className="text-[11px] text-blue-600 dark:text-amber-400 hover:underline cursor-pointer"
+                      >
+                        Esqueci minha senha
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setMostrarSenha(!mostrarSenha)}
+                      className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1"
+                    >
+                      {mostrarSenha ? <EyeOff size={13} /> : <Eye size={13} />}
+                      {mostrarSenha ? "Ocultar" : "Mostrar"}
+                    </button>
+                  </div>
                 </div>
                 <input
                   type={mostrarSenha ? "text" : "password"}
@@ -731,6 +813,8 @@ export function AuthCard() {
                 </p>
               )}
             </div>
+            </>
+            )} {/* fim do ternário forgot */}
           </>
         )}
       </div>
