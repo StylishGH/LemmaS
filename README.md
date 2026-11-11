@@ -64,7 +64,7 @@ Two students can miss the same calculus problem for completely different reasons
 - **Personalized ordering:** profile preferences rank the full catalog without selecting filters. Choosing Escola Naval puts its questions first while other banks remain available. Manual and URL filters restrict results.
 - **Background loading:** after showing the current 15 questions, the catalog prefetches the next page in the same personalized order and reuses visited pages in memory. Storage is bounded and reset when filters, preferences, or the user change.
 - **Learning profile:** primary and secondary goals, selected content separated from recommendations, daily availability, and preserved learning preferences.
-- **Landing and technical portfolio:** larger product captures, corrected formulas, and explicit implementation, experiment, and research status.
+- **Student landing:** guidance for setting a goal, a three-step study cycle, a short FAQ about accounts, tools, and hints, and worked teaching examples. Professional contact stays in the technical portfolio.
 
 | Production catalog | Observed on November 11, 2026 |
 |---|---:|
