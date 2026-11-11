@@ -79,13 +79,25 @@ def carregar_env() -> Dict[str, str]:
     return env
 
 
-def obter_cliente_supabase():
-    """Inicializa e retorna o cliente Supabase."""
+def obter_cliente_supabase(require_service_role: bool = False):
+    """Inicializa o cliente Supabase; gravações administrativas exigem chave privilegiada."""
     env = carregar_env()
     url = env.get("SUPABASE_URL") or env.get("NEXT_PUBLIC_SUPABASE_URL")
-    key = env.get("SUPABASE_KEY") or env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    if require_service_role:
+        key = env.get("SUPABASE_SERVICE_ROLE_KEY") or env.get("SUPABASE_SECRET_KEY")
+    else:
+        key = (
+            env.get("SUPABASE_SERVICE_ROLE_KEY")
+            or env.get("SUPABASE_SECRET_KEY")
+            or env.get("SUPABASE_KEY")
+            or env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+        )
 
     if not url or not key:
+        if require_service_role:
+            print("⚠️  Sincronização no Supabase exige SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_SECRET_KEY.")
+            print("   O lema local foi salvo, mas a gravação administrativa no banco foi ignorada.")
+            return None
         print("⚠️  Aviso: Credenciais do Supabase não encontradas no ambiente.")
         print("   O script funcionará normalmente operando sobre o arquivo JSON local.")
         return None
@@ -167,7 +179,7 @@ def adicionar_lema(
 
     # Sincroniza com Supabase se solicitado
     if sincronizar_db:
-        sb = obter_cliente_supabase()
+        sb = obter_cliente_supabase(require_service_role=True)
         if sb:
             try:
                 # Upsert idempotente no Supabase via RPC segura com SECURITY DEFINER
@@ -233,7 +245,7 @@ def adicionar_em_lote(lista_novos: List[Dict[str, str]], atualizar: bool = False
 
 def sincronizar_com_banco() -> None:
     """Sincroniza todos os lemas do JSON local com a tabela conceitos do Supabase."""
-    sb = obter_cliente_supabase()
+    sb = obter_cliente_supabase(require_service_role=True)
     if not sb:
         print("❌ Não foi possível conectar ao Supabase para sincronização.")
         return
