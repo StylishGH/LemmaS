@@ -361,27 +361,13 @@ function ResolverContent() {
   const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
   const [loadingChunk, setLoadingChunk] = useState<boolean>(false);
   const [answeredIndices, setAnsweredIndices] = useState<Set<number>>(new Set());
-  const [windowSize, setWindowSize] = useState<number>(20);
+  const windowSize = 20;
   const sessionGenerationRef = useRef(0);
 
   const profileStandbyDescricao = useMemo(
     () => (profile ? obterFiltrosApiPerfil(profile).origemDescricao : null),
     [profile]
   );
-
-  useEffect(() => {
-    const updateSize = () => {
-      if (typeof window !== "undefined") {
-        if (window.innerWidth >= 1280) setWindowSize(22);
-        else if (window.innerWidth >= 1024) setWindowSize(20);
-        else if (window.innerWidth >= 768) setWindowSize(14);
-        else setWindowSize(8);
-      }
-    };
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
 
   // Cronômetro
   const [totalTimeInitial, setTotalTimeInitial] = useState(45 * 60);
@@ -2071,9 +2057,8 @@ function ResolverContent() {
   );
   const discursiveEval = currentQ ? discursiveEvaluations[currentQ.id] : undefined;
 
-  // Navegação de Janela Deslizante (20/22 botões com questão ativa centralizada no desktop)
-  const maxStart = Math.max(0, effectiveTotal - windowSize);
-  const windowStart = Math.max(0, Math.min(currentIndex - Math.floor(windowSize / 2), maxStart));
+  // Fixed blocks of 20; jump controls stay visible without horizontal scrolling.
+  const windowStart = Math.floor(currentIndex / windowSize) * windowSize;
   const endIndex = Math.min(windowStart + windowSize, effectiveTotal);
   const visibleQuestionIndices = Array.from(
     { length: Math.max(0, endIndex - windowStart) },
@@ -2099,22 +2084,26 @@ function ResolverContent() {
       <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
       <div className="space-y-4 relative z-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 max-w-full">
           {isDiscursiva ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs shrink-0">
               <Sparkles className="w-3 h-3" />
-              QUESTÃO DISCURSIVA
+              DISCURSIVA
             </span>
           ) : (
-            <PenTool className="w-4 h-4 text-blue-600 dark:text-[#d9b452]" />
+            <PenTool className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
           )}
-          <h4 className="font-serif-math text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
-            {isDiscursiva ? "Bancada de Resolução do Estudante" : "Bancada de Rascunho & Ferramentas"}
+          <h4 className="font-serif-math text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0] break-words">
+            {isDiscursiva ? (
+              <>Bancada de Resolução<span className="hidden xl:inline"> do Estudante</span></>
+            ) : (
+              <>Bancada de Rascunho<span className="hidden xl:inline"> & Ferramentas</span></>
+            )}
           </h4>
         </div>
 
         {/* ABAS RÁPIDAS DA BANCADA */}
-        <div className="flex items-center gap-1.5 overflow-x-auto select-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 w-full min-w-0 select-none">
           <button
             type="button"
             onClick={() => {
@@ -2124,15 +2113,15 @@ function ResolverContent() {
                 ativarEIrParaBancada("lousa");
               }
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "lousa"
-                ? "lemmas-gold-cta font-bold shadow-xs scale-105"
+                ? "lemmas-gold-cta font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-blue-500/35 dark:hover:border-amber-500/35"
             }`}
             title="Lousa com Pointer Events e rejeição de palma para rascunhos"
           >
             <PenTool className="w-3.5 h-3.5" />
-            <span>Lousa de Rascunho</span>
+            <span>Lousa <span className="hidden md:inline">de Rascunho</span></span>
           </button>
 
           <button
@@ -2144,15 +2133,15 @@ function ResolverContent() {
                 ativarEIrParaBancada("geometria");
               }
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "geometria"
-                ? "bg-sky-500 text-white font-bold shadow-xs scale-105"
+                ? "bg-sky-500 text-white font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-sky-500/35"
             }`}
             title="Quadro Euclidiano com régua, compasso e script de lemas"
           >
             <Compass className="w-3.5 h-3.5" />
-            <span>Geometria Euclidiana</span>
+            <span>Geometria <span className="hidden md:inline">Euclidiana</span></span>
           </button>
 
           <button
@@ -2164,9 +2153,9 @@ function ResolverContent() {
                 ativarEIrParaBancada("texto");
               }
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "texto"
-                ? "bg-purple-600 text-white font-bold shadow-xs scale-105"
+                ? "bg-purple-600 text-white font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-purple-500/35"
             }`}
             title="Dedução digitada em texto ou envio de foto para OCR"
@@ -2184,11 +2173,11 @@ function ResolverContent() {
               }
               setModoFocoAtivo(true);
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-700 dark:text-[#f5f0df] border border-amber-500/40 shadow-xs hover:scale-105"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-700 dark:text-[#f5f0df] border border-amber-500/40 shadow-xs hover:scale-102 whitespace-nowrap shrink-0"
             title="Abrir a Lousa ou GeoGebra em tela cheia com card flutuante da questão"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="font-bold">✨ Modo Foco Imersivo</span>
+            <span className="font-bold">✨ Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
           </button>
         </div>
       </div>
@@ -2669,15 +2658,15 @@ function ResolverContent() {
         </div>
 
         {/* LINHA 2: NAVEGAÇÃO DE QUESTÕES (JUMPER DE 20 & IR PARA) */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4 pt-1 overflow-x-auto flex-nowrap pb-1 sm:pb-0">
-          {/* Faixa com os números da janela de 20/22 questões */}
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap shrink-0">
+        <div aria-label="Navegação de questões" className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pt-1">
+          {/* Faixa com os números do bloco de 20 questões */}
+          <div className="flex items-center gap-1.5 min-w-0">
             {/* Botão para voltar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 20))}
-              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex(Math.max(0, windowStart - windowSize))}
+              disabled={windowStart === 0}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                currentIndex === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+                windowStart === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
               title="20 questões anteriores"
             >
@@ -2685,7 +2674,8 @@ function ResolverContent() {
               <span>-20</span>
             </button>
 
-            {/* Números das questões na janela ativa de 20/22 */}
+            {/* Até 20 números, distribuídos em linhas conforme a largura. */}
+            <div className="grid grid-cols-5 sm:grid-cols-10 xl:grid-cols-20 gap-1 min-w-0 flex-1">
             {visibleQuestionIndices.map((qIndex) => {
               const isCurrent = qIndex === currentIndex;
               const qObj = questions[qIndex];
@@ -2737,7 +2727,7 @@ function ResolverContent() {
                 <button
                   key={qIndex}
                   onClick={() => setCurrentIndex(qIndex)}
-                  className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center shrink-0 ${buttonColorClass}`}
+                  className={`min-w-0 w-full h-8 rounded-lg text-[10px] font-bold transition-all relative flex items-center justify-center ${buttonColorClass}`}
                   title={`Questão ${qIndex + 1}${statusTitle}${isBookmarked ? " [Marcada]" : ""}`}
                 >
                   {qIndex + 1}
@@ -2757,12 +2747,14 @@ function ResolverContent() {
               );
             })}
 
+            </div>
+
             {/* Botão para avançar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.min(effectiveTotal - 1, prev + 20))}
-              disabled={currentIndex >= effectiveTotal - 1}
+              onClick={() => setCurrentIndex(windowStart + windowSize)}
+              disabled={windowStart + windowSize >= effectiveTotal}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                currentIndex >= effectiveTotal - 1 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+                windowStart + windowSize >= effectiveTotal ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
               title="Próximas 20 questões"
             >
@@ -2772,7 +2764,7 @@ function ResolverContent() {
           </div>
 
           {/* Jump input com divisor vertical */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 border-l border-slate-200 dark:border-stone-700 pl-2.5 sm:pl-3.5">
+          <div className="flex items-center justify-end gap-2 xl:border-l border-slate-200 dark:border-stone-700 xl:pl-3">
             <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap" htmlFor="jump-input">
               Ir para:
             </label>
