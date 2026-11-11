@@ -248,12 +248,13 @@ export default function ImmersiveFocusOverlay({
           )}
 
           {activeEngine === "geometria" && (
-            <div className="w-full h-full">
+            <div className="w-full h-full flex flex-col">
               <GeometricCompassBoard
                 key={`geo-focus-q${currentIndex}-${question.id}`}
                 initialCommands={geometricCommands}
                 onCommandsChange={onGeometricCommandsChange}
                 className="w-full h-full"
+                isFocusMode={true}
               />
             </div>
           )}

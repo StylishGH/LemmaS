@@ -1,0 +1,9 @@
+tentativa_id,aluno_id,questao_id,materia,topico,banca,ano,dificuldade,gabarito_oficial,resposta_marcada,acertou,tempo_segundos,confianca_aluno,tipo_erro,data_hora
+37,9999,22968,Matemática,Álgebra,Escola Naval,2026,1,B,,0,60,1,conceitual,2026-11-01T22:08:10.436574+00:00
+36,9999,22928,Matemática,Álgebra,EsPCEx,2026,1,D,,1,45,5,nenhum,2026-11-01T22:08:04.876444+00:00
+35,9999,22916,Matemática,Funções,EsPCEx,2026,2,C,,1,12,5,nenhum,2026-11-01T22:07:59.368928+00:00
+34,9999,22928,Matemática,Álgebra,EsPCEx,2026,1,D,,0,20,1,conceitual,2026-11-01T21:48:53.523534+00:00
+33,9999,22928,Matemática,Álgebra,EsPCEx,2026,1,D,,1,45,5,nenhum,2026-11-01T21:48:48.47399+00:00
+32,9999,22916,Matemática,Funções,EsPCEx,2026,2,C,,1,15,4,nenhum,2026-11-01T21:48:48.083959+00:00
+31,9999,22916,Matemática,Funções,EsPCEx,2026,2,C,,1,15,4,nenhum,2026-11-01T21:48:20.168287+00:00
+30,9999,22916,Matemática,Funções,EsPCEx,2026,2,C,,1,10,4,nenhum,2026-11-01T21:43:07.623872+00:00

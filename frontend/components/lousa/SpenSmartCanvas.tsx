@@ -66,6 +66,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const baseCanvasRef = useRef<HTMLCanvasElement | null>(null);
   // Camada 2: Apenas o traço atual em movimento (incremental O(1))
   const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Contextos 2D cacheados em Ref para evitar overhead contínuo de getContext() em 120Hz/240Hz
+  const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const inkCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+
   // Histórico mantido em Refs para ZERO re-renders do React durante a escrita
   const strokesRef = useRef<Stroke[]>(initialStrokes ? [...initialStrokes] : []);
   const redoStackRef = useRef<Stroke[]>([]);
@@ -73,76 +78,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const isDrawingRef = useRef<boolean>(false);
   const activePointerIdRef = useRef<number | null>(null);
   const dprRef = useRef<number>(1);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Estados leves apenas para a barra de ferramentas
   const [activeTool, setActiveTool] = useState<ToolType>("pen");
   const [activeColor, setActiveColor] = useState<string>(COLORS[0].hex);
-
-  // Quando o tema muda: (1) reseta cor ativa, (2) remapeia cores dos traços existentes e redesenha
-  useEffect(() => {
-    // Paleta de saída (de onde veio) e de chegada (para onde vai)
-    const fromColors = isLight ? COLORS_DARK : COLORS_LIGHT;
-    const toColors   = isLight ? COLORS_LIGHT : COLORS_DARK;
-
-    // Mapa direto hex→hex entre as duas paletas (por índice de posição)
-    const colorMap = new Map<string, string>();
-    fromColors.forEach((c, i) => {
-      if (toColors[i]) colorMap.set(c.hex.toUpperCase(), toColors[i].hex);
-    });
-
-    // Remapeia cada traço: cor conhecida da paleta → equivalente na nova paleta
-    // Cor desconhecida (custom) → mantém
-    strokesRef.current = strokesRef.current.map((stroke) => {
-      const mapped = colorMap.get(stroke.color.toUpperCase());
-      return mapped ? { ...stroke, color: mapped } : stroke;
-    });
-
-    // Reseta a cor ativa para o default do novo tema
-    setActiveColor(toColors[0].hex);
-    colorRef.current = toColors[0].hex;
-
-    // Redesenha o canvas base com as novas cores
-    // (pequeno timeout deixa o DOM atualizar o fundo primeiro)
-    setTimeout(() => {
-      const canvas = baseCanvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      const dpr = dprRef.current;
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-      for (const stroke of strokesRef.current) {
-        // drawFullStroke usa strokesRef diretamente via closure — precisa ctx inline aqui
-        const pts = stroke.points;
-        if (pts.length === 0) return;
-        ctx.save();
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = stroke.color;
-        ctx.fillStyle = stroke.color;
-        ctx.globalAlpha = stroke.tool === "highlighter" ? 0.35 : 1.0;
-        if (pts.length < 3) {
-          ctx.beginPath();
-          const r = (stroke.baseWidth * (pts[0].pressure || 0.7)) / 2;
-          ctx.arc(pts[0].x, pts[0].y, Math.max(1, r), 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-          return;
-        }
-        ctx.beginPath();
-        ctx.lineWidth = stroke.baseWidth;
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length - 1; i++) {
-          const p1 = pts[i];
-          const p2 = pts[i + 1];
-          ctx.quadraticCurveTo(p1.x, p1.y, (p1.x + p2.x) * 0.5, (p1.y + p2.y) * 0.5);
-        }
-        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }, 0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLight]);
   const [activeWidth, setActiveWidth] = useState<number>(2);
   const [stylusMode, setStylusMode] = useState<boolean>(false);
   const [strokeCount, setStrokeCount] = useState<number>(initialStrokes ? initialStrokes.length : 0);
@@ -166,7 +106,27 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     stylusModeRef.current = stylusMode;
   }, [stylusMode]);
 
-  // Desenha um traço completo (usado APENAS ao finalizar o traço ou no Undo/Redo)
+  // Debounced sync de traços para a página pai (evita travar o React a cada pen-up no tablet)
+  const scheduleSync = useCallback(
+    (strokes: Stroke[]) => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        onStrokesChange?.(strokes);
+      }, 350);
+    },
+    [onStrokesChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+        onStrokesChange?.([...strokesRef.current]);
+      }
+    };
+  }, [onStrokesChange]);
+
+  // Desenha um traço completo (usado APENAS ao finalizar o traço, na troca de tema ou no Undo/Redo)
   const drawFullStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
     const pts = stroke.points;
     if (pts.length === 0) return;
@@ -207,7 +167,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const redrawBaseCanvas = useCallback(() => {
     const canvas = baseCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = baseCtxRef.current || canvas.getContext("2d");
     if (!ctx) return;
     const dpr = dprRef.current;
     ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
@@ -216,7 +176,30 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     }
   }, [drawFullStroke]);
 
-  // Inicializa o tamanho do Canvas APENAS quando o container muda de tamanho físico
+  // Quando o tema muda: (1) reseta cor ativa, (2) remapeia cores dos traços existentes e redesenha
+  useEffect(() => {
+    const fromColors = isLight ? COLORS_DARK : COLORS_LIGHT;
+    const toColors = isLight ? COLORS_LIGHT : COLORS_DARK;
+
+    const colorMap = new Map<string, string>();
+    fromColors.forEach((c, i) => {
+      if (toColors[i]) colorMap.set(c.hex.toUpperCase(), toColors[i].hex);
+    });
+
+    strokesRef.current = strokesRef.current.map((stroke) => {
+      const mapped = colorMap.get(stroke.color.toUpperCase());
+      return mapped ? { ...stroke, color: mapped } : stroke;
+    });
+
+    setActiveColor(toColors[0].hex);
+    colorRef.current = toColors[0].hex;
+
+    setTimeout(() => {
+      redrawBaseCanvas();
+    }, 0);
+  }, [isLight, redrawBaseCanvas]);
+
+  // Inicializa o tamanho do Canvas APENAS quando o container muda de tamanho físico real
   useEffect(() => {
     const container = containerRef.current;
     const baseCanvas = baseCanvasRef.current;
@@ -225,22 +208,45 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
     const setupDimensions = () => {
       const rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
       // Limita DPR em 2.0 no máximo para não sobrecarregar a GPU de tablets 3x/4x
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       dprRef.current = dpr;
-      [baseCanvas, inkCanvas].forEach((c) => {
-        c.width = rect.width * dpr;
-        c.height = rect.height * dpr;
-      });
-      const baseCtx = baseCanvas.getContext("2d");
-      if (baseCtx) baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Contexto com desynchronized: true reduz drasticamente o input lag no tablet
-      const inkCtx =
-        inkCanvas.getContext("2d", { desynchronized: true }) ||
-        inkCanvas.getContext("2d");
-      if (inkCtx) inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      redrawBaseCanvas();
+      const targetW = Math.round(rect.width * dpr);
+      const targetH = Math.round(rect.height * dpr);
+
+      // Só recria texturas de GPU se as dimensões mudaram mais de 2px (evita thrashing no tablet)
+      const widthChanged = Math.abs(baseCanvas.width - targetW) > 2;
+      const heightChanged = Math.abs(baseCanvas.height - targetH) > 2;
+
+      if (widthChanged || heightChanged) {
+        baseCanvas.width = targetW;
+        baseCanvas.height = targetH;
+        inkCanvas.width = targetW;
+        inkCanvas.height = targetH;
+
+        const baseCtx = baseCanvas.getContext("2d");
+        if (baseCtx) {
+          baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          baseCtx.lineCap = "round";
+          baseCtx.lineJoin = "round";
+          baseCtxRef.current = baseCtx;
+        }
+
+        const inkCtx =
+          inkCanvas.getContext("2d", { desynchronized: true }) ||
+          inkCanvas.getContext("2d");
+        if (inkCtx) {
+          inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          inkCtx.lineCap = "round";
+          inkCtx.lineJoin = "round";
+          inkCtxRef.current = inkCtx;
+        }
+
+        redrawBaseCanvas();
+      }
     };
 
     setupDimensions();
@@ -249,31 +255,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     return () => observer.disconnect();
   }, [redrawBaseCanvas]);
 
-  // DESENHO INCREMENTAL O(1): Desenha SOMENTE os últimos 3 pontos adicionados!
+  // DESENHO INCREMENTAL O(1) ULTRA-RÁPIDO:
+  // Usa o contexto cacheado sem chamar save()/restore() a cada ponto para maximizar FPS no tablet
   const drawIncrementalSegment = (stroke: Stroke) => {
-    const inkCanvas = inkCanvasRef.current;
-    if (!inkCanvas) return;
-    const ctx =
-      inkCanvas.getContext("2d", { desynchronized: true }) ||
-      inkCanvas.getContext("2d");
+    const ctx = inkCtxRef.current;
     if (!ctx) return;
     const pts = stroke.points;
     const len = pts.length;
     if (len === 0) return;
 
-    // Para o marcador (transparente), limpamos apenas a camada ink para não somar opacidade
     if (stroke.tool === "highlighter") {
-      const dpr = dprRef.current;
-      ctx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
-      drawFullStroke(ctx, stroke);
+      const inkCanvas = inkCanvasRef.current;
+      if (inkCanvas) {
+        const dpr = dprRef.current;
+        ctx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
+        drawFullStroke(ctx, stroke);
+      }
       return;
     }
-
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = stroke.color;
-    ctx.fillStyle = stroke.color;
 
     if (len === 1) {
       const p0 = pts[0];
@@ -281,7 +280,6 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       ctx.beginPath();
       ctx.arc(p0.x, p0.y, Math.max(1, w * 0.5), 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
       return;
     }
 
@@ -293,11 +291,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       ctx.moveTo(p0.x, p0.y);
       ctx.lineTo((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
       ctx.stroke();
-      ctx.restore();
       return;
     }
 
-    // Pega exclusivamente os últimos 3 pontos (Custo O(1) = microssegundos!)
+    // Pega exclusivamente os últimos 3 pontos (Custo O(1) direto na GPU)
     const p0 = pts[len - 3];
     const p1 = pts[len - 2];
     const p2 = pts[len - 1];
@@ -312,12 +309,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     ctx.moveTo(mid1X, mid1Y);
     ctx.quadraticCurveTo(p1.x, p1.y, mid2X, mid2Y);
     ctx.stroke();
-    ctx.restore();
   };
 
   // Borracha de Traço Otimizada (Checa Bounding Box antes de calcular distância)
   const eraseStrokeAtPoint = useCallback(
-    (x: number, y: number, radius = 14) => {
+    (x: number, y: number, radius = 16) => {
       const beforeCount = strokesRef.current.length;
       if (beforeCount === 0) return;
       const rSq = radius * radius;
@@ -327,7 +323,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           const dx = pt.x - x;
           const dy = pt.y - y;
           if (dx * dx + dy * dy <= rSq) {
-            return false; // Apaga o traço inteiro
+            return false;
           }
         }
         return true;
@@ -335,10 +331,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (strokesRef.current.length !== beforeCount) {
         redrawBaseCanvas();
         setStrokeCount(strokesRef.current.length);
-        onStrokesChange?.([...strokesRef.current]);
+        scheduleSync([...strokesRef.current]);
       }
     },
-    [redrawBaseCanvas, onStrokesChange]
+    [redrawBaseCanvas, scheduleSync]
   );
 
   // Listeners Nativos de Baixa Latência anexados diretamente ao elemento DOM
@@ -357,7 +353,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType === "pen" && !stylusModeRef.current) {
         stylusModeRef.current = true;
-        setStylusMode(true);
+        // Atualiza a ref imediatamente sem forçar re-render no primeiro frame do toque
+        requestAnimationFrame(() => setStylusMode(true));
       }
       // Bloqueia palma da mão imediatamente
       if (e.pointerType === "touch" && stylusModeRef.current) {
@@ -369,7 +366,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       activePointerIdRef.current = e.pointerId;
       inkCanvas.setPointerCapture(e.pointerId);
 
-      // Faz cache do BoundingClientRect apenas no pointerdown (evita Layout Thrashing no move!)
+      // Faz cache do BoundingClientRect apenas no pointerdown (evita Layout Thrashing no move)
       cachedRect = inkCanvas.getBoundingClientRect();
       const pt = getPoint(e, cachedRect);
       const isSpenEraser = e.button === 5 || (e.buttons & 32) !== 0;
@@ -379,6 +376,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (effectiveTool === "stroke-eraser") {
         eraseStrokeAtPoint(pt.x, pt.y);
         return;
+      }
+
+      // Prepara estilos no contexto ink antes de começar os segmentos
+      const inkCtx = inkCtxRef.current;
+      if (inkCtx) {
+        inkCtx.strokeStyle = colorRef.current;
+        inkCtx.fillStyle = colorRef.current;
+        inkCtx.globalAlpha = effectiveTool === "highlighter" ? 0.35 : 1.0;
       }
 
       const newStroke: Stroke = {
@@ -418,7 +423,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         const pt = getPoint(coalesced[i], rect);
         const pts = stroke.points;
         const lastPt = pts[pts.length - 1];
-        // Distância mínima ao quadrado >= 2.25px (1.5px) para cortar eventos redundantes
+        // Distância mínima ao quadrado >= 2.25px (1.5px) para cortar ruído sem perder fluidez
         const dx = pt.x - lastPt.x;
         const dy = pt.y - lastPt.y;
         if (dx * dx + dy * dy >= 2.25) {
@@ -439,22 +444,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (finishedStroke && finishedStroke.points.length > 0) {
         // 1. Limpa a camada temporária de tinta rápida
         const dpr = dprRef.current;
-        const inkCtx =
-          inkCanvas.getContext("2d", { desynchronized: true }) ||
-          inkCanvas.getContext("2d");
+        const inkCtx = inkCtxRef.current;
         if (inkCtx) {
           inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
         }
 
-        // 2. Consolida o traço finalizado direto no baseCanvas (sem redesenhar os antigos!)
-        const baseCtx = baseCanvas.getContext("2d");
+        // 2. Consolida o traço finalizado direto no baseCanvas (sem redesenhar os antigos)
+        const baseCtx = baseCtxRef.current || baseCanvas.getContext("2d");
         if (baseCtx) {
           drawFullStroke(baseCtx, finishedStroke);
         }
         strokesRef.current.push(finishedStroke);
         redoStackRef.current = [];
         setStrokeCount(strokesRef.current.length);
-        onStrokesChange?.([...strokesRef.current]);
+        scheduleSync([...strokesRef.current]);
       }
     };
 
@@ -469,7 +472,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       inkCanvas.removeEventListener("pointerup", onPointerUpOrCancel);
       inkCanvas.removeEventListener("pointercancel", onPointerUpOrCancel);
     };
-  }, [drawFullStroke, eraseStrokeAtPoint]);
+  }, [drawFullStroke, eraseStrokeAtPoint, scheduleSync]);
 
   const handleUndo = () => {
     if (strokesRef.current.length === 0) return;
@@ -477,6 +480,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     redoStackRef.current.push(popped);
     redrawBaseCanvas();
     setStrokeCount(strokesRef.current.length);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     onStrokesChange?.([...strokesRef.current]);
   };
 
@@ -484,9 +488,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     if (redoStackRef.current.length === 0) return;
     const restored = redoStackRef.current.pop()!;
     strokesRef.current.push(restored);
-    const baseCtx = baseCanvasRef.current?.getContext("2d");
+    const baseCtx = baseCtxRef.current || baseCanvasRef.current?.getContext("2d");
     if (baseCtx) drawFullStroke(baseCtx, restored);
     setStrokeCount(strokesRef.current.length);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     onStrokesChange?.([...strokesRef.current]);
   };
 
@@ -495,6 +500,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     redoStackRef.current = [];
     redrawBaseCanvas();
     setStrokeCount(0);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     onStrokesChange?.([]);
   };
 
@@ -510,7 +516,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     ctx.drawImage(baseCanvas, 0, 0);
     return exportCanvas.toDataURL("image/png");
-  }, []);
+  }, [isLight]);
 
   useEffect(() => {
     if (exportCanvasRef) {
@@ -519,6 +525,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   }, [exportCanvasRef, getCanvasBase64]);
 
   const handleExportAndEvaluate = async () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+      onStrokesChange?.([...strokesRef.current]);
+    }
     const b64 = getCanvasBase64();
     if (b64) {
       await onEvaluateOcr(b64);
@@ -526,18 +536,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   };
 
   return (
-    <div className={`rounded-xl border p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
-      isLight
-        ? "border-slate-300 bg-white"
-        : "border-amber-500/20 bg-[#0D0B18]"
-    }`}>
+    <div
+      className={`rounded-xl border p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
+        isLight
+          ? "border-slate-300 bg-white"
+          : "border-amber-500/20 bg-[#0D0B18]"
+      }`}
+    >
       {/* Barra de Ferramentas */}
-      <div className={`mb-3 flex flex-wrap items-center justify-between gap-3 border-b pb-3 ${isLight ? "border-slate-200" : "border-white/10"}`}>
+      <div
+        className={`mb-3 flex flex-wrap items-center justify-between gap-3 border-b pb-3 select-none ${
+          isLight ? "border-slate-200" : "border-white/10"
+        }`}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTool("pen")}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer ${
               activeTool === "pen"
                 ? "bg-amber-400 text-black font-bold"
                 : isLight
@@ -550,7 +566,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={() => setActiveTool("highlighter")}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer ${
               activeTool === "highlighter"
                 ? "bg-amber-400 text-black font-bold"
                 : isLight
@@ -563,7 +579,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={() => setActiveTool("stroke-eraser")}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer ${
               activeTool === "stroke-eraser"
                 ? "bg-amber-400 text-black font-bold"
                 : isLight
@@ -574,16 +590,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             Borracha
           </button>
 
-          <div className={`ml-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 ${isLight ? "bg-slate-100" : "bg-white/5"}`}>
+          <div
+            className={`ml-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 ${
+              isLight ? "bg-slate-100" : "bg-white/5"
+            }`}
+          >
             {COLORS.map((c) => (
               <button
                 key={c.hex}
                 type="button"
                 onClick={() => setActiveColor(c.hex)}
-                className={`h-5 w-5 rounded-full transition-transform ${
+                className={`h-5 w-5 rounded-full transition-transform cursor-pointer ${
                   activeColor === c.hex
                     ? `scale-125 ${isLight ? "ring-2 ring-slate-400" : "ring-2 ring-white"}`
-                    : "opacity-75"
+                    : "opacity-75 hover:opacity-100"
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -597,12 +617,12 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
                 key={w}
                 type="button"
                 onClick={() => setActiveWidth(w)}
-                className={`rounded px-2 py-1 ${
+                className={`rounded px-2 py-1 cursor-pointer transition ${
                   activeWidth === w
                     ? "bg-amber-500/20 font-bold text-amber-600 dark:text-amber-300"
                     : isLight
-                    ? "text-slate-500 hover:text-slate-900"
-                    : "text-gray-400 hover:text-white"
+                    ? "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
               >
                 {w}px
@@ -615,12 +635,12 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={() => setStylusMode((prev) => !prev)}
-            className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+            className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
               stylusMode
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold"
                 : isLight
-                ? "border-slate-300 bg-slate-100 text-slate-500"
-                : "border-white/10 bg-white/5 text-gray-400"
+                ? "border-slate-300 bg-slate-100 text-slate-500 hover:text-slate-900"
+                : "border-white/10 bg-white/5 text-gray-400 hover:text-white"
             }`}
           >
             {stylusMode ? "✏️ S-Pen: Rejeição de Palma ATIVA" : "👆 Toque + Caneta"}
@@ -630,7 +650,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             type="button"
             onClick={handleUndo}
             disabled={strokeCount === 0}
-            className={`rounded p-1.5 disabled:opacity-30 transition ${isLight ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900" : "text-gray-400 hover:bg-white/10 hover:text-white"}`}
+            className={`rounded p-1.5 disabled:opacity-30 transition cursor-pointer ${
+              isLight
+                ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                : "text-gray-400 hover:bg-white/10 hover:text-white"
+            }`}
             title="Desfazer"
           >
             <Undo2 className="w-4 h-4" />
@@ -639,7 +663,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={handleRedo}
-            className={`rounded p-1.5 transition ${isLight ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900" : "text-gray-400 hover:bg-white/10 hover:text-white"}`}
+            className={`rounded p-1.5 transition cursor-pointer ${
+              isLight
+                ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                : "text-gray-400 hover:bg-white/10 hover:text-white"
+            }`}
             title="Refazer"
           >
             <Redo2 className="w-4 h-4" />
@@ -649,7 +677,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             type="button"
             onClick={handleClear}
             disabled={strokeCount === 0}
-            className="rounded p-1.5 text-rose-500 hover:bg-rose-500/10 disabled:opacity-30 transition"
+            className="rounded p-1.5 text-rose-500 hover:bg-rose-500/10 disabled:opacity-30 transition cursor-pointer"
             title="Limpar Lousa"
           >
             <Trash2 className="w-4 h-4" />
@@ -657,10 +685,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         </div>
       </div>
 
-      {/* Container Dual-Canvas (Camada Base + Camada de Tinta Rápida) */}
+      {/* Container Dual-Canvas com touch-action: none estrito */}
       <div
         ref={containerRef}
-        className={`relative w-full overflow-hidden rounded-lg border transition-colors ${
+        style={{ touchAction: "none" }}
+        className={`relative w-full overflow-hidden rounded-lg border transition-colors select-none ${
           isLight
             ? "border-slate-200 bg-white bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
             : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
@@ -668,6 +697,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       >
         <canvas
           ref={baseCanvasRef}
+          style={{ touchAction: "none" }}
           className="pointer-events-none absolute inset-0 h-full w-full"
         />
         <canvas
@@ -678,25 +708,29 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             WebkitUserSelect: "none",
             userSelect: "none",
           }}
-          className="absolute inset-0 h-full w-full cursor-crosshair [will-change:transform]"
+          className="absolute inset-0 h-full w-full cursor-crosshair"
         />
       </div>
 
       {!hideFooterEvaluate && (
-        <div className={`mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 ${
-          isLight
-            ? "border-amber-500/30 bg-amber-50 text-slate-700"
-            : "border-amber-500/20 bg-amber-500/5 text-gray-300"
-        }`}>
+        <div
+          className={`mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 ${
+            isLight
+              ? "border-amber-500/30 bg-amber-50 text-slate-700"
+              : "border-amber-500/20 bg-amber-500/5 text-gray-300"
+          }`}
+        >
           <div className="text-xs">
-            <strong className={isLight ? "text-amber-700" : "text-amber-300"}>Avaliação do Rascunho da Lousa:</strong> Submete o
-            desenvolvimento manuscrito para transcrição LaTeX e validação passo a passo.
+            <strong className={isLight ? "text-amber-700" : "text-amber-300"}>
+              Avaliação do Rascunho da Lousa:
+            </strong>{" "}
+            Submete o desenvolvimento manuscrito para transcrição LaTeX e validação passo a passo.
           </div>
           <button
             type="button"
             disabled={isEvaluating || strokeCount === 0}
             onClick={handleExportAndEvaluate}
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-amber-300 disabled:opacity-50 cursor-pointer"
+            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-amber-300 disabled:opacity-50 cursor-pointer shadow-xs"
           >
             {isEvaluating
               ? "Analisando Manuscrito..."
