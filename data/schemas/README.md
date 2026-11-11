@@ -83,6 +83,7 @@ flowchart TD
 | [`01_core_tables.sql`](./01_core_tables.sql) | DDL das tabelas fundamentais: `usuarios`, `questoes`, `conceitos`, `tentativas` e `revisao_espacada` (SM-2). Inclui índices cobrindo chaves estrangeiras e políticas de RLS. |
 | [`15_admin_analytics_presence.sql`](./15_admin_analytics_presence.sql) | Heartbeat de presença com acesso próprio por RLS e função de analytics protegida por lista de administradores. |
 | [`16_admin_analytics_public_privileges.sql`](./16_admin_analytics_public_privileges.sql) | Remove permissões herdadas por `PUBLIC` das tabelas de presença e allowlist administrativa. |
+| [`17_analytics_admin_page_guard.sql`](./17_analytics_admin_page_guard.sql) | Expõe uma checagem booleana restrita para esconder a rota do painel de não administradores. |
 | [`02_provenance_and_consent.sql`](./02_provenance_and_consent.sql) | DDL das tabelas de proveniência total: `consentimentos`, `avaliacoes_ia`, `feedback_tentativa` e `validacao_humana`. Inclui índices GIN, verificações de integridade (`CHECK`) e RLS habilitado. |
 | [`06_question_bank_counts.sql`](./06_question_bank_counts.sql) | Função segura de contagem agregada de questões por banca para os filtros do catálogo. |
 
