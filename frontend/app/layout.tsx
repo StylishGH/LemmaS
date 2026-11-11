@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/lib/use-user";
 import { ThemeInitializer } from "@/components/theme-initializer";
+import { StudentPresenceHeartbeat } from "@/components/StudentPresenceHeartbeat";
 
 export const metadata: Metadata = {
   title: "LEMMAS — Plataforma Cognitiva de Aprendizagem | Powered by MathAI Engine",
@@ -22,9 +24,11 @@ export default function RootLayout({
     <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
       <head />
       <body className="min-h-full">
+        <Analytics />
         <ThemeInitializer />
         <ThemeProvider>
           <UserProvider>
+            <StudentPresenceHeartbeat />
             {children}
           </UserProvider>
         </ThemeProvider>
