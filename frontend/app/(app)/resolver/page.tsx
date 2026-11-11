@@ -2202,8 +2202,10 @@ function ResolverContent() {
             key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
             initialStrokes={lousaStrokes[currentIndex] || []}
             onStrokesChange={(strokes) => {
-              setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
-              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
+              React.startTransition(() => {
+                setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
+                setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
+              });
             }}
             onEvaluateOcr={async (b64) => {
               setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
@@ -3632,8 +3634,10 @@ function ResolverContent() {
           }}
           lousaStrokes={lousaStrokes[currentIndex] || []}
           onLousaStrokesChange={(strokes) => {
-            setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
-            setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
+            React.startTransition(() => {
+              setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
+              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
+            });
           }}
           geometricCommands={geometricCommands[currentIndex] || []}
           onGeometricCommandsChange={handleGeometricCommandsChange}
