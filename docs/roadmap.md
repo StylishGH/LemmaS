@@ -66,6 +66,8 @@ Este documento consolida fontes que divergem. Quando há conflito entre um relat
 - [x] Contato profissional restrito ao portfólio técnico.
 - [x] Amostras identificadas como exemplos didáticos, sem atribuição não comprovada a provas. Corrigidos o discriminante da parábola e a renderização de matrizes; expressões da landing preservam delimitadores explícitos sem alterar o parser de questões importadas.
 
+- [x] Prévias das recomendações no painel preservam fórmulas delimitadas completas ao resumir o enunciado, com altura limitada e regressão para sistemas de equações.
+
 ## 1. Visão do produto
 
 ### 1.1 Identidade
