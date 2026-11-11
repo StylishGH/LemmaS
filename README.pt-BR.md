@@ -64,7 +64,7 @@ O **LEMMAS**, impulsionado pela **MathAI Engine**, está disponível em [lemmas.
 - **Personalização por prioridade:** o perfil ordena o acervo sem selecionar filtros automaticamente. Por exemplo, Escola Naval aparece primeiro quando escolhida no perfil; as outras bancas continuam na lista. Filtros manuais e de URL restringem os resultados.
 - **Próximas questões em segundo plano:** depois das 15 atuais, o banco antecipa a próxima página na mesma ordem personalizada e reaproveita páginas visitadas em memória. A fila é limitada e descartada ao mudar filtros, preferências ou usuário.
 - **Perfil pedagógico:** objetivo principal, objetivos secundários, conteúdos escolhidos separados das sugestões, disponibilidade e preferência de aprendizagem preservada.
-- **Landing e portfólio técnico:** capturas legíveis, fórmulas corrigidas e distinção entre implementação, experimento e pesquisa futura.
+- **Landing do estudante:** orientação para definir o objetivo, ciclo de estudo em três passos, FAQ sobre conta, ferramentas e dicas, e exemplos didáticos com fórmulas renderizadas. O contato profissional fica no portfólio técnico.
 
 | Acervo em produção | Consulta em 11/11/2026 |
 |---|---:|

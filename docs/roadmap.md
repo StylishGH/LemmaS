@@ -58,6 +58,14 @@ Este documento consolida fontes que divergem. Quando há conflito entre um relat
 - [x] Falha de antecipação não substitui a lista por erro; ao navegar, a página não carregada pode ser solicitada novamente.
 - [x] Cinco testes do cache no CI: reutilização, concorrência, repetição após falha, limite de memória e cancelamento de respostas antigas. Verificação de navegador cobre avanço/retorno sem nova consulta da mesma página, mudança de filtros e falha em segundo plano.
 
+## 0.3 Orientação da landing do estudante
+
+- [x] Acesso a “Definir meu objetivo” com explicação de que as preferências priorizam questões, mantendo o restante do acervo disponível.
+- [x] Ciclo de estudo em três passos com linguagem voltada ao estudante; encerramento direciona ao perfil ou ao banco.
+- [x] FAQ acessível por teclado sobre conta, uso sem tablet, dicas/rendição e limites da IA.
+- [x] Contato profissional restrito ao portfólio técnico.
+- [x] Amostras identificadas como exemplos didáticos, sem atribuição não comprovada a provas. Corrigidos o discriminante da parábola e a renderização de matrizes; expressões da landing preservam delimitadores explícitos sem alterar o parser de questões importadas.
+
 ## 1. Visão do produto
 
 ### 1.1 Identidade

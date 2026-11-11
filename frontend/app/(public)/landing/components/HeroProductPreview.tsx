@@ -2,18 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { resolveFigureUrl } from "@/lib/image-url";
+import { SUPABASE_STORAGE_URL } from "@/lib/image-url";
 import { Lightbulb, Sparkles, ArrowRight, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Calendar, Compass, ShieldCheck } from "lucide-react";
 import { MathInline } from "@/components/math/MathDisplay";
-
-// Curated copy has explicit delimiters: keep each complete formula intact.
-function MathText({ text }: { text: string }) {
-  return <>{text.split(/(\$[^$]+\$)/g).map((part, index) =>
-    part.startsWith("$") && part.endsWith("$")
-      ? <MathInline key={index} latex={part.slice(1, -1)} />
-      : <React.Fragment key={index}>{part}</React.Fragment>
-  )}</>;
-}
+import { LandingMathText as MathText } from "./LandingMathText";
 
 interface LemmaInfo {
   number: string;
@@ -63,7 +55,7 @@ const QUESTIONS: QuestionItem[] = [
     materia: "Matemática",
     topico: "Geometria Plana",
     question: "Considere a figura abaixo.\n\nSabendo que o octógono é regular de lado 8, tal que a reta que contém o segmento $IH$ intersecta o ponto $C$ e os pontos $B$, $I$ e $E$ são colineares, calcule a razão entre a área do triângulo $IEG$ e a área do octógono regular $ABCDEFGH$ e assinale a opção correta.",
-    figuraUrl: "/data/imagens/escola_naval/2026/escola_naval_2026_q07_fig1.png",
+    figuraUrl: `${SUPABASE_STORAGE_URL}/escola_naval/2026/escola_naval_2026_q07_fig1.png`,
     options: [
       { letter: "A", text: "\\frac{1 + \\sqrt{2}}{4}" },
       { letter: "B", text: "\\frac{1 + \\sqrt{2}}{6}" },
@@ -201,7 +193,7 @@ export function HeroProductPreview() {
             <div className="my-2 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-100/80 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={resolveFigureUrl(q.figuraUrl)}
+                src={q.figuraUrl}
                 alt="Figura geométrica da questão"
                 className="max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-transparent p-1 shadow-xs border border-slate-200 dark:border-white/10"
                 loading="lazy"
@@ -271,7 +263,7 @@ export function HeroProductPreview() {
                     {isAnswered
                       ? (isCorrect
                           ? `Correto! Alternativa Oficial (${q.correctLetter}) confirmada.`
-                          : `Tentativa registrada. Você marcou (${selectedLetter}) · Gabarito: (${q.correctLetter})`)
+                          : `Você marcou (${selectedLetter}) · Gabarito: (${q.correctLetter})`)
                       : `Gabarito Oficial: Alternativa (${q.correctLetter})`}
                   </span>
                 </span>
