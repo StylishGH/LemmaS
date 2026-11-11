@@ -1,8 +1,8 @@
 # LemmaS + MathAI Engine — Roadmap Mestre
 
-> **Versão:** 1.3 — Marco de Consolidação V1.x & Integração de Expansões  
-> **Data:** 01/11/2026  
-> **Status deste documento:** Fonte Única da Verdade (Single Source of Truth) consolidada. Registra a conclusão da missão integrada (Pipeline de Figuras com Proveniência, Bancada Discursiva & MathAI Engine com 4 Vereditos, Personalização Pedagógica Socrática por Perfil, Redesign Minimalista LeetCode/Linear, Taxonomia Canônica), validação de **recursos adicionados além do plano original** (Lousa S-Pen 120Hz, Escada Socrática de Polya, Segunda Opinião Ortogonal, Catálogo de 2.000 Lemas, Ingestão AoPS/CEDERJ/Escola Naval 2026) e estabelece a transição para as Fases de Retenção e Simulados (Fases 03 a 05).  
+> **Versão:** 1.4 — Release de Modo Foco, personalização e vitrine
+> **Data:** 11/11/2026
+> **Status deste documento:** Registra a entrega em produção do PR #83 e preserva o histórico das fases anteriores. Contagens atuais têm data e fonte; validação de interface e API não equivale a calibração psicométrica ou benchmark dos provedores.
 > **Objetivo:** Reunir produto, engenharia de software, engenharia de dados, dados pedagógicos, IA e Ciência de Dados em um plano unificado, garantindo integridade epistemológica: `DADO OBSERVADO ≠ INTERPRETAÇÃO DA IA ≠ DADO VALIDADO`.
 
 ---
@@ -20,6 +20,34 @@ Os status abaixo refletem o estado real verificado do código, testes e ambiente
 **Regra de ouro:** Um item só é considerado concluído quando o código foi auditado, os testes relevantes passaram e a compatibilidade de contratos (frontend, backend e banco) foi demonstrada ponta a ponta.
 
 Este documento consolida fontes que divergem. Quando há conflito entre um relatório antigo e um erro reproduzido agora, prevalece a evidência mais recente do teste — e a divergência fica registrada para auditoria.
+
+## 0.1 Release publicada em 11/11/2026
+
+**Evidência:** [PR #83 integrado](https://github.com/StylishGH/LemmaS/pull/83), commit de produção `1a6ed119e340f19ebae04e211f555fb1659890d7`, checks de CI e deploy Vercel aprovados. Site: [lemmas.com.br](https://lemmas.com.br).
+
+### Entregue e verificado
+
+- [x] Landing do estudante e portfólio técnico com capturas maiores, LaTeX corrigido e alegações alinhadas ao código; sem promessas de IA sem erros ou de calibração psicométrica já concluída.
+- [x] Modo Foco com lousa/GeoGebra, painel flutuante da questão e acesso ao Tutor Socrático no próprio overlay.
+- [x] Painel de dicas compartilha estado, histórico e progressão com a bancada. O nível 5 mantém confirmação de rendição e a política de penalidade SM-2; os diálogos ficam acima do overlay. Durante simulados ativos, o painel informa que as dicas estão desabilitadas.
+- [x] Preferências do perfil ordenam o banco completo. Bancas têm prioridade, seguidas das matérias dentro dos grupos; filtros manuais e de URL continuam restringindo a consulta.
+- [x] Paginação entre grupos mantém o total e não repete questões na transição. Preferência por Escola Naval não exclui as outras bancas.
+- [x] Correção da consulta de Funções, normalização de nomes/IDs do perfil e tratamento de falha da API com repetição da consulta sem apagar filtros.
+- [x] Vitrine usa `/api/stats`; indisponibilidade produz “—”, sem contagens antigas apresentadas como atuais.
+
+### Evidência de validação e limites
+
+- Build de produção, TypeScript e testes de backend aprovados no GitHub.
+- 14 testes do motor pedagógico e 4 regressões da API de ordenação aprovados; as quatro regressões também passaram contra o domínio de produção.
+- Navegador: abertura do painel em treino, confirmação do nível 5 acima do overlay, layout de tablet e bloqueio em simulado. Landing publicada sem imagens quebradas ou erros KaTeX nos elementos inspecionados.
+- O teste do painel não executou chamadas reais de IA, gravação autenticada de rendição ou benchmark de caneta. A confirmação visual não comprova esses fluxos de ponta a ponta.
+
+### Próximas verificações
+
+- [ ] Validar dicas autenticadas N1–N5 em produção, incluindo falha/repetição de chamada, registro da rendição e persistência após recarregar.
+- [ ] Validar preservação do rascunho e histórico ao navegar entre questões e entrar/sair do Modo Foco em tablet com caneta real.
+- [ ] Medir latência, custo e qualidade dos provedores com entradas comparáveis; não inferir desempenho de uma captura de tela.
+- [ ] Consolidar a fonte de verdade do agendamento SM-2/agendador experimental antes de qualquer substituição; manter TRI e active learning como pesquisa futura.
 
 ## 1. Visão do produto
 
@@ -60,10 +88,13 @@ Esta seção é essencial para que os agentes não trabalhem com versões difere
 
 ### 2.1 Contagens de questões e lemas — [x] Auditado & Verificado
 
-A auditoria canônica de banco de dados executada em Outubro/Novembro 2026 estabeleceu a contagem factual da plataforma:
+Consulta à [API de estatísticas de produção](https://lemmas.com.br/api/stats) em **11/11/2026**:
 
-- **Questões Indexadas no Supabase:** **21.272 questões** auditadas e servidas via `public.questoes` com busca textual, facets canônicos e anos mapeados de 1979 a 2026 (incorporando expansões de AoPS, CEDERJ e Escola Naval 2026).
-- **Banco de Lemas & Gatilhos:** **2.000 lemas axiomáticos e táticos** catalogados em `public.lemmas` (`data/repertorio/canonical_lemmas_2000.json`) com fórmulas em KaTeX, popover interativo e gatilhos heurísticos.
+- **Questões:** **21.578 registros** em `public.questoes`.
+- **Lemas:** **3.000 registros** em `public.lemmas`.
+- **Fonte operacional:** `frontend/app/api/stats/route.ts`, com contagem exata. Os números mudam com a curadoria; quantidade de registros não comprova revisão individual.
+- **Histórico:** a auditoria anterior registrava 21.272 questões e o catálogo canônico inicial de 2.000 lemas (`data/repertorio/canonical_lemmas_2000.json`). Essas referências históricas abaixo não devem ser usadas como contagem atual.
+
 - **Taxonomia Canônica (12 Grandes Áreas):** Reclassificação consolidada com a matéria *Funções* desmembrada com 2.148 questões, e eliminação definitiva de resíduos com menos de 10 questões (`Geral`, `Lógica`, `Matemática Geral`).
 - **Tabelas Canônicas:** `public.questoes` (acervo), `public.lemmas` (catálogo), `public.tentativas` (histórico de submissões discursivas e objetivas com SHA-256), `public.avaliacoes_ia` (persistência completa de avaliações pedagógicas) e `public.ai_inference_logs` (telemetria N:1 com tokens).
 
@@ -83,7 +114,7 @@ A auditoria canônica de banco de dados executada em Outubro/Novembro 2026 estab
 
 ## 3. Prioridade imediata — P0: corrigir e validar o simulado
 
-Esta é a prioridade atual. Não iniciar recursos novos antes que o caminho principal funcione localmente.
+Esta seção preserva a prioridade original de estabilização, cujo critério de saída foi registrado como atingido. As verificações imediatas da release atual estão na seção 0.1.
 
 ### 3.1 Problemas observados no teste local — [x] Resolvidos
 
@@ -517,7 +548,7 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 
 ---
 
-## 14. Backlog consolidado por prioridade — Status Oficial V1 Launch Ready & Expansões
+## 14. Backlog consolidado por prioridade — histórico de entregas e expansões
 
 ### P0 — Simulado, Gabaritos e Estabilidade Principal — [x] 100% Concluído
 - [x] Corrigir a causa de `q.gabarito` indefinido e não classificar respostas sem gabarito como erradas.
@@ -577,17 +608,17 @@ O LemmaS deve provar competências por resultados mensuráveis — não só pela
 ### P3+ — Entregas & Inovações Adicionadas Além do Escopo Original — [x] 100% Concluído & Em Produção
 *(Funcionalidades de alto valor pedagógico e técnico implementadas sem previsão no roadmap inicial)*
 
-1. **🖊️ Lousa Digital SpenSmartCanvas 120Hz Dual-Canvas:**
+1. **🖊️ Lousa Digital SpenSmartCanvas Dual-Canvas:**
    - [x] Arquitetura Dual-Canvas (`baseCanvas` estático + `inkCanvas` desynchronized em tempo real O(1)).
    - [x] Suporte dedicado a stylus S-Pen e Apple Pencil com interpolação Bézier cúbica/quadrática.
    - [x] Rejeição estrita de palma (palm rejection) e suporte a botão de borracha lateral.
    - [x] Trava de DPR `Math.min(DPR, 2)` protegendo a VRAM de Galaxy Tab e iPad.
    - [x] Isolamento de traços por questão em `sessionStorage` e exportação com OCR para a bancada discursiva.
 2. **🪜 Escada Socrática de Polya em 5 Níveis (Socratic Scaffolding):**
-   - [x] 5 degraus cognitivos: N1 (Simbologia & Notação) ➔ N2 (Primeiro Passo no Rascunho) ➔ N3 (Encadeamento Dedutivo) ➔ N4 (Pulo do Gato / Heurística de Banca) ➔ N5 (Resolução Oficial Definitiva).
+   - [x] Rótulos da interface atual: N1 (Intuição) ➔ N2 (Lema) ➔ N3 (Primeiro Passo) ➔ N4 (Destravamento) ➔ N5 (Resolução).
    - [x] Registro formal de rendição pedagógica quando o estudante solicita o Nível 5.
    - [x] Penalidade formal calculada e aplicada ao algoritmo de repetição espaçada SM-2.
-   - [x] Cache de dicas socráticas (`data/schemas/13_socratic_hint_cache.sql`) para resposta submétrica.
+   - [x] Schema de cache de dicas socráticas em `data/schemas/13_socratic_hint_cache.sql`; latência efetiva requer medição.
 3. **⚖️ Segunda Opinião Ortogonal com Debate Multi-Modelo:**
    - [x] Rota `/opinioes` com debate entre dois modelos distintos (ex: Gemini Flash Lite com intuição analítica vs. NVIDIA Nemotron com prova dedutiva).
    - [x] Regra estrita de não-canibalização: cada modelo cumpre seu papel sem repetições.
@@ -624,7 +655,7 @@ Conforme consolidado em `docs/roadmap_produto_lemmas.html`:
 
 | Fase | Título | Status | Principais Entregas |
 |---|---|---|---|
-| **Fase 01** | Fundação Canônica & Lousa Digital | **[x] Concluído & Estável** | 2.000 Lemas em `public.lemmas`, 21.2k questões, SpenSmartCanvas 120Hz Dual-Canvas, KaTeX Anti-Crash. |
+| **Fase 01** | Fundação Canônica & Lousa Digital | **[x] Concluído & Estável** | 2.000 Lemas em `public.lemmas`, acervo com contagem dinâmica, SpenSmartCanvas Dual-Canvas, KaTeX Anti-Crash. |
 | **Fase 02** | Motor Socrático & Cascata de IA Resiliente | **[x] Operando / Produção** | Escada Socrática 5 Níveis com Polya, Segunda Opinião Ortogonal (Gemini + NVIDIA), MathAI Gateway desacoplado. |
 | **Fase 03** | Retenção, Simulados & Métricas do Aluno | **[~] Próximo Foco Imediato** | Radar de Habilidades (6 eixos), Modo Simulado Militar Realista cronometrado, Caderno de Erros SM-2. |
 | **Fase 04** | Gamificação, Comunidade & Mobile First | **[ ] Fase de Engajamento** | Patentes & Ranks Militares (Cadete a Coronel), Streaks diários, PWA instalável para tablets com modo offline. |
