@@ -53,7 +53,7 @@ Este documento consolida fontes que divergem. Quando há conflito entre um relat
 
 - [x] Barras da bancada com quatro ferramentas distribuídas em colunas iguais; navegação do resolver em blocos de até 20 números com “Ir para”, sem rolagem horizontal (PR #85).
 - [x] Busca personalizada sem contagem antecipada de todos os grupos; contagem de grupos anteriores apenas quando necessária para traduzir um salto de página (PR #86).
-- [x] Banco mostra as 15 questões atuais antes de antecipar a próxima página em segundo plano, usando os mesmos filtros e parâmetros de prioridade.
+- [x] Banco mostra as 15 questões atuais antes de antecipar a próxima página em segundo plano, usando os mesmos filtros e parâmetros de prioridade (PR #87).
 - [x] Cache em memória desta visita, limitado a seis páginas; reaproveita páginas concluídas e requisições já em andamento. Troca de usuário, filtros, preferências ou repetição explícita da consulta invalida a fila.
 - [x] Falha de antecipação não substitui a lista por erro; ao navegar, a página não carregada pode ser solicitada novamente.
 - [x] Cinco testes do cache no CI: reutilização, concorrência, repetição após falha, limite de memória e cancelamento de respostas antigas. Verificação de navegador cobre avanço/retorno sem nova consulta da mesma página, mudança de filtros e falha em segundo plano.
