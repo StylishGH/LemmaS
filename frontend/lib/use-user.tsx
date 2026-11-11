@@ -13,6 +13,13 @@ export interface UserProfile {
   concursosSelecionados: string[];
   motivacoesSelecionadas: string[];
   conceitosSelecionados?: string[];
+  // Personalização Pedagógica V2
+  objetivoPrincipal?: string | null;
+  objetivosSecundarios?: string[];
+  disponibilidadeMinutos?: number;
+  metaTipo?: "questoes" | "sessoes";
+  conteudosSelecionados?: string[];
+  conteudosRecomendados?: string[];
   metaQuestoesDia: number;
   streakDias: number;
   focoConcurso: string;
@@ -43,6 +50,12 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   concursosSelecionados: [],
   motivacoesSelecionadas: [],
   conceitosSelecionados: [],
+  objetivoPrincipal: null,
+  objetivosSecundarios: [],
+  disponibilidadeMinutos: 45,
+  metaTipo: "questoes",
+  conteudosSelecionados: [],
+  conteudosRecomendados: [],
   metaQuestoesDia: 0,
   streakDias: 0,
   focoConcurso: "Matemática Geral",
@@ -395,6 +408,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               dbUser.motivos
             );
 
+            // Parsing dos novos campos de personalização pedagógica V2 (com compatibilidade retroativa)
+            let parsedMotivosObj: Record<string, any> = {};
+            if (dbUser.motivos) {
+              try {
+                parsedMotivosObj = typeof dbUser.motivos === "string" ? JSON.parse(dbUser.motivos) : dbUser.motivos;
+              } catch {}
+            }
+
+            const objetivoPrincipalSalvo = parsedMotivosObj.objetivo_principal !== undefined
+              ? parsedMotivosObj.objetivo_principal
+              : (motivacoesRecuperadas[0] || null);
+
+            const objetivosSecundariosSalvos = Array.isArray(parsedMotivosObj.objetivos_secundarios)
+              ? parsedMotivosObj.objetivos_secundarios
+              : motivacoesRecuperadas.slice(1);
+
+            const disponibilidadeSalva = typeof parsedMotivosObj.disponibilidade_minutos === "number"
+              ? parsedMotivosObj.disponibilidade_minutos
+              : (loadedProfile.disponibilidadeMinutos || 45);
+
+            const metaTipoSalva = parsedMotivosObj.meta_tipo === "sessoes" || parsedMotivosObj.meta_tipo === "questoes"
+              ? parsedMotivosObj.meta_tipo
+              : "questoes";
+
+            const conteudosSelecionadosSalvos = Array.isArray(parsedMotivosObj.conteudos_selecionados)
+              ? parsedMotivosObj.conteudos_selecionados
+              : (conceitosSalvos.length > 0 ? conceitosSalvos : []);
+
+            const conteudosRecomendadosSalvos = Array.isArray(parsedMotivosObj.conteudos_recomendados)
+              ? parsedMotivosObj.conteudos_recomendados
+              : [];
+
             // Resolução do avatar: banco explícito > cache local customizado > Google Avatar
             let resolvedFoto: string | null = null;
             if (fotoDoBanco !== undefined) {
@@ -416,6 +461,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               concursosSelecionados: concursosSalvos.length > 0 ? concursosSalvos : (loadedProfile.concursosSelecionados || []),
               motivacoesSelecionadas: motivacoesRecuperadas.length > 0 ? motivacoesRecuperadas : (loadedProfile.motivacoesSelecionadas || []),
               conceitosSelecionados: conceitosSalvos.length > 0 ? conceitosSalvos : (loadedProfile.conceitosSelecionados || []),
+              objetivoPrincipal: objetivoPrincipalSalvo,
+              objetivosSecundarios: objetivosSecundariosSalvos,
+              disponibilidadeMinutos: disponibilidadeSalva,
+              metaTipo: metaTipoSalva,
+              conteudosSelecionados: conteudosSelecionadosSalvos,
+              conteudosRecomendados: conteudosRecomendadosSalvos,
               pedagogicalPreference: pedPrefSalva || loadedProfile.pedagogicalPreference || "conceitual",
               emailVerificado: estaVerificado,
               cpf: dbUser.cpf || loadedProfile.cpf || "",
@@ -579,6 +630,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             concursosSelecionados: next.concursosSelecionados,
             motivacoesSelecionadas: next.motivacoesSelecionadas,
             conceitosSelecionados: next.conceitosSelecionados,
+            objetivoPrincipal: next.objetivoPrincipal,
+            objetivosSecundarios: next.objetivosSecundarios,
+            disponibilidadeMinutos: next.disponibilidadeMinutos,
+            metaTipo: next.metaTipo,
+            conteudosSelecionados: next.conteudosSelecionados,
+            conteudosRecomendados: next.conteudosRecomendados,
             pedagogicalPreference: next.pedagogicalPreference,
             cpf: next.cpf,
             celular: next.celular,
@@ -627,6 +684,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
         if (next.pedagogicalPreference !== undefined) {
           parsed.pedagogical_preference = next.pedagogicalPreference;
+        }
+        if (next.objetivoPrincipal !== undefined) {
+          parsed.objetivo_principal = next.objetivoPrincipal;
+        }
+        if (next.objetivosSecundarios !== undefined) {
+          parsed.objetivos_secundarios = next.objetivosSecundarios;
+        }
+        if (next.disponibilidadeMinutos !== undefined) {
+          parsed.disponibilidade_minutos = next.disponibilidadeMinutos;
+        }
+        if (next.metaTipo !== undefined) {
+          parsed.meta_tipo = next.metaTipo;
+        }
+        if (next.conteudosSelecionados !== undefined) {
+          parsed.conteudos_selecionados = next.conteudosSelecionados;
+        }
+        if (next.conteudosRecomendados !== undefined) {
+          parsed.conteudos_recomendados = next.conteudosRecomendados;
         }
         if (next.conceitosSelecionados !== undefined) {
           parsed.conceitos_selecionados = next.conceitosSelecionados;

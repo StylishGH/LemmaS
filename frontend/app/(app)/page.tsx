@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { 
   Target, 
   BrainCircuit, 
@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useUserProfile } from "@/lib/use-user";
 import LemaBadge from "@/components/math/LemaBadge";
+import { MathText } from "@/components/math/MathDisplay";
+import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 
 interface HistoricoItem {
   id: number;
@@ -92,6 +94,48 @@ export default function DashboardPage() {
     "Combinatória": 0,
     "Aritmética": 0,
   });
+
+  const [questoesRecomendadas, setQuestoesRecomendadas] = useState<any[]>([]);
+  const [loadingRecomendadas, setLoadingRecomendadas] = useState<boolean>(true);
+
+  const origemDescricaoPerfil = useMemo(() => {
+    return profile ? obterFiltrosApiPerfil(profile).origemDescricao : null;
+  }, [profile]);
+
+  useEffect(() => {
+    let ignore = false;
+    const profileFilters = obterFiltrosApiPerfil(profile);
+    const hasFilters = !!(
+      (profileFilters.materia && profileFilters.materia.length > 0) ||
+      (profileFilters.banca && profileFilters.banca.length > 0) ||
+      profileFilters.categoria_banca
+    );
+
+    setLoadingRecomendadas(true);
+    fetch("/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(hasFilters ? { filters: profileFilters } : {}),
+        limit: 3,
+        shuffle: true,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ignore && data?.questoes) {
+          setQuestoesRecomendadas(data.questoes);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!ignore) setLoadingRecomendadas(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [profile?.id, profile?.objetivoPrincipal, profile?.conteudosSelecionados, profile?.concursosSelecionados]);
 
   useEffect(() => {
     fetch("/api/stats", { cache: "no-store" })
@@ -340,6 +384,108 @@ export default function DashboardPage() {
             Questões indexadas no LEMMAS Core
           </div>
         </div>
+      </div>
+
+      {/* 2.5. QUESTÕES RECOMENDADAS PARA O SEU PERFIL */}
+      <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
+              Questões Recomendadas para o seu Perfil
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              {origemDescricaoPerfil
+                ? `Selecionadas a partir do seu foco em ${origemDescricaoPerfil}`
+                : "Sugestões de treino calibradas para o seu objetivo matemático"}
+            </p>
+          </div>
+          <Link
+            href="/questoes"
+            className="text-xs text-blue-600 dark:text-[#d9b452] hover:underline font-semibold flex items-center gap-1 self-start sm:self-auto"
+          >
+            Explorar todo o acervo →
+          </Link>
+        </div>
+
+        {loadingRecomendadas ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] animate-pulse h-36 flex flex-col justify-between"
+              >
+                <div className="h-4 bg-slate-200 dark:bg-zinc-800 rounded w-1/3" />
+                <div className="space-y-2">
+                  <div className="h-3 bg-slate-200 dark:bg-zinc-800 rounded w-full" />
+                  <div className="h-3 bg-slate-200 dark:bg-zinc-800 rounded w-2/3" />
+                </div>
+                <div className="h-6 bg-slate-200 dark:bg-zinc-800 rounded w-1/4" />
+              </div>
+            ))}
+          </div>
+        ) : questoesRecomendadas.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            {questoesRecomendadas.map((q) => {
+              const preview = q.enunciado ? q.enunciado.slice(0, 140) + (q.enunciado.length > 140 ? "..." : "") : "";
+              return (
+                <div
+                  key={q.id}
+                  className="p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all group"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-blue-700 dark:text-[#d9b452] truncate">
+                        {q.banca ? `${q.banca}${q.ano ? ` ${q.ano}` : ""}` : (q.materia || "Matemática")}
+                      </span>
+                      {q.dificuldade ? (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 shrink-0">
+                          Nível {q.dificuldade}/5
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="text-[11px] font-semibold text-slate-800 dark:text-[#f5f0df]">
+                      {q.topico || q.materia}
+                    </div>
+
+                    <div className="text-xs text-slate-600 dark:text-zinc-400 line-clamp-3 leading-relaxed">
+                      <MathText text={preview} />
+                    </div>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-slate-200/60 dark:border-zinc-800 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                      #{q.id}
+                    </span>
+                    <Link
+                      href={`/resolver?id=${q.id}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-[#d9b452] hover:underline group-hover:translate-x-0.5 transition-transform"
+                    >
+                      <span>Resolver agora</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
+            <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+              Personalize seu perfil para receber recomendações exclusivas
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+              Defina seu objetivo e matérias prioritárias no seu perfil pedagógico.
+            </p>
+            <Link
+              href="/perfil"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs transition-colors"
+            >
+              Configurar Perfil
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* 3. RADAR COGNITIVO VETORIAL DOURADO + DIAGNÓSTICO METACONCEITUAL */}
