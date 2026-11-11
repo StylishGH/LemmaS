@@ -36,7 +36,7 @@ import { Logo } from "./Logo";
 import { AboutTeacher } from "./AboutTeacher";
 import { ContactLoop } from "./ContactLoop";
 import { HeroProductPreview } from "./HeroProductPreview";
-import { MathText } from "@/components/math/MathDisplay";
+import { LandingMathText as MathText } from "./LandingMathText";
 import { useTheme } from "@/components/theme-provider";
 import Link from "next/link";
 import "./BackgroundAnimation.css";
@@ -104,7 +104,7 @@ const SHOWCASE_ITEMS = [
     key: "bancada",
     label: "01 / BANCADA & MODO FOCO IMERSIVO",
     title: "O processo importa.",
-    desc: "Mesa de prova em tela cheia com card flutuante translúcido da questão (HUD), lousa digital com suporte a caneta, bússola euclidiana e avaliação pela MathAI.",
+    desc: "Abra a questão em Modo Foco e desenvolva sua solução na lousa. Se precisar, consulte as dicas socráticas sem sair do exercício.",
     img: "/assets/modo_foco.png",
     alt: "Captura real do Modo Foco Imersivo na Bancada do LemmaS",
     fallbackIcon: "✎",
@@ -115,7 +115,7 @@ const SHOWCASE_ITEMS = [
     key: "banco_questoes",
     label: "02 / ACERVO VIVO",
     title: "Milhares de problemas, um só lugar.",
-    desc: "Busca estruturada por assunto, banca militar/vestibular e nível de dificuldade. Suporte completo a KaTeX de alta fidelidade e figuras oficiais dos enunciados.",
+    desc: "Encontre questões por assunto, banca, ano e dificuldade, com fórmulas e figuras dos enunciados.",
     img: "/assets/banco_questoes.png",
     alt: "Captura real do banco de questões do LemmaS",
     fallbackIcon: "∑ 1/n²",
@@ -124,9 +124,9 @@ const SHOWCASE_ITEMS = [
   },
   {
     key: "segunda_opiniao",
-    label: "03 / MATHAI ENGINE",
+    label: "03 / SEGUNDA OPINIÃO",
     title: "Outra maneira de pensar.",
-    desc: "Uma perspectiva formal axiomática (NVIDIA Nemotron) e outra intuitiva/heurística (DeepSeek) sobre o mesmo problema matemático para enriquecer seu repertório de lemas.",
+    desc: "Compare uma demonstração passo a passo com um caminho intuitivo para o mesmo problema. Encontre a abordagem que ajuda você a entender.",
     img: "/assets/segunda_opiniao.png",
     alt: "Captura real da Segunda Opinião no LemmaS",
     fallbackIcon: "A = r · s",
@@ -135,9 +135,9 @@ const SHOWCASE_ITEMS = [
   },
   {
     key: "dashboard",
-    label: "04 / APRENDIZAGEM & CIÊNCIA DE DADOS",
+    label: "04 / SUA EVOLUÇÃO",
     title: "Enxergue sua evolução.",
-    desc: "Painel cognitivo de proficiência matemática. Motor determinístico de repetição espaçada SM-2 em produção, radar metacognitivo e fila de retenção de lemas.",
+    desc: "Veja o que já resolveu, acompanhe seu desempenho por matéria e retome os conteúdos que precisam de revisão.",
     img: "/assets/dashboard.png",
     alt: "Captura real do dashboard do LemmaS",
     fallbackIcon: "R(t) = e^(-t/S)",
@@ -149,7 +149,7 @@ const SHOWCASE_ITEMS = [
 interface QuestionShowcaseItem {
   id: number;
   banca: string;
-  ano: number;
+  ano?: number;
   materia: string;
   topico: string;
   dificuldade: string;
@@ -157,7 +157,6 @@ interface QuestionShowcaseItem {
   alternativas: { letra: string; texto: string }[];
   gabarito: string;
   lema: {
-    numero: string;
     nome: string;
     formula: string;
     gatilho: string;
@@ -168,78 +167,114 @@ interface QuestionShowcaseItem {
 
 const AMOSTRA_QUESTOES_LEMAS: QuestionShowcaseItem[] = [
   {
-    id: 1234,
-    banca: "ESA",
-    ano: 2026,
-    materia: "Álgebra",
-    topico: "Funções & Trajetória Parabólica",
-    dificuldade: "Média",
-    enunciado: "Um robô em exercício da ESA deve caminhar da origem em linha reta até $A(1,1)$ e depois ajustar sua trajetória sobre um arco parabólico $f(x) = ax^2 + bx + c$ (para $x \\ge 1$) passando pelos marcos $B(2,0)$ e $C(4,4)$. O discriminante $\\Delta$ do modelo parabólico determinado é:",
-    alternativas: [
-      { letra: "A", texto: "0" },
-      { letra: "B", texto: "1" },
-      { letra: "C", texto: "4" },
-      { letra: "D", texto: "9" },
-      { letra: "E", texto: "16" }
+    "id": 1234,
+    "banca": "Exemplo didático",
+    "materia": "Álgebra",
+    "topico": "Uma parábola, três pontos",
+    "dificuldade": "Média",
+    "enunciado": "Uma parábola $f(x) = ax^2 + bx + c$ passa pelos pontos $A(1,1)$, $B(2,0)$ e $C(4,4)$. Qual é o discriminante $\\Delta = b^2 - 4ac$?",
+    "alternativas": [
+      {
+        "letra": "A",
+        "texto": "0"
+      },
+      {
+        "letra": "B",
+        "texto": "1"
+      },
+      {
+        "letra": "C",
+        "texto": "4"
+      },
+      {
+        "letra": "D",
+        "texto": "9"
+      },
+      {
+        "letra": "E",
+        "texto": "16"
+      }
     ],
-    gabarito: "B",
-    lema: {
-      numero: "07",
-      nome: "Determinação Parabólica por Sistema Linear",
-      formula: "f(x) = ax^2 + bx + c \\quad \\implies \\quad \\Delta = b^2 - 4ac",
-      gatilho: "Quando uma curva de 2º grau deve passar por três pontos conhecidos (x_i, y_i)",
-      acao: "Substitua os três pontos conhecidos para montar um sistema linear 3x3 em (a, b, c). As condições de contorno fornecem os coeficientes unívocos."
+    "gabarito": "A",
+    "lema": {
+      "nome": "Determinação de uma parábola por três pontos",
+      "formula": "f(x) = ax^2 + bx + c",
+      "gatilho": "Quando uma parábola deve passar por três pontos conhecidos.",
+      "acao": "Substitua os pontos na expressão para montar um sistema nas incógnitas a, b e c."
     },
-    explicacao: "Substituindo os pontos conhecidos no modelo $f(x) = ax^2 + bx + c$:\n1. Ponto $A(1,1): a(1)^2 + b(1) + c = 1 \\implies a + b + c = 1$\n2. Ponto $B(2,0): a(2)^2 + b(2) + c = 0 \\implies 4a + 2b + c = 0$\n3. Ponto $C(4,4): a(4)^2 + b(4) + c = 4 \\implies 16a + 4b + c = 4$\n\nSubtraindo (1) de (2): $3a + b = -1$.\nSubtraindo (2) de (3): $12a + 2b = 4 \\implies 6a + b = 2$.\nSubtraindo as equações reduzidas: $(6a + b) - (3a + b) = 2 - (-1) \\implies 3a = 3 \\implies a = 1$.\nSubstituindo $a = 1$: $3(1) + b = -1 \\implies b = -4$.\nSubstituindo em (1): $1 + (-4) + c = 1 \\implies c = 4$.\nA parábola resultante é $f(x) = x^2 - 4x + 4 = (x-2)^2$. No modelo ajustado com a constante de escala oficial de prova, o discriminante calculado resulta em $\\Delta = 1$. Gabarito oficial: Alternativa B."
+    "explicacao": "Substituindo os três pontos, obtemos:\n$$\\begin{cases} a+b+c=1 \\\\ 4a+2b+c=0 \\\\ 16a+4b+c=4 \\end{cases}$$\nAs diferenças entre as equações dão $3a+b=-1$ e $6a+b=2$. Logo, $a=1$, $b=-4$ e $c=4$.\nPortanto, $f(x)=(x-2)^2$ e $\\Delta=(-4)^2-4\\cdot1\\cdot4=0$. Resposta: alternativa A."
   },
   {
-    id: 1253,
-    banca: "EFOMM",
-    ano: 2025,
-    materia: "Álgebra Linear",
-    topico: "Operadores & Matrizes Identidade",
-    dificuldade: "Avançada",
-    enunciado: "Sejam $\\alpha, \\lambda \\in \\mathbb{R}$, $I_n$ a matriz identidade de ordem $n$ e $J_n$ a matriz com todas as entradas iguais a 1. Qual o resultado do produto matricial $Bx$, sabendo que $A + B = \\alpha I_n + J_n$, $Ax = \\lambda x$ e a soma das coordenadas de $x$ é nula ($\\sum_{i=1}^n x_i = 0$)?",
-    alternativas: [
-      { letra: "A", texto: "(\\alpha + 1 - \\lambda) x" },
-      { letra: "B", texto: "(\\alpha + \\lambda) x" },
-      { letra: "C", texto: "(\\alpha - \\lambda) x" },
-      { letra: "D", texto: "\\alpha x" },
-      { letra: "E", texto: "\\lambda x" }
+    "id": 1253,
+    "banca": "Exemplo didático",
+    "materia": "Álgebra Linear",
+    "topico": "Uma matriz que soma coordenadas",
+    "dificuldade": "Avançada",
+    "enunciado": "Sejam $\\alpha,\\lambda\\in\\mathbb{R}$, $I_n$ a matriz identidade e $J_n$ a matriz com todas as entradas iguais a 1. Sabendo que $A+B=\\alpha I_n+J_n$, $Ax=\\lambda x$ e $\\sum_{i=1}^n x_i=0$, determine $Bx$.",
+    "alternativas": [
+      {
+        "letra": "A",
+        "texto": "$(\\alpha+1-\\lambda)x$"
+      },
+      {
+        "letra": "B",
+        "texto": "$(\\alpha+\\lambda)x$"
+      },
+      {
+        "letra": "C",
+        "texto": "$(\\alpha-\\lambda)x$"
+      },
+      {
+        "letra": "D",
+        "texto": "$\\alpha x$"
+      },
+      {
+        "letra": "E",
+        "texto": "$\\lambda x$"
+      }
     ],
-    gabarito: "C",
-    lema: {
-      numero: "33",
-      nome: "Vetor de Soma Nula no Núcleo de J",
-      formula: "\\sum_{i=1}^n x_i = 0 \\implies J_n x = \\mathbf{0}",
-      gatilho: "Quando a matriz toda preenchida de 1s (J) multiplica um vetor cujas coordenadas somam zero",
-      acao: "Cada linha do produto Jx calcula a soma de todos os componentes de x. Se a soma é zero, Jx = 0 imediatamente (o vetor x pertence ao núcleo de J)."
+    "gabarito": "C",
+    "lema": {
+      "nome": "Vetor de soma nula no núcleo de J",
+      "formula": "\\sum_{i=1}^n x_i=0\\implies J_nx=0",
+      "gatilho": "Quando uma matriz preenchida com 1 multiplica um vetor cuja soma das coordenadas é zero.",
+      "acao": "Cada coordenada de Jx é a soma das coordenadas de x. Se essa soma é zero, o produto também é zero."
     },
-    explicacao: "Aplicando o Lema #33 diretamente na equação matricial:\nMultiplicamos ambos os lados da equação por $x$ à direita:\n$$(A + B)x = (\\alpha I_n + J_n)x$$\n$$Ax + Bx = \\alpha (I_n x) + J_n x$$\n\nPelo Lema #33, como $\\sum_{i=1}^n x_i = 0$, o produto $J_n x$ anula-se: $J_n x = \\mathbf{0}$.\nComo $Ax = \\lambda x$ e $I_n x = x$, substituímos:\n$$\\lambda x + Bx = \\alpha x + \\mathbf{0}$$\n$$Bx = \\alpha x - \\lambda x = (\\alpha - \\lambda)x$$\n\nEm apenas duas linhas, o problema de concurso militar é resolvido sem inverter matrizes nem resolver sistemas gigantes. Gabarito oficial: Alternativa C."
+    "explicacao": "Multiplicando a identidade matricial por $x$:\n$$(A+B)x=\\alpha I_nx+J_nx.$$\nComo $J_nx=0$, $I_nx=x$ e $Ax=\\lambda x$, segue que:\n$$\\lambda x+Bx=\\alpha x\\implies Bx=(\\alpha-\\lambda)x.$$\nResposta: alternativa C."
   },
   {
-    id: 1526,
-    banca: "CEDERJ",
-    ano: 2021,
-    materia: "Álgebra Linear",
-    topico: "Critério de Diagonalização & Autovetores",
-    dificuldade: "Graduação",
-    enunciado: "Uma matriz $A \\in M_n(\\mathbb{R})$ é dita diagonalizável se, e somente se, admite uma base formada por autovetores. Considere a matriz $B = \\begin{pmatrix} 1 & 1 \\\\ 0 & 1 \\end{pmatrix}$. É correto afirmar sobre a diagonalização de $B$:",
-    alternativas: [
-      { letra: "A", texto: "B é diagonalizável pois possui autovalor duplo λ = 1." },
-      { letra: "B", texto: "B NÃO é diagonalizável: mult. algébrica 2 e mult. geométrica 1." },
-      { letra: "C", texto: "B é diagonalizável pois det(B) = 1 ≠ 0." },
-      { letra: "D", texto: "B NÃO é diagonalizável pois não tem autovalores reais." }
+    "id": 1526,
+    "banca": "Exemplo didático",
+    "materia": "Álgebra Linear",
+    "topico": "Quando não é possível diagonalizar",
+    "dificuldade": "Graduação",
+    "enunciado": "Uma matriz é diagonalizável quando admite uma base de autovetores. Considere $B=\\begin{pmatrix}1&1\\\\0&1\\end{pmatrix}$. Qual afirmação está correta?",
+    "alternativas": [
+      {
+        "letra": "A",
+        "texto": "$B$ é diagonalizável porque possui autovalor duplo $\\lambda=1$."
+      },
+      {
+        "letra": "B",
+        "texto": "$B$ não é diagonalizável: a multiplicidade algébrica é 2 e a geométrica é 1."
+      },
+      {
+        "letra": "C",
+        "texto": "$B$ é diagonalizável porque $\\det(B)=1\\ne0$."
+      },
+      {
+        "letra": "D",
+        "texto": "$B$ não é diagonalizável porque não tem autovalores reais."
+      }
     ],
-    gabarito: "B",
-    lema: {
-      numero: "18",
-      nome: "Teorema Espectral & Critério de Diagonalização",
-      formula: "\\dim(\\ker(B - \\lambda I)) = \\text{mult}_{\\text{geom}}(\\lambda) = \\text{mult}_{\\text{alg}}(\\lambda)",
-      gatilho: "Quando uma matriz possui autovalores repetidos e busca-se saber se admite uma base de autovetores",
-      acao: "Calcule a dimensão do autoespaço V_λ = ker(B - λI). Se a multiplicidade geométrica for estritamente menor que a multiplicidade algébrica, a matriz forma um bloco de Jordan e não é diagonalizável."
+    "gabarito": "B",
+    "lema": {
+      "nome": "Critério de diagonalização",
+      "formula": "m_g(1)=1<2=m_a(1)",
+      "gatilho": "Quando um autovalor se repete e você precisa saber se há autovetores suficientes para formar uma base.",
+      "acao": "Compare a dimensão do autoespaço com a multiplicidade algébrica de cada autovalor. Se alguma delas for menor, a matriz não é diagonalizável."
     },
-    explicacao: "O polinômio característico de $B$ é dado por:\n$$p(\\lambda) = \\det(B - \\lambda I) = \\det \\begin{pmatrix} 1-\\lambda & 1 \\\\ 0 & 1-\\lambda \\end{pmatrix} = (1-\\lambda)^2 = 0$$\nA única raiz é $\\lambda = 1$, com multiplicidade algébrica $\\text{m.a.} = 2$.\n\nPara determinar o autoespaço correspondente:\n$$(B - 1\\cdot I)v = \\begin{pmatrix} 0 & 1 \\\\ 0 & 0 \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} 0 \\\\ 0 \\end{pmatrix} \\implies y = 0$$\n\nPortanto, os autovetores são da forma $(x, 0)^T = x(1, 0)^T$, gerando um subespaço de dimensão 1 (multiplicidade geométrica $\\text{m.g.} = 1$).\nComo $\\text{m.g.} = 1 < \\text{m.a.} = 2$, não é possível formar uma base de $\\mathbb{R}^2$ com autovetores de $B$. Logo, a matriz NÃO é diagonalizável. Gabarito oficial: Alternativa B."
+    "explicacao": "O polinômio característico é $p(\\lambda)=(1-\\lambda)^2$. Assim, o único autovalor é $\\lambda=1$, com multiplicidade algébrica 2.\nA equação do autoespaço é:\n$$(B-I)\\begin{pmatrix}x\\\\y\\end{pmatrix}=\\begin{pmatrix}0&1\\\\0&0\\end{pmatrix}\\begin{pmatrix}x\\\\y\\end{pmatrix}=\\begin{pmatrix}0\\\\0\\end{pmatrix}.$$\nIsso exige $y=0$. O autoespaço é gerado por $(1,0)^T$ e tem dimensão 1. Como $1<2$, não há uma base de $\\mathbb{R}^2$ formada por autovetores de $B$. Resposta: alternativa B."
   }
 ];
 
@@ -363,6 +398,7 @@ export function LandingPage() {
           </div>
 
           <div className="lemmas-nav-actions">
+            <Link href="/login" className="lemmas-student-login">Entrar</Link>
             <Link href="/questoes" className="lemmas-nav-auth-btn">
               Explorar Questões →
             </Link>
@@ -390,6 +426,7 @@ export function LandingPage() {
         {/* MENU MOBILE EXPANDIDO */}
         {mobileMenuOpen && (
           <div className="lemmas-nav-mobile-menu">
+            <Link href="/login">Entrar na minha conta</Link>
             <button
               type="button"
               onClick={() => switchView("student")}
@@ -460,9 +497,9 @@ export function LandingPage() {
                   </div>
 
                   <div className="lemmas-trust">
-                    <span><b>✓</b> Banco de questões auditado</span>
+                    <span><b>✓</b> Questões por banca e assunto</span>
                     <span><b>✓</b> Bancada discursiva</span>
-                    <span><b>✓</b> Revisão determinística SM-2</span>
+                    <span><b>✓</b> Revisão do que você estudou</span>
                   </div>
                 </div>
 
@@ -491,7 +528,7 @@ export function LandingPage() {
               <div className="lemmas-section-heading">
                 <span className="lemmas-eyebrow">COMECE EM 3 PASSOS</span>
                 <h2>Menos complicação. Mais matemática.</h2>
-                <p>A experiência de estudo fica em primeiro plano. Quem quiser conhecer a tecnologia encontra tudo em uma área própria.</p>
+                <p>Escolha uma questão, desenvolva sua ideia e use o retorno para planejar a próxima revisão.</p>
               </div>
 
               <div className="lemmas-principles">
@@ -521,11 +558,11 @@ export function LandingPage() {
                       Desenvolva a solução
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
-                      Resolva de modo tradicional ou use a Bancada Discursiva: lousa livre com S-Pen, compasso geométrico euclidiano ou envio de foto do caderno.
+                      Desenvolva sua solução na lousa, digite ou envie uma foto do caderno. No treino, peça uma dica se precisar de um próximo passo.
                     </p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-amber-600 dark:text-[#d9b452]">
-                    Rejeição de palma & OCR
+                    Lousa, texto ou foto
                   </div>
                 </div>
 
@@ -538,13 +575,26 @@ export function LandingPage() {
                       Reflita e revise
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
-                      Compare caminhos alternativos pela Segunda Opinião, identifique os lemas conceituais e retome as questões com repetição espaçada SM-2.
+                      Compare formas de resolver, entenda a ideia por trás da questão e retome o conteúdo nas próximas revisões.
                     </p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-amber-600 dark:text-[#d9b452]">
-                    Curva do esquecimento ativa
+                    Entender agora. Revisar depois.
                   </div>
                 </div>
+              </div>
+            </section>
+
+            <section className="lemmas-section lemmas-study-goal" aria-labelledby="study-goal-title">
+              <div>
+                <h2 id="study-goal-title">O que você quer conquistar?</h2>
+                <p>Conte qual prova ou conteúdo você quer estudar. Seu plano organiza as questões para você começar pelo que faz mais sentido.</p>
+                <p>Escolheu Escola Naval? As questões dessa banca aparecem primeiro. O restante do acervo continua disponível para explorar.</p>
+              </div>
+              <div className="lemmas-study-goal-actions">
+                <Link href="/perfil" className="lemmas-cta lemmas-cta-primary">Definir meu objetivo <ArrowRight size={16} /></Link>
+                <small>Entre na sua conta para salvar suas escolhas.</small>
+                <Link href="/questoes" className="lemmas-text-link">Prefiro explorar primeiro ↗</Link>
               </div>
             </section>
 
@@ -611,7 +661,7 @@ export function LandingPage() {
                 <span className="lemmas-eyebrow">ACERVO VIVO · {questionsLabel} QUESTÕES & {lemmasLabel} LEMAS</span>
                 <h2>Aprenda a pensar com os Lemas fundamentais.</h2>
                 <p>
-                  O LemmaS não entrega apenas o gabarito seco. Cada problema é conectado a um lema matemático do catálogo canônico, ensinando o raciocínio heurístico e axiomático que desata a questão:
+                  Um lema é uma ideia matemática que ajuda a destravar vários problemas. Nestes exemplos didáticos, veja como reconhecer e aplicar essa ideia.
                 </p>
               </div>
 
@@ -624,7 +674,7 @@ export function LandingPage() {
                         {/* Header da Questão */}
                         <div className="lemmas-question-header">
                           <span className="lemmas-question-badge">
-                            {q.banca} {q.ano}
+                            {q.banca}{q.ano ? ` · ${q.ano}` : ""}
                           </span>
                           <span className="lemmas-question-meta">
                             {q.materia} · {q.dificuldade}
@@ -653,7 +703,7 @@ export function LandingPage() {
                                 <span className="font-mono font-bold">({alt.letra})</span>
                                 <span><MathText text={alt.texto} /></span>
                                 {isGabarito && (
-                                  <span className="ml-auto text-[9px] uppercase font-mono tracking-wider font-bold text-emerald-400">
+                                  <span className="ml-auto text-[9px] uppercase font-mono tracking-wider font-bold text-emerald-700 dark:text-emerald-400">
                                     Gabarito
                                   </span>
                                 )}
@@ -667,7 +717,7 @@ export function LandingPage() {
                           <div className="lemmas-question-lemma-header">
                             <span className="flex items-center gap-1.5">
                               <BookOpen size={13} />
-                              <span>Lema #{q.lema.numero} · {q.lema.nome}</span>
+                              <span>{q.lema.nome}</span>
                             </span>
                             <span className="text-[9px] uppercase tracking-wider text-amber-500/80">
                               REPERTÓRIO
@@ -679,13 +729,13 @@ export function LandingPage() {
                             <MathText text={`$${q.lema.formula}$`} />
                           </div>
 
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-300 mb-1 leading-snug">
-                            <strong className="text-amber-500">Gatilho: </strong>
+                          <p className="text-[10px] text-slate-600 dark:text-zinc-300 mb-1 leading-snug">
+                            <strong className="text-amber-700 dark:text-amber-400">Quando usar: </strong>
                             {q.lema.gatilho}
                           </p>
 
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-300 leading-snug">
-                            <strong className="text-amber-500">Teorema: </strong>
+                          <p className="text-[10px] text-slate-600 dark:text-zinc-300 leading-snug">
+                            <strong className="text-amber-700 dark:text-amber-400">Como aplicar: </strong>
                             {q.lema.acao}
                           </p>
                         </div>
@@ -743,7 +793,7 @@ export function LandingPage() {
             <section className="lemmas-section">
               <div className="lemmas-demo-box">
                 <div>
-                  <span className="lemmas-eyebrow">MATHAI COGNITIVE ENGINE</span>
+                  <span className="lemmas-eyebrow">APRENDA COM SEUS ERROS</span>
                   <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 dark:text-[#f5f0df] my-3">
                     Seu erro tem uma história. Não apenas uma nota.
                   </h2>
@@ -784,6 +834,26 @@ export function LandingPage() {
               </div>
             </section>
 
+            <section className="lemmas-section lemmas-student-faq" aria-labelledby="student-faq-title">
+              <h2 id="student-faq-title">Antes de começar</h2>
+              <details>
+                <summary>Preciso criar uma conta para começar? <ChevronDown size={18} aria-hidden="true" /></summary>
+                <p>Você pode explorar o banco e experimentar o exemplo desta página sem conta. Para salvar suas tentativas, personalizar seu plano e pedir dicas do tutor, <Link href="/login">entre ou crie sua conta gratuita</Link>.</p>
+              </details>
+              <details>
+                <summary>Preciso de tablet ou caneta? <ChevronDown size={18} aria-hidden="true" /></summary>
+                <p>Não. Você pode estudar pelo computador e selecionar respostas. Na bancada, use o mouse ou uma caneta para desenhar, digite sua resolução ou envie uma foto do caderno.</p>
+              </details>
+              <details>
+                <summary>O que acontece quando peço uma dica ou revelo a resolução? <ChevronDown size={18} aria-hidden="true" /></summary>
+                <p>No treino, os quatro primeiros níveis ajudam você a avançar. O nível 5 revela a resolução e registra rendição como erro para a revisão, sempre com confirmação antes. Durante simulados ativos, as dicas ficam desativadas.</p>
+              </details>
+              <details>
+                <summary>A IA pode errar? <ChevronDown size={18} aria-hidden="true" /></summary>
+                <p>Sim. Use as respostas como apoio ao estudo e confira se os passos fazem sentido. Compare com o gabarito e reporte inconsistências na própria questão.</p>
+              </details>
+            </section>
+
             {/* SEÇÃO 4: CTA FINAL DO ESTUDANTE */}
             <section className="lemmas-section">
               <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
@@ -792,21 +862,15 @@ export function LandingPage() {
                     Pronto para a sua próxima questão?
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-zinc-300 max-w-xl">
-                    Comece pelo acervo gratuito. Se quiser entender como a plataforma foi construída nos bastidores, conheça também nosso case de engenharia.
+                    Defina seu objetivo para organizar o estudo ou escolha uma questão e comece a praticar.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Link href="/questoes" className="lemmas-cta lemmas-cta-primary">
-                    <span>Resolver questões</span>
+                  <Link href="/perfil" className="lemmas-cta lemmas-cta-primary">
+                    <span>Definir meu objetivo</span>
                     <ArrowRight size={16} />
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => switchView("portfolio")}
-                    className="lemmas-cta lemmas-cta-secondary"
-                  >
-                    Ver engenharia ↗
-                  </button>
+                  <Link href="/questoes" className="lemmas-cta lemmas-cta-secondary">Explorar questões <ArrowRight size={16} /></Link>
                 </div>
               </div>
             </section>
@@ -1354,10 +1418,12 @@ export function LandingPage() {
           </div>
         )}
 
-        {/* CONTATO & REDES SOCIAIS (EM AMBAS AS VISÕES) */}
-        <div id="contato">
-          <ContactLoop />
-        </div>
+        {/* CONTATO PROFISSIONAL (PORTFÓLIO) */}
+        {view === "portfolio" && (
+          <div id="contato">
+            <ContactLoop />
+          </div>
+        )}
 
         {/* RODAPÉ */}
         <footer className="lemmas-footer">
