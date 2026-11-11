@@ -361,27 +361,13 @@ function ResolverContent() {
   const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
   const [loadingChunk, setLoadingChunk] = useState<boolean>(false);
   const [answeredIndices, setAnsweredIndices] = useState<Set<number>>(new Set());
-  const [windowSize, setWindowSize] = useState<number>(20);
+  const windowSize = 20;
   const sessionGenerationRef = useRef(0);
 
   const profileStandbyDescricao = useMemo(
     () => (profile ? obterFiltrosApiPerfil(profile).origemDescricao : null),
     [profile]
   );
-
-  useEffect(() => {
-    const updateSize = () => {
-      if (typeof window !== "undefined") {
-        if (window.innerWidth >= 1280) setWindowSize(22);
-        else if (window.innerWidth >= 1024) setWindowSize(20);
-        else if (window.innerWidth >= 768) setWindowSize(14);
-        else setWindowSize(8);
-      }
-    };
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
 
   // Cronômetro
   const [totalTimeInitial, setTotalTimeInitial] = useState(45 * 60);
@@ -2071,9 +2057,8 @@ function ResolverContent() {
   );
   const discursiveEval = currentQ ? discursiveEvaluations[currentQ.id] : undefined;
 
-  // Navegação de Janela Deslizante (20/22 botões com questão ativa centralizada no desktop)
-  const maxStart = Math.max(0, effectiveTotal - windowSize);
-  const windowStart = Math.max(0, Math.min(currentIndex - Math.floor(windowSize / 2), maxStart));
+  // Fixed blocks of 20; jump controls stay visible without horizontal scrolling.
+  const windowStart = Math.floor(currentIndex / windowSize) * windowSize;
   const endIndex = Math.min(windowStart + windowSize, effectiveTotal);
   const visibleQuestionIndices = Array.from(
     { length: Math.max(0, endIndex - windowStart) },
@@ -2673,15 +2658,15 @@ function ResolverContent() {
         </div>
 
         {/* LINHA 2: NAVEGAÇÃO DE QUESTÕES (JUMPER DE 20 & IR PARA) */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4 pt-1 overflow-x-auto flex-nowrap pb-1 sm:pb-0">
-          {/* Faixa com os números da janela de 20/22 questões */}
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap shrink-0">
+        <div aria-label="Navegação de questões" className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pt-1">
+          {/* Faixa com os números do bloco de 20 questões */}
+          <div className="flex items-center gap-1.5 min-w-0">
             {/* Botão para voltar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 20))}
-              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex(Math.max(0, windowStart - windowSize))}
+              disabled={windowStart === 0}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                currentIndex === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+                windowStart === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
               title="20 questões anteriores"
             >
@@ -2689,7 +2674,8 @@ function ResolverContent() {
               <span>-20</span>
             </button>
 
-            {/* Números das questões na janela ativa de 20/22 */}
+            {/* Até 20 números, distribuídos em linhas conforme a largura. */}
+            <div className="grid grid-cols-5 sm:grid-cols-10 xl:grid-cols-20 gap-1 min-w-0 flex-1">
             {visibleQuestionIndices.map((qIndex) => {
               const isCurrent = qIndex === currentIndex;
               const qObj = questions[qIndex];
@@ -2741,7 +2727,7 @@ function ResolverContent() {
                 <button
                   key={qIndex}
                   onClick={() => setCurrentIndex(qIndex)}
-                  className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center shrink-0 ${buttonColorClass}`}
+                  className={`min-w-0 w-full h-8 rounded-lg text-[10px] font-bold transition-all relative flex items-center justify-center ${buttonColorClass}`}
                   title={`Questão ${qIndex + 1}${statusTitle}${isBookmarked ? " [Marcada]" : ""}`}
                 >
                   {qIndex + 1}
@@ -2761,12 +2747,14 @@ function ResolverContent() {
               );
             })}
 
+            </div>
+
             {/* Botão para avançar 20 questões */}
             <button
-              onClick={() => setCurrentIndex((prev) => Math.min(effectiveTotal - 1, prev + 20))}
-              disabled={currentIndex >= effectiveTotal - 1}
+              onClick={() => setCurrentIndex(windowStart + windowSize)}
+              disabled={windowStart + windowSize >= effectiveTotal}
               className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                currentIndex >= effectiveTotal - 1 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+                windowStart + windowSize >= effectiveTotal ? "opacity-40 cursor-not-allowed" : "active:scale-95"
               }`}
               title="Próximas 20 questões"
             >
@@ -2776,7 +2764,7 @@ function ResolverContent() {
           </div>
 
           {/* Jump input com divisor vertical */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 border-l border-slate-200 dark:border-stone-700 pl-2.5 sm:pl-3.5">
+          <div className="flex items-center justify-end gap-2 xl:border-l border-slate-200 dark:border-stone-700 xl:pl-3">
             <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap" htmlFor="jump-input">
               Ir para:
             </label>
