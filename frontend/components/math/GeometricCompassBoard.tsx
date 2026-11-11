@@ -19,6 +19,7 @@ interface GeometricCompassBoardProps {
   initialCommands?: string[];
   onCommandsChange?: (commands: string[]) => void;
   className?: string;
+  isFocusMode?: boolean;
 }
 
 declare global {
@@ -102,8 +103,10 @@ export default function GeometricCompassBoard({
   initialCommands,
   onCommandsChange,
   className = "",
+  isFocusMode = false,
 }: GeometricCompassBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const appletParentRef = useRef<HTMLDivElement>(null);
   const appletId = useRef(`ggb-applet-${Math.random().toString(36).substring(2, 9)}`).current;
   const initializedRef = useRef(false);
   const onCommandsChangeRef = useRef(onCommandsChange);
@@ -119,10 +122,13 @@ export default function GeometricCompassBoard({
 
   const [appletLoaded, setAppletLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showScriptPanel, setShowScriptPanel] = useState(false);
   const [customCommand, setCustomCommand] = useState("");
   const [selectedPreset, setSelectedPreset] = useState<number>(0);
   const [scriptLog, setScriptLog] = useState<string[]>([]);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+
+  const isFullHeight = isFocusMode || className.includes("h-full");
 
   // Executa comando no GeoGebra
   const runGGBCommand = useCallback((cmd: string) => {
@@ -250,11 +256,16 @@ export default function GeometricCompassBoard({
 
           initializedRef.current = true;
 
+          // Mede o container real para abrir já com as dimensões dinâmicas corretas
+          const parentRect = container.parentElement?.getBoundingClientRect();
+          const targetW = parentRect?.width ? Math.floor(parentRect.width) : 800;
+          const targetH = parentRect?.height ? Math.floor(parentRect.height) : 520;
+
           const params = {
             id: appletId,
             appName: "geometry",
-            width: 800,
-            height: 520,
+            width: targetW > 100 ? targetW : 800,
+            height: targetH > 100 ? targetH : 520,
             showToolBar: true,
             showAlgebraInput: true,
             showMenuBar: false,
@@ -265,10 +276,22 @@ export default function GeometricCompassBoard({
             showToolBarHelp: false,
             errorDialogsActive: false,
             useBrowserForJS: true,
+            allowStyleMutation: true,
             appletOnLoad: () => {
               if (isMounted) {
                 clearTimeout(fallbackTimer);
                 setAppletLoaded(true);
+
+                // Força ajuste inicial ao tamanho real do container
+                try {
+                  const ggbApplet = window[appletId];
+                  const pRect = appletParentRef.current?.getBoundingClientRect();
+                  if (ggbApplet && pRect && pRect.width > 100 && pRect.height > 100 && typeof ggbApplet.setSize === "function") {
+                    ggbApplet.setSize(Math.round(pRect.width), Math.round(pRect.height));
+                  }
+                } catch {
+                  // ignore
+                }
 
                 // Conecta listener para objetos criados interativamente na tela
                 try {
@@ -362,6 +385,39 @@ export default function GeometricCompassBoard({
     };
   }, [appletId, runBatchCommands]);
 
+  // Redimensionamento dinâmico e responsivo do GeoGebra via ResizeObserver
+  useEffect(() => {
+    if (!appletLoaded) return;
+    const parentEl = appletParentRef.current;
+    if (!parentEl) return;
+
+    let timeoutId: NodeJS.Timeout;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 100 && height > 100) {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            try {
+              const ggbApplet = window[appletId];
+              if (ggbApplet && typeof ggbApplet.setSize === "function") {
+                ggbApplet.setSize(Math.round(width), Math.round(height));
+              }
+            } catch {
+              // Silencioso se o applet estiver desmontando
+            }
+          }, 80);
+        }
+      }
+    });
+
+    observer.observe(parentEl);
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, [appletLoaded, appletId]);
+
   const handleApplyPreset = (index: number) => {
     setSelectedPreset(index);
     const preset = PRESET_CONSTRUCTIONS[index];
@@ -390,7 +446,11 @@ export default function GeometricCompassBoard({
     <div
       ref={containerRef}
       className={`relative flex flex-col rounded-2xl border border-slate-200/90 dark:border-amber-500/25 bg-[#0e0d16] text-[#f5f0df] shadow-xl overflow-hidden transition-all ${
-        isFullscreen ? "fixed inset-3 z-50 rounded-2xl" : "h-[580px] md:h-[640px] w-full"
+        isFullscreen
+          ? "fixed inset-3 z-50 rounded-2xl"
+          : isFullHeight
+          ? "w-full h-full flex-1 min-h-0"
+          : "h-[580px] md:h-[640px] w-full"
       } ${className}`}
     >
       {/* BARRA SUPERIOR EDITORIAL */}
@@ -431,11 +491,25 @@ export default function GeometricCompassBoard({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
+            onClick={() => setShowScriptPanel((prev) => !prev)}
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-mono border flex items-center gap-1.5 transition-all cursor-pointer ${
+              showScriptPanel
+                ? "bg-amber-500/20 text-[#d9b452] border-amber-500/40"
+                : "bg-zinc-800 text-zinc-300 border-zinc-700 hover:text-zinc-100 hover:border-zinc-500"
+            }`}
+            title="Alternar painel de execução de lemas e comandos formais"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            <span>{showScriptPanel ? "Ocultar Painel" : "Comandos"}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               setUseIframeFallback(!useIframeFallback);
               setAppletLoaded(true);
             }}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono border transition-all ${
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono border transition-all cursor-pointer ${
               useIframeFallback
                 ? "bg-amber-500/20 text-[#d9b452] border-amber-500/40"
                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200"
@@ -448,26 +522,28 @@ export default function GeometricCompassBoard({
           <button
             type="button"
             onClick={handleReset}
-            className="p-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Reiniciar Geometria"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors"
-            title={isFullscreen ? "Sair da Tela Cheia" : "Modo Tela Cheia"}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
+          {!isFocusMode && (
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
+              title={isFullscreen ? "Sair da Tela Cheia" : "Modo Tela Cheia"}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+          )}
 
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Fechar Bancada"
             >
               <X className="w-4 h-4" />
@@ -480,7 +556,10 @@ export default function GeometricCompassBoard({
       <div className="relative flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
         
         {/* CONTAINER DO GEOGEBRA */}
-        <div className="relative flex-1 h-full min-h-[380px] bg-slate-50 flex items-center justify-center overflow-hidden">
+        <div
+          ref={appletParentRef}
+          className="relative flex-1 h-full min-h-[380px] bg-slate-50 flex items-center justify-center overflow-hidden"
+        >
           {useIframeFallback && (
             <iframe
               src="https://www.geogebra.org/geometry?embed"
@@ -518,74 +597,76 @@ export default function GeometricCompassBoard({
         </div>
 
         {/* CONSOLE DE COMANDOS FORMAIS (SCRIPTING DE LEMAS) */}
-        <div className="w-full md:w-72 bg-[#110f1e] border-t md:border-t-0 md:border-l border-amber-500/20 p-3 flex flex-col gap-2.5 text-xs">
-          <div className="flex items-center justify-between text-zinc-300 font-semibold">
-            <div className="flex items-center gap-1.5">
-              <Code2 className="w-3.5 h-3.5 text-amber-500" />
-              <span>Execução de Lemas Geométricos</span>
+        {showScriptPanel && (
+          <div className="w-full md:w-80 bg-[#110f1e] border-t md:border-t-0 md:border-l border-amber-500/20 p-3 flex flex-col gap-2.5 text-xs animate-in fade-in-50 duration-150 shrink-0">
+            <div className="flex items-center justify-between text-zinc-300 font-semibold">
+              <div className="flex items-center gap-1.5">
+                <Code2 className="w-3.5 h-3.5 text-amber-500" />
+                <span>Execução de Lemas Geométricos</span>
+              </div>
+              <button
+                type="button"
+                onClick={syncGeoGebraObjects}
+                className="p-1 rounded-md text-zinc-400 hover:text-[#d9b452] hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Sincronizar objetos construídos com régua/compasso no GeoGebra"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={syncGeoGebraObjects}
-              className="p-1 rounded-md text-zinc-400 hover:text-[#d9b452] hover:bg-zinc-800 transition-colors"
-              title="Sincronizar objetos construídos com régua/compasso no GeoGebra"
+
+            <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+              Digite comandos formais em sintaxe GeoGebra ou aplique construções axiomáticas.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                runGGBCommand(customCommand);
+                setCustomCommand("");
+              }}
+              className="flex items-center gap-1.5"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              <input
+                type="text"
+                value={customCommand}
+                onChange={(e) => setCustomCommand(e.target.value)}
+                placeholder="Ex: C = Circle((0,0), 5)"
+                className="flex-1 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-amber-500/20 text-[#f5f0df] text-xs font-mono outline-none focus:border-amber-500"
+              />
+              <button
+                type="submit"
+                className="p-2 rounded-xl lemmas-gold-cta font-bold shadow-xs shrink-0 cursor-pointer"
+                title="Executar comando"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+              </button>
+            </form>
 
-          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-            Digite comandos formais em sintaxe GeoGebra ou aplique construções axiomáticas.
-          </p>
+            {/* HISTÓRICO DE COMANDOS EXECUTADOS */}
+            <div className="flex-1 min-h-[90px] max-h-[140px] md:max-h-none overflow-y-auto rounded-xl bg-zinc-950 p-2 font-mono text-[10px] space-y-1 text-zinc-400 border border-zinc-800">
+              {scriptLog.length === 0 ? (
+                <span className="text-zinc-600 italic">Nenhum comando executado ainda.</span>
+              ) : (
+                scriptLog.map((log, i) => (
+                  <div key={i} className={log.startsWith("✓") ? "text-emerald-400" : "text-rose-400"}>
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              runGGBCommand(customCommand);
-              setCustomCommand("");
-            }}
-            className="flex items-center gap-1.5"
-          >
-            <input
-              type="text"
-              value={customCommand}
-              onChange={(e) => setCustomCommand(e.target.value)}
-              placeholder="Ex: C = Circle((0,0), 5)"
-              className="flex-1 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-amber-500/20 text-[#f5f0df] text-xs font-mono outline-none focus:border-amber-500"
-            />
-            <button
-              type="submit"
-              className="p-2 rounded-xl lemmas-gold-cta font-bold shadow-xs shrink-0"
-              title="Executar comando"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-            </button>
-          </form>
-
-          {/* HISTÓRICO DE COMANDOS EXECUTADOS */}
-          <div className="flex-1 min-h-[90px] max-h-[140px] md:max-h-none overflow-y-auto rounded-xl bg-zinc-950 p-2 font-mono text-[10px] space-y-1 text-zinc-400 border border-zinc-800">
-            {scriptLog.length === 0 ? (
-              <span className="text-zinc-600 italic">Nenhum comando executado ainda.</span>
-            ) : (
-              scriptLog.map((log, i) => (
-                <div key={i} className={log.startsWith("✓") ? "text-emerald-400" : "text-rose-400"}>
-                  {log}
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* GUIA RÁPIDO DE SINTAXE */}
-          <div className="p-2 rounded-xl bg-amber-500/5 border border-amber-500/15 text-[10px] text-zinc-400 space-y-1">
-            <span className="font-bold text-[#d9b452] block">Comandos Comuns:</span>
-            <div className="space-y-0.5 font-mono text-zinc-300">
-              <div>• Segment(A, B)</div>
-              <div>• Midpoint(A, B)</div>
-              <div>• PerpendicularLine(A, s)</div>
-              <div>• AngleBisector(A, B, C)</div>
+            {/* GUIA RÁPIDO DE SINTAXE */}
+            <div className="p-2 rounded-xl bg-amber-500/5 border border-amber-500/15 text-[10px] text-zinc-400 space-y-1">
+              <span className="font-bold text-[#d9b452] block">Comandos Comuns:</span>
+              <div className="space-y-0.5 font-mono text-zinc-300">
+                <div>• Segment(A, B)</div>
+                <div>• Midpoint(A, B)</div>
+                <div>• PerpendicularLine(A, s)</div>
+                <div>• AngleBisector(A, B, C)</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

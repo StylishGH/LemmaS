@@ -42,6 +42,7 @@ htmlcov/
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*
 *-checkpoint.ipynb
+data/notebooks/backups/
 
 # ------------------------------------------------------------------------------
 # Banco de Dados e Arquivos Temporários SQLite / Datasets Grandes
