@@ -3,7 +3,7 @@
   <p><strong>Plataforma de aprendizagem matemática adaptativa guiada por dados, psicometria e IA multi-modelo.</strong></p>
   <p>Um projeto de engenharia aplicada na interseção entre Engenharia de Dados, Ciência de Dados / Machine Learning e Design Epistêmico.</p>
   <p><strong>🇧🇷 Português (Brasil)</strong> &nbsp;|&nbsp; <a href="./README.md">🇺🇸 English</a></p>
-  <p><a href="https://lemmas.com.br/dashboard"><strong>🚀 Acesse a Demonstração ao Vivo do Lemmas</strong></a></p>
+  <p><a href="https://lemmas.com.br/landing"><strong>🚀 Acesse a Demonstração ao Vivo do Lemmas</strong></a></p>
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/FastAPI-Python%203.12-009688?logo=fastapi" alt="FastAPI" />
@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/badge/AI%20Gateway-Nemotron%20%7C%20DeepSeek%20%7C%20Gemini-76B900" alt="Gateway Multi-Modelo" />
     <img src="https://img.shields.io/badge/Psicometria-SM--2%20(Ativo)%20%7C%20FSRS--v4%20%26%20TRI%20(Roadmap)-blue" alt="SM-2 & Psicometria" />
     <img src="https://img.shields.io/badge/Integridade-Proveniência%20SHA--256-orange" alt="Proveniência SHA-256" />
-    <img src="https://img.shields.io/badge/Status-Pronto%20para%20Lançamento-success" alt="Pronto para Lançamento" />
+    <img src="https://img.shields.io/badge/Status-Em%20Produção-success" alt="Em produção" />
   </p>
 </div>
 
@@ -55,6 +55,25 @@ O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemá
 
 ---
 
+## Publicado em 11/11/2026
+
+O **LEMMAS**, impulsionado pela **MathAI Engine**, está disponível em [lemmas.com.br](https://lemmas.com.br). A entrega do [PR #83](https://github.com/StylishGH/LemmaS/pull/83) inclui:
+
+- **Modo Foco Imersivo:** lousa digital ou GeoGebra em tela cheia, questão flutuante com arrasto, alternativas e avaliação da resolução.
+- **Dicas socráticas dentro do Modo Foco:** o painel usa o mesmo histórico e os mesmos cinco níveis da bancada. O nível 5 exige confirmação, revela a resolução e registra rendição com penalidade SM-2. As dicas ficam bloqueadas durante simulados ativos.
+- **Personalização por prioridade:** o perfil ordena o acervo sem selecionar filtros automaticamente. Por exemplo, Escola Naval aparece primeiro quando escolhida no perfil; as outras bancas continuam na lista. Filtros manuais e de URL restringem os resultados.
+- **Perfil pedagógico:** objetivo principal, objetivos secundários, conteúdos escolhidos separados das sugestões, disponibilidade e preferência de aprendizagem preservada.
+- **Landing e portfólio técnico:** capturas legíveis, fórmulas corrigidas e distinção entre implementação, experimento e pesquisa futura.
+
+| Acervo em produção | Consulta em 11/11/2026 |
+|---|---:|
+| Questões | 21.578 |
+| Lemas | 3.000 |
+
+Fonte: [API de estatísticas](https://lemmas.com.br/api/stats). Os números variam com a curadoria; a landing consulta a API e mostra “—” se a contagem estiver indisponível. Quantidade de registros não comprova validação individual de todo o acervo.
+
+![Modo Foco em produção com painel de dicas socráticas](docs/assets/modo_foco_dicas.png)
+
 ## 📸 Demonstração Visual do Produto
 
 <table align="center">
@@ -77,7 +96,7 @@ O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemá
       <em>Ciclos de repetição espaçada, telemetria de erros e radar de domínio por matéria.</em>
     </td>
     <td align="center" width="50%">
-      <strong>Acervo de 20.803 Questões &amp; Teoremas</strong><br />
+      <strong>Banco de Questões &amp; Teoremas</strong><br />
       <img src="docs/assets/banco_questoes.png" alt="Banco de Questões" width="100%" /><br />
       <em>Questões auditadas de olimpíadas e vestibulares militares renderizadas em KaTeX nativo.</em>
     </td>
@@ -94,14 +113,14 @@ A plataforma desacopla a interação do usuário, contratos de API, roteamento d
   <tr>
     <td align="center">
       <strong>Camada Cliente · Next.js 16 (App Router + Turbopack + KaTeX)</strong><br />
-      Bancada Discursiva (Lousa / OCR / Texto) · Painel de Metacognição &amp; Radar · Acervo (20.803 Questões &amp; Lemas)
+      Bancada Discursiva (Lousa / OCR / Texto) · Painel de Metacognição &amp; Radar · Acervo de questões e lemas
     </td>
   </tr>
   <tr><td align="center">⬇</td></tr>
   <tr>
     <td align="center">
       <strong>Motor Backend · FastAPI (Python 3.12)</strong><br />
-      Guarda de Segurança (Validador de Token e Anon Key) · Motor de Integridade (Hash SHA-256 Determinístico) · Gateway Multi-Modelo MathAI · Psicometria &amp; Memória (FSRS-v4 / SM-2 / TRI-3PL)
+      Guarda de Segurança (Validador de Token e Anon Key) · Motor de Integridade (Hash SHA-256 Determinístico) · Gateway Multi-Modelo MathAI · Revisão SM-2 · Agendamento inspirado em FSRS (experimental) · TRI 3PL (pesquisa)
     </td>
   </tr>
   <tr><td align="center">⬇</td></tr>
@@ -133,11 +152,11 @@ No deploy em produção, os ciclos de retenção de questões e lemas são calcu
   Onde $q \in [0, 5]$ é a nota qualitativa mapeada a partir dos 4 vereditos cognitivos da plataforma.
 - O estado de retenção é gravado imediatamente na tabela `public.revisao_espacada` do Supabase PostgreSQL.
 
-### 2. Protótipo Algorítmico: FSRS-v4 (Free Spaced Repetition Scheduler)
+### 2. Agendador experimental inspirado em FSRS
 Para a modelagem da curva de esquecimento em flashcards e lemas, o backend possui uma implementação inicial inspirada na formulação moderna do FSRS:
 $$R(t) = \left(1 + F \cdot \frac{t}{S}\right)^{-1}$$
-- Os contratos de estabilidade mnemônica ($S$) e dificuldade intrínseca ($D$) estão definidos em `app/services/mathai/flashcards.py`.
-- *Status:* Operacional em modo protótipo com constantes aproximadas; a calibração empírica dos hiperparâmetros via estimativa de máxima verossimilhança está planejada para a Fase 2 conforme o volume de interações crescer.
+- Os contratos de estabilidade mnemônica ($S$) e dificuldade intrínseca ($D$) estão definidos em `backend/app/services/mathai/flashcards.py`.
+- *Status:* Protótipo com constantes aproximadas. Consolidar a fonte de verdade do agendamento e validar persistência e regressões antes de substituir o SM-2; calibração empírica permanece planejada. Não equivale a uma implementação completa e calibrada de FSRS-v4.
 
 ### 3. Alvo de Pesquisa Científica: Teoria de Resposta ao Item (TRI 3PL)
 Para evoluir da dificuldade ordinal (1 a 5) das bancas para uma métrica psicométrica contínua, os experimentos futuros de ciência de dados calibrarão as questões via Modelo Logístico de Três Parâmetros:
@@ -157,7 +176,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 - **Isolamento Relacional com Row Level Security (RLS):** 20 tabelas PostgreSQL hospedadas no Supabase aplicam políticas rigorosas de isolamento multi-tenant.
 - **Padrão Strategy no Roteamento Multi-Modelo:** Desacoplamento da camada de inferência:
   - **NVIDIA Nemotron 70B/120B:** Demonstrações formais e checagem axiomática estrita.
-  - **Google Gemini Flash-Lite:** OCR de rascunhos manuscritos em caderno com latência reduzida (<600ms).
+  - **Google Gemini Flash-Lite:** OCR de rascunhos manuscritos; a latência depende do modelo, da entrada e da disponibilidade do provedor.
   - **DeepSeek:** Sugestões intuitivas, contra-exemplos e atalhos cognitivos.
 
 ---
@@ -170,8 +189,8 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **Backend** | Python 3.12, FastAPI, Pydantic V2, Uvicorn |
 | **Banco de Dados & Auth** | Supabase (PostgreSQL com RLS), Hashes SHA-256 determinísticos |
 | **IA Aplicada & Visão** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
-| **Psicometria & Repetição** | Motor SM-2 (Ativo em produção), FSRS-v4 (Protótipo), TRI 3PL (Roadmap de Pesquisa) |
-| **Testes & Qualidade** | pytest (Backend & Testes de Arquitetura), Vitest (Componentes de UI) |
+| **Psicometria & Repetição** | Motor SM-2 (Ativo em produção), Agendador inspirado em FSRS (Experimental), TRI 3PL (Roadmap de Pesquisa) |
+| **Testes & Qualidade** | pytest (Backend & Testes de Arquitetura), TypeScript, build Next.js, testes de integração da API com Node.js e verificações de navegador |
 
 ---
 
@@ -219,13 +238,27 @@ npm run dev
 - [x] **Arquitetura Monorepo:** Frontend Next.js 16 + Backend FastAPI.
 - [x] **Pipeline Epistêmico de Dados:** Hashing SHA-256 e segregação estrita de dados submetidos.
 - [x] **Bancada Discursiva & OCR Multimodal:** Parser KaTeX para rascunhos manuscritos.
-- [x] **Acervo de 20.803 Questões:** Base de problemas matemáticos auditados e catalogados.
+- [x] **Acervo consultável:** Contagens atuais fornecidas por `/api/stats`, com filtros manuais e ordenação por preferências do perfil.
 - [x] **Gateway Multi-Modelo:** Roteamento entre Nemotron, Gemini e DeepSeek.
 - [ ] **Migração de Persistência Completa:** Substituição gradual dos handlers em memória por tabelas duráveis no PostgreSQL.
 - [ ] **Calibração Empírica:** Ajuste dos hiperparâmetros do FSRS com base em logs reais de interação.
 - [ ] **Harness de Avaliação Contínua (Evals):** Suite de benchmarks de latência, custo e concordância de diagnósticos entre modelos de IA.
 
 ---
+
+## Verificação da entrega
+
+- Build de produção e TypeScript aprovados no CI, junto aos testes de backend.
+- 14 testes do motor pedagógico e 4 regressões da ordenação aprovados. As regressões da API também passaram no domínio de produção.
+- Navegador: painel de dicas em treino, confirmação do nível 5 acima do Modo Foco, layout de tablet e bloqueio no simulado. Essas verificações não executaram chamadas reais de IA nem mediram taxa de atualização da caneta.
+- Próximos passos: validar o fluxo autenticado de dicas e persistência após recarregar, medir latência/custo dos provedores e consolidar o agendamento de revisão. Veja o [roadmap mestre](docs/roadmap.md).
+
+Para repetir as regressões da ordenação, com o frontend local em execução:
+
+```bash
+cd frontend
+node --test scripts/test-question-personalization.mjs
+```
 
 ## 👨‍💻 Sobre o Autor
 
