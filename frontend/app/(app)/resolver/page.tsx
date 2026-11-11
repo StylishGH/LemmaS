@@ -79,6 +79,7 @@ interface Question {
 }
 
 interface SubmitResult {
+  id?: number | string | null;
   acertou: boolean;
   gabarito: string;
   resposta_enviada: string;
@@ -88,6 +89,8 @@ interface SubmitResult {
     intervalo_dias: number;
     proxima_revisao_data: string;
   };
+  imagem_resolucao_path?: string | null;
+  estrategias_esperadas?: string | null;
 }
 
 interface FeedbackState {
@@ -100,6 +103,7 @@ interface FeedbackState {
 }
 
 interface DiagnosticoIaResult {
+  id?: number | string | null;
   status_resolucao: string;
   transcricao_latex?: string;
   diagnostico: string;
@@ -1235,6 +1239,9 @@ function ResolverContent() {
               nivel_max_dica: maxHintLevel,
               total_dicas_solicitadas: qHints.length,
               avaliacao_ia: data,
+              justificativa_texto: justificativaRequest || null,
+              imagem_base64: imageBase64 || null,
+              origem: origem || "bancada",
             }),
           });
           const submitData = await submitRes.json();
@@ -1364,6 +1371,8 @@ function ResolverContent() {
         body: JSON.stringify({
           questao_id: qId,
           aluno_id: profile.isGuest ? 9999 : (profile.id || 9999),
+          tentativa_id: submitResults[idx]?.id || null,
+          avaliacao_ia_id: diagnosticosIa[idx]?.id || null,
           tipo,
           util: fb.util,
           concorda_diagnostico: fb.concorda,
@@ -1374,6 +1383,8 @@ function ResolverContent() {
             questao_index: idx,
             questao_id: qId,
             resposta_estudante: answers[qId] || answers[idx] || null,
+            tentativa_id: submitResults[idx]?.id || null,
+            avaliacao_ia_id: diagnosticosIa[idx]?.id || null,
           },
         }),
       });
