@@ -171,6 +171,22 @@ export async function GET() {
         verificado: dbUser?.verificado ?? (user.email_confirmed_at ? 1 : 0),
         fotoUrl: fotoFinal,
         motivacoesSelecionadas: motivacoes,
+        objetivoPrincipal: parsedMotivos.objetivo_principal !== undefined
+          ? parsedMotivos.objetivo_principal
+          : (motivacoes[0] || null),
+        objetivosSecundarios: Array.isArray(parsedMotivos.objetivos_secundarios)
+          ? parsedMotivos.objetivos_secundarios
+          : motivacoes.slice(1),
+        disponibilidadeMinutos: typeof parsedMotivos.disponibilidade_minutos === "number"
+          ? parsedMotivos.disponibilidade_minutos
+          : 45,
+        metaTipo: parsedMotivos.meta_tipo || "questoes",
+        conteudosSelecionados: Array.isArray(parsedMotivos.conteudos_selecionados)
+          ? parsedMotivos.conteudos_selecionados
+          : (Array.isArray(parsedMotivos.conceitos_selecionados) ? parsedMotivos.conceitos_selecionados : []),
+        conteudosRecomendados: Array.isArray(parsedMotivos.conteudos_recomendados)
+          ? parsedMotivos.conteudos_recomendados
+          : [],
         concursosSelecionados: Array.isArray(parsedMotivos.concursos_selecionados) ? parsedMotivos.concursos_selecionados : [],
         conceitosSelecionados: Array.isArray(parsedMotivos.conceitos_selecionados) ? parsedMotivos.conceitos_selecionados : [],
         pedagogicalPreference: parsedMotivos.pedagogical_preference || "conceitual",
@@ -237,6 +253,24 @@ export async function POST(req: NextRequest) {
     }
     if (body.pedagogicalPreference !== undefined) {
       mergedMotivos.pedagogical_preference = body.pedagogicalPreference;
+    }
+    if (body.objetivoPrincipal !== undefined) {
+      mergedMotivos.objetivo_principal = body.objetivoPrincipal;
+    }
+    if (body.objetivosSecundarios !== undefined) {
+      mergedMotivos.objetivos_secundarios = body.objetivosSecundarios;
+    }
+    if (body.disponibilidadeMinutos !== undefined) {
+      mergedMotivos.disponibilidade_minutos = body.disponibilidadeMinutos;
+    }
+    if (body.metaTipo !== undefined) {
+      mergedMotivos.meta_tipo = body.metaTipo;
+    }
+    if (body.conteudosSelecionados !== undefined) {
+      mergedMotivos.conteudos_selecionados = body.conteudosSelecionados;
+    }
+    if (body.conteudosRecomendados !== undefined) {
+      mergedMotivos.conteudos_recomendados = body.conteudosRecomendados;
     }
 
     // Faturamento (dados adicionais que não possuem coluna própria na tabela usuarios)

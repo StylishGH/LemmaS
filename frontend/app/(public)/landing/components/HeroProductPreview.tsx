@@ -1,143 +1,422 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, CheckCircle2, Cpu, Lightbulb, Eye, ShieldCheck, ChevronRight } from "lucide-react";
-import { MathText } from "@/components/math/MathDisplay";
+import Link from "next/link";
+import { resolveFigureUrl } from "@/lib/image-url";
+import { Lightbulb, Sparkles, ArrowRight, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Calendar, Compass, ShieldCheck } from "lucide-react";
+import { MathInline } from "@/components/math/MathDisplay";
+
+// Curated copy has explicit delimiters: keep each complete formula intact.
+function MathText({ text }: { text: string }) {
+  return <>{text.split(/(\$[^$]+\$)/g).map((part, index) =>
+    part.startsWith("$") && part.endsWith("$")
+      ? <MathInline key={index} latex={part.slice(1, -1)} />
+      : <React.Fragment key={index}>{part}</React.Fragment>
+  )}</>;
+}
+
+interface LemmaInfo {
+  number: string;
+  name: string;
+  formula: string;
+  trigger: string;
+  action: string;
+}
+
+interface Alternative {
+  letter: string;
+  text: string;
+}
+
+interface QuestionItem {
+  id: number;
+  origin: string;
+  banca: string;
+  ano: number;
+  category: string;
+  type: string;
+  level: string;
+  materia: string;
+  topico: string;
+  question: string;
+  figuraUrl?: string;
+  options: Alternative[];
+  correctLetter: string;
+  explain: string;
+  socraticHint: {
+    level1: string;
+    level2: string;
+    level3: string;
+  };
+  lemma: LemmaInfo;
+}
+
+const QUESTIONS: QuestionItem[] = [
+  {
+    id: 22960,
+    origin: "ESCOLA NAVAL · 2026",
+    banca: "Escola Naval",
+    ano: 2026,
+    category: "Concurso Militar",
+    type: "Objetiva",
+    level: "Fácil (2/5)",
+    materia: "Matemática",
+    topico: "Geometria Plana",
+    question: "Considere a figura abaixo.\n\nSabendo que o octógono é regular de lado 8, tal que a reta que contém o segmento $IH$ intersecta o ponto $C$ e os pontos $B$, $I$ e $E$ são colineares, calcule a razão entre a área do triângulo $IEG$ e a área do octógono regular $ABCDEFGH$ e assinale a opção correta.",
+    figuraUrl: "/data/imagens/escola_naval/2026/escola_naval_2026_q07_fig1.png",
+    options: [
+      { letter: "A", text: "\\frac{1 + \\sqrt{2}}{4}" },
+      { letter: "B", text: "\\frac{1 + \\sqrt{2}}{6}" },
+      { letter: "C", text: "\\frac{1 + \\sqrt{2}}{12}" },
+      { letter: "D", text: "\\frac{1 + \\sqrt{2}}{8}" },
+      { letter: "E", text: "\\frac{1 + \\sqrt{2}}{14}" }
+    ],
+    correctLetter: "D",
+    explain: "No triângulo retângulo isósceles $ABC$, temos $BI = CI = 8 \\cdot \\frac{\\sqrt{2}}{2} = 4\\sqrt{2}$.\nSe $AJ \\perp CH$, então $JH = 4\\sqrt{2}$ e $IJ = 8$.\nNote que a base e a altura do triângulo $IEG$ medem $EI = HI = 8 + 4\\sqrt{2} = 4\\sqrt{2}(\\sqrt{2} + 1)$.\nA área do triângulo é $S_{IEG} = \\frac{IE \\cdot HI}{2} = 16(\\sqrt{2} + 1)^2$.\nA área total do octógono regular é $S_{octo} = 128(\\sqrt{2} + 1)$.\nDividindo as áreas: $\\frac{S_{IEG}}{S_{octo}} = \\frac{16(\\sqrt{2} + 1)^2}{128(\\sqrt{2} + 1)} = \\frac{1 + \\sqrt{2}}{8}$.\nGabarito oficial: Alternativa (D).",
+    socraticHint: {
+      level1: "Identifique os triângulos retângulos isósceles formados nas quinas do octógono regular.",
+      level2: "Como a reta IH passa por C, a simetria fornece $BI = CI = 4\\sqrt{2}$. Veja que $EI$ e $HI$ são congruentes.",
+      level3: "Calcule a área do triângulo IEG como $\\frac{1}{2} \\cdot EI \\cdot HI$ e compare com a área decomposta do octógono."
+    },
+    lemma: {
+      number: "1916",
+      name: "Princípio de Cavalieri e Decomposição de Polígonos",
+      formula: "\\frac{S_{IEG}}{S_{octo}} = \\frac{1 + \\sqrt{2}}{8}",
+      trigger: "Quando a questão envolve polígono regular com decomposição simétrica em triângulos e trapézios notáveis",
+      action: "Projete as diagonais perpendiculares para decompor o polígono em retângulos centrais e triângulos retângulos isósceles congruentes nas quinas."
+    }
+  },
+  {
+    id: 1108,
+    origin: "COLÉGIO NAVAL / EPCAR · 2024",
+    banca: "Colégio Naval",
+    ano: 2024,
+    category: "Concurso Militar",
+    type: "Objetiva",
+    level: "Média (3/5)",
+    materia: "Matemática",
+    topico: "Geometria Plana",
+    question: "Um triângulo retângulo possui catetos de comprimentos 6 cm e 8 cm. O raio da circunferência inscrita (inraio) a esse triângulo é igual a:",
+    options: [
+      { letter: "A", text: "1\\text{ cm}" },
+      { letter: "B", text: "2\\text{ cm}" },
+      { letter: "C", text: "3\\text{ cm}" },
+      { letter: "D", text: "4\\text{ cm}" },
+      { letter: "E", text: "5\\text{ cm}" }
+    ],
+    correctLetter: "B",
+    explain: "Pelo Lema de Poncelet direto: em triângulos retângulos com catetos $a = 6$, $b = 8$ e hipotenusa $c = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$, o inraio é $r = \\frac{a+b-c}{2} = \\frac{6+8-10}{2} = 2\\text{ cm}$. Pelo método tradicional da conservação de área: $S = \\frac{6 \\times 8}{2} = 24\\text{ cm}^2$ e $p = \\frac{6+8+10}{2} = 12\\text{ cm}$. Como $S = p \\cdot r$, resulta $r = \\frac{24}{12} = 2\\text{ cm}$. Gabarito oficial: Alternativa (B).",
+    socraticHint: {
+      level1: "Calcule a hipotenusa usando o Teorema de Pitágoras clássico (triângulo pitagórico 6-8-10).",
+      level2: "Use a relação de conservação da área: a área total é o semiperímetro multiplicado pelo inraio ($S = p \\cdot r$).",
+      level3: "Ou aplique o Teorema de Poncelet direto para triângulos retângulos: $r = \\frac{a+b-c}{2}$."
+    },
+    lemma: {
+      number: "42",
+      name: "Teorema de Poncelet & Inraio",
+      formula: "r = \\frac{a + b - c}{2} \\quad \\iff \\quad S = p \\cdot r",
+      trigger: "Quando o problema envolve o raio da circunferência inscrita em um triângulo retângulo ou relação entre catetos e perímetro",
+      action: "A soma dos catetos excede a hipotenusa pelo diâmetro inscrito: a + b = c + 2r. Calcule diretamente sem calcular áreas intermediárias."
+    }
+  }
+];
 
 export function HeroProductPreview() {
-  const [activeTab, setActiveTab] = useState<"axiom" | "heuristic">("axiom");
+  const [currentIdx, setCurrentIdx] = useState<number>(0);
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const [socraticLevel, setSocraticLevel] = useState<number | null>(null);
+  const [forceShowExplain, setForceShowExplain] = useState<boolean>(false);
+
+  const q = QUESTIONS[currentIdx];
+  const isAnswered = selectedLetter !== null;
+  const isCorrect = selectedLetter === q.correctLetter;
+  const shouldShowExplain = isAnswered || forceShowExplain;
+
+  const handleSelect = (letter: string) => {
+    setSelectedLetter(letter);
+  };
+
+  const handleNext = () => {
+    setCurrentIdx((prev) => (prev + 1) % QUESTIONS.length);
+    setSelectedLetter(null);
+    setSocraticLevel(null);
+    setForceShowExplain(false);
+  };
 
   return (
-    <div className="w-full rounded-2xl md:rounded-3xl border border-slate-200/90 dark:border-amber-500/25 bg-white/95 dark:bg-[#141222]/95 shadow-2xl backdrop-blur-md overflow-hidden text-slate-800 dark:text-[#dedbd0] font-sans transition-all">
-      {/* BARRA SUPERIOR MAC/LINUX COM STATUS */}
-      <div className="px-4 py-3 bg-slate-100/90 dark:bg-[#18152a] border-b border-slate-200/80 dark:border-amber-500/15 flex items-center justify-between text-xs select-none">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-          <span className="ml-2 font-mono text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-[210px] sm:max-w-none">
-            Bancada Discursiva · ITA 2024 · Geometria Plana
-          </span>
+    <div className="relative w-full max-w-[560px] mx-auto select-none">
+      {/* Moldura externa sutil do quadro negro */}
+      <div
+        className="absolute -inset-3 sm:-inset-4 rounded-3xl border border-amber-500/20 dark:border-amber-500/25 pointer-events-none transform -rotate-1 hidden sm:block opacity-60"
+        aria-hidden="true"
+      />
+
+      {/* Painel da questão estilo autêntico LemmaS */}
+      <div className="relative rounded-2xl md:rounded-3xl border border-slate-200/90 dark:border-amber-500/30 bg-white dark:bg-[#141222] shadow-[0_24px_60px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,220,163,0.18)] overflow-hidden transition-all">
+
+        {/* CABEÇALHO COM BADGES REAIS DO LEMMAS */}
+        <div className="px-5 py-3.5 bg-slate-50 dark:bg-[#17142a] border-b border-slate-200/80 dark:border-amber-500/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold font-mono bg-amber-500/15 border border-amber-500/35 text-amber-700 dark:text-[#d9b452]">
+              {q.origin}
+            </span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+              {q.category}
+            </span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+              {q.type}
+            </span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              {q.level}
+            </span>
+          </div>
+
+          <Link
+            href={`/resolver?id=${q.id}`}
+            className="text-[11px] font-semibold text-amber-700 dark:text-[#d9b452] hover:underline flex items-center gap-1 transition"
+            title="Abrir esta questão no Modo Foco em tela cheia"
+          >
+            <Sparkles size={12} className="text-amber-500" />
+            <span>Modo Foco ↗</span>
+          </Link>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Avaliação Concluída</span>
+
+        {/* CORPO DA QUESTÃO */}
+        <div className="p-5 sm:p-6 space-y-4">
+          {/* Breadcrumb da Matéria */}
+          <div className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">
+            <span>{q.materia}</span>
+            <span className="mx-1.5 opacity-40">›</span>
+            <strong className="text-slate-800 dark:text-[#f5f0df] font-semibold">{q.topico}</strong>
+          </div>
+
+          {/* Enunciado formatado com KaTeX */}
+          <div className="text-xs sm:text-sm font-medium text-slate-900 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
+            <MathText text={q.question} />
+          </div>
+
+          {/* Figura da Questão (se houver) */}
+          {q.figuraUrl && (
+            <div className="my-2 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-100/80 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/20">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resolveFigureUrl(q.figuraUrl)}
+                alt="Figura geométrica da questão"
+                className="max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-transparent p-1 shadow-xs border border-slate-200 dark:border-white/10"
+                loading="lazy"
+              />
+              <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-400 mt-1.5">
+                Figura de referência oficial da prova
+              </span>
+            </div>
+          )}
+
+          {/* Alternativas Reais do LemmaS */}
+          <div className="space-y-2 pt-1">
+            <div className="text-[10px] font-mono font-bold tracking-wider uppercase text-slate-500 dark:text-zinc-400">
+              Alternativas (clique para responder):
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {q.options.map((opt) => {
+                const isSelected = selectedLetter === opt.letter;
+                const isOptionCorrect = opt.letter === q.correctLetter;
+
+                let btnClass = "border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-[#18152a] text-slate-800 dark:text-[#dedbd0] hover:border-amber-500/50 hover:bg-amber-500/5";
+
+                if (isSelected) {
+                  if (isOptionCorrect) {
+                    btnClass = "border-2 border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold shadow-md";
+                  } else {
+                    btnClass = "border-2 border-amber-500 bg-amber-500/15 text-amber-800 dark:text-[#d9b452] font-bold shadow-md";
+                  }
+                } else if (shouldShowExplain && isOptionCorrect) {
+                  btnClass = "border border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold";
+                }
+
+                return (
+                  <button
+                    key={opt.letter}
+                    type="button"
+                    onClick={() => handleSelect(opt.letter)}
+                    className={`py-2 px-3 rounded-xl text-left text-xs transition-all cursor-pointer flex items-center gap-2 ${btnClass}`}
+                  >
+                    <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-[#d9b452] shrink-0">
+                      ({opt.letter})
+                    </span>
+                    <span className="overflow-x-auto scrollbar-none font-medium">
+                      <MathInline latex={opt.text} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* FEEDBACK REAL: STATUS + REPETIÇÃO ESPAÇADA SM-2 + LEMA ASSOCIADO */}
+          {shouldShowExplain && (
+            <div className={`p-4 rounded-xl text-xs leading-relaxed animate-fadeIn border space-y-3 ${
+              isAnswered && !isCorrect
+                ? "bg-amber-500/10 border-amber-500/35 text-slate-800 dark:text-[#f5f0df]"
+                : "bg-emerald-500/10 border-emerald-500/35 text-slate-800 dark:text-[#f5f0df]"
+            }`}>
+              {/* Status do acerto */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200/40 dark:border-zinc-800/80">
+                <span className={`font-bold flex items-center gap-1.5 ${
+                  isAnswered && !isCorrect ? "text-amber-600 dark:text-[#d9b452]" : "text-emerald-600 dark:text-emerald-400"
+                }`}>
+                  <CheckCircle2 size={14} />
+                  <span>
+                    {isAnswered
+                      ? (isCorrect
+                          ? `Correto! Alternativa Oficial (${q.correctLetter}) confirmada.`
+                          : `Tentativa registrada. Você marcou (${selectedLetter}) · Gabarito: (${q.correctLetter})`)
+                      : `Gabarito Oficial: Alternativa (${q.correctLetter})`}
+                  </span>
+                </span>
+                <span className="font-mono text-[10px] font-bold text-amber-600 dark:text-[#d9b452] bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+                  Gabarito: ({q.correctLetter})
+                </span>
+              </div>
+
+              {/* CARD DE LEMA MATEMÁTICO DO LEMMAS */}
+              <div className="p-3 rounded-lg bg-white/80 dark:bg-[#141222] border border-amber-500/30 shadow-sm space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold font-mono text-amber-600 dark:text-[#d9b452]">
+                    <BookOpen size={12} />
+                    <span>Lema #{q.lemma.number} · {q.lemma.name}</span>
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 uppercase">
+                    Catálogo de Lemas
+                  </span>
+                </div>
+
+                {/* Fórmula em destaque com KaTeX */}
+                <div className="py-1 px-2.5 rounded bg-amber-500/10 border border-amber-500/20 text-center font-serif text-slate-900 dark:text-[#f5f0df]">
+                  <MathText text={`$${q.lemma.formula}$`} />
+                </div>
+
+                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug">
+                  <strong className="text-amber-700 dark:text-[#d9b452]">Gatilho Cognitivo: </strong>
+                  {q.lemma.trigger}
+                </p>
+
+                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug">
+                  <strong className="text-amber-700 dark:text-[#d9b452]">Ação / Teorema: </strong>
+                  {q.lemma.action}
+                </p>
+              </div>
+
+              {/* Agendamento da repetição espaçada SM-2 */}
+              <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-center justify-between text-[11px] font-mono text-slate-700 dark:text-zinc-300">
+                <span className="flex items-center gap-1.5">
+                  <Calendar size={13} className="text-amber-500" />
+                  <span>Repetição Espaçada SM-2:</span>
+                </span>
+                <span className="font-bold text-amber-600 dark:text-[#d9b452]">
+                  {isCorrect ? "Próxima revisão em 3 dias (EF: 2.50)" : "Revisão prioritária hoje (EF: 2.36)"}
+                </span>
+              </div>
+
+              {/* Explicação Passo a Passo */}
+              <div className="space-y-1 text-slate-700 dark:text-zinc-200">
+                <strong className="text-[11px] font-semibold text-slate-900 dark:text-[#f5f0df] block">
+                  Resolução passo a passo guiada pelo Lema:
+                </strong>
+                <div className="text-[11px] leading-relaxed whitespace-pre-line">
+                  <MathText text={q.explain} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TUTOR SOCRÁTICO ADAPTATIVO (MÉTODO PÓLYA) */}
+          {socraticLevel !== null && !shouldShowExplain && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-slate-800 dark:text-[#f5f0df] leading-relaxed animate-fadeIn space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-amber-500/20">
+                <strong className="text-amber-600 dark:text-[#d9b452] flex items-center gap-1.5 font-mono text-[10px] uppercase">
+                  <Lightbulb size={12} />
+                  <span>Tutor Socrático · Método Pólya (Nível {socraticLevel})</span>
+                </strong>
+                <span className="text-[9px] font-mono text-zinc-400">sem spoiler</span>
+              </div>
+              <div className="text-[11px]">
+                {socraticLevel === 1 && <MathText text={q.socraticHint.level1} />}
+                {socraticLevel === 2 && <MathText text={q.socraticHint.level2} />}
+                {socraticLevel === 3 && <MathText text={q.socraticHint.level3} />}
+              </div>
+            </div>
+          )}
+
+          {/* CONTROLES DO RODAPÉ */}
+          <div className="pt-2 border-t border-slate-200/60 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+            <div className="flex items-center gap-2">
+              {!shouldShowExplain && (
+                <button
+                  type="button"
+                  onClick={() => setSocraticLevel((prev) => (prev === null ? 1 : prev < 3 ? prev + 1 : null))}
+                  className="text-amber-600 dark:text-[#d9b452] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Lightbulb size={12} />
+                  <span>
+                    {socraticLevel === null
+                      ? "✧ Dica Socrática"
+                      : socraticLevel < 3
+                        ? `Dica Nível ${socraticLevel + 1} ↗`
+                        : "Ocultar dicas"}
+                  </span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setForceShowExplain(!shouldShowExplain)}
+                className="text-slate-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-[#d9b452] font-semibold flex items-center gap-1 cursor-pointer transition"
+              >
+                {shouldShowExplain ? (
+                  <>
+                    <ChevronUp size={12} />
+                    <span>Ocultar lema</span>
+                  </>
+                ) : (
+                  <>
+                    <BookOpen size={12} />
+                    <span>Ver lema & gabarito</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/resolver?id=${q.id}`}
+                className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-[#d9b452] font-bold hover:bg-amber-500/20 transition flex items-center gap-1"
+                title="Praticar esta questão com S-Pen e Régua/Compasso na Bancada"
+              >
+                <Compass size={11} />
+                <span>Praticar na Lousa ↗</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="text-slate-700 dark:text-zinc-300 font-bold hover:text-amber-600 dark:hover:text-[#d9b452] flex items-center gap-1 transition cursor-pointer"
+              >
+                <span>Outra questão</span>
+                <ArrowRight size={12} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 space-y-4">
-        {/* ENUNCIADO REAL EM KATEX */}
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1a172e] border border-slate-200/80 dark:border-amber-500/15 space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-            <span className="font-mono text-amber-700 dark:text-[#d9b452] font-bold">QUESTÃO #1428</span>
-            <span>Geometria Euclidiana & Invariantes</span>
-          </div>
-          <div className="text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df] leading-relaxed">
-            <MathText text="Em um triângulo retângulo de catetos $a = 6\text{ cm}$ e $b = 8\text{ cm}$, determine o raio $r$ da circunferência inscrita (incírculo)." />
-          </div>
-        </div>
-
-        {/* DADO OBSERVADO DO ALUNO (RESOLUÇÃO DISCURSIVA) */}
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200/80 dark:border-zinc-800 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white flex items-center gap-1">
-                <Eye className="w-3 h-3" />
-                DADO OBSERVADO
-              </span>
-              <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 hidden sm:inline">
-                sha256:7f3a...b891
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-500 dark:text-zinc-400 italic">
-              Lousa de Rascunho & Dedução
-            </span>
-          </div>
-
-          <div className="text-xs font-mono text-slate-700 dark:text-zinc-300 leading-relaxed space-y-1 pl-2 border-l-2 border-amber-500/40">
-            <div><MathText text="1. Pitágoras: $c = \sqrt{6^2 + 8^2} = 10\text{ cm}$" /></div>
-            <div><MathText text="2. Invariante: $r = \frac{a + b - c}{2} = \frac{6 + 8 - 10}{2} = 2\text{ cm}$" /></div>
-          </div>
-        </div>
-
-        {/* VEREDITO DA MATHAI ENGINE (4 VEREDITOS AUDITÁVEIS) */}
-        <div className="p-3.5 rounded-xl bg-purple-500/5 dark:bg-purple-950/20 border border-purple-500/30 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                APROVADO
-              </span>
-              <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300">
-                MathAI Engine
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
-              Confiança: 98%
-            </span>
-          </div>
-
-          <div className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
-            <MathText text="Demonstração consistente. O teorema dos segmentos tangentes valida $r = \frac{a+b-c}{2}$. O semiperímetro $p = 12$ confirma a conservação de área $S = p \cdot r = 24\text{ cm}^2$." />
-          </div>
-        </div>
-
-        {/* PREVIEW INTERATIVO DA SEGUNDA OPINIÃO */}
-        <div className="pt-1">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-zinc-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Segunda Opinião: Disputa Pedagógica</span>
-            </div>
-
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1a172e] p-0.5 rounded-lg border border-slate-200 dark:border-amber-500/20 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setActiveTab("axiom")}
-                className={`px-2 py-0.5 rounded-md font-semibold transition ${
-                  activeTab === "axiom"
-                    ? "bg-amber-500 text-slate-950 shadow-xs"
-                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                }`}
-              >
-                Axiomático
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("heuristic")}
-                className={`px-2 py-0.5 rounded-md font-semibold transition ${
-                  activeTab === "heuristic"
-                    ? "bg-amber-500 text-slate-950 shadow-xs"
-                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                }`}
-              >
-                Heurístico
-              </button>
-            </div>
-          </div>
-
-          <div className="pt-2 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans animate-fadeIn">
-            {activeTab === "axiom" ? (
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
-                  Rigor Axiomático & Demonstração Formal (Nemotron):
-                </span>
-                <div className="text-xs text-slate-600 dark:text-zinc-300">
-                  <MathText text="Isole os pontos de tangência $T_1, T_2, T_3$. A igualdade dos segmentos de tangentes exteriores conduz estritamente a $r = \frac{a+b-c}{2} = 2\text{ cm}$." />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-amber-600 dark:text-[#d9b452] block">
-                  Intuição Heurística & Atalhos de Gauss:
-                </span>
-                <div className="text-xs text-slate-600 dark:text-zinc-300">
-                  <MathText text="O triângulo 6-8-10 é uma homotetia de razão 2 do triângulo primitivo 3-4-5 (inraio primitivo $1$). Logo, o novo inraio é $1 \times 2 = 2\text{ cm}$ sem contas!" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Ribbon Flutuante */}
+      <div className="absolute -right-2 sm:-right-4 -bottom-4 sm:-bottom-5 bg-[#e1bb55] text-slate-950 px-3.5 py-2 rounded-xl shadow-xl font-bold text-xs flex items-center gap-2 transform -rotate-3 z-10 border border-white/20 select-none">
+        <span className="w-5 h-5 rounded-full bg-slate-950 text-[#e1bb55] flex items-center justify-center text-[11px] font-black">
+          ✓
+        </span>
+        <span>Aprender com os erros.</span>
       </div>
     </div>
   );

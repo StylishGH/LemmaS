@@ -90,7 +90,7 @@ const CANONICAL_CATEGORIES: CanonicalCategory[] = [
     },
   {
     name: "Funções",
-    filter: "materia.ilike.%Funções%,materia.ilike.%Função%,topico.ilike.%Funç%,topico.ilike.%Afim%,topico.ilike.%Quadrátic%,topico.ilike.%Exponencial%,topico.ilike.%Logarítm%,topico.ilike.%Modular%,topico.ilike.%Funciona%,and(materia.ilike.%Álgebra%,enunciado.ilike.%f(x)%)",
+    filter: "materia.ilike.%Funções%,materia.ilike.%Função%,topico.ilike.%Funç%,topico.ilike.%Afim%,topico.ilike.%Quadrátic%,topico.ilike.%Exponencial%,topico.ilike.%Logarítm%,topico.ilike.%Modular%,topico.ilike.%Funciona%,and(materia.ilike.%Álgebra%,enunciado.ilike.\"%f(x)%\")",
     matcher: (m) => {
       const lower = m.toLowerCase();
       return lower.includes("funç") || lower.includes("func");
@@ -193,174 +193,228 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "15", 10);
     const offset = (page - 1) * limit;
 
-    // 1. Montagem da Query Principal com Filtros Multi-Dimensionais
-    let query = supabase
-          .from("questoes")
-          .select(
-            "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas, lema_id, lema_codigo",
-            { count: "exact" }
-          );
+    const buildBaseQuery = (head = false) => {
+      let query = supabase
+            .from("questoes")
+            .select(
+              "id, materia, topico, subtopico, dificuldade, banca, ano, enunciado, figura_path, tipo, edicao, etapa, tipo_material, pais, categoria_banca, tipo_prova, fase_nivel, gabarito, solucao, estrategias_esperadas, lema_id, lema_codigo",
+              { count: "exact", head }
+            );
 
-    // Filtro por Categoria de Banca (ex: "Concurso Militar,Vestibular & Superior,Olimpíadas")
-    const categoriaBancaValues = splitValues(categoriaBanca);
-    if (categoriaBancaValues.length > 0) {
-      const cond = categoriaBancaValues.map((v) => `categoria_banca.ilike.%${esc(v)}%`).join(",");
-      query = query.or(cond);
-    }
-
-    // Filtro por Lema (Código ou ID)
-    const lemaParam = searchParams.get("lema") || searchParams.get("lema_codigo");
-    if (lemaParam) {
-      const cleanLema = lemaParam.trim().toUpperCase();
-      if (cleanLema.startsWith("LEMA-")) {
-        query = query.eq("lema_codigo", cleanLema);
-      } else if (!isNaN(Number(cleanLema))) {
-        query = query.or(`lema_id.eq.${cleanLema},lema_codigo.eq.LEMA-${cleanLema.padStart(4, "0")}`);
-      } else {
-        query = query.eq("lema_codigo", cleanLema);
+      // Filtro por Categoria de Banca (ex: "Concurso Militar,Vestibular & Superior,Olimpíadas")
+      const categoriaBancaValues = splitValues(categoriaBanca);
+      if (categoriaBancaValues.length > 0) {
+        const cond = categoriaBancaValues.map((v) => `categoria_banca.ilike.%${esc(v)}%`).join(",");
+        query = query.or(cond);
       }
-    }
 
-    // Filtro por Tipo de Prova (ex: "Oficial,Seleção e Treinamento")
-    const tipoProvaValues = splitValues(tipoProva);
-    if (tipoProvaValues.length > 0) {
-      const cond = tipoProvaValues.map((v) => `tipo_prova.ilike.%${esc(v)}%`).join(",");
-      query = query.or(cond);
-    }
-
-    // Filtro por Fase / Nível (ex: "Final,Nível Júnior,Nível 2,Nível 3,Geral")
-    const faseNivelValues = splitValues(faseNivel);
-    if (faseNivelValues.length > 0) {
-      const cond = faseNivelValues.map((v) => `fase_nivel.ilike.%${esc(v)}%`).join(",");
-      query = query.or(cond);
-    }
-
-    // Filtro por Tipo de Material (ex: "shortlist,seletiva,treinamento")
-    const tipoMaterial = searchParams.get("tipo_material");
-    const tipoMaterialValues = splitValues(tipoMaterial);
-    if (tipoMaterialValues.length > 0) {
-      const cond = tipoMaterialValues.map((v) => `tipo_material.ilike.%${esc(v)}%`).join(",");
-      query = query.or(cond);
-    }
-
-    // Filtro por Presença de Figura / Imagem
-    const temFigura = searchParams.get("tem_figura");
-    if (temFigura === "true") {
-      query = query.not("figura_path", "is", null);
-    } else if (temFigura === "false") {
-      query = query.is("figura_path", null);
-    }
-
-    // Filtro por IDs específicos (ex: simulado ou lista customizada)
-    const idsParam = searchParams.get("ids");
-    if (idsParam) {
-      const idList = idsParam.split(",").map((v) => parseInt(v.trim(), 10)).filter((n) => !isNaN(n));
-      if (idList.length > 0) {
-        query = query.in("id", idList);
-      }
-    }
-
-    // Filtro por ID único (ex: busca por #1827)
-    const idParam = searchParams.get("id");
-    if (idParam) {
-      const singleId = parseInt(idParam.trim(), 10);
-      if (!isNaN(singleId)) {
-        query = query.eq("id", singleId);
-      }
-    }
-
-    // Filtro por Banca (multi-select: "EFOMM,CEDERJ")
-    const bancaValues = splitValues(banca);
-    if (bancaValues.length > 0) {
-      const conds: string[] = [];
-      for (const val of bancaValues) {
-        const lowerVal = val.toLowerCase();
-        if (lowerVal.includes("nível 2") || lowerVal.includes("nivel 2")) {
-          conds.push("and(banca.ilike.%OBM%,fase_nivel.ilike.%Nível 2%)");
-        } else if (lowerVal.includes("nível 3") || lowerVal.includes("nivel 3")) {
-          conds.push("and(banca.ilike.%OBM%,fase_nivel.ilike.%Nível 3%)");
+      // Filtro por Lema (Código ou ID)
+      const lemaParam = searchParams.get("lema") || searchParams.get("lema_codigo");
+      if (lemaParam) {
+        const cleanLema = lemaParam.trim().toUpperCase();
+        if (cleanLema.startsWith("LEMA-")) {
+          query = query.eq("lema_codigo", cleanLema);
+        } else if (!isNaN(Number(cleanLema))) {
+          query = query.or(`lema_id.eq.${cleanLema},lema_codigo.eq.LEMA-${cleanLema.padStart(4, "0")}`);
         } else {
-          conds.push(`banca.ilike.%${esc(val)}%`);
+          query = query.eq("lema_codigo", cleanLema);
         }
       }
-      query = query.or(conds.join(","));
-    }
 
-    // Filtro por Ano (multi-select: "2023,2024")
-    const anoValues = splitValues(ano);
-    if (anoValues.length > 0) {
-      const cond = anoValues
-        .map((v) => `ano.eq.${parseInt(v, 10)}`)
-        .filter((v) => !v.includes("NaN"))
-        .join(",");
-      if (cond) query = query.or(cond);
-    }
+      // Filtro por Tipo de Prova (ex: "Oficial,Seleção e Treinamento")
+      const tipoProvaValues = splitValues(tipoProva);
+      if (tipoProvaValues.length > 0) {
+        const cond = tipoProvaValues.map((v) => `tipo_prova.ilike.%${esc(v)}%`).join(",");
+        query = query.or(cond);
+      }
 
-    // Filtro por Tipo (multi-select: "objetiva,discursiva")
-    const tipoValues = splitValues(tipo);
-    if (tipoValues.length > 0) {
-      const cond = tipoValues.map((v) => `tipo.eq.${esc(v.toLowerCase())}`).join(",");
-      query = query.or(cond);
-    }
+      // Filtro por Fase / Nível (ex: "Final,Nível Júnior,Nível 2,Nível 3,Geral")
+      const faseNivelValues = splitValues(faseNivel);
+      if (faseNivelValues.length > 0) {
+        const cond = faseNivelValues.map((v) => `fase_nivel.ilike.%${esc(v)}%`).join(",");
+        query = query.or(cond);
+      }
 
-    // Filtro por Dificuldade (multi-select: "facil,media,dificil,nao_classificada")
-    const dificuldadeValues = splitValues(dificuldade);
-    if (dificuldadeValues.length > 0) {
-      const conds: string[] = [];
-      dificuldadeValues.forEach((v) => {
-        if (v === "facil") conds.push("and(dificuldade.gte.1,dificuldade.lte.2)");
-        else if (v === "media") conds.push("dificuldade.eq.3");
-        else if (v === "dificil") conds.push("and(dificuldade.gte.4,dificuldade.lte.5)");
-        else if (v === "nao_classificada") {
-          conds.push("dificuldade.is.null");
-          conds.push("dificuldade.lt.1");
-          conds.push("dificuldade.gt.5");
+      // Filtro por Tipo de Material (ex: "shortlist,seletiva,treinamento")
+      const tipoMaterial = searchParams.get("tipo_material");
+      const tipoMaterialValues = splitValues(tipoMaterial);
+      if (tipoMaterialValues.length > 0) {
+        const cond = tipoMaterialValues.map((v) => `tipo_material.ilike.%${esc(v)}%`).join(",");
+        query = query.or(cond);
+      }
+
+      // Filtro por Presença de Figura / Imagem
+      const temFigura = searchParams.get("tem_figura");
+      if (temFigura === "true") {
+        query = query.not("figura_path", "is", null);
+      } else if (temFigura === "false") {
+        query = query.is("figura_path", null);
+      }
+
+      // Filtro por IDs específicos (ex: simulado ou lista customizada)
+      const idsParam = searchParams.get("ids");
+      if (idsParam) {
+        const idList = idsParam.split(",").map((v) => parseInt(v.trim(), 10)).filter((n) => !isNaN(n));
+        if (idList.length > 0) {
+          query = query.in("id", idList);
         }
-      });
-      if (conds.length > 0) query = query.or(conds.join(","));
-    }
+      }
 
-    // Filtro por Matéria / Grande Área (multi-select, com categorias canônicas)
-    const materiaValues = splitValues(materia);
-    if (materiaValues.length > 0) {
-      const conds: string[] = [];
-      materiaValues.forEach((value) => {
-        const canonical = CANONICAL_CATEGORIES.find((c) => c.name.toLowerCase() === value.toLowerCase());
-        if (canonical) {
-          canonical.filter.split(",").forEach((part) => conds.push(part));
-        } else {
-          conds.push(`materia.ilike.%${esc(value)}%`);
+      // Filtro por ID único (ex: busca por #1827)
+      const idParam = searchParams.get("id");
+      if (idParam) {
+        const singleId = parseInt(idParam.trim(), 10);
+        if (!isNaN(singleId)) {
+          query = query.eq("id", singleId);
         }
-      });
-      if (conds.length > 0) query = query.or(conds.join(","));
-    }
+      }
 
-    // Filtro por Tópico Específico (multi-select, cobre também subtopico)
-    const topicoValues = splitValues(topico);
-    if (topicoValues.length > 0) {
-      const conds: string[] = [];
-      topicoValues.forEach((v) => {
-        conds.push(`topico.ilike.%${esc(v)}%`);
-        conds.push(`subtopico.ilike.%${esc(v)}%`);
-      });
-      query = query.or(conds.join(","));
-    }
+      // Filtro por Banca (multi-select: "EFOMM,CEDERJ")
+      const bancaValues = splitValues(banca);
+      if (bancaValues.length > 0) {
+        const conds: string[] = [];
+        for (const val of bancaValues) {
+          const lowerVal = val.toLowerCase();
+          if (lowerVal.includes("nível 2") || lowerVal.includes("nivel 2")) {
+            conds.push("and(banca.ilike.%OBM%,fase_nivel.ilike.%Nível 2%)");
+          } else if (lowerVal.includes("nível 3") || lowerVal.includes("nivel 3")) {
+            conds.push("and(banca.ilike.%OBM%,fase_nivel.ilike.%Nível 3%)");
+          } else {
+            conds.push(`banca.ilike.%${esc(val)}%`);
+          }
+        }
+        query = query.or(conds.join(","));
+      }
 
-    // Filtro por Busca Textual
-    if (search && search.trim() !== "") {
-      const term = esc(search.trim());
-      query = query.or(`enunciado.ilike.%${term}%,topico.ilike.%${term}%,subtopico.ilike.%${term}%,materia.ilike.%${term}%`);
+      // Filtro por Ano (multi-select: "2023,2024")
+      const anoValues = splitValues(ano);
+      if (anoValues.length > 0) {
+        const cond = anoValues
+          .map((v) => `ano.eq.${parseInt(v, 10)}`)
+          .filter((v) => !v.includes("NaN"))
+          .join(",");
+        if (cond) query = query.or(cond);
+      }
+
+      // Filtro por Tipo (multi-select: "objetiva,discursiva")
+      const tipoValues = splitValues(tipo);
+      if (tipoValues.length > 0) {
+        const cond = tipoValues.map((v) => `tipo.eq.${esc(v.toLowerCase())}`).join(",");
+        query = query.or(cond);
+      }
+
+      // Filtro por Dificuldade (multi-select: "facil,media,dificil,nao_classificada")
+      const dificuldadeValues = splitValues(dificuldade);
+      if (dificuldadeValues.length > 0) {
+        const conds: string[] = [];
+        dificuldadeValues.forEach((v) => {
+          if (v === "facil") conds.push("and(dificuldade.gte.1,dificuldade.lte.2)");
+          else if (v === "media") conds.push("dificuldade.eq.3");
+          else if (v === "dificil") conds.push("and(dificuldade.gte.4,dificuldade.lte.5)");
+          else if (v === "nao_classificada") {
+            conds.push("dificuldade.is.null");
+            conds.push("dificuldade.lt.1");
+            conds.push("dificuldade.gt.5");
+          }
+        });
+        if (conds.length > 0) query = query.or(conds.join(","));
+      }
+
+      // Filtro por Matéria / Grande Área (multi-select, com categorias canônicas)
+      const materiaValues = splitValues(materia);
+      if (materiaValues.length > 0) {
+        const conds: string[] = [];
+        materiaValues.forEach((value) => {
+          const canonical = CANONICAL_CATEGORIES.find((c) => c.name.toLowerCase() === value.toLowerCase());
+          if (canonical) {
+            canonical.filter.split(",").forEach((part) => conds.push(part));
+          } else {
+            conds.push(`materia.ilike.%${esc(value)}%`);
+          }
+        });
+        if (conds.length > 0) query = query.or(conds.join(","));
+      }
+
+      // Filtro por Tópico Específico (multi-select, cobre também subtopico)
+      const topicoValues = splitValues(topico);
+      if (topicoValues.length > 0) {
+        const conds: string[] = [];
+        topicoValues.forEach((v) => {
+          conds.push(`topico.ilike.%${esc(v)}%`);
+          conds.push(`subtopico.ilike.%${esc(v)}%`);
+        });
+        query = query.or(conds.join(","));
+      }
+
+      // Filtro por Busca Textual
+      if (search && search.trim() !== "") {
+        const term = esc(search.trim());
+        query = query.or(`enunciado.ilike.%${term}%,topico.ilike.%${term}%,subtopico.ilike.%${term}%,materia.ilike.%${term}%`);
+      }
+
+      return { query, bancaValues, materiaValues, tipoProvaValues, faseNivelValues, categoriaBancaValues, topicoValues };
+    };
+    const { query, bancaValues, materiaValues, tipoProvaValues, faseNivelValues, categoriaBancaValues, topicoValues } = buildBaseQuery();
+
+    // Preferences only affect ordering; explicit filters define the available set.
+    const preferenceGroups: string[] = [];
+    for (const [param, column] of [["prefer_banca", "banca"], ["prefer_categoria_banca", "categoria_banca"]] as const) {
+      const values = splitValues(searchParams.get(param));
+      if (values.length) preferenceGroups.push(`or(${values.map(v => `${column}.ilike."%${v.replace(/["\\]/g, "")}%"`).join(",")})`);
     }
+    const preferredSubjects = splitValues(searchParams.get("prefer_materia"));
+    if (preferredSubjects.length) {
+      preferenceGroups.push(`or(${preferredSubjects.map(value => {
+        const canonical = CANONICAL_CATEGORIES.find(c => c.name.toLowerCase() === value.toLowerCase());
+        return canonical?.filter || `materia.ilike."%${value.replace(/["\\]/g, "")}%"`;
+      }).join(",")})`);
+    }
+    // Explicit non-null checks make each predicate two-valued, keeping the
+    // complementary groups exhaustive even when catalog metadata is missing.
+    const predicates = preferenceGroups.map(group => group.replace(
+      /(\w+)\.ilike\.("(?:[^"]*)"|[^,()]+)/g,
+      (_, column: string, value: string) => `and(${column}.not.is.null,${column}.ilike.${value})`
+    ));
+    const preference = predicates.length > 0;
+    // Bank/category preferences take precedence, followed by subject preferences.
+    // Each group is disjoint, so pagination never repeats or excludes catalog items.
+    const cohorts: string[] = [];
+    const appendCohorts = (index: number, terms: string[]) => {
+      if (index === predicates.length) {
+        cohorts.push(`and(${terms.join(",")})`);
+        return;
+      }
+      appendCohorts(index + 1, [...terms, predicates[index]]);
+      appendCohorts(index + 1, [...terms, `not.${predicates[index]}`]);
+    };
+    if (preference) appendCohorts(0, []);
+    const ordered = (q: typeof query) => q.order("ano", { ascending: false, nullsFirst: false }).order("id", { ascending: false });
+    const loadPage = async () => {
+      if (!preference) return ordered(query).range(offset, offset + fetchLimit - 1);
+      const counts = await Promise.all(cohorts.map(cohort => buildBaseQuery(true).query.or(cohort)));
+      const failed = counts.find(result => result.error);
+      if (failed) return failed;
+      let start = 0;
+      const pages = [];
+      for (let index = 0; index < cohorts.length; index++) {
+        const size = counts[index].count || 0;
+        const localStart = Math.max(0, offset - start);
+        const localEnd = Math.min(size, offset + limit - start);
+        if (localStart < localEnd) {
+          pages.push(ordered(buildBaseQuery().query.or(cohorts[index])).range(localStart, localEnd - 1));
+        }
+        start += size;
+      }
+      const results = await Promise.all(pages);
+      const failedPage = results.find(result => result.error);
+      if (failedPage) return failedPage;
+      return { ...counts[0], data: results.flatMap(result => result.data || []), count: start };
+    };
 
     // Ordenação padrão inteligente por ano mais recente e id desc (NUNCA id ASC)
     // Para cold start (page 1 sem busca/filtros profundos), ampliamos a janela para triagem por quality score
-    const isColdStart = page === 1 && !search && bancaValues.length === 0 && materiaValues.length === 0;
+    const isColdStart = !preference && page === 1 && !search && bancaValues.length === 0 && materiaValues.length === 0;
     const fetchLimit = isColdStart ? Math.max(limit * 3, 45) : limit;
-
-    query = query
-      .order("ano", { ascending: false, nullsFirst: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + fetchLimit - 1);
 
         // 2. Consulta paralela: itens paginados + RPC global stats (contagens REAIS sem limite 1000) + RPC filtro
         const rpcBanca = bancaValues.length === 1 ? bancaValues[0] : null;
@@ -369,7 +423,7 @@ export async function GET(req: NextRequest) {
         const rpcMateria = materiaValues.length === 1 ? materiaValues[0] : null;
 
         const [mainResult, filterCountsResult, globalStatsResult] = await Promise.all([
-          query,
+          loadPage(),
           supabase.rpc("get_question_filter_counts", {
             p_banca: rpcBanca,
             p_tipo_prova: rpcTipoProva,
@@ -398,7 +452,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Ordenação por Quality Score: prioriza questões completas e de bancas principais, empurrando incompletas para o fim
-        const sortedRawData = sortQuestionsByQuality(data || []);
+        const sortedRawData = preference ? (data || []) : sortQuestionsByQuality(data || []);
         const questoesPaginadas = sortedRawData.slice(0, limit);
 
         // Parse global stats (RPC sem limite de 1000)
@@ -748,7 +802,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   try {
     const body = await req.json();
-    const { ids, filters, limit = 100, page = 1 } = body || {};
+    const { ids, filters, limit = 100, page = 1, shuffle = false } = body || {};
     const offset = Math.max(0, (page - 1) * limit);
 
     let query = supabase
@@ -881,7 +935,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const sortedData = sortQuestionsByQuality(data || []);
+    // shuffle=true: embaralha antes de aplicar quality score para garantir sessões diferentes
+    const rawData = shuffle
+      ? (data || []).sort(() => Math.random() - 0.5)
+      : (data || []);
+
+    const sortedData = sortQuestionsByQuality(rawData);
 
     return NextResponse.json({
       questoes: sortedData,
