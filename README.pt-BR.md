@@ -57,7 +57,7 @@ O **Lemmas** foi projetado por primeiros princípios por um graduando em Matemá
 
 ## Publicado em 11/11/2026
 
-O **LEMMAS**, impulsionado pela **MathAI Engine**, está disponível em [lemmas.com.br](https://lemmas.com.br). A entrega do [PR #83](https://github.com/StylishGH/LemmaS/pull/83) inclui:
+O **LEMMAS**, impulsionado pela **MathAI Engine**, está disponível em [lemmas.com.br](https://lemmas.com.br). A versão atual reúne a entrega do [PR #83](https://github.com/StylishGH/LemmaS/pull/83) e o [carregamento antecipado do PR #87](https://github.com/StylishGH/LemmaS/pull/87):
 
 - **Modo Foco Imersivo:** lousa digital ou GeoGebra em tela cheia, questão flutuante com arrasto, alternativas e avaliação da resolução.
 - **Dicas socráticas dentro do Modo Foco:** o painel usa o mesmo histórico e os mesmos cinco níveis da bancada. O nível 5 exige confirmação, revela a resolução e registra rendição com penalidade SM-2. As dicas ficam bloqueadas durante simulados ativos.
