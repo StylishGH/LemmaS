@@ -62,6 +62,7 @@ O **LEMMAS**, impulsionado pela **MathAI Engine**, está disponível em [lemmas.
 - **Modo Foco Imersivo:** lousa digital ou GeoGebra em tela cheia, questão flutuante com arrasto, alternativas e avaliação da resolução.
 - **Dicas socráticas dentro do Modo Foco:** o painel usa o mesmo histórico e os mesmos cinco níveis da bancada. O nível 5 exige confirmação, revela a resolução e registra rendição com penalidade SM-2. As dicas ficam bloqueadas durante simulados ativos.
 - **Personalização por prioridade:** o perfil ordena o acervo sem selecionar filtros automaticamente. Por exemplo, Escola Naval aparece primeiro quando escolhida no perfil; as outras bancas continuam na lista. Filtros manuais e de URL restringem os resultados.
+- **Próximas questões em segundo plano:** depois das 15 atuais, o banco antecipa a próxima página na mesma ordem personalizada e reaproveita páginas visitadas em memória. A fila é limitada e descartada ao mudar filtros, preferências ou usuário.
 - **Perfil pedagógico:** objetivo principal, objetivos secundários, conteúdos escolhidos separados das sugestões, disponibilidade e preferência de aprendizagem preservada.
 - **Landing e portfólio técnico:** capturas legíveis, fórmulas corrigidas e distinção entre implementação, experimento e pesquisa futura.
 

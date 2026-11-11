@@ -49,6 +49,9 @@ jobs:
       - name: Install npm dependencies
         working-directory: frontend
         run: npm ci
+      - name: Test question page prefetch cache
+        working-directory: frontend
+        run: node --test scripts/test-question-page-cache.mjs
       - name: Build Next.js 16 (Turbopack)
         working-directory: frontend
         env:
