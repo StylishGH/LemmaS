@@ -1757,3 +1757,80 @@ html[data-theme="lemmas-light"] .lemmas-dialog-card {
 .lemmas-engineering-example dd { margin: 0; line-height: 1.7; }
 html[data-theme="lemmas-light"] .lemmas-engineering-example dt { color: #785a15; }
 @media (max-width: 700px) { .lemmas-engineering-example dl { grid-template-columns: minmax(0, 1fr); } }
+
+/* Student guidance: one clear next step and short, expandable answers. */
+.lemmas-study-goal {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(240px, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--bg-card);
+  border: 1px solid rgba(217, 180, 82, .3);
+  border-radius: 20px;
+}
+.lemmas-study-goal h2,
+.lemmas-student-faq h2 {
+  margin: 0 0 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 400;
+  color: var(--ink-primary);
+}
+.lemmas-study-goal p,
+.lemmas-student-faq p {
+  margin: 12px 0 0;
+  max-width: 68ch;
+  line-height: 1.7;
+  color: var(--ink-secondary);
+}
+.lemmas-study-goal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+.lemmas-study-goal-actions small { color: var(--ink-secondary); line-height: 1.5; }
+.lemmas-student-faq { max-width: 860px; }
+.lemmas-student-faq details { border-bottom: 1px solid rgba(217, 180, 82, .25); }
+.lemmas-student-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  list-style: none;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-primary);
+}
+.lemmas-student-faq summary::-webkit-details-marker { display: none; }
+.lemmas-student-faq summary svg { flex-shrink: 0; transition: transform .2s ease; }
+.lemmas-student-faq details[open] summary svg { transform: rotate(180deg); }
+.lemmas-student-faq details p { margin: 0 0 22px; }
+.lemmas-student-faq p a { color: var(--ink-primary); text-decoration: underline; text-underline-offset: 3px; }
+.lemmas-student-login { display: none; color: #f4efdf; font-size: .85rem; font-weight: 600; text-decoration: none; padding: 8px 4px; }
+.lemmas-student-login:hover { text-decoration: underline; text-underline-offset: 4px; }
+.lemmas-study-goal a:focus-visible,
+.lemmas-student-faq summary:focus-visible,
+.lemmas-student-faq a:focus-visible,
+.lemmas-student-login:focus-visible { outline: 2px solid #d9b452; outline-offset: 4px; }
+html[data-theme="lemmas-light"] .lemmas-student-login { color: #30362f; }
+html[data-theme="lemmas-light"] .lemmas-study-goal a:focus-visible,
+html[data-theme="lemmas-light"] .lemmas-student-faq summary:focus-visible,
+html[data-theme="lemmas-light"] .lemmas-student-faq a:focus-visible,
+html[data-theme="lemmas-light"] .lemmas-student-login:focus-visible { outline-color: #866516; }
+@media (max-width: 760px) {
+  .lemmas-study-goal { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lemmas-student-faq summary svg { transition: none; }
+}
+
+@media (min-width: 1040px) { .lemmas-student-login { display: inline-flex; } }
+
+.lemmas-question-card { min-width: 0; }
+.lemmas-question-lemma-formula { max-width: 100%; overflow-x: auto; }
+html[data-theme="lemmas-light"] .lemmas-verdict-row { color: #344054; }
