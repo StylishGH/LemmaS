@@ -37,6 +37,7 @@ import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
 import { useTheme } from "@/components/theme-provider";
 import { useUserProfile } from "@/lib/use-user";
 import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
+import { QuestionPageCache } from "@/lib/question-page-cache";
 
 interface Question {
   id: number;
@@ -177,12 +178,20 @@ export default function BancoQuestoesPage() {
   }, [profilePreferences]);
   const perfilAtivoDescricao = personalizationEnabled ? profilePreferences.origemDescricao : null;
   const initialFiltersAppliedRef = useRef(false);
+  const [initialFiltersReady, setInitialFiltersReady] = useState(false);
+  const pageCacheRef = useRef<{ scope: string; cache: QuestionPageCache<any> } | null>(null);
+  useEffect(() => () => {
+    pageCacheRef.current?.cache.dispose();
+    pageCacheRef.current = null;
+  }, []);
+
 
   // URL parameters are explicit filters; profile preferences only affect ranking.
   useEffect(() => {
     if (userLoading) return;
     if (initialFiltersAppliedRef.current) return;
     initialFiltersAppliedRef.current = true;
+    setInitialFiltersReady(true);
 
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
@@ -415,12 +424,9 @@ export default function BancoQuestoesPage() {
 
   // Carregamento de questões com parâmetros sincronizados
   useEffect(() => {
-    if (userLoading && !initialFiltersAppliedRef.current) {
-      return;
-    }
+    if (userLoading || !initialFiltersReady) return;
     let ignore = false;
-    const controller = new AbortController();
-    setLoading(true);
+    let prefetchTimer: ReturnType<typeof setTimeout> | undefined;
     setLoadError(null);
 
     const params = new URLSearchParams({
@@ -463,18 +469,42 @@ export default function BancoQuestoesPage() {
     }
 
 
-    fetch(`/api/questions?${params.toString()}`, { signal: controller.signal })
-      .then(async (res) => {
+    const query = new URLSearchParams(params);
+    query.delete("page");
+    const identity = profile.id || profile.email || "guest";
+    const scope = JSON.stringify([identity, profile.isGuest, query.toString(), retryCount]);
+    if (pageCacheRef.current?.scope !== scope) {
+      pageCacheRef.current?.cache.dispose();
+      const cache = new QuestionPageCache<any>(async (targetPage, signal) => {
+        const request = new URLSearchParams(query);
+        request.set("page", String(targetPage));
+        const res = await fetch(`/api/questions?${request.toString()}`, { signal });
         const data = await res.json();
-        if (!res.ok || data.error) throw new Error("Não foi possível carregar as questões. Tente novamente.");
+        if (!res.ok || data.error || !Array.isArray(data.questoes)) {
+          throw new Error("Não foi possível carregar as questões. Tente novamente.");
+        }
         return data;
-      })
+      });
+      pageCacheRef.current = { scope, cache };
+    }
+    const cache = pageCacheRef.current.cache;
+    setLoading(cache.peek(page) === undefined);
+    cache.load(page)
       .then((data) => {
         if (!ignore) {
           if (data && data.questoes) {
             setQuestoes(data.questoes);
             setTotal(data.total || 0);
             setTotalPages(data.total_pages || 1);
+            if (page < (data.total_pages || 1)) {
+              // Let the current page paint before requesting the next 15.
+              prefetchTimer = setTimeout(() => {
+                void cache.load(page + 1).catch(() => {
+                  // Background failure stays invisible; navigation retries it.
+                });
+              }, 250);
+            }
+
 
             if (data.bancas && Array.isArray(data.bancas)) {
               setBancasDisponiveis(data.bancas);
@@ -524,7 +554,7 @@ export default function BancoQuestoesPage() {
         }
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (ignore || err?.name === "AbortError") return;
         console.error("Erro ao carregar questões:", err);
         if (!ignore) {
           setLoadError("Não foi possível carregar as questões. Seus filtros foram mantidos.");
@@ -538,7 +568,7 @@ export default function BancoQuestoesPage() {
 
     return () => {
       ignore = true;
-      controller.abort();
+      if (prefetchTimer !== undefined) clearTimeout(prefetchTimer);
     };
   }, [
     categoriaBancaFiltro,
@@ -554,9 +584,13 @@ export default function BancoQuestoesPage() {
     lemaFiltro,
     page,
     userLoading,
+    initialFiltersReady,
     retryCount,
     personalizationEnabled,
     profilePreferenceQuery,
+    profile.id,
+    profile.email,
+    profile.isGuest,
   ]);
 
   const toggleGabarito = (id: number) => {

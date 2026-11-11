@@ -62,6 +62,7 @@ Two students can miss the same calculus problem for completely different reasons
 - **Immersive Focus Mode:** a digital canvas or GeoGebra, a draggable question panel, answer choices, and resolution evaluation.
 - **Socratic hints inside Focus Mode:** the same history and five levels as the regular workbench. Level 5 requires confirmation, reveals the solution, and records surrender with an SM-2 penalty. Hints remain disabled during active mock exams.
 - **Personalized ordering:** profile preferences rank the full catalog without selecting filters. Choosing Escola Naval puts its questions first while other banks remain available. Manual and URL filters restrict results.
+- **Background loading:** after showing the current 15 questions, the catalog prefetches the next page in the same personalized order and reuses visited pages in memory. Storage is bounded and reset when filters, preferences, or the user change.
 - **Learning profile:** primary and secondary goals, selected content separated from recommendations, daily availability, and preserved learning preferences.
 - **Landing and technical portfolio:** larger product captures, corrected formulas, and explicit implementation, experiment, and research status.
 
