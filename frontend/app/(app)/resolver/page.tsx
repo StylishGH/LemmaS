@@ -2103,7 +2103,7 @@ function ResolverContent() {
         </div>
 
         {/* ABAS RÁPIDAS DA BANCADA */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0 max-w-full select-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 w-full min-w-0 select-none">
           <button
             type="button"
             onClick={() => {
@@ -2113,7 +2113,7 @@ function ResolverContent() {
                 ativarEIrParaBancada("lousa");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "lousa"
                 ? "lemmas-gold-cta font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-blue-500/35 dark:hover:border-amber-500/35"
@@ -2133,7 +2133,7 @@ function ResolverContent() {
                 ativarEIrParaBancada("geometria");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "geometria"
                 ? "bg-sky-500 text-white font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-sky-500/35"
@@ -2153,7 +2153,7 @@ function ResolverContent() {
                 ativarEIrParaBancada("texto");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               bancadaModo === "texto"
                 ? "bg-purple-600 text-white font-bold shadow-xs scale-102"
                 : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-purple-500/35"
@@ -2173,7 +2173,7 @@ function ResolverContent() {
               }
               setModoFocoAtivo(true);
             }}
-            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-700 dark:text-[#f5f0df] border border-amber-500/40 shadow-xs hover:scale-102 whitespace-nowrap shrink-0"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-700 dark:text-[#f5f0df] border border-amber-500/40 shadow-xs hover:scale-102 whitespace-nowrap shrink-0"
             title="Abrir a Lousa ou GeoGebra em tela cheia com card flutuante da questão"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
