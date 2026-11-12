@@ -46,6 +46,7 @@ import { useUserProfile } from "@/lib/use-user";
 import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 import { createClient } from "@/lib/supabase";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
+import { createCanvasDocument, type CanvasDocument } from "@/lib/canvas-document";
 import SpenSmartCanvas, { type Stroke } from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ImmersiveFocusOverlay from "@/components/bancada/ImmersiveFocusOverlay";
@@ -395,7 +396,9 @@ function ResolverContent() {
   const [hintError, setHintError] = useState<string | null>(null);
 
   // Armazenamento em Ref para ZERO re-renders do componente pai (3600+ linhas) durante a escrita ativa
-  const lousaStrokesRef = useRef<Record<number, Stroke[]>>({});
+  const lousaDocumentsRef = useRef<Record<number, CanvasDocument>>({});
+  const getLousaDocument = (index: number) =>
+    lousaDocumentsRef.current[index] ??= createCanvasDocument();
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -420,7 +423,6 @@ function ResolverContent() {
   const bancadaRef = React.useRef<HTMLDivElement>(null);
 
   const handleLousaStrokesChange = useCallback((strokes: Stroke[]) => {
-    lousaStrokesRef.current[currentIndex] = strokes;
     const hasStrokes = strokes.length > 0;
     setLousaHasStrokes((prev) =>
       prev[currentIndex] === hasStrokes
@@ -768,7 +770,7 @@ function ResolverContent() {
     setFeedbacks({});
     setJustificativas({});
     setBookmarks(new Set());
-    lousaStrokesRef.current = {};
+    lousaDocumentsRef.current = {};
     setTotalTimeInitial(45 * 60);
     setTimeLeft(45 * 60);
   };
@@ -2218,11 +2220,11 @@ function ResolverContent() {
       )}
 
       {/* CONTEÚDO ATIVO DA BANCADA */}
-      {bancadaModo === "lousa" && (
+      {bancadaModo === "lousa" && !modoFocoAtivo && (
         <div className="space-y-3 animate-fadeIn">
           <SpenSmartCanvas
             key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
-            initialStrokes={lousaStrokesRef.current[currentIndex] || []}
+            documentState={getLousaDocument(currentIndex)}
             onStrokesChange={handleLousaStrokesChange}
             onEvaluateOcr={async (b64) => {
               setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
@@ -2234,7 +2236,7 @@ function ResolverContent() {
         </div>
       )}
 
-      {bancadaModo === "geometria" && (
+      {bancadaModo === "geometria" && !modoFocoAtivo && (
         <div className="space-y-3 animate-fadeIn">
           <GeometricCompassBoard
             key={`geo-board-q${currentIndex}-${currentQ?.id ?? 'none'}`}
@@ -3649,7 +3651,7 @@ function ResolverContent() {
               setBancadaModo("lousa");
             }
           }}
-          lousaStrokes={lousaStrokesRef.current[currentIndex] || []}
+          lousaDocument={getLousaDocument(currentIndex)}
           onLousaStrokesChange={handleLousaStrokesChange}
           geometricCommands={geometricCommands[currentIndex] || []}
           onGeometricCommandsChange={handleGeometricCommandsChange}
