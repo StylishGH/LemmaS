@@ -394,7 +394,8 @@ function ResolverContent() {
   const [loadingHint, setLoadingHint] = useState<boolean>(false);
   const [hintError, setHintError] = useState<string | null>(null);
 
-  const [lousaStrokes, setLousaStrokes] = useState<Record<number, any[]>>({});
+  // Armazenamento em Ref para ZERO re-renders do componente pai (3600+ linhas) durante a escrita ativa
+  const lousaStrokesRef = useRef<Record<number, Stroke[]>>({});
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -419,8 +420,8 @@ function ResolverContent() {
   const bancadaRef = React.useRef<HTMLDivElement>(null);
 
   const handleLousaStrokesChange = useCallback((strokes: Stroke[]) => {
+    lousaStrokesRef.current[currentIndex] = strokes;
     const hasStrokes = strokes.length > 0;
-    setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
     setLousaHasStrokes((prev) =>
       prev[currentIndex] === hasStrokes
         ? prev
@@ -767,7 +768,7 @@ function ResolverContent() {
     setFeedbacks({});
     setJustificativas({});
     setBookmarks(new Set());
-    setLousaStrokes({});
+    lousaStrokesRef.current = {};
     setTotalTimeInitial(45 * 60);
     setTimeLeft(45 * 60);
   };
@@ -2221,7 +2222,7 @@ function ResolverContent() {
         <div className="space-y-3 animate-fadeIn">
           <SpenSmartCanvas
             key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
-            initialStrokes={lousaStrokes[currentIndex] || []}
+            initialStrokes={lousaStrokesRef.current[currentIndex] || []}
             onStrokesChange={handleLousaStrokesChange}
             onEvaluateOcr={async (b64) => {
               setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
@@ -3648,7 +3649,7 @@ function ResolverContent() {
               setBancadaModo("lousa");
             }
           }}
-          lousaStrokes={lousaStrokes[currentIndex] || []}
+          lousaStrokes={lousaStrokesRef.current[currentIndex] || []}
           onLousaStrokesChange={handleLousaStrokesChange}
           geometricCommands={geometricCommands[currentIndex] || []}
           onGeometricCommandsChange={handleGeometricCommandsChange}
