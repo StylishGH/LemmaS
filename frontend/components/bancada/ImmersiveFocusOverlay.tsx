@@ -270,6 +270,7 @@ export default function ImmersiveFocusOverlay({
                 isEvaluating={isEvaluating}
                 canvasHeightClass="flex-1 min-h-0"
                 hideFooterEvaluate={true}
+                showZoomControls={true}
                 exportCanvasRef={spenExportRef}
               />
             </div>

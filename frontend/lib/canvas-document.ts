@@ -13,12 +13,12 @@ export interface CanvasDocument {
   strokes: Stroke[];
   past: Stroke[][];
   future: Stroke[][];
-  settings: { tool: ToolType; colorIndex: number; width: number; stylusMode: boolean };
+  settings: { tool: ToolType; colorIndex: number; width: number; stylusMode: boolean; zoom: number };
 }
 
 export function createCanvasDocument(strokes: Stroke[] = []): CanvasDocument {
   return { strokes: [...strokes], past: [], future: [],
-    settings: { tool: "pen", colorIndex: 0, width: 2, stylusMode: false } };
+    settings: { tool: "pen", colorIndex: 0, width: 2, stylusMode: false, zoom: 1 } };
 }
 
 export function commitCanvas(document: CanvasDocument, strokes: Stroke[]) {
