@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Undo2, Redo2, Trash2 } from "lucide-react";
+import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 import {
@@ -21,6 +21,7 @@ export interface SpenSmartCanvasProps {
   canvasHeightClass?: string;
   hideFooterEvaluate?: boolean;
   exportCanvasRef?: React.MutableRefObject<(() => string | null) | null>;
+  showZoomControls?: boolean;
 }
 
 const COLORS_DARK = [
@@ -63,6 +64,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   canvasHeightClass = "h-[420px]",
   hideFooterEvaluate = false,
   exportCanvasRef,
+  showZoomControls = false,
 }) => {
   const { isLight } = useTheme();
   const COLORS = isLight ? COLORS_LIGHT : COLORS_DARK;
@@ -100,6 +102,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const activeColor = COLORS[colorIndex].hex;
   const [activeWidth, setActiveWidth] = useState<number>(documentState?.settings.width ?? 2);
   const [stylusMode, setStylusMode] = useState<boolean>(documentState?.settings.stylusMode ?? false);
+  const [zoom, setZoom] = useState(documentState?.settings.zoom ?? 1);
+  const [baseSize, setBaseSize] = useState({ width: 0, height: 0 });
   const [strokeCount, setStrokeCount] = useState(documentState?.strokes.length ?? initialStrokes?.length ?? 0);
 
   const [historyState, setHistoryState] = useState({
@@ -107,8 +111,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   });
 
   useEffect(() => {
-    documentRef.current.settings = { tool: activeTool, colorIndex, width: activeWidth, stylusMode };
-  }, [activeTool, colorIndex, activeWidth, stylusMode]);
+    documentRef.current.settings = { ...documentRef.current.settings, tool: activeTool, colorIndex, width: activeWidth, stylusMode, zoom };
+  }, [activeTool, colorIndex, activeWidth, stylusMode, zoom]);
 
   // Refs sincronizadas para leitura instantânea nos listeners nativos
   const toolRef = useRef<ToolType>(activeTool);
@@ -256,10 +260,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const setupDimensions = () => {
       if (viewport.clientWidth <= 0 || viewport.clientHeight <= 0) return;
       const content = canvasContentSize(strokesRef.current);
-      const width = Math.max(viewport.clientWidth, content.width);
-      const height = Math.max(viewport.clientHeight, content.height);
+      const width = Math.max(viewport.clientWidth / zoom, content.width);
+      const height = Math.max(viewport.clientHeight / zoom, content.height);
       container.style.width = `${width}px`;
       container.style.height = `${height}px`;
+      setBaseSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
 
       // Limita DPR em 2.0 no máximo para não sobrecarregar a GPU de tablets 3x/4x
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -327,7 +332,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       resizeCanvasRef.current = null;
       window.removeEventListener("resize", setupDimensions);
     };
-  }, [redrawBaseCanvas, drawFullStroke]);
+  }, [redrawBaseCanvas, drawFullStroke, zoom]);
 
   // Um gesto da borracha é uma única operação de histórico.
   const eraseStrokeAtPoints = useCallback((points: Point[]) => {
@@ -352,8 +357,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const drawingDocument = documentRef.current;
 
     const getPoint = (e: PointerEvent, rect: DOMRect): Point => ({
-      x: Math.max(0, Math.min(rect.width, e.clientX - rect.left)),
-      y: Math.max(0, Math.min(rect.height, e.clientY - rect.top)),
+      x: Math.max(0, Math.min(rect.width / zoom, (e.clientX - rect.left) / zoom)),
+      y: Math.max(0, Math.min(rect.height / zoom, (e.clientY - rect.top) / zoom)),
       pressure: e.pointerType === "pen" ? e.pressure || 0.7 : 0.7,
     });
 
@@ -583,7 +588,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       isDrawingRef.current = false;
       activePointerIdRef.current = null;
     };
-  }, [drawFullStroke, eraseStrokeAtPoints, publishStrokes]);
+  }, [drawFullStroke, eraseStrokeAtPoints, publishStrokes, zoom]);
 
   const handleUndo = useCallback(() => {
     if (isDrawingRef.current || !undoCanvas(documentRef.current)) return;
@@ -755,6 +760,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {showZoomControls && (
+            <div className={`flex items-center gap-1 rounded-lg border px-1 ${isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`} aria-label="Controles de zoom da lousa">
+              <button type="button" onClick={() => setZoom(value => Math.max(0.5, Math.round((value - 0.1) * 10) / 10))} disabled={zoom <= 0.5} className="rounded p-1.5 disabled:opacity-30" title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></button>
+              <span className="min-w-12 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
+              <button type="button" onClick={() => setZoom(value => Math.min(2, Math.round((value + 0.1) * 10) / 10))} disabled={zoom >= 2} className="rounded p-1.5 disabled:opacity-30" title="Aumentar zoom"><ZoomIn className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setZoom(1); if (viewportRef.current) { viewportRef.current.scrollLeft = 0; viewportRef.current.scrollTop = 0; } }} className="rounded p-1.5" title="Centralizar lousa"><LocateFixed className="h-4 w-4" /></button>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setStylusMode((prev) => !prev)}
@@ -823,7 +836,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
         } ${canvasHeightClass}`}
       >
-        <div ref={containerRef} className="relative min-h-full min-w-full">
+        <div style={{ width: baseSize.width * zoom || "100%", height: baseSize.height * zoom || "100%" }} aria-hidden="true" />
+        <div ref={containerRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: baseSize.width || "100%", height: baseSize.height || "100%" }} className="relative min-h-full min-w-full">
         <canvas
           ref={baseCanvasRef}
           style={{
