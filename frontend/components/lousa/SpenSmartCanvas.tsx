@@ -236,8 +236,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         }
 
         const inkCtx =
-          inkCanvas.getContext("2d", { desynchronized: true }) ||
-          inkCanvas.getContext("2d");
+          inkCanvas.getContext("2d", {
+            desynchronized: true,
+            alpha: true,
+            willReadFrequently: false,
+          }) || inkCanvas.getContext("2d");
         if (inkCtx) {
           inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
           inkCtx.lineCap = "round";
@@ -255,14 +258,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     return () => observer.disconnect();
   }, [redrawBaseCanvas]);
 
-  // DESENHO INCREMENTAL O(1) ULTRA-RÁPIDO:
-  // Usa o contexto cacheado sem chamar save()/restore() a cada ponto para maximizar FPS no tablet
-  const drawIncrementalSegment = (stroke: Stroke) => {
+  // DESENHO INCREMENTAL O(1) EM BATCH ULTRA-RÁPIDO:
+  // Agrupa todos os pontos coalescidos do evento em um ÚNICO stroke de GPU (reduz overhead em até 8x)
+  const drawBatchIncrementalSegments = (stroke: Stroke, fromIndex: number) => {
     const ctx = inkCtxRef.current;
     if (!ctx) return;
     const pts = stroke.points;
     const len = pts.length;
-    if (len === 0) return;
+    if (len <= fromIndex) return;
 
     if (stroke.tool === "highlighter") {
       const inkCanvas = inkCanvasRef.current;
@@ -274,41 +277,55 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       return;
     }
 
-    if (len === 1) {
-      const p0 = pts[0];
-      const w = stroke.baseWidth * (p0.pressure || 0.7);
-      ctx.beginPath();
-      ctx.arc(p0.x, p0.y, Math.max(1, w * 0.5), 0, Math.PI * 2);
-      ctx.fill();
-      return;
+    if (fromIndex <= 1 && len <= 2) {
+      if (len === 1) {
+        const p0 = pts[0];
+        const w = stroke.baseWidth * (p0.pressure || 0.7);
+        ctx.beginPath();
+        ctx.arc(p0.x, p0.y, Math.max(1, w * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      if (len === 2) {
+        const p0 = pts[0];
+        const p1 = pts[1];
+        ctx.beginPath();
+        ctx.lineWidth = stroke.baseWidth * (p1.pressure || 0.7);
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
+        ctx.stroke();
+        return;
+      }
     }
 
-    if (len === 2) {
-      const p0 = pts[0];
-      const p1 = pts[1];
-      ctx.beginPath();
-      ctx.lineWidth = stroke.baseWidth * (p1.pressure || 0.7);
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
-      ctx.stroke();
-      return;
-    }
+    // Calcula o ponto de partida do lote anterior para continuidade suave
+    const startIndex = Math.max(1, fromIndex);
+    const pPrev0 = pts[startIndex - 1];
+    const pPrev1 = pts[startIndex];
+    let currentMidX = (pPrev0.x + pPrev1.x) * 0.5;
+    let currentMidY = (pPrev0.y + pPrev1.y) * 0.5;
 
-    // Pega exclusivamente os últimos 3 pontos (Custo O(1) direto na GPU)
-    const p0 = pts[len - 3];
-    const p1 = pts[len - 2];
-    const p2 = pts[len - 1];
-    const mid1X = (p0.x + p1.x) * 0.5;
-    const mid1Y = (p0.y + p1.y) * 0.5;
-    const mid2X = (p1.x + p2.x) * 0.5;
-    const mid2Y = (p1.y + p2.y) * 0.5;
-    const pressureFactor = Math.max(0.5, Math.min(1.4, p1.pressure * 1.3));
+    // Última pressão ponderada para espessura fluida sem saltos
+    const lastPressure = pts[len - 1].pressure || 0.7;
+    const pressureFactor = Math.max(0.5, Math.min(1.4, lastPressure * 1.3));
 
     ctx.beginPath();
     ctx.lineWidth = stroke.baseWidth * pressureFactor;
-    ctx.moveTo(mid1X, mid1Y);
-    ctx.quadraticCurveTo(p1.x, p1.y, mid2X, mid2Y);
-    ctx.stroke();
+    ctx.moveTo(currentMidX, currentMidY);
+
+    for (let i = startIndex; i < len - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const nextMidX = (p1.x + p2.x) * 0.5;
+      const nextMidY = (p1.y + p2.y) * 0.5;
+      ctx.quadraticCurveTo(p1.x, p1.y, nextMidX, nextMidY);
+      currentMidX = nextMidX;
+      currentMidY = nextMidY;
+    }
+
+    const last = pts[len - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.stroke(); // ÚNICA chamada de stroke para todos os pontos coalescidos do lote!
   };
 
   // Borracha de Traço Otimizada (Checa Bounding Box antes de calcular distância)
@@ -397,7 +414,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         points: [pt],
       };
       currentStrokeRef.current = newStroke;
-      drawIncrementalSegment(newStroke);
+      drawBatchIncrementalSegments(newStroke, 0);
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -419,17 +436,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       const stroke = currentStrokeRef.current;
       if (!stroke) return;
 
+      const pts = stroke.points;
+      const prevLength = pts.length;
+      let lastPt = pts[prevLength - 1];
+
+      // Filtra pontos coalescidos com corte de ruído subpixel (dx*dx + dy*dy >= 2.25)
       for (let i = 0; i < coalesced.length; i++) {
         const pt = getPoint(coalesced[i], rect);
-        const pts = stroke.points;
-        const lastPt = pts[pts.length - 1];
-        // Distância mínima ao quadrado >= 2.25px (1.5px) para cortar ruído sem perder fluidez
         const dx = pt.x - lastPt.x;
         const dy = pt.y - lastPt.y;
         if (dx * dx + dy * dy >= 2.25) {
           pts.push(pt);
-          drawIncrementalSegment(stroke);
+          lastPt = pt;
         }
+      }
+
+      // Se novos pontos válidos foram registrados, executa ÚNICO batch stroke
+      if (pts.length > prevLength) {
+        drawBatchIncrementalSegments(stroke, prevLength - 1);
       }
     };
 
@@ -685,10 +709,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         </div>
       </div>
 
-      {/* Container Dual-Canvas com touch-action: none estrito */}
+      {/* Container Dual-Canvas com touch-action: none estrito e isolamento de camada GPU */}
       <div
         ref={containerRef}
-        style={{ touchAction: "none" }}
+        style={{
+          touchAction: "none",
+          contain: "paint layout",
+          isolation: "isolate",
+        }}
         className={`relative w-full overflow-hidden rounded-lg border transition-colors select-none ${
           isLight
             ? "border-slate-200 bg-white bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
@@ -697,7 +725,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       >
         <canvas
           ref={baseCanvasRef}
-          style={{ touchAction: "none" }}
+          style={{
+            touchAction: "none",
+            willChange: "transform",
+            transform: "translateZ(0)",
+          }}
           className="pointer-events-none absolute inset-0 h-full w-full"
         />
         <canvas
@@ -705,6 +737,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           onContextMenu={(e) => e.preventDefault()}
           style={{
             touchAction: "none",
+            willChange: "transform",
+            transform: "translateZ(0)",
             WebkitUserSelect: "none",
             userSelect: "none",
           }}
