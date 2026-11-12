@@ -41,6 +41,7 @@ Este documento consolida fontes que divergem. Quando há conflito entre um relat
 - 14 testes do motor pedagógico e 4 regressões da API de ordenação aprovados; as quatro regressões também passaram contra o domínio de produção.
 - Navegador: abertura do painel em treino, confirmação do nível 5 acima do overlay, layout de tablet e bloqueio em simulado. Landing publicada sem imagens quebradas ou erros KaTeX nos elementos inspecionados.
 - O teste do painel não executou chamadas reais de IA, gravação autenticada de rendição ou benchmark de caneta. A confirmação visual não comprova esses fluxos de ponta a ponta.
+- Revisão local de 11/11/2026: testes automatizados de desenho/histórico e componentes reais no Chrome, incluindo Foco e tema claro. [Evidência, referências e limites](architecture/lousa-focus-validation.md). A validação física com S-Pen permanece pendente.
 
 ### Próximas verificações
 
