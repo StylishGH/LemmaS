@@ -19,6 +19,7 @@ import {
 import { MathText } from "@/components/math/MathDisplay";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { resolveFigureUrl } from "@/lib/image-url";
+import { useTheme } from "@/components/theme-provider";
 
 export interface QuestionData {
   id: number;
@@ -69,6 +70,7 @@ export default function FloatingQuestionHUD({
   isEvaluating = false,
   evaluationResult,
 }: FloatingQuestionHUDProps) {
+  const { isLight } = useTheme();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isTranslucent, setIsTranslucent] = useState(false);
 
@@ -136,18 +138,26 @@ export default function FloatingQuestionHUD({
       {isMinimized ? (
         /* ── PÍLULA MINIMIZADA ── */
         <div
-          className="flex items-center gap-0 rounded-2xl bg-[#141224]/95 text-[#f5f0df] border border-amber-500/35 shadow-2xl backdrop-blur-md hover:border-amber-400 transition-colors font-sans text-xs select-none overflow-hidden"
+          className={`flex items-center gap-0 rounded-2xl border shadow-2xl backdrop-blur-md transition-colors font-sans text-xs select-none overflow-hidden ${
+            isLight
+              ? "bg-white/95 text-slate-900 border-amber-700/30 hover:border-amber-700"
+              : "bg-[#141224]/95 text-[#f5f0df] border-amber-500/35 hover:border-amber-400"
+          }`}
         >
           {/* ALÇA DE DRAG */}
           <div
-            className="flex items-center justify-center w-8 h-full px-1.5 py-2 cursor-grab active:cursor-grabbing touch-none bg-amber-500/10 border-r border-amber-500/25 hover:bg-amber-500/20 transition-colors shrink-0"
+            className={`flex items-center justify-center w-8 h-full px-1.5 py-2 cursor-grab active:cursor-grabbing touch-none border-r transition-colors shrink-0 ${
+              isLight
+                ? "bg-amber-500/10 border-amber-700/20 hover:bg-amber-500/20"
+                : "bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/20"
+            }`}
             onPointerDown={onDragStart}
             onPointerMove={onDragMove}
             onPointerUp={onDragEnd}
             onPointerCancel={onDragEnd}
             title="Arrastar"
           >
-            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" className="text-amber-400/70">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" className={isLight ? "text-amber-700/70" : "text-amber-400/70"}>
               <circle cx="2" cy="2" r="1.5" fill="currentColor"/>
               <circle cx="8" cy="2" r="1.5" fill="currentColor"/>
               <circle cx="2" cy="8" r="1.5" fill="currentColor"/>
@@ -160,18 +170,18 @@ export default function FloatingQuestionHUD({
           {/* CONTEÚDO DA PÍLULA */}
           <div className="flex items-center gap-2 px-3 py-2">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-            <span className="font-serif-math font-semibold text-[#d9b452]">
+            <span className={`font-serif-math font-semibold ${isLight ? "text-amber-800" : "text-[#d9b452]"}`}>
               Q. {currentIndex + 1}
             </span>
             {question.banca && (
-              <span className="text-zinc-400 font-mono text-[11px]">
+              <span className={`font-mono text-[11px] ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
                 • {question.banca} {question.ano ? `(${question.ano})` : ""}
               </span>
             )}
             <button
               type="button"
               onClick={() => setIsMinimized(false)}
-              className="p-1 rounded-lg text-zinc-400 hover:text-amber-400 transition cursor-pointer"
+              className={`p-1 rounded-lg transition cursor-pointer ${isLight ? "text-slate-500 hover:text-amber-800" : "text-zinc-400 hover:text-amber-400"}`}
               title="Expandir"
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -181,26 +191,36 @@ export default function FloatingQuestionHUD({
       ) : (
         /* ── PAINEL EXPANDIDO ── */
         <div
-          className={`w-[92vw] sm:w-[480px] md:w-[520px] max-w-[94vw] rounded-2xl border border-amber-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
-            isTranslucent
-              ? "bg-[#110f1e]/75 text-[#f5f0df] border-amber-500/20"
-              : "bg-[#110f1e]/98 text-[#f5f0df]"
+          className={`w-[92vw] sm:w-[480px] md:w-[520px] max-w-[94vw] rounded-2xl border flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
+            isLight
+              ? isTranslucent
+                ? "bg-white/85 text-slate-900 border-amber-700/25 shadow-[0_12px_36px_rgba(15,23,42,0.16)]"
+                : "bg-white text-slate-900 border-slate-300 shadow-[0_12px_36px_rgba(15,23,42,0.16)]"
+              : isTranslucent
+                ? "bg-[#110f1e]/75 text-[#f5f0df] border-amber-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.85)]"
+                : "bg-[#110f1e]/98 text-[#f5f0df] border-amber-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.85)]"
           }`}
         >
           {/* BARRA SUPERIOR — alça de drag separada do conteúdo */}
           <div
-            className="flex items-center gap-0 bg-[#17142b]/95 border-b border-amber-500/20 select-none"
+            className={`flex items-center gap-0 border-b select-none ${
+              isLight ? "bg-slate-50 border-slate-200" : "bg-[#17142b]/95 border-amber-500/20"
+            }`}
           >
             {/* ALÇA DE DRAG — quadradinho com grip à esquerda */}
             <div
-              className="flex items-center justify-center w-9 self-stretch px-2 cursor-grab active:cursor-grabbing touch-none bg-amber-500/10 border-r border-amber-500/20 hover:bg-amber-500/20 transition-colors shrink-0"
+              className={`flex items-center justify-center w-9 self-stretch px-2 cursor-grab active:cursor-grabbing touch-none border-r transition-colors shrink-0 ${
+                isLight
+                  ? "bg-amber-500/10 border-amber-700/20 hover:bg-amber-500/20"
+                  : "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20"
+              }`}
               onPointerDown={onDragStart}
               onPointerMove={onDragMove}
               onPointerUp={onDragEnd}
               onPointerCancel={onDragEnd}
               title="Arrastar"
             >
-              <svg width="10" height="16" viewBox="0 0 10 16" fill="none" className="text-amber-400/60">
+              <svg width="10" height="16" viewBox="0 0 10 16" fill="none" className={isLight ? "text-amber-700/70" : "text-amber-400/60"}>
                 <circle cx="2" cy="2" r="1.5" fill="currentColor"/>
                 <circle cx="8" cy="2" r="1.5" fill="currentColor"/>
                 <circle cx="2" cy="8" r="1.5" fill="currentColor"/>
@@ -213,7 +233,11 @@ export default function FloatingQuestionHUD({
             {/* CONTEÚDO DO HEADER */}
             <div className="flex flex-1 items-center justify-between gap-2 px-3 py-2.5 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[#d9b452] font-serif-math font-bold text-xs shrink-0">
+                <span className={`px-2 py-0.5 rounded-md border font-serif-math font-bold text-xs shrink-0 ${
+                  isLight
+                    ? "bg-amber-100 border-amber-300 text-amber-900"
+                    : "bg-amber-500/15 border-amber-500/30 text-[#d9b452]"
+                }`}>
                   Q. {currentIndex + 1} / {totalQuestions}
                 </span>
                 {/* Navegação ◀ ▶ */}
@@ -221,7 +245,7 @@ export default function FloatingQuestionHUD({
                   type="button"
                   onClick={onPrev}
                   disabled={!onPrev || currentIndex === 0}
-                  className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shrink-0"
+                  className={`p-1 rounded-lg disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shrink-0 ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-200" : "text-zinc-400 hover:text-white hover:bg-zinc-800/60"}`}
                   title="Questão anterior (←)"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
@@ -230,17 +254,17 @@ export default function FloatingQuestionHUD({
                   type="button"
                   onClick={onNext}
                   disabled={!onNext || currentIndex >= totalQuestions - 1}
-                  className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shrink-0"
+                  className={`p-1 rounded-lg disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shrink-0 ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-200" : "text-zinc-400 hover:text-white hover:bg-zinc-800/60"}`}
                   title="Próxima questão (→)"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-                <div className="truncate text-xs font-mono text-zinc-300">
+                <div className={`truncate text-xs font-mono ${isLight ? "text-slate-600" : "text-zinc-300"}`}>
                   {question.banca && (
-                    <span className="font-semibold text-white">{question.banca} </span>
+                    <span className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{question.banca} </span>
                   )}
                   {question.ano && (
-                    <span className="text-zinc-400">({question.ano})</span>
+                    <span className={isLight ? "text-slate-500" : "text-zinc-400"}>({question.ano})</span>
                   )}
                 </div>
               </div>
@@ -250,11 +274,11 @@ export default function FloatingQuestionHUD({
                 <button
                   type="button"
                   onClick={() => setIsTranslucent(!isTranslucent)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition cursor-pointer"
+                  className={`p-1.5 rounded-lg transition cursor-pointer ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-200" : "text-zinc-400 hover:text-white hover:bg-zinc-800/60"}`}
                   title={isTranslucent ? "Opacidade 100%" : "Modo Translúcido"}
                 >
                   {isTranslucent ? (
-                    <Eye className="w-3.5 h-3.5 text-amber-400" />
+                    <Eye className={`w-3.5 h-3.5 ${isLight ? "text-amber-700" : "text-amber-400"}`} />
                   ) : (
                     <EyeOff className="w-3.5 h-3.5" />
                   )}
@@ -262,7 +286,7 @@ export default function FloatingQuestionHUD({
                 <button
                   type="button"
                   onClick={() => setIsMinimized(true)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition cursor-pointer"
+                  className={`p-1.5 rounded-lg transition cursor-pointer ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-200" : "text-zinc-400 hover:text-white hover:bg-zinc-800/60"}`}
                   title="Minimizar"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -272,7 +296,7 @@ export default function FloatingQuestionHUD({
           </div>
 
           {/* CORPO DA QUESTÃO COM SCROLL INTERNO */}
-          <div className="p-4 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto space-y-3.5 text-xs text-zinc-200 leading-relaxed font-sans">
+          <div className={`p-4 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto space-y-3.5 text-xs leading-relaxed font-sans ${isLight ? "text-slate-900" : "text-zinc-200"}`}>
             {/* Enunciado */}
             <div className="space-y-2 select-text">
               <MathText text={corpo} />
@@ -280,7 +304,7 @@ export default function FloatingQuestionHUD({
 
             {/* Figura de Apoio */}
             {figuraUrl && (
-              <div className="my-2 p-2 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center">
+              <div className={`my-2 p-2 rounded-xl border flex items-center justify-center ${isLight ? "bg-slate-100 border-slate-200" : "bg-black/40 border-white/10"}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={figuraUrl}
@@ -292,8 +316,8 @@ export default function FloatingQuestionHUD({
 
             {/* Alternativas Clicáveis (se objetiva) */}
             {hasAlternativas && (
-              <div className="space-y-1.5 pt-2 border-t border-white/10">
-                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider block">
+              <div className={`space-y-1.5 pt-2 border-t ${isLight ? "border-slate-200" : "border-white/10"}`}>
+                <span className={`text-[10px] font-mono uppercase tracking-wider block ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
                   Alternativas (Clique para marcar):
                 </span>
                 <div className="space-y-1.5">
@@ -306,15 +330,23 @@ export default function FloatingQuestionHUD({
                         onClick={() => onSelectAnswer && onSelectAnswer(letra)}
                         className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${
                           isSelected
-                            ? "bg-amber-500/20 border-amber-500 text-[#f5f0df] shadow-xs font-semibold"
-                            : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 text-zinc-300"
+                            ? isLight
+                              ? "bg-amber-100 border-amber-700 text-slate-900 shadow-xs font-semibold"
+                              : "bg-amber-500/20 border-amber-500 text-[#f5f0df] shadow-xs font-semibold"
+                            : isLight
+                              ? "bg-white border-slate-300 hover:border-slate-500 text-slate-800"
+                              : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 text-zinc-300"
                         }`}
                       >
                         <span
                           className={`w-5 h-5 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
                             isSelected
-                              ? "bg-amber-400 text-black shadow-xs"
-                              : "bg-zinc-800 text-zinc-400"
+                              ? isLight
+                                ? "bg-amber-200 text-amber-950 shadow-xs"
+                                : "bg-amber-400 text-black shadow-xs"
+                              : isLight
+                                ? "bg-slate-100 text-slate-600"
+                                : "bg-zinc-800 text-zinc-400"
                           }`}
                         >
                           {isSelected ? (
@@ -338,26 +370,26 @@ export default function FloatingQuestionHUD({
               <div
                 className={`p-3 rounded-xl border space-y-2 animate-fadeIn ${
                   evaluationResult.veredito === "aprovado"
-                    ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-200"
+                    ? isLight ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-emerald-950/40 border-emerald-500/40 text-emerald-200"
                     : evaluationResult.veredito === "parcial"
-                    ? "bg-amber-950/40 border-amber-500/40 text-amber-200"
+                    ? isLight ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-amber-950/40 border-amber-500/40 text-amber-200"
                     : evaluationResult.veredito === "sem_desenvolvimento"
-                    ? "bg-sky-950/40 border-sky-500/40 text-sky-200"
-                    : "bg-rose-950/40 border-rose-500/40 text-rose-200"
+                    ? isLight ? "bg-sky-50 border-sky-200 text-sky-900" : "bg-sky-950/40 border-sky-500/40 text-sky-200"
+                    : isLight ? "bg-rose-50 border-rose-200 text-rose-900" : "bg-rose-950/40 border-rose-500/40 text-rose-200"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {evaluationResult.veredito === "aprovado" && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 ${isLight ? "text-emerald-700" : "text-emerald-400"}`} />
                   )}
                   {evaluationResult.veredito === "parcial" && (
-                    <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <AlertCircle className={`w-4 h-4 shrink-0 ${isLight ? "text-amber-700" : "text-amber-400"}`} />
                   )}
                   {evaluationResult.veredito === "sem_desenvolvimento" && (
-                    <HelpCircle className="w-4 h-4 text-sky-400 shrink-0" />
+                    <HelpCircle className={`w-4 h-4 shrink-0 ${isLight ? "text-sky-700" : "text-sky-400"}`} />
                   )}
                   {evaluationResult.veredito === "incorreto" && (
-                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <XCircle className={`w-4 h-4 shrink-0 ${isLight ? "text-rose-700" : "text-rose-400"}`} />
                   )}
                   <span className="font-bold uppercase tracking-wider text-xs">
                     Veredito: {evaluationResult.veredito.replace("_", " ")}
@@ -366,7 +398,7 @@ export default function FloatingQuestionHUD({
 
                 {(evaluationResult.feedback_latex ||
                   evaluationResult.diagnostico) && (
-                  <div className="text-xs leading-relaxed text-zinc-200 pl-6 border-l-2 border-white/20">
+                  <div className={`text-xs leading-relaxed pl-6 border-l-2 ${isLight ? "text-slate-800 border-slate-300" : "text-zinc-200 border-white/20"}`}>
                     <MathText
                       text={
                         evaluationResult.feedback_latex ||
@@ -378,7 +410,7 @@ export default function FloatingQuestionHUD({
                 )}
 
                 {evaluationResult.dica_proximo_passo && (
-                  <div className="text-[11px] text-amber-300/90 pl-6 italic">
+                  <div className={`text-[11px] pl-6 italic ${isLight ? "text-amber-800" : "text-amber-300/90"}`}>
                     💡 Dica: {evaluationResult.dica_proximo_passo}
                   </div>
                 )}
@@ -388,8 +420,8 @@ export default function FloatingQuestionHUD({
 
           {/* RODAPÉ: AVALIAR COM MATHAI ENGINE */}
           {onEvaluate && (
-            <div className="p-3 bg-[#17142b]/95 border-t border-amber-500/20 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono text-zinc-400">
+            <div className={`p-3 border-t flex items-center justify-between gap-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#17142b]/95 border-amber-500/20"}`}>
+              <span className={`text-[10px] font-mono ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
                 Validação instantânea via MathAI
               </span>
               <button
