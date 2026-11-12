@@ -46,7 +46,7 @@ import { useUserProfile } from "@/lib/use-user";
 import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 import { createClient } from "@/lib/supabase";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
-import SpenSmartCanvas from "@/components/lousa/SpenSmartCanvas";
+import SpenSmartCanvas, { type Stroke } from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ImmersiveFocusOverlay from "@/components/bancada/ImmersiveFocusOverlay";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
@@ -417,6 +417,16 @@ function ResolverContent() {
   const [lousaHasStrokes, setLousaHasStrokes] = useState<Record<number, boolean>>({});
   const [modoFocoAtivo, setModoFocoAtivo] = useState<boolean>(false);
   const bancadaRef = React.useRef<HTMLDivElement>(null);
+
+  const handleLousaStrokesChange = useCallback((strokes: Stroke[]) => {
+    const hasStrokes = strokes.length > 0;
+    setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
+    setLousaHasStrokes((prev) =>
+      prev[currentIndex] === hasStrokes
+        ? prev
+        : { ...prev, [currentIndex]: hasStrokes }
+    );
+  }, [currentIndex]);
 
   const handleGeometricCommandsChange = useCallback((cmds: string[]) => {
     setGeometricCommands((prev) => {
@@ -2212,12 +2222,7 @@ function ResolverContent() {
           <SpenSmartCanvas
             key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
             initialStrokes={lousaStrokes[currentIndex] || []}
-            onStrokesChange={(strokes) => {
-              React.startTransition(() => {
-                setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
-                setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
-              });
-            }}
+            onStrokesChange={handleLousaStrokesChange}
             onEvaluateOcr={async (b64) => {
               setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
               setImageFiles((prev) => ({ ...prev, [currentIndex]: b64 }));
@@ -3644,12 +3649,7 @@ function ResolverContent() {
             }
           }}
           lousaStrokes={lousaStrokes[currentIndex] || []}
-          onLousaStrokesChange={(strokes) => {
-            React.startTransition(() => {
-              setLousaStrokes((prev) => ({ ...prev, [currentIndex]: strokes }));
-              setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: strokes.length > 0 }));
-            });
-          }}
+          onLousaStrokesChange={handleLousaStrokesChange}
           geometricCommands={geometricCommands[currentIndex] || []}
           onGeometricCommandsChange={handleGeometricCommandsChange}
           onEvaluateDiscursive={async (tipo, payload) => {
