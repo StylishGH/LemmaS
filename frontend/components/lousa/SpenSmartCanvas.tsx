@@ -49,6 +49,12 @@ const COLORS_LIGHT = [
 
 const WIDTHS = [2, 4, 8, 14];
 
+interface ActiveStrokeState {
+  stroke: Stroke;
+  lastMidX: number;
+  lastMidY: number;
+}
+
 export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   onEvaluateOcr,
   isEvaluating = false,
@@ -62,21 +68,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const COLORS = isLight ? COLORS_LIGHT : COLORS_DARK;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // Camada 1: Traços já finalizados (estática durante a escrita)
+  // Camada 1: Traços consolidados (estática durante a escrita ativa)
   const baseCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  // Camada 2: Apenas o traço atual em movimento (incremental O(1))
+  // Camada 2: Apenas o traço atual em movimento (incremental O(1) com curva Bézier)
   const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Contextos 2D cacheados em Ref para evitar overhead contínuo de getContext() em 120Hz/240Hz
+  // Contextos 2D cacheados em Ref para evitar overhead de getContext() em 120Hz/240Hz
   const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const inkCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  // Delegated Ink Trails API (Chromium / Android SurfaceFlinger bypass)
+  const inkPresenterRef = useRef<any>(null);
 
   // Histórico mantido em Refs para ZERO re-renders do React durante a escrita
   const strokesRef = useRef<Stroke[]>(initialStrokes ? [...initialStrokes] : []);
   const redoStackRef = useRef<Stroke[]>([]);
-  const currentStrokeRef = useRef<Stroke | null>(null);
   const isDrawingRef = useRef<boolean>(false);
   const activePointerIdRef = useRef<number | null>(null);
+  const activeStrokeStateRef = useRef<ActiveStrokeState | null>(null);
   const dprRef = useRef<number>(1);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -106,13 +115,28 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     stylusModeRef.current = stylusMode;
   }, [stylusMode]);
 
-  // Debounced sync de traços para a página pai (evita travar o React a cada pen-up no tablet)
+  // Inicializa a Ink API de traço delegado (hardware compositor) do navegador
+  useEffect(() => {
+    if (typeof window !== "undefined" && (navigator as any).ink?.requestPresenter) {
+      const inkCanvas = inkCanvasRef.current;
+      if (inkCanvas) {
+        (navigator as any).ink
+          .requestPresenter({ presentationArea: inkCanvas })
+          .then((presenter: any) => {
+            inkPresenterRef.current = presenter;
+          })
+          .catch(() => {});
+      }
+    }
+  }, []);
+
+  // Debounced sync de traços para a página pai (1s idle evita travar o React durante a escrita contínua)
   const scheduleSync = useCallback(
     (strokes: Stroke[]) => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
       syncTimeoutRef.current = setTimeout(() => {
         onStrokesChange?.(strokes);
-      }, 350);
+      }, 1000);
     },
     [onStrokesChange]
   );
@@ -176,7 +200,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     }
   }, [drawFullStroke]);
 
-  // Quando o tema muda: (1) reseta cor ativa, (2) remapeia cores dos traços existentes e redesenha
+  // Quando o tema muda: reseta cor ativa, remapeia traços e redesenha
   useEffect(() => {
     const fromColors = isLight ? COLORS_DARK : COLORS_LIGHT;
     const toColors = isLight ? COLORS_LIGHT : COLORS_DARK;
@@ -199,7 +223,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     }, 0);
   }, [isLight, redrawBaseCanvas]);
 
-  // Inicializa o tamanho do Canvas APENAS quando o container muda de tamanho físico real
+  // Inicializa o tamanho do Canvas apenas quando as dimensões físicas mudam
   useEffect(() => {
     const container = containerRef.current;
     const baseCanvas = baseCanvasRef.current;
@@ -217,7 +241,6 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       const targetW = Math.round(rect.width * dpr);
       const targetH = Math.round(rect.height * dpr);
 
-      // Só recria texturas de GPU se as dimensões mudaram mais de 2px (evita thrashing no tablet)
       const widthChanged = Math.abs(baseCanvas.width - targetW) > 2;
       const heightChanged = Math.abs(baseCanvas.height - targetH) > 2;
 
@@ -235,12 +258,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           baseCtxRef.current = baseCtx;
         }
 
+        // No Android / Samsung One UI, 'desynchronized: true' em canvas transparente sobre DOM
+        // entra em conflito com o SurfaceFlinger e causa stutter/drop de frames severo no navegador.
+        // Em desktop, usamos desynchronized; no Android mobile/tablet, usamos sincronização com VSync estável.
+        const isMobileOrSamsung =
+          typeof navigator !== "undefined" &&
+          (/Android/i.test(navigator.userAgent) ||
+            /SamsungBrowser/i.test(navigator.userAgent));
+
         const inkCtx =
           inkCanvas.getContext("2d", {
-            desynchronized: true,
+            desynchronized: !isMobileOrSamsung,
             alpha: true,
-            willReadFrequently: false,
           }) || inkCanvas.getContext("2d");
+
         if (inkCtx) {
           inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
           inkCtx.lineCap = "round";
@@ -258,77 +289,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     return () => observer.disconnect();
   }, [redrawBaseCanvas]);
 
-  // DESENHO INCREMENTAL O(1) EM BATCH ULTRA-RÁPIDO:
-  // Agrupa todos os pontos coalescidos do evento em um ÚNICO stroke de GPU (reduz overhead em até 8x)
-  const drawBatchIncrementalSegments = (stroke: Stroke, fromIndex: number) => {
-    const ctx = inkCtxRef.current;
-    if (!ctx) return;
-    const pts = stroke.points;
-    const len = pts.length;
-    if (len <= fromIndex) return;
-
-    if (stroke.tool === "highlighter") {
-      const inkCanvas = inkCanvasRef.current;
-      if (inkCanvas) {
-        const dpr = dprRef.current;
-        ctx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
-        drawFullStroke(ctx, stroke);
-      }
-      return;
-    }
-
-    if (fromIndex <= 1 && len <= 2) {
-      if (len === 1) {
-        const p0 = pts[0];
-        const w = stroke.baseWidth * (p0.pressure || 0.7);
-        ctx.beginPath();
-        ctx.arc(p0.x, p0.y, Math.max(1, w * 0.5), 0, Math.PI * 2);
-        ctx.fill();
-        return;
-      }
-      if (len === 2) {
-        const p0 = pts[0];
-        const p1 = pts[1];
-        ctx.beginPath();
-        ctx.lineWidth = stroke.baseWidth * (p1.pressure || 0.7);
-        ctx.moveTo(p0.x, p0.y);
-        ctx.lineTo((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
-        ctx.stroke();
-        return;
-      }
-    }
-
-    // Calcula o ponto de partida do lote anterior para continuidade suave
-    const startIndex = Math.max(1, fromIndex);
-    const pPrev0 = pts[startIndex - 1];
-    const pPrev1 = pts[startIndex];
-    let currentMidX = (pPrev0.x + pPrev1.x) * 0.5;
-    let currentMidY = (pPrev0.y + pPrev1.y) * 0.5;
-
-    // Última pressão ponderada para espessura fluida sem saltos
-    const lastPressure = pts[len - 1].pressure || 0.7;
-    const pressureFactor = Math.max(0.5, Math.min(1.4, lastPressure * 1.3));
-
-    ctx.beginPath();
-    ctx.lineWidth = stroke.baseWidth * pressureFactor;
-    ctx.moveTo(currentMidX, currentMidY);
-
-    for (let i = startIndex; i < len - 1; i++) {
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const nextMidX = (p1.x + p2.x) * 0.5;
-      const nextMidY = (p1.y + p2.y) * 0.5;
-      ctx.quadraticCurveTo(p1.x, p1.y, nextMidX, nextMidY);
-      currentMidX = nextMidX;
-      currentMidY = nextMidY;
-    }
-
-    const last = pts[len - 1];
-    ctx.lineTo(last.x, last.y);
-    ctx.stroke(); // ÚNICA chamada de stroke para todos os pontos coalescidos do lote!
-  };
-
-  // Borracha de Traço Otimizada (Checa Bounding Box antes de calcular distância)
+  // Borracha de Traço Otimizada
   const eraseStrokeAtPoint = useCallback(
     (x: number, y: number, radius = 16) => {
       const beforeCount = strokesRef.current.length;
@@ -368,22 +329,24 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     });
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === "pen" && !stylusModeRef.current) {
-        stylusModeRef.current = true;
-        // Atualiza a ref imediatamente sem forçar re-render no primeiro frame do toque
-        requestAnimationFrame(() => setStylusMode(true));
+      // Rejeição estrita de palma: se a caneta já estiver ativa na tela, ignora toque simultâneo
+      if (e.pointerType === "touch" && isDrawingRef.current) {
+        e.preventDefault();
+        return;
       }
-      // Bloqueia palma da mão imediatamente
+      // Se o usuário travou o modo stylus exclusivo pelo botão da UI, bloqueia toque
       if (e.pointerType === "touch" && stylusModeRef.current) {
         e.preventDefault();
         return;
       }
       if (activePointerIdRef.current !== null) return;
       e.preventDefault();
-      activePointerIdRef.current = e.pointerId;
-      inkCanvas.setPointerCapture(e.pointerId);
 
-      // Faz cache do BoundingClientRect apenas no pointerdown (evita Layout Thrashing no move)
+      activePointerIdRef.current = e.pointerId;
+      try {
+        inkCanvas.setPointerCapture(e.pointerId);
+      } catch {}
+
       cachedRect = inkCanvas.getBoundingClientRect();
       const pt = getPoint(e, cachedRect);
       const isSpenEraser = e.button === 5 || (e.buttons & 32) !== 0;
@@ -395,36 +358,52 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         return;
       }
 
-      // Prepara estilos no contexto ink antes de começar os segmentos
       const inkCtx = inkCtxRef.current;
+      const pressure = pt.pressure || 0.7;
+      const baseWidth =
+        effectiveTool === "highlighter"
+          ? Math.max(14, widthRef.current * 3)
+          : widthRef.current;
+      const pressureFactor = Math.max(0.6, Math.min(1.4, pressure * 1.2));
+
       if (inkCtx) {
         inkCtx.strokeStyle = colorRef.current;
         inkCtx.fillStyle = colorRef.current;
         inkCtx.globalAlpha = effectiveTool === "highlighter" ? 0.35 : 1.0;
+        inkCtx.lineWidth = baseWidth * pressureFactor;
+        inkCtx.beginPath();
+        inkCtx.arc(pt.x, pt.y, Math.max(0.75, (baseWidth * pressureFactor) * 0.5), 0, Math.PI * 2);
+        inkCtx.fill();
       }
 
       const newStroke: Stroke = {
         id: Math.random().toString(36).slice(2),
         tool: effectiveTool,
         color: colorRef.current,
-        baseWidth:
-          effectiveTool === "highlighter"
-            ? Math.max(14, widthRef.current * 3)
-            : widthRef.current,
+        baseWidth,
         points: [pt],
       };
-      currentStrokeRef.current = newStroke;
-      drawBatchIncrementalSegments(newStroke, 0);
+
+      activeStrokeStateRef.current = {
+        stroke: newStroke,
+        lastMidX: pt.x,
+        lastMidY: pt.y,
+      };
     };
 
     const onPointerMove = (e: PointerEvent) => {
       if (!isDrawingRef.current || e.pointerId !== activePointerIdRef.current) return;
       if (e.pointerType === "touch" && stylusModeRef.current) return;
       e.preventDefault();
+
       const rect = cachedRect || inkCanvas.getBoundingClientRect();
       const isSpenEraser = (e.buttons & 32) !== 0;
       const effectiveTool: ToolType = isSpenEraser ? "stroke-eraser" : toolRef.current;
-      const coalesced = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+
+      const coalesced =
+        e.getCoalescedEvents && e.getCoalescedEvents().length > 0
+          ? e.getCoalescedEvents()
+          : [e];
 
       if (effectiveTool === "stroke-eraser") {
         const lastEv = coalesced[coalesced.length - 1];
@@ -433,51 +412,108 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         return;
       }
 
-      const stroke = currentStrokeRef.current;
-      if (!stroke) return;
-
+      const state = activeStrokeStateRef.current;
+      if (!state) return;
+      const stroke = state.stroke;
       const pts = stroke.points;
-      const prevLength = pts.length;
-      let lastPt = pts[prevLength - 1];
+      const inkCtx = inkCtxRef.current;
 
-      // Filtra pontos coalescidos com corte de ruído subpixel (dx*dx + dy*dy >= 2.25)
       for (let i = 0; i < coalesced.length; i++) {
         const pt = getPoint(coalesced[i], rect);
+        const lastPt = pts[pts.length - 1];
         const dx = pt.x - lastPt.x;
         const dy = pt.y - lastPt.y;
-        if (dx * dx + dy * dy >= 2.25) {
+
+        // Limiar sutil (0.5px) para capturar curvas precisas sem ruído
+        if (dx * dx + dy * dy >= 0.25) {
           pts.push(pt);
-          lastPt = pt;
+
+          if (stroke.tool === "highlighter") {
+            const inkCanvas = inkCanvasRef.current;
+            if (inkCanvas && inkCtx) {
+              const dpr = dprRef.current;
+              inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
+              drawFullStroke(inkCtx, stroke);
+            }
+          } else if (inkCtx) {
+            const pressure = pt.pressure || 0.7;
+            const pressureFactor = Math.max(0.6, Math.min(1.4, pressure * 1.2));
+            inkCtx.lineWidth = stroke.baseWidth * pressureFactor;
+
+            if (pts.length === 2) {
+              const midX = (lastPt.x + pt.x) * 0.5;
+              const midY = (lastPt.y + pt.y) * 0.5;
+              inkCtx.beginPath();
+              inkCtx.moveTo(lastPt.x, lastPt.y);
+              inkCtx.lineTo(midX, midY);
+              inkCtx.stroke();
+              state.lastMidX = midX;
+              state.lastMidY = midY;
+            } else {
+              const midX = (lastPt.x + pt.x) * 0.5;
+              const midY = (lastPt.y + pt.y) * 0.5;
+              inkCtx.beginPath();
+              inkCtx.moveTo(state.lastMidX, state.lastMidY);
+              inkCtx.quadraticCurveTo(lastPt.x, lastPt.y, midX, midY);
+              inkCtx.stroke();
+              state.lastMidX = midX;
+              state.lastMidY = midY;
+            }
+          }
         }
       }
 
-      // Se novos pontos válidos foram registrados, executa ÚNICO batch stroke
-      if (pts.length > prevLength) {
-        drawBatchIncrementalSegments(stroke, prevLength - 1);
+      // Delegated Ink Trail para o compositor nativo do Android / Windows
+      if (inkPresenterRef.current) {
+        try {
+          const lastPoint = pts[pts.length - 1];
+          inkPresenterRef.current.updateInkTrailStartPoint(e, {
+            color: stroke.color,
+            diameter: Math.max(2, stroke.baseWidth * (lastPoint.pressure || 0.7)),
+          });
+        } catch {}
       }
     };
 
     const onPointerUpOrCancel = (e: PointerEvent) => {
-      if (e.pointerId !== activePointerIdRef.current) return;
+      if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return;
+      const state = activeStrokeStateRef.current;
+      activeStrokeStateRef.current = null;
       isDrawingRef.current = false;
       activePointerIdRef.current = null;
       cachedRect = null;
-      const finishedStroke = currentStrokeRef.current;
-      currentStrokeRef.current = null;
 
-      if (finishedStroke && finishedStroke.points.length > 0) {
-        // 1. Limpa a camada temporária de tinta rápida
-        const dpr = dprRef.current;
+      try {
+        if (inkCanvas.hasPointerCapture(e.pointerId)) {
+          inkCanvas.releasePointerCapture(e.pointerId);
+        }
+      } catch {}
+
+      if (state && state.stroke.points.length > 0) {
+        const finishedStroke = state.stroke;
+        const pts = finishedStroke.points;
         const inkCtx = inkCtxRef.current;
+        const baseCtx = baseCtxRef.current || baseCanvas.getContext("2d");
+
+        // Conecta o último segmento até a ponta final
+        if (inkCtx && pts.length >= 2 && finishedStroke.tool !== "highlighter") {
+          const lastPt = pts[pts.length - 1];
+          inkCtx.beginPath();
+          inkCtx.lineWidth = finishedStroke.baseWidth * (lastPt.pressure || 0.7);
+          inkCtx.moveTo(state.lastMidX, state.lastMidY);
+          inkCtx.lineTo(lastPt.x, lastPt.y);
+          inkCtx.stroke();
+        }
+
+        // Consolida no canvas base permanente e limpa o buffer volátil
+        const dpr = dprRef.current;
         if (inkCtx) {
           inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
         }
-
-        // 2. Consolida o traço finalizado direto no baseCanvas (sem redesenhar os antigos)
-        const baseCtx = baseCtxRef.current || baseCanvas.getContext("2d");
         if (baseCtx) {
           drawFullStroke(baseCtx, finishedStroke);
         }
+
         strokesRef.current.push(finishedStroke);
         redoStackRef.current = [];
         setStrokeCount(strokesRef.current.length);
@@ -489,12 +525,25 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     inkCanvas.addEventListener("pointermove", onPointerMove, { passive: false });
     inkCanvas.addEventListener("pointerup", onPointerUpOrCancel, { passive: false });
     inkCanvas.addEventListener("pointercancel", onPointerUpOrCancel, { passive: false });
+    inkCanvas.addEventListener("lostpointercapture", onPointerUpOrCancel, { passive: false });
+
+    // Proteção de segurança caso o ponteiro saia da tela
+    const onWindowPointerUp = (e: PointerEvent) => {
+      if (isDrawingRef.current && activePointerIdRef.current === e.pointerId) {
+        onPointerUpOrCancel(e);
+      }
+    };
+    window.addEventListener("pointerup", onWindowPointerUp);
+    window.addEventListener("pointercancel", onWindowPointerUp);
 
     return () => {
       inkCanvas.removeEventListener("pointerdown", onPointerDown);
       inkCanvas.removeEventListener("pointermove", onPointerMove);
       inkCanvas.removeEventListener("pointerup", onPointerUpOrCancel);
       inkCanvas.removeEventListener("pointercancel", onPointerUpOrCancel);
+      inkCanvas.removeEventListener("lostpointercapture", onPointerUpOrCancel);
+      window.removeEventListener("pointerup", onWindowPointerUp);
+      window.removeEventListener("pointercancel", onWindowPointerUp);
     };
   }, [drawFullStroke, eraseStrokeAtPoint, scheduleSync]);
 
