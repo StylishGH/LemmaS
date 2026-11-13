@@ -12,7 +12,9 @@ const LATEX_N_COMMANDS = new Set([
 ]);
 
 const LATEX_ENV_NAMES = "(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\\*?|align\\*?)";
-const INLINE_MATH_SOURCE = `\\$(?:[^\\$\\n]+?|[^\\$\\n]*?\\\\begin\\{${LATEX_ENV_NAMES}\\}[^\\$]*?\\\\end\\{${LATEX_ENV_NAMES}\\}[ \\t]*)\\$`;
+const MULTILINE_INLINE_MATH_SOURCE = `\\$[^\\$\\n]*?\\\\begin\\{${LATEX_ENV_NAMES}\\}(?:[^\\$\\n]|\\n(?![ \\t]*\\n))*?\\\\end\\{${LATEX_ENV_NAMES}\\}[^\\$\\n]*\\$`;
+// Match single-line $...$ before multiline env so closing $ of an earlier $...$ can never open a multiline match.
+const INLINE_MATH_SOURCE = `(?:\\$[^\\$\\n]+?\\$|${MULTILINE_INLINE_MATH_SOURCE})`;
 const TEXT_COMMAND_OPEN_RE = /^\\(?:text(?:bf|it|rm|sf|tt)?|mbox)\s*\{/;
 const BRL_PRECEDED_BLOCK_RE = /[a-zA-Z0-9_\\$]/;
 const BRL_FOLLOWED_DIGIT_RE = /^\s*\d/;
@@ -301,6 +303,25 @@ export function cleanLatexForKatex(latex: string): string {
   return clean;
 }
 
+function shieldMultilineInlineEnvs(
+  text: string,
+  tokenPrefix: string,
+  tokenMap: Map<string, string>,
+  nextIndex: () => number,
+): string {
+  // Consume $$...$$ and single-line $...$ left-to-right so closing $ never pairs with a later standalone \begin{...}.
+  const regex = new RegExp(
+    `(\\$\\$[\\s\\S]+?\\$\\$|(?<!\\$)\\$(?!\\$)[^\\$\\n]+?(?<!\\$)\\$(?!\\$))|((?<!\\$)${MULTILINE_INLINE_MATH_SOURCE}(?!\\$))`,
+    "g",
+  );
+  return text.replace(regex, (fullMatch, passthrough?: string, multiline?: string) => {
+    if (passthrough || !multiline) return fullMatch;
+    const token = `___${tokenPrefix}_${nextIndex()}___`;
+    tokenMap.set(token, multiline);
+    return token;
+  });
+}
+
 /**
  * Sanitizador profundo de markdown matemático para evitar desbalanceamento de delimitadores $
  * e isolar fórmulas soltas que modelos LLM escrevem sem delimitação explícita.
@@ -348,6 +369,9 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
     blockMap.set(token, `$$${inner.trim()}$$`);
     return `\n${token}\n`;
   });
+
+  // Extrai também ambientes $...\begin{...}...\end{...}...$ multilinha para não serem corrompidos por autoWrap nem pelo loop por linha
+  text = shieldMultilineInlineEnvs(text, "LEMMAS_MATH_BLOCK", blockMap, () => blockCounter++);
 
   // Desembrulha inline $...$ que contém frases em português (apenas com delimitadores estritos de inline)
   text = text.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)/g, (fullMatch, inner) => {
@@ -432,8 +456,17 @@ export function renderMathText(text: string) {
   let preprocessed = sanitizeMathText(text, { preserveCurrencyToken: true });
   preprocessed = normalizarMatematica(preprocessed);
 
+  // Protege expressões $...\begin{...}...\end{...}...$ multilinha antes de autoWrapLatexExpressions (que só divide $...$ em linha única)
+  const protectedMultilineInline = new Map<string, string>();
+  let multilineCounter = 0;
+  preprocessed = shieldMultilineInlineEnvs(preprocessed, "LEMMAS_INLINE_ENV", protectedMultilineInline, () => multilineCounter++);
+
   // Aplica autoWrap nos trechos fora de $...$ e $$...$$ para envolver equações, funções trigonométricas e letras gregas
   preprocessed = autoWrapLatexExpressions(preprocessed);
+
+  for (const [token, inlineEnv] of protectedMultilineInline.entries()) {
+    preprocessed = preprocessed.replace(token, () => inlineEnv);
+  }
 
   // Auto-envolve expressões matemáticas com comandos LaTeX soltos que vieram sem delimitadores $ (ex: \triangle OXM \sim \triangle OYN, \frac{XM}{YN} = \frac{OM}{ON})
   const looseMathRegex = /(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+[A-Za-z0-9]+(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to|\\sim|\\approx|\\perp|\\parallel|\\cong)\s*(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+)?[A-Za-z0-9]+)*|\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to)\s*(?:\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|[a-zA-Z0-9_{}^]+))*|\\(?:sqrt|sum|int|lim)\b(?:\{[^{}]*\}|\[[^\]]*\])*(?:[a-zA-Z0-9_{}^+\-*\/=<>]+)*|\b[a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+|\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)+/g;

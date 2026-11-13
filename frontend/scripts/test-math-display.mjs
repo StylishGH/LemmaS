@@ -226,12 +226,42 @@ test("multiline environments inside inline $ stay single inline formulas without
     { type: "inline", content: "A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}" },
   ]);
 
+  const alignedWithEq = formulasOf("Dada $\\begin{aligned}\nx = 1 \\\\\ny = 2\n\\end{aligned}$");
+  assert.deepEqual(alignedWithEq.formulas, [
+    { type: "inline", content: "\\begin{aligned}\nx = 1 \\\\\ny = 2\n\\end{aligned}" },
+  ]);
+  assert.match(katex.renderToString(alignedWithEq.formulas[0].content, { throwOnError: true, macros: KATEX_MACROS }), /class="katex/);
+
+  const startOfNewLine = formulasOf("Dada:\n$A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}$");
+  assert.equal(startOfNewLine.parts[0].content, "Dada:\n");
+  assert.deepEqual(startOfNewLine.formulas, [
+    { type: "inline", content: "A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}" },
+  ]);
+
+  const mixedSingleAndMultiline = formulasOf("$A = \\begin{pmatrix} 1 \\\\ 2 \\end{pmatrix}$ e $\\begin{pmatrix}\n3 \\\\\n4\n\\end{pmatrix}$");
+  assert.deepEqual(mixedSingleAndMultiline.formulas, [
+    { type: "inline", content: "A = \\begin{pmatrix} 1 \\\\ 2 \\end{pmatrix}" },
+    { type: "inline", content: "\\begin{pmatrix}\n3 \\\\\n4\n\\end{pmatrix}" },
+  ]);
+
+  const trailingMathAfterEnd = formulasOf("Dada $A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix} + I$");
+  assert.deepEqual(trailingMathAfterEnd.formulas, [
+    { type: "inline", content: "A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix} + I" },
+  ]);
+  assert.match(katex.renderToString(trailingMathAfterEnd.formulas[0].content, { throwOnError: true, macros: KATEX_MACROS }), /class="katex/);
+
   const separateInlineAndBlock = "$x = 1$ e \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix} e $y = 2$";
   const separate = formulasOf(separateInlineAndBlock);
   assert.deepEqual(separate.formulas, [
     { type: "inline", content: "x = 1" },
     { type: "block", content: "\\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}" },
     { type: "inline", content: "y = 2" },
+  ]);
+
+  const singleLineThenMultiline = formulasOf("$x = 1$ e $\\begin{aligned}\ny = 2\n\\end{aligned}$");
+  assert.deepEqual(singleLineThenMultiline.formulas, [
+    { type: "inline", content: "x = 1" },
+    { type: "inline", content: "\\begin{aligned}\ny = 2\n\\end{aligned}" },
   ]);
 });
 
