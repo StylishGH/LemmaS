@@ -14,7 +14,7 @@ function moduleUrl(source) {
 const parserUrl = moduleUrl(await readFile(new URL("../lib/math-parser.ts", import.meta.url), "utf8"));
 const source = await readFile(new URL("../lib/math-sanitize.ts", import.meta.url), "utf8");
 const {
-  KATEX_MACROS, TOKEN_REAL, cleanLatexForKatex, sanitizeMathText, renderMathText,
+  KATEX_MACROS, TOKEN_REAL, shieldBrlCurrency, cleanLatexForKatex, sanitizeMathText, renderMathText,
   isLikelyProseMistakenlyWrappedInMath,
 } = await import(moduleUrl(source.replace('"./math-parser"', JSON.stringify(parserUrl))));
 
@@ -104,13 +104,135 @@ test("#330 renders overparen and degree notation through the shared macro table"
 });
 
 test("currency is restored according to text, inline and block context and survives KaTeX cleanup", () => {
-  const { parts, formulas } = formulasOf("Preço R$ 20 e $R$ 30$ ou $$R$ 40$$");
+  const { parts, formulas } = formulasOf(String.raw`Preço R$ 20 e $\text{custa R$ 30}$ ou $$\text{valor R$ 40}$$`);
   assert.equal(parts[0].content, "Preço R$ 20 e ");
   assert.deepEqual(formulas, [
-    { type: "inline", content: String.raw`R\$ 30` },
-    { type: "block", content: String.raw`R\$ 40` },
+    { type: "inline", content: String.raw`\text{custa R\$ 30}` },
+    { type: "block", content: String.raw`\text{valor R\$ 40}` },
   ]);
   assert.equal(cleanLatexForKatex(String.raw`R\$ 30`), String.raw`R\$ 30`);
+});
+
+test("math variable R before closing delimiters is never mistaken for R$ currency", () => {
+  const cases = [
+    {
+      input: String.raw`Seja $R$ o raio da circunferência e $C = 2\pi R$ o comprimento.`,
+      expected: [
+        { type: "inline", content: "R" },
+        { type: "inline", content: String.raw`C = 2\pi R` },
+      ],
+    },
+    {
+      input: "Se $x = R$ e $y = 2$",
+      expected: [
+        { type: "inline", content: "x = R" },
+        { type: "inline", content: "y = 2" },
+      ],
+    },
+    {
+      input: "$$x = R$$",
+      expected: [{ type: "block", content: "x = R" }],
+    },
+    {
+      input: "O valor de $R$ é 10.",
+      expected: [{ type: "inline", content: "R" }],
+    },
+    {
+      input: "Calcule $f(R)$ e $2R$",
+      expected: [
+        { type: "inline", content: "f(R)" },
+        { type: "inline", content: "2R" },
+      ],
+    },
+    {
+      input: "Seja $R$ 10 vezes maior.",
+      expected: [{ type: "inline", content: "R" }],
+    },
+  ];
+
+  for (const { input, expected } of cases) {
+    const { formulas } = formulasOf(input);
+    assert.deepEqual(formulas, expected, input);
+    assert.equal(shieldBrlCurrency(input), input, input);
+    assert.equal(sanitizeMathText(input).trim(), input, input);
+  }
+
+  const mixed = "Para $x = 5$, temos R$ 30,00 e $y = R$.";
+  const { parts, formulas } = formulasOf(mixed);
+  assert.deepEqual(formulas, [
+    { type: "inline", content: "x = 5" },
+    { type: "inline", content: "y = R" },
+  ]);
+  assert.equal(parts.map(part => part.content).join(""), "Para x = 5, temos R$ 30,00 e y = R.");
+  assert.equal(parts[2].content, ", temos R$ 30,00 e ");
+});
+
+test("currency shielding respects math delimiters, prefixes, newlines and \\text edges", () => {
+  const withParenAndBracket = String.raw`Temos \(x = R\) e \[y = R\] e custo R$ 50 e R$$z = 1$$.`;
+  const { parts, formulas } = formulasOf(withParenAndBracket);
+  assert.deepEqual(formulas, [
+    { type: "inline", content: "x = R" },
+    { type: "block", content: "y = R" },
+    { type: "block", content: "z = 1" },
+  ]);
+  assert.ok(parts.some(part => part.type === "text" && part.content.includes("custo R$ 50 e R")));
+
+  const withLiteralNewline = String.raw`Total:\nR$ 50,00 e $R$`;
+  const newlineResult = formulasOf(withLiteralNewline);
+  assert.deepEqual(newlineResult.formulas, [{ type: "inline", content: "R" }]);
+  assert.equal(newlineResult.parts[0].content, "Total:\nR$ 50,00 e ");
+
+  const innerMathInText = String.raw`$\text{onde $x = R$ e custa R$ 50}$`;
+  assert.equal(
+    shieldBrlCurrency(innerMathInText),
+    String.raw`$\text{onde $x = R$ e custa ` + TOKEN_REAL + String.raw` 50}$`,
+  );
+
+  const blockWithInnerMathInText = String.raw`$$\text{onde $x = R$ e custa R$ 50}$$`;
+  const blockResult = formulasOf(blockWithInnerMathInText);
+  assert.deepEqual(blockResult.formulas, [
+    { type: "block", content: String.raw`\text{onde $x = R$ e custa R\$ 50}` },
+  ]);
+
+  const closedTextBeforeR = String.raw`Se $\text{para } R$ 10 e R$ 20`;
+  const closedTextResult = formulasOf(closedTextBeforeR);
+  assert.deepEqual(closedTextResult.formulas, [{ type: "inline", content: String.raw`\text{para } R` }]);
+  assert.equal(closedTextResult.parts.at(-1).content, " 10 e R$ 20");
+
+  for (const untouched of ["EUR$ 20", "2R$ 20", "_R$ 20", String.raw`\R$ 20`, String.raw`$\text{se $R$ 10}$`]) {
+    assert.equal(shieldBrlCurrency(untouched), untouched, untouched);
+  }
+});
+
+test("cleanLatexForKatex preserves escaped \\$ while stripping unescaped outer and internal $", () => {
+  for (const input of [String.raw`R\$`, String.raw`x = R\$`, String.raw`$R\$$`, String.raw`$$R\$$$`]) {
+    const cleaned = cleanLatexForKatex(input);
+    const expected = input === String.raw`x = R\$` ? String.raw`x = R\$` : String.raw`R\$`;
+    assert.equal(cleaned, expected, input);
+    assert.match(katex.renderToString(cleaned, { throwOnError: true, macros: KATEX_MACROS }), /class="katex/);
+  }
+
+  assert.equal(cleanLatexForKatex(String.raw`R\\$`), String.raw`R\\`);
+  assert.equal(cleanLatexForKatex(String.raw`$R\\$`), String.raw`R\\`);
+  assert.equal(cleanLatexForKatex(String.raw`a \\$ b`), String.raw`a \\ b`);
+  assert.equal(cleanLatexForKatex(String.raw`a \\\$ b`), String.raw`a \\\$ b`);
+});
+
+test("multiline environments inside inline $ stay single inline formulas without crossing $ pairs", () => {
+  const multilineInline = "Dada $A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}$";
+  const { parts, formulas } = formulasOf(multilineInline);
+  assert.equal(parts[0].content, "Dada ");
+  assert.deepEqual(formulas, [
+    { type: "inline", content: "A = \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}" },
+  ]);
+
+  const separateInlineAndBlock = "$x = 1$ e \\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix} e $y = 2$";
+  const separate = formulasOf(separateInlineAndBlock);
+  assert.deepEqual(separate.formulas, [
+    { type: "inline", content: "x = 1" },
+    { type: "block", content: "\\begin{pmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{pmatrix}" },
+    { type: "inline", content: "y = 2" },
+  ]);
 });
 
 test("standalone environments remain blocks and existing macros render", () => {
