@@ -201,7 +201,9 @@ export default function BancoQuestoesPage() {
       const urlBanca = sp.get("banca");
       const urlCategoriaBanca = sp.get("categoria_banca");
       const urlTopico = sp.get("topico");
-      const urlSubtopico = sp.getAll("subtopico").map((s) => s.trim()).filter(Boolean);
+      const urlSubtopico = Array.from(
+        new Set(sp.getAll("subtopico").map((s) => s.trim()).filter(Boolean))
+      );
       const urlTipoProva = sp.get("tipo_prova");
       const urlFaseNivel = sp.get("fase_nivel");
       const urlAno = sp.get("ano");
@@ -911,7 +913,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 1: BANCA */}
-        <div className="sm:relative">
+        <div className="xl:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "banca" ? null : "banca")}
@@ -930,7 +932,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "banca" && (
-            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-96 max-h-[70vh] sm:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               {/* Header do Popover */}
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
@@ -1054,7 +1056,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 2: MATÉRIA, TÓPICO & SUBTÓPICO */}
-        <div className="sm:relative">
+        <div className="xl:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "materia" ? null : "materia")}
@@ -1085,7 +1087,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "materia" && (
-            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-[480px] max-h-[75vh] sm:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Grandes Áreas, Tópicos & Subtópicos
@@ -1170,27 +1172,33 @@ export default function BancoQuestoesPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-1 max-h-36 overflow-y-auto pr-1">
-                  {topicosFiltradosDropdown.map((topico) => {
-                    const isSelected = topicoFiltro.includes(topico.name);
-                    return (
-                      <button
-                        key={topico.name}
-                        type="button"
-                        onClick={() => handleSelectTopico(topico.name)}
-                        title={topico.name}
-                        className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
-                          isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
-                        }`}
-                      >
-                        <span className="truncate">{topico.name}</span>
-                        <span className="text-[10px] font-mono text-slate-400 shrink-0">({topico.count})</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {topicosFiltradosDropdown.length === 0 ? (
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 italic py-1">
+                    Nenhum tópico disponível para os filtros atuais.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-1 max-h-36 overflow-y-auto pr-1">
+                    {topicosFiltradosDropdown.map((topico) => {
+                      const isSelected = topicoFiltro.includes(topico.name);
+                      return (
+                        <button
+                          key={topico.name}
+                          type="button"
+                          onClick={() => handleSelectTopico(topico.name)}
+                          title={topico.name}
+                          className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
+                            isSelected
+                              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
+                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+                          }`}
+                        >
+                          <span className="truncate">{topico.name}</span>
+                          <span className="text-[10px] font-mono text-slate-400 shrink-0">({topico.count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-zinc-800">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
@@ -1224,7 +1232,7 @@ export default function BancoQuestoesPage() {
                           className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between gap-1 border ${
                             isSelected
                               ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
                           }`}
                         >
                           <span className="truncate">{subtopico.name}</span>
@@ -1251,7 +1259,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 3: DIFICULDADE */}
-        <div className="sm:relative">
+        <div className="xl:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "dificuldade" ? null : "dificuldade")}
@@ -1270,7 +1278,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "dificuldade" && (
-            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Nível de Dificuldade
@@ -1328,7 +1336,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 4: ANO */}
-        <div className="sm:relative">
+        <div className="xl:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "ano" ? null : "ano")}
@@ -1347,7 +1355,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "ano" && (
-            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-84 max-h-[70vh] sm:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-84 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Anos da Prova ({anoMin}–{anoMax})
@@ -1427,7 +1435,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 5: FORMATO & FASE */}
-        <div className="sm:relative">
+        <div className="xl:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "formato" ? null : "formato")}
@@ -1446,7 +1454,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "formato" && (
-            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Formato, Prova & Fase
@@ -1680,17 +1688,17 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* LADO DIREITO: SELEÇÃO EM LOTE + AÇÕES PRINCIPAIS */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={handleSelectAllPage}
-              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-[#d9b452] transition-colors text-xs"
+              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-[#d9b452] transition-colors text-xs whitespace-nowrap"
             >
               {questoes.length > 0 && questoes.every((q) => selectedIds.has(q.id)) ? (
-                <CheckSquare className="w-4 h-4 text-blue-600 dark:text-amber-500" />
+                <CheckSquare className="w-4 h-4 shrink-0 text-blue-600 dark:text-amber-500" />
               ) : (
-                <Square className="w-4 h-4 text-slate-400" />
+                <Square className="w-4 h-4 shrink-0 text-slate-400" />
               )}
               <span className="sm:hidden">Selecionar pág.</span>
               <span className="hidden sm:inline">Selecionar página</span>
@@ -1699,7 +1707,7 @@ export default function BancoQuestoesPage() {
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold ml-1"
+                className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold ml-1 whitespace-nowrap"
                 title="Limpar seleção"
               >
                 ({selectedIds.size}) Limpar
@@ -1710,18 +1718,18 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={handleTreinarListaEstudo}
-            className="px-3.5 py-1.5 rounded-xl border border-[var(--border-badge)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs"
+            className="px-3.5 py-1.5 rounded-xl border border-[var(--border-badge)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
           >
-            <BookOpen className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+            <BookOpen className="w-3.5 h-3.5 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span>Treinar Lista ({selectedIds.size > 0 ? selectedIds.size : total})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setModalSimuladoAberto(true)}
-            className="lemmas-gold-cta inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02]"
+            className="lemmas-gold-cta inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02] whitespace-nowrap"
           >
-            <Timer className="w-3.5 h-3.5" />
+            <Timer className="w-3.5 h-3.5 shrink-0" />
             <span>Criar Simulado</span>
           </button>
         </div>
