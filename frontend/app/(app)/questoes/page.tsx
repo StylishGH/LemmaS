@@ -887,7 +887,7 @@ export default function BancoQuestoesPage() {
         className="flex flex-wrap items-center gap-2 p-2 rounded-2xl border border-[var(--border-board)] bg-white dark:bg-[#161a1e] shadow-xs relative z-30"
       >
         {/* INPUT DE BUSCA COMPACTO */}
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative flex-1 min-w-[160px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -932,7 +932,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "banca" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               {/* Header do Popover */}
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
@@ -1087,7 +1087,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "materia" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Grandes Áreas, Tópicos & Subtópicos
