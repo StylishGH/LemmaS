@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState, useId } from "react";
+import React, { useState, useId, useEffect, useRef } from "react";
 import { 
   Clock, 
   Play, 
   X, 
-  HelpCircle, 
   ShieldAlert, 
-  Sparkles, 
   Timer, 
   Calculator,
-  CheckCircle2,
   AlertCircle
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+
+const DEFAULT_QUESTION_COUNT = 20;
 
 export interface SimuladoConfig {
   modo: "simulado";
@@ -62,13 +62,44 @@ export function CriarSimuladoModal({
 
   // Limite de questões (opcional, para não fazer 200 de uma vez)
   const [quantidadeDesejada, setQuantidadeDesejada] = useState<number>(
-    selectedIds.length > 0 ? selectedIds.length : Math.min(20, totalFiltradas)
+    selectedIds.length > 0 ? selectedIds.length : (totalFiltradas > 0 ? Math.min(DEFAULT_QUESTION_COUNT, totalFiltradas) : 0)
   );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  const wasOpenRef = useRef(false);
+
+  // The portal must wait for hydration before accessing document.body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    // Reopening or receiving the initial count restores defaults without replacing manual edits.
+    const shouldSync = isOpen && (
+      !wasOpenRef.current || (quantidadeDesejada === 0 && totalFiltradas > 0)
+    );
+    wasOpenRef.current = isOpen;
+    if (!shouldSync) return;
+
+    setOrigemQuestoes(selectedIds.length > 0 ? "selecionadas" : "todas_filtradas");
+    setQuantidadeDesejada(selectedIds.length > 0
+      ? selectedIds.length
+      : (totalFiltradas > 0 ? Math.min(DEFAULT_QUESTION_COUNT, totalFiltradas) : 0));
+  }, [isOpen, selectedIds.length, totalFiltradas, quantidadeDesejada]);
+
+  useEffect(() => {
+    // Register keyboard dismissal only while the dialog can be closed.
+    if (!isOpen || loading) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, loading, onClose]);
+
+  if (!mounted || !isOpen) return null;
 
   const totalEfetivoQuestoes = origemQuestoes === "selecionadas" 
     ? (selectedIds.length || 1) 
@@ -132,7 +163,7 @@ export function CriarSimuladoModal({
         return;
       }
 
-      let data: { questions?: any[]; simuladoId?: string } = {};
+      let data: { questions?: { id: number }[]; simuladoId?: string } = {};
       let res: Response | null = null;
 
       try {
@@ -157,7 +188,7 @@ export function CriarSimuladoModal({
 
       const simuladoIdFinal = data.simuladoId || crypto.randomUUID();
       const idsConfig = data.questions && data.questions.length > 0
-        ? data.questions.map((q: any) => q.id)
+        ? data.questions.map((q) => q.id)
         : idsFinais;
 
       const config: SimuladoConfig = {
@@ -183,9 +214,9 @@ export function CriarSimuladoModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
-      <div className="max-w-xl w-full my-8 rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn">
+      <div className="max-w-xl w-full my-auto rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6">
         {/* BOTÃO FECHAR */}
         <button
           onClick={onClose}
@@ -490,6 +521,7 @@ export function CriarSimuladoModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
