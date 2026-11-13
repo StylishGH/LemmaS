@@ -160,6 +160,7 @@ export default function BancoQuestoesPage() {
   const [bancaFiltro, setBancaFiltro] = useState<string[]>([VAL_TODAS]);
   const [materiaFiltro, setMateriaFiltro] = useState<string[]>([VAL_TODAS]);
   const [topicoFiltro, setTopicoFiltro] = useState<string[]>([VAL_TODOS]);
+  const [subtopicoFiltro, setSubtopicoFiltro] = useState<string[]>([VAL_TODOS]);
   const [anoFiltro, setAnoFiltro] = useState<string[]>([VAL_TODOS]);
   const [tipoFiltro, setTipoFiltro] = useState<string[]>([VAL_TODOS]);
   const [dificuldadeFiltro, setDificuldadeFiltro] = useState<string[]>([VAL_TODAS]);
@@ -200,6 +201,7 @@ export default function BancoQuestoesPage() {
       const urlBanca = sp.get("banca");
       const urlCategoriaBanca = sp.get("categoria_banca");
       const urlTopico = sp.get("topico");
+      const urlSubtopico = sp.getAll("subtopico").map((s) => s.trim()).filter(Boolean);
       const urlTipoProva = sp.get("tipo_prova");
       const urlFaseNivel = sp.get("fase_nivel");
       const urlAno = sp.get("ano");
@@ -209,7 +211,7 @@ export default function BancoQuestoesPage() {
 
       const hasUrlFilters = !!(
         urlLema || urlMateria || urlBanca || urlCategoriaBanca ||
-        urlTopico || urlTipoProva || urlFaseNivel || urlAno ||
+        urlTopico || urlSubtopico.length > 0 || urlTipoProva || urlFaseNivel || urlAno ||
         urlTipo || urlDificuldade || urlBusca
       );
 
@@ -219,6 +221,7 @@ export default function BancoQuestoesPage() {
         if (urlBanca) setBancaFiltro(urlBanca.split(",").map((s) => s.trim()));
         if (urlCategoriaBanca) setCategoriaBancaFiltro(urlCategoriaBanca.trim());
         if (urlTopico) setTopicoFiltro(urlTopico.split(",").map((s) => s.trim()));
+        if (urlSubtopico.length > 0) setSubtopicoFiltro(urlSubtopico);
         if (urlTipoProva) setTipoProvaFiltro(urlTipoProva.split(",").map((s) => s.trim()));
         if (urlFaseNivel) setFaseNivelFiltro(urlFaseNivel.split(",").map((s) => s.trim()));
         if (urlAno) setAnoFiltro(urlAno.split(",").map((s) => s.trim()));
@@ -265,12 +268,7 @@ export default function BancoQuestoesPage() {
 
   const [materiasDisponiveis, setMateriasDisponiveis] = useState<{ name: string; count: number }[]>([]);
   const [topicosDisponiveis, setTopicosDisponiveis] = useState<{ name: string; count: number }[]>([]);
-  const [materiasComTopicos, setMateriasComTopicos] = useState<{
-    name: string;
-    count: number;
-    topicos: { name: string; count: number }[];
-  }[]>([]);
-  const [expandedMaterias, setExpandedMaterias] = useState<Set<string>>(new Set());
+  const [subtopicosDisponiveis, setSubtopicosDisponiveis] = useState<{ name: string; count: number }[]>([]);
 
   const [anosDisponiveis, setAnosDisponiveis] = useState<{ ano: number; label?: string; count: number }[]>([]);
   const [anoMin, setAnoMin] = useState<number>(1979);
@@ -351,21 +349,13 @@ export default function BancoQuestoesPage() {
       }
     };
 
-  const toggleExpandMateria = (nome: string) => {
-    setExpandedMaterias((prev) => {
-      const next = new Set(prev);
-      if (next.has(nome)) next.delete(nome);
-      else next.add(nome);
-      return next;
-    });
-  };
-
   // Contadores derivados dos filtros
   const numBancas = numSelecionados(bancaFiltro, VAL_TODAS);
   const numTiposProva = numSelecionados(tipoProvaFiltro, VAL_TODOS);
   const numFases = numSelecionados(faseNivelFiltro, VAL_TODAS);
   const numMaterias = numSelecionados(materiaFiltro, VAL_TODAS);
   const numTopicos = numSelecionados(topicoFiltro, VAL_TODOS);
+  const numSubtopicos = numSelecionados(subtopicoFiltro, VAL_TODOS);
   const numAnos = numSelecionados(anoFiltro, VAL_TODOS);
   const numTipos = numSelecionados(tipoFiltro, VAL_TODOS);
   const numDificuldades = numSelecionados(dificuldadeFiltro, VAL_TODAS);
@@ -396,13 +386,9 @@ export default function BancoQuestoesPage() {
   const handleSelectBanca = (b: string) => toggleFiltro(setBancaFiltro, b, VAL_TODAS);
   const handleSelectTipoProva = (tp: string) => toggleFiltro(setTipoProvaFiltro, tp, VAL_TODOS);
   const handleSelectFaseNivel = (f: string) => toggleFiltro(setFaseNivelFiltro, f, VAL_TODAS);
-  const handleSelectMateria = (m: string) => {
-    toggleFiltro(setMateriaFiltro, m, VAL_TODAS);
-    if (m !== VAL_TODAS) {
-      setExpandedMaterias((prev) => new Set([...prev, m]));
-    }
-  };
+  const handleSelectMateria = (m: string) => toggleFiltro(setMateriaFiltro, m, VAL_TODAS);
   const handleSelectTopico = (t: string) => toggleFiltro(setTopicoFiltro, t, VAL_TODOS);
+  const handleSelectSubtopico = (s: string) => toggleFiltro(setSubtopicoFiltro, s, VAL_TODOS);
   const handleSelectAno = (a: string) => toggleFiltro(setAnoFiltro, a, VAL_TODOS);
   const handleSelectTipo = (t: string) => toggleFiltro(setTipoFiltro, t, VAL_TODOS);
   const handleSelectDificuldade = (d: string) => toggleFiltro(setDificuldadeFiltro, d, VAL_TODAS);
@@ -414,6 +400,7 @@ export default function BancoQuestoesPage() {
     setFaseNivelFiltro([VAL_TODAS]);
     setMateriaFiltro([VAL_TODAS]);
     setTopicoFiltro([VAL_TODOS]);
+    setSubtopicoFiltro([VAL_TODOS]);
     setAnoFiltro([VAL_TODOS]);
     setTipoFiltro([VAL_TODOS]);
     setDificuldadeFiltro([VAL_TODAS]);
@@ -448,6 +435,9 @@ export default function BancoQuestoesPage() {
     if (materiaParam) params.set("materia", materiaParam);
     const topicoParam = paramFromFiltro(topicoFiltro);
     if (topicoParam) params.set("topico", topicoParam);
+    subtopicoFiltro
+      .filter((v) => v !== VAL_TODOS)
+      .forEach((s) => params.append("subtopico", s));
     const anoParam = paramFromFiltro(anoFiltro);
     if (anoParam) params.set("ano", anoParam);
     const tipoParam = paramFromFiltro(tipoFiltro);
@@ -525,15 +515,19 @@ export default function BancoQuestoesPage() {
               if (validas.length === 0) setMateriaFiltro([VAL_TODAS]);
               else if (validas.length !== materiaFiltro.length) setMateriaFiltro(validas);
             }
-            if (data.materias_com_topicos && Array.isArray(data.materias_com_topicos)) {
-              setMateriasComTopicos(data.materias_com_topicos);
-            }
             if (data.topicos && Array.isArray(data.topicos)) {
               setTopicosDisponiveis(data.topicos);
               const names = data.topicos.map((t: { name: string }) => t.name);
               const validos = topicoFiltro.filter((v) => v === VAL_TODOS || names.includes(v));
               if (validos.length === 0) setTopicoFiltro([VAL_TODOS]);
               else if (validos.length !== topicoFiltro.length) setTopicoFiltro(validos);
+            }
+            if (data.subtopicos && Array.isArray(data.subtopicos)) {
+              setSubtopicosDisponiveis(data.subtopicos);
+              const names = data.subtopicos.map((s: { name: string }) => s.name);
+              const validos = subtopicoFiltro.filter((v) => v === VAL_TODOS || names.includes(v));
+              if (validos.length === 0) setSubtopicoFiltro([VAL_TODOS]);
+              else if (validos.length !== subtopicoFiltro.length) setSubtopicoFiltro(validos);
             }
             if (data.anos && Array.isArray(data.anos)) {
               setAnosDisponiveis(data.anos);
@@ -577,6 +571,7 @@ export default function BancoQuestoesPage() {
     bancaFiltro,
     materiaFiltro,
     topicoFiltro,
+    subtopicoFiltro,
     anoFiltro,
     tipoFiltro,
     dificuldadeFiltro,
@@ -628,6 +623,30 @@ export default function BancoQuestoesPage() {
     setSelectedIds(new Set());
   };
 
+  const buildPostFilters = () => {
+    const subtopicosSelecionados = subtopicoFiltro.filter((v) => v !== VAL_TODOS);
+    const buscaTrim = busca.trim();
+    const buscaId = buscaTrim.startsWith("#") && /^\d+$/.test(buscaTrim.slice(1))
+      ? buscaTrim.slice(1)
+      : undefined;
+
+    return {
+      banca: paramFromFiltro(bancaFiltro) || undefined,
+      materia: paramFromFiltro(materiaFiltro) || undefined,
+      topico: paramFromFiltro(topicoFiltro) || undefined,
+      subtopico: subtopicosSelecionados.length > 0 ? subtopicosSelecionados : undefined,
+      categoria_banca: categoriaBancaFiltro !== "Todas" ? categoriaBancaFiltro : undefined,
+      tipo_prova: paramFromFiltro(tipoProvaFiltro) || undefined,
+      fase_nivel: paramFromFiltro(faseNivelFiltro) || undefined,
+      ano: paramFromFiltro(anoFiltro) || undefined,
+      tipo: paramFromFiltro(tipoFiltro) || undefined,
+      dificuldade: paramFromFiltro(dificuldadeFiltro) || undefined,
+      id: buscaId,
+      search: !buscaId && buscaTrim ? buscaTrim : undefined,
+      lema: lemaFiltro || undefined,
+    };
+  };
+
   // Carrega IDs completos de acordo com os filtros atuais
   const fetchFilteredIds = async (): Promise<number[]> => {
     try {
@@ -635,15 +654,7 @@ export default function BancoQuestoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          filters: {
-            banca: paramFromFiltro(bancaFiltro) || VAL_TODAS,
-            materia: paramFromFiltro(materiaFiltro) || VAL_TODAS,
-            topico: paramFromFiltro(topicoFiltro) || VAL_TODOS,
-            ano: paramFromFiltro(anoFiltro) || VAL_TODOS,
-            tipo: paramFromFiltro(tipoFiltro) || VAL_TODOS,
-            dificuldade: paramFromFiltro(dificuldadeFiltro) || VAL_TODAS,
-            lema: lemaFiltro || undefined,
-          },
+          filters: buildPostFilters(),
           limit: 100,
         }),
       });
@@ -673,18 +684,7 @@ export default function BancoQuestoesPage() {
       return;
     }
 
-    const activeFilters = {
-      banca: paramFromFiltro(bancaFiltro),
-      materia: paramFromFiltro(materiaFiltro),
-      topico: paramFromFiltro(topicoFiltro),
-      ano: paramFromFiltro(anoFiltro),
-      tipo: paramFromFiltro(tipoFiltro),
-      dificuldade: paramFromFiltro(dificuldadeFiltro),
-      categoria_banca: categoriaBancaFiltro !== "Todas" ? categoriaBancaFiltro : null,
-      tipo_prova: paramFromFiltro(tipoProvaFiltro),
-      fase_nivel: paramFromFiltro(faseNivelFiltro),
-      search: busca.trim() || null,
-    };
+    const activeFilters = buildPostFilters();
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("lemmas_active_treino", JSON.stringify({
@@ -724,6 +724,7 @@ export default function BancoQuestoesPage() {
     numBancas > 0,
     numMaterias > 0,
     numTopicos > 0,
+    numSubtopicos > 0,
     numAnos > 0,
     numTipos > 0,
     numDificuldades > 0,
@@ -733,30 +734,19 @@ export default function BancoQuestoesPage() {
 
   const resumoFiltrosTexto = `${numBancas > 0 ? `Bancas: ${joinSelecionados(bancaFiltro, VAL_TODAS)}` : "Todas as bancas"}${
     numMaterias > 0 ? ` · ${joinSelecionados(materiaFiltro, VAL_TODAS)}` : ""
-  }${numTopicos > 0 ? ` · ${joinSelecionados(topicoFiltro, VAL_TODOS)}` : ""}`;
+  }${numTopicos > 0 ? ` · ${joinSelecionados(topicoFiltro, VAL_TODOS)}` : ""}${
+    numSubtopicos > 0 ? ` · ${joinSelecionados(subtopicoFiltro, VAL_TODOS)}` : ""
+  }`;
 
-  // Tópicos disponíveis no dropdown suspenso
-  const topicosBaseDropdown = (() => {
-    if (numMaterias > 0 && materiasComTopicos.length > 0) {
-      const topicosDasMaterias = materiasComTopicos
-        .filter((m) => materiaFiltro.includes(m.name))
-        .flatMap((m) => m.topicos);
-      if (topicosDasMaterias.length > 0) {
-        const vistos = new Set<string>();
-        return topicosDasMaterias.filter((t) => {
-          if (vistos.has(t.name)) return false;
-          vistos.add(t.name);
-          return true;
-        });
-      }
-    }
-    return topicosDisponiveis.filter((t) => t.name !== VAL_TODOS);
-  })();
-
+  // Tópicos e subtópicos disponíveis no dropdown suspenso (cross-filtrados pela API)
+  const termoBuscaTopico = buscaTopicoInterna.toLowerCase().trim();
+  const topicosBaseDropdown = topicosDisponiveis.filter((t) => t.name !== VAL_TODOS);
   const topicosFiltradosDropdown = topicosBaseDropdown.filter((t) =>
-    buscaTopicoInterna.trim() === ""
-      ? true
-      : t.name.toLowerCase().includes(buscaTopicoInterna.toLowerCase().trim())
+    termoBuscaTopico === "" ? true : t.name.toLowerCase().includes(termoBuscaTopico)
+  );
+  const subtopicosBaseDropdown = subtopicosDisponiveis.filter((s) => s.name !== VAL_TODOS);
+  const subtopicosFiltradosDropdown = subtopicosBaseDropdown.filter((s) =>
+    termoBuscaTopico === "" ? true : s.name.toLowerCase().includes(termoBuscaTopico)
   );
 
   return (
@@ -766,7 +756,12 @@ export default function BancoQuestoesPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{total > 0 ? total.toLocaleString("pt-BR") : "—"} Questões Auditadas · MathAI Engine</span>
+            <span>
+              {total === 1
+                ? "1 Questão Auditada"
+                : `${total > 0 ? total.toLocaleString("pt-BR") : "—"} Questões Auditadas`}{" "}
+              · MathAI Engine
+            </span>
           </div>
           <h1 className="font-serif-math text-2xl sm:text-3xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
             Banco de <em className="italic text-blue-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
@@ -841,7 +836,7 @@ export default function BancoQuestoesPage() {
                   }`}
                 >
                   <span>∂</span>
-                  <span>Cálculo 3 (CEDERJ)</span>
+                  <span>Cálculo 3</span>
                 </button>
 
                 <button
@@ -854,7 +849,7 @@ export default function BancoQuestoesPage() {
                   }`}
                 >
                   <span>📐</span>
-                  <span>Álgebra Linear I (CEDERJ)</span>
+                  <span>Álgebra Linear I</span>
                 </button>
 
                 <button
@@ -916,7 +911,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 1: BANCA */}
-        <div className="relative">
+        <div className="sm:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "banca" ? null : "banca")}
@@ -935,7 +930,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "banca" && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-80 sm:w-96 max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-96 max-h-[70vh] sm:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               {/* Header do Popover */}
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
@@ -1058,43 +1053,50 @@ export default function BancoQuestoesPage() {
           )}
         </div>
 
-        {/* POPOVER 2: MATÉRIA & TÓPICO */}
-        <div className="relative">
+        {/* POPOVER 2: MATÉRIA, TÓPICO & SUBTÓPICO */}
+        <div className="sm:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "materia" ? null : "materia")}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
-              numMaterias > 0 || numTopicos > 0
+              numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0
                 ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
                 : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
             }`}
           >
-            <Layers className={`w-3.5 h-3.5 shrink-0 ${numMaterias > 0 || numTopicos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
+            <Layers className={`w-3.5 h-3.5 shrink-0 ${numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
             <span>
-              {numMaterias === 0 && numTopicos === 0
-                ? "Matéria & Tópico"
-                : numMaterias > 0 && numTopicos === 0
+              {numMaterias === 0 && numTopicos === 0 && numSubtopicos === 0
+                ? "Matéria, Tópico & Subtópico"
+                : numMaterias > 0 && numTopicos === 0 && numSubtopicos === 0
                 ? numMaterias === 1 ? materiaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numMaterias} Matérias`
-                : `${numMaterias} Mat., ${numTopicos} Tóp.`}
+                : [
+                    numMaterias > 0 ? `${numMaterias} Mat.` : null,
+                    numTopicos > 0 ? `${numTopicos} Tóp.` : null,
+                    numSubtopicos > 0 ? `${numSubtopicos} Sub.` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
             </span>
-            {(numMaterias > 0 || numTopicos > 0) && (
+            {(numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0) && (
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] shrink-0" />
             )}
             <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${activePopover === "materia" ? "rotate-180" : ""}`} />
           </button>
 
           {activePopover === "materia" && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-84 sm:w-[480px] max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-[480px] max-h-[75vh] sm:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
-                  Grandes Áreas & Tópicos
+                  Grandes Áreas, Tópicos & Subtópicos
                 </span>
-                {(numMaterias > 0 || numTopicos > 0) && (
+                {(numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0) && (
                   <button
                     type="button"
                     onClick={() => {
                       setMateriaFiltro([VAL_TODAS]);
                       setTopicoFiltro([VAL_TODOS]);
+                      setSubtopicoFiltro([VAL_TODOS]);
                       setPage(1);
                     }}
                     className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
@@ -1131,8 +1133,8 @@ export default function BancoQuestoesPage() {
                 </div>
               </div>
 
-              {/* Tópicos com mini-busca */}
-              <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-zinc-800">
+              {/* Tópicos e Subtópicos com mini-busca */}
+              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                     Tópicos Específicos:
@@ -1154,7 +1156,7 @@ export default function BancoQuestoesPage() {
                     type="text"
                     value={buscaTopicoInterna}
                     onChange={(e) => setBuscaTopicoInterna(e.target.value)}
-                    placeholder="Buscar tópico (ex: derivadas, matrizes, poliedros)..."
+                    placeholder="Buscar tópico ou subtópico (ex: derivadas, Stokes, poliedros)..."
                     className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:focus:ring-amber-500/50"
                   />
                   {buscaTopicoInterna && (
@@ -1176,6 +1178,7 @@ export default function BancoQuestoesPage() {
                         key={topico.name}
                         type="button"
                         onClick={() => handleSelectTopico(topico.name)}
+                        title={topico.name}
                         className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
                           isSelected
                             ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
@@ -1188,6 +1191,49 @@ export default function BancoQuestoesPage() {
                     );
                   })}
                 </div>
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-zinc-800">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    Subtópicos:
+                  </span>
+                  {numSubtopicos > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectSubtopico(VAL_TODOS)}
+                      className="text-[10px] text-blue-600 dark:text-[#d9b452] hover:underline"
+                    >
+                      Limpar subtópicos
+                    </button>
+                  )}
+                </div>
+
+                {subtopicosFiltradosDropdown.length === 0 ? (
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 italic py-1">
+                    Nenhum subtópico disponível para os filtros atuais.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-36 overflow-y-auto pr-1">
+                    {subtopicosFiltradosDropdown.map((subtopico) => {
+                      const isSelected = subtopicoFiltro.includes(subtopico.name);
+                      return (
+                        <button
+                          key={subtopico.name}
+                          type="button"
+                          onClick={() => handleSelectSubtopico(subtopico.name)}
+                          title={subtopico.name}
+                          className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between gap-1 border ${
+                            isSelected
+                              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
+                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                          }`}
+                        >
+                          <span className="truncate">{subtopico.name}</span>
+                          <span className="text-[10px] font-mono text-slate-400 shrink-0">({subtopico.count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Rodapé */}
@@ -1205,7 +1251,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 3: DIFICULDADE */}
-        <div className="relative">
+        <div className="sm:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "dificuldade" ? null : "dificuldade")}
@@ -1224,7 +1270,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "dificuldade" && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-64 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Nível de Dificuldade
@@ -1282,7 +1328,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 4: ANO */}
-        <div className="relative">
+        <div className="sm:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "ano" ? null : "ano")}
@@ -1301,7 +1347,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "ano" && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-76 sm:w-84 max-h-96 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-84 max-h-[70vh] sm:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Anos da Prova ({anoMin}–{anoMax})
@@ -1381,7 +1427,7 @@ export default function BancoQuestoesPage() {
         </div>
 
         {/* POPOVER 5: FORMATO & FASE */}
-        <div className="relative">
+        <div className="sm:relative">
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "formato" ? null : "formato")}
@@ -1400,7 +1446,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "formato" && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-80 sm:w-88 rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 sm:inset-x-auto sm:right-0 mt-2 z-50 w-auto sm:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Formato, Prova & Fase
@@ -1581,6 +1627,17 @@ export default function BancoQuestoesPage() {
             </button>
           )}
 
+          {numSubtopicos > 0 && (
+            <button
+              type="button"
+              onClick={() => handleSelectSubtopico(VAL_TODOS)}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+            >
+              <span>Subtópico: {joinSelecionados(subtopicoFiltro, VAL_TODOS)}</span>
+              <X className="w-3 h-3" />
+            </button>
+          )}
+
           {numAnos > 0 && (
             <button
               onClick={() => handleSelectAno(VAL_TODOS)}
@@ -1635,6 +1692,7 @@ export default function BancoQuestoesPage() {
               ) : (
                 <Square className="w-4 h-4 text-slate-400" />
               )}
+              <span className="sm:hidden">Selecionar pág.</span>
               <span className="hidden sm:inline">Selecionar página</span>
             </button>
             {selectedIds.size > 0 && (
@@ -1768,16 +1826,16 @@ export default function BancoQuestoesPage() {
               const clean = val.trim();
               return (
                 clean.length > 20 ||
-                clean.includes("\frac") ||
-                clean.includes("\sqrt") ||
-                clean.includes("\displaystyle") ||
-                clean.includes("\matrix") ||
-                clean.includes("\begin") ||
-                clean.includes("\sum") ||
-                clean.includes("\int") ||
-                clean.includes("\pmatrix") ||
-                clean.includes("\bmatrix") ||
-                clean.includes("\lim")
+                clean.includes("\\frac") ||
+                clean.includes("\\sqrt") ||
+                clean.includes("\\displaystyle") ||
+                clean.includes("\\matrix") ||
+                clean.includes("\\begin") ||
+                clean.includes("\\sum") ||
+                clean.includes("\\int") ||
+                clean.includes("\\pmatrix") ||
+                clean.includes("\\bmatrix") ||
+                clean.includes("\\lim")
               );
             });
 
@@ -1998,7 +2056,13 @@ export default function BancoQuestoesPage() {
                       {selectedIds.has(q.id) ? "✓ Na Seleção" : "+ Selecionar"}
                     </button>
 
-
+                    <Link
+                      href={`/resolver?id=${q.id}`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>Resolver na Lousa</span>
+                      <span aria-hidden="true">→</span>
+                    </Link>
                   </div>
                 </div>
               </article>
