@@ -105,7 +105,8 @@ test('material, figure, difficulty, IDs and lemma filters share memory and SQL s
   assert(f.matchesMetadataRow(row(1, { dificuldade: null, lema_codigo: 'LEMA-0002' }), { dificuldade: ['nao_classificada'], lema: '2' }));
   assert.equal(emitted({ tem_figura: true })[0].kind, 'not');
   assert.equal(emitted({ tem_figura: false })[0].kind, 'is');
-  assert.deepEqual(f.compileFilterPredicatesForTest({ materia: ['Cálculo'] }), [{ kind: 'or', value: 'materia.eq."Cálculo"' }]);
+  assert.deepEqual(f.compileFilterPredicatesForTest({ materia: ['Cálculo'] }), [{ kind: 'or', value: 'materia.ilike."Cálculo"' }]);
+  assert.deepEqual(f.compileFilterPredicatesForTest({ materia: ['A_B%'] }), [{ kind: 'or', value: 'materia.ilike."A\\\\_B\\\\%"' }]);
 });
 test('cohort rewriting supports escaped quoted eq and ilike expressions', () => {
   assert.equal(f.rewritePreferenceGroupForNonNull('or(materia.eq."Cálculo",banca.ilike."%ITA%")'), 'or(and(materia.not.is.null,materia.eq."Cálculo"),and(banca.not.is.null,banca.ilike."%ITA%"))');
@@ -180,4 +181,78 @@ test('empty metadata and empty ID selections return zero without inventing year 
   assert.equal(facets.ano_max, null);
   assert(!f.matchesMetadataRow(row(1), { ids: [] }));
   assert.deepEqual(emitted({ ids: [] }), [{ kind: 'in', args: ['id', []] }]);
+});
+
+test('tipo folds case and whitespace across memory, SQL and friendly facet labels', async () => {
+  const data = [
+    row(1, { tipo: 'Objetiva ', categoria_banca: 'Concurso Militar', banca: 'ITA' }),
+    row(2, { tipo: 'objetiva', categoria_banca: 'Vestibular & Superior', banca: 'ITA' }),
+    row(3, { tipo: 'Discursiva', categoria_banca: 'Olimpíadas', banca: 'OBM' }),
+    row(4, { tipo: 'oral', categoria_banca: 'Concurso Militar', banca: 'ITA' }),
+  ];
+  const idx = await index(data);
+  const facets = f.computeCrossFilteredFacets(idx, {});
+  assert.deepEqual(facets.tipos, [
+    { id: 'Todos', label: 'Todos os Tipos', count: 4 },
+    { id: 'objetiva', label: 'Objetivas', count: 2 },
+    { id: 'discursiva', label: 'Discursivas', count: 1 },
+    { id: 'oral', label: 'Oral', count: 1 },
+  ]);
+  assert.deepEqual(facets.categorias_banca, [
+    { id: 'Todas', label: 'Todas as Categorias', count: 4 },
+    { id: 'Concurso Militar', label: 'Concursos Militares', count: 2 },
+    { id: 'Olimpíadas', label: 'Olimpíadas de Matemática', count: 1 },
+    { id: 'Vestibular & Superior', label: 'Vestibulares & Superior', count: 1 },
+  ]);
+  assert.equal(facets.bancas.find(b => b.name === 'ITA').categoria, 'Concurso Militar');
+  assert.equal(data.filter(r => f.matchesMetadataRow(r, { tipo: ['objetiva'] })).length, 2);
+  assert.equal(f.computeCrossFilteredFacets(idx, { tipo: ['objetiva'] }).total_filtered, 2);
+  assert.equal(emitted({ tipo: ['objetiva'] }, idx)[0].args[0], 'tipo.eq."Objetiva ",tipo.eq."objetiva"');
+  assert.equal(emitted({ tipo: ['objetiva'] })[0].args[0], 'tipo.ilike."objetiva"');
+});
+
+test('repeated GET parameters, empty ids string and numeric lema parse consistently', () => {
+  const parsed = f.parseGetFilterParams(new URLSearchParams([
+    ['ano', '2025,2026'], ['ano', '2024'],
+    ['dificuldade', 'facil'], ['dificuldade', 'media'],
+    ['ids', '1'], ['ids', '2,3'],
+    ['id', '6'], ['id', '6'],
+  ]));
+  assert.deepEqual(parsed.ano, [2025, 2026, 2024]);
+  assert.deepEqual(parsed.dificuldade, ['facil', 'media']);
+  assert.deepEqual(parsed.ids, [1, 2, 3]);
+  assert.equal(parsed.id, 6);
+  assert.throws(() => f.parseGetFilterParams(new URLSearchParams([['id', '1'], ['id', '2']])), /Invalid id/i);
+  assert.throws(() => f.parseGetFilterParams(new URLSearchParams([['tem_figura', 'true'], ['tem_figura', 'false']])), /Invalid tem_figura/i);
+
+  assert.equal(f.parsePostFilterParams({ ids: '' }).ids, undefined);
+  assert.equal(f.parseGetFilterParams(new URLSearchParams('ids=&id=&ano=')).ids, undefined);
+  assert.equal(f.parseGetFilterParams(new URLSearchParams('ids=&id=&ano=')).id, undefined);
+  assert.deepEqual(f.parsePostFilterParams({ ids: [] }).ids, []);
+  assert.deepEqual(f.parsePostFilterParams({ ids: '' }, { ids: [4, 5] }).ids, [4, 5]);
+  assert.deepEqual(f.parsePostFilterParams({ ids: '' }, { ids: [] }).ids, []);
+
+  const numLema = f.parsePostFilterParams({ lema: 2 });
+  assert.equal(numLema.lema, '2');
+  assert(f.matchesMetadataRow(row(1, { lema_codigo: 'LEMA-0002' }), numLema));
+  assert.equal(emitted(numLema)[0].args[0], 'lema_id.eq.2,lema_codigo.eq."LEMA-0002"');
+  assert.equal(f.parsePostFilterParams({ lema_codigo: 42 }).lema, '42');
+  assert.equal(f.parsePostFilterParams({ lema: '', lema_codigo: 7 }).lema, '7');
+  assert.equal(f.parsePostFilterParams({ lema: ' lema-0002 ' }).lema, 'LEMA-0002');
+  for (const bad of [1.5, NaN, -1]) assert.throws(() => f.parsePostFilterParams({ lema: bad }), /Invalid lema/i);
+});
+
+test('missing indexed topic or subtopic lookup avoids scanning index.rows', async () => {
+  const idx = await index();
+  const originalFilter = idx.rows.filter;
+  let scanned = false;
+  idx.rows.filter = (...args) => { scanned = true; return originalFilter.apply(idx.rows, args); };
+  try {
+    const calls = emitted({ topico: ['Inexistente'], subtopico: ['Também Inexistente'], banca: ['Banca Desconhecida'], materia: ['Matemática (Geral)'], tipo: ['desconhecido'] }, idx);
+    assert.equal(scanned, false);
+    assert(calls.some(c => c.args[0] === 'topico.ilike."Inexistente"'));
+    assert(calls.some(c => c.args[0] === 'subtopico.ilike."Também Inexistente"'));
+  } finally {
+    idx.rows.filter = originalFilter;
+  }
 });
