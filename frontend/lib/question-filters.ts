@@ -294,6 +294,7 @@ type ExtraIndexData = {
   materiaVariantsByLower: Map<string, string[]>;
   tipoVariantsByLower: Map<string, string[]>;
   canonicalBancasDisplay: Map<string, string>;
+  canonicalBancaCategorias: Map<string, string>;
 };
 const indexExtras = new WeakMap<QuestionTaxonomyIndex, ExtraIndexData>();
 function labels(rows: MetadataRow[], column: 'topico' | 'subtopico' | 'banca' | 'materia' | 'tipo') {
@@ -319,11 +320,22 @@ function getIndexExtras(index: QuestionTaxonomyIndex): ExtraIndexData {
     const bancas = labels(index.rows, 'banca');
     const materias = labels(index.rows, 'materia');
     const tipos = labels(index.rows, 'tipo');
+    const bankCats = new Map<string, Map<string, number>>();
+    for (const row of index.rows) {
+      if (!row.banca?.trim() || !row.categoria_banca?.trim()) continue;
+      const bankKey = fold(row.banca);
+      const counts = bankCats.get(bankKey) ?? new Map<string, number>();
+      counts.set(row.categoria_banca.trim(), (counts.get(row.categoria_banca.trim()) ?? 0) + 1);
+      bankCats.set(bankKey, counts);
+    }
+    const canonicalBancaCategorias = new Map<string, string>();
+    for (const [key, counts] of bankCats) canonicalBancaCategorias.set(key, sortNamedCounts(counts)[0].name);
     extras = {
       bancaVariantsByLower: bancas.variants,
       materiaVariantsByLower: materias.variants,
       tipoVariantsByLower: tipos.variants,
       canonicalBancasDisplay: bancas.display,
+      canonicalBancaCategorias,
     };
     indexExtras.set(index, extras);
   }
@@ -393,12 +405,42 @@ function sortNamedCounts(counts?: Map<string, number>): NamedFacet[] {
   if (!counts || counts.size === 0) return [];
   return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || lexical(a.name, b.name));
 }
+function formatIdFacet(key: 'categoria_banca' | 'tipo_prova' | 'fase_nivel' | 'tipo', raw: string, count: number): IdFacet {
+  if (key === 'tipo') {
+    const id = fold(raw);
+    return { id, label: TIPO_LABELS[id] ?? `${id.charAt(0).toUpperCase()}${id.slice(1)}`, count };
+  }
+  if (key === 'categoria_banca') {
+    const canonical = CATEGORIA_BANCA_LABELS[fold(raw)];
+    const id = canonical?.id ?? raw;
+    return { id, label: canonical?.label ?? raw, count };
+  }
+  return { id: raw, label: raw, count };
+}
+function retainSelected<T>(
+  items: T[],
+  selected: ReadonlyArray<string> | undefined,
+  getKey: (item: T) => string,
+  makeZero: (raw: string) => { key: string; item: T } | null,
+): T[] {
+  if (!selected?.length) return items;
+  const seen = new Set(items.map(getKey));
+  const extra: T[] = [];
+  for (const raw of selected) {
+    const entry = makeZero(raw);
+    if (!entry || seen.has(entry.key)) continue;
+    seen.add(entry.key);
+    extra.push(entry.item);
+  }
+  return extra.length ? [...items, ...extra] : items;
+}
 function aggregate(rows: MetadataRow[], label: (row: MetadataRow) => string | null): NamedFacet[] {
   const counts = new Map<string, number>();
   for (const row of rows) { const value = label(row); if (value) counts.set(value, (counts.get(value) ?? 0) + 1); }
   return sortNamedCounts(counts);
 }
 export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters: QuestionFilterInput, matchingIdsFromSearch?: Set<number> | null): CrossFilteredFacetsResult {
+  const extras = getIndexExtras(index);
   const baseMatcher = compileRowMatcher(filters, matchingIdsFromSearch);
   const baseRows = index.rows.filter(baseMatcher);
   const subset = (dimension?: keyof QuestionFilterInput) => {
@@ -411,35 +453,46 @@ export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters
   const named = (key: 'topico' | 'subtopico', all: string) => {
     const rows = subset(key);
     const displayMap = key === 'topico' ? index.canonicalTopicsDisplay : index.canonicalSubtopicsDisplay;
-    return [{ name: all, count: rows.length }, ...aggregate(rows, row => {
+    const aggregated = aggregate(rows, row => {
       const raw = row[key];
       return raw ? displayMap.get(fold(raw)) ?? null : null;
-    })];
+    });
+    const items = retainSelected(aggregated, filters[key], item => fold(item.name), raw => {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const name = displayMap.get(fold(trimmed)) ?? trimmed;
+      return { key: fold(name), item: { name, count: 0 } };
+    });
+    return [{ name: all, count: rows.length }, ...items];
   };
   const idFacets = (key: 'categoria_banca' | 'tipo_prova' | 'fase_nivel' | 'tipo', all: string, label: string): IdFacet[] => {
     const rows = subset(key);
-    const items = aggregate(rows, row => {
+    const aggregated = aggregate(rows, row => {
       const raw = row[key]?.trim();
       if (!raw) return null;
       if (key === 'tipo') return fold(raw);
       if (key === 'categoria_banca') return CATEGORIA_BANCA_LABELS[fold(raw)]?.id ?? raw;
       return raw;
-    }).map(item => ({
-      id: item.name,
-      label: key === 'tipo'
-        ? (TIPO_LABELS[item.name] ?? `${item.name.charAt(0).toUpperCase()}${item.name.slice(1)}`)
-        : key === 'categoria_banca'
-          ? (CATEGORIA_BANCA_LABELS[fold(item.name)]?.label ?? item.name)
-          : item.name,
-      count: item.count,
-    }));
+    }).map(item => formatIdFacet(key, item.name, item.count));
+    const items = retainSelected(aggregated, filters[key], item => fold(item.id), raw => {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const item = formatIdFacet(key, trimmed, 0);
+      return { key: fold(item.id), item };
+    });
     return [{ id: all, label, count: rows.length }, ...items];
   };
   const yearRows = subset('ano');
   const yearCounts = new Map<number, number>();
   for (const row of yearRows) if (row.ano != null) yearCounts.set(row.ano, (yearCounts.get(row.ano) ?? 0) + 1);
+  const populatedYears = [...yearCounts].map(([ano, count]) => ({ ano, count })).sort((a, b) => b.ano - a.ano);
+  const min = populatedYears.length ? populatedYears[populatedYears.length - 1].ano : null, max = populatedYears[0]?.ano ?? null;
+  if (filters.ano?.length) {
+    for (const selectedAno of filters.ano) {
+      if (!yearCounts.has(selectedAno)) yearCounts.set(selectedAno, 0);
+    }
+  }
   const years = [...yearCounts].map(([ano, count]) => ({ ano, count })).sort((a, b) => b.ano - a.ano);
-  const min = years.length ? years[years.length - 1].ano : null, max = years[0]?.ano ?? null;
   const difficultyRows = subset('dificuldade');
   const diffCounts: Record<Difficulty, number> = { facil: 0, media: 0, dificil: 0, nao_classificada: 0 };
   for (const row of difficultyRows) {
@@ -466,11 +519,14 @@ export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters
       }
     }
   }
-  const materiaItems = sortNamedCounts(materiaCounts);
+  const materiaItems = retainSelected(sortNamedCounts(materiaCounts), filters.materia, item => fold(item.name), raw => {
+    const name = getUiMateriaName(raw) ?? raw.trim();
+    return name ? { key: fold(name), item: { name, count: 0 } } : null;
+  });
   const materias: NamedFacet[] = [{ name: 'Todas', count: materiaRows.length }, ...materiaItems];
   const materias_com_topicos = materiaItems.map(item => ({ ...item, topicos: sortNamedCounts(topicsByMateria.get(item.name)) }));
   const bankRows = subset('banca');
-  const bankLabels = getIndexExtras(index).canonicalBancasDisplay;
+  const bankLabels = extras.canonicalBancasDisplay;
   const bankCounts = new Map<string, number>();
   const bankCategories = new Map<string, Map<string, number>>();
   for (const row of bankRows) {
@@ -485,10 +541,18 @@ export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters
       counts.set(category, (counts.get(category) ?? 0) + 1);
     }
   }
-  const bancas = [{ name: 'Todas', count: bankRows.length, categoria: 'Todas' }, ...sortNamedCounts(bankCounts).map(item => ({
+  const rawBankItems: Array<NamedFacet & { categoria: string | null }> = sortNamedCounts(bankCounts).map(item => ({
     ...item,
     categoria: sortNamedCounts(bankCategories.get(fold(item.name)))[0]?.name ?? null,
-  }))];
+  }));
+  const bankItems = retainSelected(rawBankItems, filters.banca, item => fold(item.name), raw => {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    const key = fold(trimmed);
+    const name = bankLabels.get(key) ?? trimmed;
+    return { key: fold(name), item: { name, count: 0, categoria: extras.canonicalBancaCategorias.get(key) ?? null } };
+  });
+  const bancas = [{ name: 'Todas', count: bankRows.length, categoria: 'Todas' }, ...bankItems];
   return {
     bancas, categorias_banca: idFacets('categoria_banca', 'Todas', 'Todas as Categorias'),
     tipos_prova: idFacets('tipo_prova', 'Todos', 'Todos os Tipos de Prova'), fases: idFacets('fase_nivel', 'Todas', 'Todas as Fases / Níveis'),
@@ -496,7 +560,7 @@ export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters
     topicos: named('topico', 'Todos'), subtopicos: named('subtopico', 'Todos'),
     anos: [{ label: min == null ? 'Todos os Anos da Prova' : `Todos os Anos da Prova (${min}–${max})`, count: yearRows.length }, ...years], ano_min: min, ano_max: max,
     tipos: idFacets('tipo', 'Todos', 'Todos os Tipos'),
-    dificuldades: [{ id: 'Todas', label: 'Todas', count: difficultyRows.length }, ...DIFFICULTIES.filter(value => diffCounts[value] > 0).map(value => ({ id: value, label: DIFFICULTY_LABELS[value], count: diffCounts[value] }))],
+    dificuldades: [{ id: 'Todas', label: 'Todas', count: difficultyRows.length }, ...DIFFICULTIES.filter(value => diffCounts[value] > 0 || filters.dificuldade?.includes(value)).map(value => ({ id: value, label: DIFFICULTY_LABELS[value], count: diffCounts[value] }))],
     total_filtered: baseRows.length,
   };
 }

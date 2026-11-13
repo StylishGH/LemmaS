@@ -512,24 +512,12 @@ export default function BancoQuestoesPage() {
             }
             if (data.materias && Array.isArray(data.materias)) {
               setMateriasDisponiveis(data.materias);
-              const names = data.materias.map((m: { name: string }) => m.name);
-              const validas = materiaFiltro.filter((v) => v === VAL_TODAS || names.includes(v));
-              if (validas.length === 0) setMateriaFiltro([VAL_TODAS]);
-              else if (validas.length !== materiaFiltro.length) setMateriaFiltro(validas);
             }
             if (data.topicos && Array.isArray(data.topicos)) {
               setTopicosDisponiveis(data.topicos);
-              const names = data.topicos.map((t: { name: string }) => t.name);
-              const validos = topicoFiltro.filter((v) => v === VAL_TODOS || names.includes(v));
-              if (validos.length === 0) setTopicoFiltro([VAL_TODOS]);
-              else if (validos.length !== topicoFiltro.length) setTopicoFiltro(validos);
             }
             if (data.subtopicos && Array.isArray(data.subtopicos)) {
               setSubtopicosDisponiveis(data.subtopicos);
-              const names = data.subtopicos.map((s: { name: string }) => s.name);
-              const validos = subtopicoFiltro.filter((v) => v === VAL_TODOS || names.includes(v));
-              if (validos.length === 0) setSubtopicoFiltro([VAL_TODOS]);
-              else if (validos.length !== subtopicoFiltro.length) setSubtopicoFiltro(validos);
             }
             if (data.anos && Array.isArray(data.anos)) {
               setAnosDisponiveis(data.anos);

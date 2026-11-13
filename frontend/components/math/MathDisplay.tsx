@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
@@ -20,21 +20,12 @@ export function MathDisplay({
   className = "",
   errorColor = "text-red-500"
 }: MathDisplayProps) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [renderError, setRenderError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    
+  const rendered = useMemo<{ html: string; error: string | null }>(() => {
     const sanitizedInput = cleanLatexForKatex(children);
-    if (!sanitizedInput) {
-      ref.current.innerHTML = "";
-      setRenderError(null);
-      return;
-    }
+    if (!sanitizedInput) return { html: "", error: null };
 
     try {
-      katex.render(sanitizedInput, ref.current, {
+      let html = katex.renderToString(sanitizedInput, {
         displayMode,
         throwOnError: false,
         strict: "warn",
@@ -43,8 +34,7 @@ export function MathDisplay({
       });
 
       // Se o KaTeX gerou span de erro interno (.katex-error), tenta uma limpeza agressiva de fallback
-      const errorNode = ref.current.querySelector(".katex-error");
-      if (errorNode) {
+      if (html.includes("katex-error")) {
         // Tenta remover comandos desconhecidos ou balancear chaves
         const fallback = sanitizedInput
           .replace(/\\[a-zA-Z]+\b(?![{a-zA-Z])/g, "")
@@ -52,28 +42,28 @@ export function MathDisplay({
           .trim();
         if (fallback) {
           try {
-            katex.render(fallback, ref.current, { displayMode, throwOnError: false });
+            html = katex.renderToString(fallback, { displayMode, throwOnError: false });
           } catch {
             // Mantém renderização do KaTeX
           }
         }
       }
 
-      setRenderError(null);
+      return { html, error: null };
     } catch (err) {
-      setRenderError(err instanceof Error ? err.message : "Erro ao renderizar LaTeX");
+      return { html: "", error: err instanceof Error ? err.message : "Erro ao renderizar LaTeX" };
     }
   }, [children, displayMode]);
 
-  if (renderError) {
+  if (rendered.error) {
     return (
-      <span className={`${className} ${errorColor} text-xs font-mono`} title={renderError}>
+      <span className={`${className} ${errorColor} text-xs font-mono`} title={rendered.error}>
         [LaTeX: {children}]
       </span>
     );
   }
 
-  return <span ref={ref} className={className} />;
+  return <span className={className} dangerouslySetInnerHTML={{ __html: rendered.html }} />;
 }
 
 interface MathInlineProps {

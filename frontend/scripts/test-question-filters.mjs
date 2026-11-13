@@ -280,3 +280,55 @@ test('POST contract preserves full filter dimensions and disjoint prefer_materia
     'or(and(materia.not.is.null,materia.eq."Cálculo 3"))'
   );
 });
+
+test('retains selected zero-count facets across dimensions while hiding unselected zero-count items', async () => {
+  const idx = await index([
+    row(1, { banca: 'CEDERJ', categoria_banca: 'Vestibular & Superior', materia: 'Cálculo 3', topico: 'Integrais Múltiplas', subtopico: 'Teorema de Stokes', ano: 2025, tipo: 'Discursiva', dificuldade: 4 }),
+    row(2, { banca: 'ITA', categoria_banca: 'Concurso Militar', materia: 'Álgebra', topico: 'Polinômios', subtopico: 'Girard', ano: 2024, tipo: 'Objetiva', dificuldade: 3 }),
+    row(3, { banca: 'IME', categoria_banca: 'Concurso Militar', materia: 'Geometria Plana', topico: 'Triângulos', subtopico: 'Ceva', ano: 2023, tipo: 'Objetiva', dificuldade: 2 }),
+  ]);
+
+  const pairFacets = f.computeCrossFilteredFacets(idx, {
+    banca: ['ITA'],
+    materia: ['Cálculo 3'],
+  });
+  assert.equal(pairFacets.total_filtered, 0);
+  assert.deepEqual(pairFacets.bancas, [
+    { name: 'Todas', count: 1, categoria: 'Todas' },
+    { name: 'CEDERJ', count: 1, categoria: 'Vestibular & Superior' },
+    { name: 'ITA', count: 0, categoria: 'Concurso Militar' },
+  ]);
+  assert.deepEqual(pairFacets.materias, [
+    { name: 'Todas', count: 1 },
+    { name: 'Álgebra', count: 1 },
+    { name: 'Cálculo 3', count: 0 },
+  ]);
+
+  const facets = f.computeCrossFilteredFacets(idx, {
+    banca: ['ITA'],
+    materia: ['Cálculo 3'],
+    topico: ['Integrais Múltiplas'],
+    subtopico: ['Teorema de Stokes'],
+    categoria_banca: ['Vestibular & Superior'],
+    ano: [2025],
+    tipo: ['discursiva'],
+    dificuldade: ['dificil'],
+  });
+
+  assert.equal(facets.total_filtered, 0);
+  // Selected values are retained with count 0 rather than vanishing or resetting
+  assert.deepEqual(facets.materias.find(m => m.name === 'Cálculo 3'), { name: 'Cálculo 3', count: 0 });
+  assert.deepEqual(facets.bancas.find(b => b.name === 'ITA'), { name: 'ITA', count: 0, categoria: 'Concurso Militar' });
+  assert.deepEqual(facets.topicos.find(t => t.name === 'Integrais Múltiplas'), { name: 'Integrais Múltiplas', count: 0 });
+  assert.deepEqual(facets.subtopicos.find(s => s.name === 'Teorema de Stokes'), { name: 'Teorema de Stokes', count: 0 });
+  assert.deepEqual(facets.categorias_banca.find(c => c.id === 'Vestibular & Superior'), { id: 'Vestibular & Superior', label: 'Vestibulares & Superior', count: 0 });
+  assert.deepEqual(facets.anos.find(a => a.ano === 2025), { ano: 2025, count: 0 });
+  assert.deepEqual(facets.tipos.find(t => t.id === 'discursiva'), { id: 'discursiva', label: 'Discursivas', count: 0 });
+  assert.deepEqual(facets.dificuldades.find(d => d.id === 'dificil'), { id: 'dificil', label: 'Difícil', count: 0 });
+  // Cross-filter subset for banca still surfaces CEDERJ (count 1) while hiding zero-count unselected IME
+  assert.equal(facets.bancas.find(b => b.name === 'CEDERJ')?.count, 1);
+  assert.equal(facets.bancas.some(b => b.name === 'IME'), false);
+  assert.equal(facets.materias.some(m => m.name === 'Geometria Plana'), false);
+  assert.equal(facets.topicos.some(t => t.name === 'Polinômios'), false);
+  assert.equal(facets.subtopicos.some(s => s.name === 'Girard'), false);
+});
