@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Flag, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
 export type MotivoReport =
@@ -62,7 +63,23 @@ export default function ReportarQuestaoModal({
   const [sucesso, setSucesso] = useState(false);
   const [erroMsg, setErroMsg] = useState<string | null>(null);
 
-  if (!isOpen || !questaoId) return null;
+  const [mounted, setMounted] = useState(false);
+
+  // The portal must wait for hydration before accessing document.body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    // Register keyboard dismissal only while the dialog can be closed.
+    if (!isOpen || !questaoId || enviando) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, questaoId, enviando, onClose]);
+
+  if (!mounted || !isOpen || !questaoId) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,16 +114,16 @@ export default function ReportarQuestaoModal({
         setMotivo("erro_digitacao");
         onClose();
       }, 1600);
-    } catch (err: any) {
-      setErroMsg(err.message || "Falha na conexão ao enviar o relato.");
+    } catch (err: unknown) {
+      setErroMsg(err instanceof Error ? err.message : "Falha na conexão ao enviar o relato.");
     } finally {
       setEnviando(false);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
-      <div className="max-w-lg w-full bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/25 rounded-2xl shadow-2xl p-6 relative text-slate-800 dark:text-[#f5f0df] space-y-5">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xs flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn">
+      <div className="max-w-lg w-full my-auto bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/25 rounded-2xl shadow-2xl p-6 relative text-slate-800 dark:text-[#f5f0df] space-y-5">
         {/* BOTÃO FECHAR */}
         <button
           onClick={onClose}
@@ -243,6 +260,7 @@ export default function ReportarQuestaoModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
