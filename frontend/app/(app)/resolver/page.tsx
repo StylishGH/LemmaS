@@ -470,10 +470,12 @@ function ResolverContent() {
             const { corpo, alternativas } = extrairEnunciadoEAlternativas(data.enunciado);
             setQuestions([{ ...data, enunciado_limpo: corpo, alternativas }]);
             setTotalCount(1);
-            setSessionType(modeQuery === "treino" ? "treino" : "simulado");
+            const nextSessionType =
+              modeQuery === "simulado" || sessionQuery === "simulado" ? "simulado" : "treino";
+            setSessionType(nextSessionType);
             setSessionMode("active");
-            setTotalTimeInitial(30 * 60);
-            setTimeLeft(30 * 60);
+            setTotalTimeInitial(nextSessionType === "simulado" ? 30 * 60 : 0);
+            setTimeLeft(nextSessionType === "simulado" ? 30 * 60 : 0);
           }
           return;
         }
@@ -2201,7 +2203,7 @@ function ResolverContent() {
             title="Abrir a Lousa ou GeoGebra em tela cheia com card flutuante da questão"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="font-bold">✨ Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
+            <span className="font-bold">Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
           </button>
         </div>
       </div>
