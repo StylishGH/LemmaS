@@ -256,3 +256,27 @@ test('missing indexed topic or subtopic lookup avoids scanning index.rows', asyn
     idx.rows.filter = originalFilter;
   }
 });
+
+test('POST contract preserves full filter dimensions and disjoint prefer_materia clauses', () => {
+  const parsed = f.parsePostFilterParams({
+    materia: 'Matemática (Geral)',
+    subtopico: ['Baricentro, Incentro, Circuncentro, Ortocentro'],
+    search: 'Stokes',
+    categoria_banca: 'Concurso Militar',
+    tipo_prova: 'Oficial',
+    fase_nivel: 'Geral',
+  });
+  assert.deepEqual(parsed.materia, ['Matemática (Geral)']);
+  assert.deepEqual(parsed.subtopico, ['Baricentro, Incentro, Circuncentro, Ortocentro']);
+  assert.equal(parsed.search, 'Stokes');
+  assert.deepEqual(parsed.categoria_banca, ['Concurso Militar']);
+  assert.deepEqual(parsed.tipo_prova, ['Oficial']);
+  assert.deepEqual(parsed.fase_nivel, ['Geral']);
+
+  assert.equal(f.buildPreferMateriaClause('Cálculo 3'), 'materia.eq."Cálculo 3"');
+  assert.equal(f.buildPreferMateriaClause('Matemática (Geral)'), 'materia.eq."Matemática"');
+  assert.equal(
+    f.rewritePreferenceGroupForNonNull(`or(${f.buildPreferMateriaClause('Cálculo 3')})`),
+    'or(and(materia.not.is.null,materia.eq."Cálculo 3"))'
+  );
+});
