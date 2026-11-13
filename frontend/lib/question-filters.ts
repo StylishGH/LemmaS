@@ -7,12 +7,20 @@ export const CANONICAL_MATERIAS: ReadonlyArray<{ uiName: string; dbValue: string
 ].map(dbValue => ({ dbValue, uiName: dbValue === 'Matemática' ? 'Matemática (Geral)' : dbValue }));
 
 const fold = (value: string) => value.trim().toLowerCase();
+const UI_MATERIA_BY_FOLD = new Map<string, string>();
+const DB_MATERIA_BY_FOLD = new Map<string, string>();
+for (const entry of CANONICAL_MATERIAS) {
+  UI_MATERIA_BY_FOLD.set(fold(entry.dbValue), entry.uiName);
+  UI_MATERIA_BY_FOLD.set(fold(entry.uiName), entry.uiName);
+  DB_MATERIA_BY_FOLD.set(fold(entry.dbValue), entry.dbValue);
+  DB_MATERIA_BY_FOLD.set(fold(entry.uiName), entry.dbValue);
+}
 export function getUiMateriaName(raw: string | null | undefined): string | null {
   if (!raw) return null;
-  return CANONICAL_MATERIAS.find(m => fold(m.dbValue) === fold(raw) || fold(m.uiName) === fold(raw))?.uiName ?? null;
+  return UI_MATERIA_BY_FOLD.get(fold(raw)) ?? null;
 }
 export function getDbMateriaValue(raw: string): string | null {
-  return CANONICAL_MATERIAS.find(m => fold(m.dbValue) === fold(raw) || fold(m.uiName) === fold(raw))?.dbValue ?? null;
+  return DB_MATERIA_BY_FOLD.get(fold(raw)) ?? null;
 }
 const DIFFICULTIES = ['facil', 'media', 'dificil', 'nao_classificada'] as const;
 type Difficulty = typeof DIFFICULTIES[number];
@@ -40,7 +48,8 @@ function strings(raw: unknown, split = true): string[] {
 }
 function numbers(raw: unknown, field: string): number[] {
   if (raw == null || raw === '') return [];
-  const values = Array.isArray(raw) ? raw : typeof raw === 'string' ? raw.split(',') : [raw];
+  const rawList = Array.isArray(raw) ? raw : [raw];
+  const values = rawList.flatMap(item => typeof item === 'string' ? item.split(',') : [item]);
   return [...new Set(values.map(value => {
     if ((typeof value !== 'number' && typeof value !== 'string') || String(value).trim() === '') throw new Error(`Invalid ${field}`);
     const number = Number(value);
@@ -52,7 +61,8 @@ export function parsePostFilterParams(raw: Record<string, unknown>, opts?: { ids
   const filters: QuestionFilterInput = {};
   for (const key of STRING_FILTERS) filters[key] = strings(raw[key], key !== 'subtopico');
   filters.ano = numbers(raw.ano, 'ano');
-  if (raw.ids != null || opts?.ids != null) filters.ids = numbers(opts?.ids ?? raw.ids, 'ids');
+  const rawIds = opts?.ids ?? raw.ids;
+  if (rawIds != null && rawIds !== '') filters.ids = numbers(rawIds, 'ids');
   if (raw.id != null && raw.id !== '') {
     const ids = numbers(raw.id, 'id');
     if (ids.length !== 1) throw new Error('Invalid id');
@@ -65,15 +75,45 @@ export function parsePostFilterParams(raw: Record<string, unknown>, opts?: { ids
     if (![true, false, 'true', 'false'].includes(raw.tem_figura as boolean | string)) throw new Error('Invalid tem_figura');
     filters.tem_figura = raw.tem_figura === true || raw.tem_figura === 'true';
   }
-  for (const key of ['search', 'lema'] as const) {
-    const value = raw[key] ?? (key === 'lema' ? raw.lema_codigo : undefined);
-    if (typeof value === 'string') filters[key] = value.trim() || null;
+  if (typeof raw.search === 'string') filters.search = raw.search.trim() || null;
+  const hasLema = raw.lema != null && (typeof raw.lema !== 'string' || raw.lema.trim() !== '');
+  const lemaValue = hasLema ? raw.lema : (raw.lema_codigo ?? raw.lema);
+  if (typeof lemaValue === 'string') {
+    filters.lema = lemaValue.trim().toUpperCase() || null;
+  } else if (typeof lemaValue === 'number') {
+    if (!Number.isSafeInteger(lemaValue) || lemaValue < 0) throw new Error('Invalid lema');
+    filters.lema = String(lemaValue).trim().toUpperCase();
+  } else if (lemaValue != null) {
+    throw new Error('Invalid lema');
   }
   return filters;
 }
+function nonEmptyGetAll(params: URLSearchParams, key: string): string[] | undefined {
+  const values = params.getAll(key);
+  return values.some(v => v !== '') ? values : undefined;
+}
 export function parseGetFilterParams(params: URLSearchParams): QuestionFilterInput {
-  const raw: Record<string, unknown> = Object.fromEntries(params);
+  const raw: Record<string, unknown> = {};
   for (const key of STRING_FILTERS) raw[key] = key === 'subtopico' ? params.getAll(key) : params.getAll(key).flatMap(v => v.split(','));
+  const ano = nonEmptyGetAll(params, 'ano');
+  if (ano) raw.ano = ano;
+  const ids = nonEmptyGetAll(params, 'ids');
+  if (ids) raw.ids = ids;
+  const id = nonEmptyGetAll(params, 'id');
+  if (id) raw.id = id;
+  const dificuldades = params.getAll('dificuldade');
+  if (dificuldades.length > 0) raw.dificuldade = dificuldades.flatMap(v => v.split(','));
+  const figuras = params.getAll('tem_figura').filter(v => v !== '');
+  if (figuras.length > 0) {
+    const unique = [...new Set(figuras)];
+    raw.tem_figura = unique.length === 1 ? unique[0] : unique;
+  }
+  const search = params.get('search');
+  if (search !== null) raw.search = search;
+  const lema = params.get('lema');
+  if (lema !== null) raw.lema = lema;
+  const lemaCodigo = params.get('lema_codigo');
+  if (lemaCodigo !== null) raw.lema_codigo = lemaCodigo;
   return parsePostFilterParams(raw);
 }
 export function escapePostgrestQuoted(value: string): string { return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); }
@@ -88,10 +128,20 @@ type Leaf = { column: Column; op: 'eq' | 'exact' | 'contains' | 'gte' | 'lte' | 
 type Predicate = Leaf | { op: 'and' | 'or'; terms: Predicate[] };
 const leaf = (column: Column, op: Leaf['op'], value: Leaf['value']): Leaf => ({ column, op, value });
 const group = (op: 'and' | 'or', terms: Predicate[]): Predicate => ({ op, terms });
+function getColumnVariants(index: QuestionTaxonomyIndex, column: Column): Map<string, string[]> | undefined {
+  if (column === 'topico') return index.topicVariantsByLower;
+  if (column === 'subtopico') return index.subtopicVariantsByLower;
+  if (column === 'banca') return getIndexExtras(index).bancaVariantsByLower;
+  if (column === 'materia') return getIndexExtras(index).materiaVariantsByLower;
+  if (column === 'tipo') return getIndexExtras(index).tipoVariantsByLower;
+  return undefined;
+}
 function exact(column: Column, value: string, index?: QuestionTaxonomyIndex | null): Predicate {
-  const variants = column === 'topico' ? index?.topicVariantsByLower : column === 'subtopico' ? index?.subtopicVariantsByLower : undefined;
+  const variants = index ? getColumnVariants(index, column) : undefined;
   // Resolve raw whitespace/case variants too; SQL equality then matches precisely the counted rows.
-  const known = variants?.get(fold(value)) ?? index?.rows.filter(r => typeof r[column as keyof MetadataRow] === 'string' && fold(String(r[column as keyof MetadataRow])) === fold(value)).map(r => String(r[column as keyof MetadataRow]));
+  const known = variants
+    ? variants.get(fold(value))
+    : index?.rows.filter(r => typeof r[column as keyof MetadataRow] === 'string' && fold(String(r[column as keyof MetadataRow])) === fold(value)).map(r => String(r[column as keyof MetadataRow]));
   if (known?.length) return group('or', [...new Set(known)].sort().map(raw => leaf(column, 'eq', raw)));
   return leaf(column, 'exact', value.trim());
 }
@@ -117,11 +167,7 @@ function predicates(filters: QuestionFilterInput, index?: QuestionTaxonomyIndex 
     if (!values?.length) continue;
     result.push(group('or', values.map(value => {
       if (key === 'banca') return bank(value, index);
-      if (key === 'materia') {
-        const dbValue = getDbMateriaValue(value) ?? value.trim();
-        return index ? exact(key, dbValue, index) : leaf(key, 'eq', dbValue);
-      }
-      if (key === 'tipo') return leaf(key, 'eq', fold(value));
+      if (key === 'materia') return exact(key, getDbMateriaValue(value) ?? value.trim(), index);
       if (['categoria_banca', 'tipo_prova', 'fase_nivel', 'tipo_material'].includes(key)) return leaf(key, 'contains', value);
       return exact(key, value, index);
     })));
@@ -172,27 +218,58 @@ export function applyFiltersToPostgrestQuery(query: any, filters: QuestionFilter
     return current[p.kind](p.column, p.value);
   }, query);
 }
-function evaluate(row: MetadataRow, p: Predicate): boolean {
-  if ('terms' in p) return p.op === 'or' ? p.terms.some(term => evaluate(row, term)) : p.terms.every(term => evaluate(row, term));
-  const raw = row[p.column as keyof MetadataRow];
-  if (p.op === 'is') return raw == null;
-  if (p.op === 'not_is') return raw != null;
-  if (raw == null) return false;
-  if (p.op === 'exact') return fold(String(raw)) === fold(String(p.value));
-  if (p.op === 'contains') return fold(String(raw)).includes(fold(String(p.value)));
-  if (p.op === 'eq') return p.column === 'materia' ? fold(String(raw)) === fold(String(p.value)) : raw === p.value;
-  if (typeof raw !== 'number' || typeof p.value !== 'number') return false;
-  if (p.op === 'gte') return raw >= p.value;
-  if (p.op === 'lte') return raw <= p.value;
-  if (p.op === 'lt') return raw < p.value;
-  return raw > p.value;
+type RowMatcher = (row: MetadataRow) => boolean;
+function compilePredicate(p: Predicate): RowMatcher {
+  if ('terms' in p) {
+    const terms = p.terms.map(compilePredicate);
+    if (p.op === 'or') {
+      if (terms.length === 0) return () => false;
+      if (terms.length === 1) return terms[0];
+      return row => {
+        for (let i = 0; i < terms.length; i++) if (terms[i](row)) return true;
+        return false;
+      };
+    }
+    if (terms.length === 0) return () => true;
+    if (terms.length === 1) return terms[0];
+    return row => {
+      for (let i = 0; i < terms.length; i++) if (!terms[i](row)) return false;
+      return true;
+    };
+  }
+  const col = p.column as keyof MetadataRow;
+  const val = p.value;
+  if (p.op === 'is') return row => row[col] == null;
+  if (p.op === 'not_is') return row => row[col] != null;
+  if (p.op === 'exact') {
+    const target = fold(String(val));
+    return row => { const raw = row[col]; return raw != null && fold(String(raw)) === target; };
+  }
+  if (p.op === 'contains') {
+    const target = fold(String(val));
+    return row => { const raw = row[col]; return raw != null && fold(String(raw)).includes(target); };
+  }
+  if (p.op === 'eq') return row => row[col] === val;
+  if (typeof val !== 'number') return () => false;
+  if (p.op === 'gte') return row => { const raw = row[col]; return typeof raw === 'number' && raw >= val; };
+  if (p.op === 'lte') return row => { const raw = row[col]; return typeof raw === 'number' && raw <= val; };
+  if (p.op === 'lt') return row => { const raw = row[col]; return typeof raw === 'number' && raw < val; };
+  return row => { const raw = row[col]; return typeof raw === 'number' && raw > val; };
 }
-export function matchesMetadataRow(row: MetadataRow, filters: QuestionFilterInput, matchingIdsFromSearch?: Set<number> | null): boolean {
-  if (matchingIdsFromSearch && !matchingIdsFromSearch.has(row.id)) return false;
-  const textual = filters.search?.trim() && searchId(filters) == null;
+function compileRowMatcher(filters: QuestionFilterInput, matchingIdsFromSearch?: Set<number> | null): RowMatcher {
+  const textual = Boolean(filters.search?.trim()) && searchId(filters) == null;
   if (textual && !matchingIdsFromSearch) throw new Error('Text search requires matchingIdsFromSearch');
   const memoryFilters = textual ? { ...filters, search: null } : filters;
-  return predicates(memoryFilters).every(p => evaluate(row, p));
+  const compiled = predicates(memoryFilters).map(compilePredicate);
+  if (!matchingIdsFromSearch && compiled.length === 0) return () => true;
+  return row => {
+    if (matchingIdsFromSearch && !matchingIdsFromSearch.has(row.id)) return false;
+    for (let i = 0; i < compiled.length; i++) if (!compiled[i](row)) return false;
+    return true;
+  };
+}
+export function matchesMetadataRow(row: MetadataRow, filters: QuestionFilterInput, matchingIdsFromSearch?: Set<number> | null): boolean {
+  return compileRowMatcher(filters, matchingIdsFromSearch)(row);
 }
 export function rewritePreferenceGroupForNonNull(group: string): string {
   return group.replace(/(\w+)\.(eq|ilike)\.("(?:\\.|[^"\\])*"|[^,()]+)/g,
@@ -212,7 +289,14 @@ type CacheState = { index?: QuestionTaxonomyIndex; expiresAt?: number; inFlight?
 const globals = globalThis as typeof globalThis & { __lemmasQuestionMetadataIndex?: CacheState };
 function state(): CacheState { return globals.__lemmasQuestionMetadataIndex ??= {}; }
 export function clearQuestionMetadataIndexCache(): void { globals.__lemmasQuestionMetadataIndex = {}; }
-function labels(rows: MetadataRow[], column: 'topico' | 'subtopico') {
+type ExtraIndexData = {
+  bancaVariantsByLower: Map<string, string[]>;
+  materiaVariantsByLower: Map<string, string[]>;
+  tipoVariantsByLower: Map<string, string[]>;
+  canonicalBancasDisplay: Map<string, string>;
+};
+const indexExtras = new WeakMap<QuestionTaxonomyIndex, ExtraIndexData>();
+function labels(rows: MetadataRow[], column: 'topico' | 'subtopico' | 'banca' | 'materia' | 'tipo') {
   const counts = new Map<string, Map<string, number>>();
   for (const row of rows) {
     const raw = row[column];
@@ -229,10 +313,28 @@ function labels(rows: MetadataRow[], column: 'topico' | 'subtopico') {
   }
   return { variants, display };
 }
+function getIndexExtras(index: QuestionTaxonomyIndex): ExtraIndexData {
+  let extras = indexExtras.get(index);
+  if (!extras) {
+    const bancas = labels(index.rows, 'banca');
+    const materias = labels(index.rows, 'materia');
+    const tipos = labels(index.rows, 'tipo');
+    extras = {
+      bancaVariantsByLower: bancas.variants,
+      materiaVariantsByLower: materias.variants,
+      tipoVariantsByLower: tipos.variants,
+      canonicalBancasDisplay: bancas.display,
+    };
+    indexExtras.set(index, extras);
+  }
+  return extras;
+}
 function lexical(a: string, b: string): number { return a < b ? -1 : a > b ? 1 : 0; }
 function createIndex(rows: MetadataRow[]): QuestionTaxonomyIndex {
   const topics = labels(rows, 'topico'), subtopics = labels(rows, 'subtopico');
-  return { rows, topicVariantsByLower: topics.variants, subtopicVariantsByLower: subtopics.variants, canonicalTopicsDisplay: topics.display, canonicalSubtopicsDisplay: subtopics.display };
+  const index: QuestionTaxonomyIndex = { rows, topicVariantsByLower: topics.variants, subtopicVariantsByLower: subtopics.variants, canonicalTopicsDisplay: topics.display, canonicalSubtopicsDisplay: subtopics.display };
+  getIndexExtras(index);
+  return index;
 }
 export function getQuestionMetadataIndex(supabase: SupabaseLike, opts: { forceRefresh?: boolean; ttlMs?: number } = {}): Promise<QuestionTaxonomyIndex> {
   const cache = state();
@@ -280,53 +382,121 @@ export interface CrossFilteredFacetsResult {
   topicos: NamedFacet[]; subtopicos: NamedFacet[]; anos: Array<{ ano?: number; label?: string; count: number }>;
   ano_min: number | null; ano_max: number | null; tipos: IdFacet[]; dificuldades: IdFacet[]; total_filtered: number;
 }
+const CATEGORIA_BANCA_LABELS: Record<string, { id: string; label: string }> = {
+  'concurso militar': { id: 'Concurso Militar', label: 'Concursos Militares' },
+  'vestibular & superior': { id: 'Vestibular & Superior', label: 'Vestibulares & Superior' },
+  'olimpíadas': { id: 'Olimpíadas', label: 'Olimpíadas de Matemática' },
+};
+const TIPO_LABELS: Record<string, string> = { objetiva: 'Objetivas', discursiva: 'Discursivas' };
+const DIFFICULTY_LABELS: Record<Difficulty, string> = { facil: 'Fácil', media: 'Média', dificil: 'Difícil', nao_classificada: 'Não Classificada' };
+function sortNamedCounts(counts?: Map<string, number>): NamedFacet[] {
+  if (!counts || counts.size === 0) return [];
+  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || lexical(a.name, b.name));
+}
 function aggregate(rows: MetadataRow[], label: (row: MetadataRow) => string | null): NamedFacet[] {
   const counts = new Map<string, number>();
   for (const row of rows) { const value = label(row); if (value) counts.set(value, (counts.get(value) ?? 0) + 1); }
-  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || lexical(a.name, b.name));
+  return sortNamedCounts(counts);
 }
 export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters: QuestionFilterInput, matchingIdsFromSearch?: Set<number> | null): CrossFilteredFacetsResult {
-  const subset = (dimension?: keyof QuestionFilterInput) => index.rows.filter(row => matchesMetadataRow(row, dimension ? { ...filters, [dimension]: undefined } : filters, matchingIdsFromSearch));
-  const named = (key: 'banca' | 'materia' | 'topico' | 'subtopico', all: string) => {
+  const baseMatcher = compileRowMatcher(filters, matchingIdsFromSearch);
+  const baseRows = index.rows.filter(baseMatcher);
+  const subset = (dimension?: keyof QuestionFilterInput) => {
+    if (!dimension) return baseRows;
+    const value = filters[dimension];
+    const active = Array.isArray(value) ? value.length > 0 : value != null && value !== '';
+    if (!active) return baseRows;
+    return index.rows.filter(compileRowMatcher({ ...filters, [dimension]: undefined }, matchingIdsFromSearch));
+  };
+  const named = (key: 'topico' | 'subtopico', all: string) => {
     const rows = subset(key);
-    const items = aggregate(rows, row => {
-      if (key === 'materia') return getUiMateriaName(row.materia);
-      if (key === 'topico') return index.canonicalTopicsDisplay.get(fold(row.topico ?? '')) ?? null;
-      if (key === 'subtopico') return index.canonicalSubtopicsDisplay.get(fold(row.subtopico ?? '')) ?? null;
-      return row[key];
-    });
-    return [{ name: all, count: rows.length }, ...items];
+    const displayMap = key === 'topico' ? index.canonicalTopicsDisplay : index.canonicalSubtopicsDisplay;
+    return [{ name: all, count: rows.length }, ...aggregate(rows, row => {
+      const raw = row[key];
+      return raw ? displayMap.get(fold(raw)) ?? null : null;
+    })];
   };
   const idFacets = (key: 'categoria_banca' | 'tipo_prova' | 'fase_nivel' | 'tipo', all: string, label: string): IdFacet[] => {
     const rows = subset(key);
-    return [{ id: all, label, count: rows.length }, ...aggregate(rows, row => row[key]).map(item => ({ id: item.name, label: item.name, count: item.count }))];
+    const items = aggregate(rows, row => {
+      const raw = row[key]?.trim();
+      if (!raw) return null;
+      if (key === 'tipo') return fold(raw);
+      if (key === 'categoria_banca') return CATEGORIA_BANCA_LABELS[fold(raw)]?.id ?? raw;
+      return raw;
+    }).map(item => ({
+      id: item.name,
+      label: key === 'tipo'
+        ? (TIPO_LABELS[item.name] ?? `${item.name.charAt(0).toUpperCase()}${item.name.slice(1)}`)
+        : key === 'categoria_banca'
+          ? (CATEGORIA_BANCA_LABELS[fold(item.name)]?.label ?? item.name)
+          : item.name,
+      count: item.count,
+    }));
+    return [{ id: all, label, count: rows.length }, ...items];
   };
   const yearRows = subset('ano');
-  const years = aggregate(yearRows, row => row.ano == null ? null : String(row.ano)).map(item => ({ ano: Number(item.name), count: item.count })).sort((a, b) => b.ano - a.ano);
+  const yearCounts = new Map<number, number>();
+  for (const row of yearRows) if (row.ano != null) yearCounts.set(row.ano, (yearCounts.get(row.ano) ?? 0) + 1);
+  const years = [...yearCounts].map(([ano, count]) => ({ ano, count })).sort((a, b) => b.ano - a.ano);
   const min = years.length ? years[years.length - 1].ano : null, max = years[0]?.ano ?? null;
   const difficultyRows = subset('dificuldade');
-  const difficultyLabels: Record<Difficulty, string> = { facil: 'Fácil', media: 'Média', dificil: 'Difícil', nao_classificada: 'Não Classificada' };
-  const materias = named('materia', 'Todas');
-  const contextual = subset('materia');
-  const bankRows = subset('banca');
-  const bankLabels = new Map<string, string>();
-  for (const item of aggregate(index.rows, row => row.banca)) {
-    const key = fold(item.name);
-    if (!bankLabels.has(key)) bankLabels.set(key, item.name.trim());
+  const diffCounts: Record<Difficulty, number> = { facil: 0, media: 0, dificil: 0, nao_classificada: 0 };
+  for (const row of difficultyRows) {
+    const d = row.dificuldade;
+    if (typeof d !== 'number' || Number.isNaN(d) || d < 1 || d > 5) diffCounts.nao_classificada++;
+    else if (d <= 2) diffCounts.facil++;
+    else if (d === 3) diffCounts.media++;
+    else if (d >= 4) diffCounts.dificil++;
+    else diffCounts.nao_classificada++;
   }
-  const banks = aggregate(bankRows, row => row.banca ? bankLabels.get(fold(row.banca)) ?? null : null);
-  const bancas = [{ name: 'Todas', count: bankRows.length, categoria: 'Todas' }, ...banks.map(item => ({
+  const materiaRows = subset('materia');
+  const materiaCounts = new Map<string, number>();
+  const topicsByMateria = new Map<string, Map<string, number>>();
+  for (const row of materiaRows) {
+    const uiMateria = getUiMateriaName(row.materia);
+    if (!uiMateria) continue;
+    materiaCounts.set(uiMateria, (materiaCounts.get(uiMateria) ?? 0) + 1);
+    if (row.topico) {
+      const topicLabel = index.canonicalTopicsDisplay.get(fold(row.topico));
+      if (topicLabel) {
+        let counts = topicsByMateria.get(uiMateria);
+        if (!counts) { counts = new Map<string, number>(); topicsByMateria.set(uiMateria, counts); }
+        counts.set(topicLabel, (counts.get(topicLabel) ?? 0) + 1);
+      }
+    }
+  }
+  const materiaItems = sortNamedCounts(materiaCounts);
+  const materias: NamedFacet[] = [{ name: 'Todas', count: materiaRows.length }, ...materiaItems];
+  const materias_com_topicos = materiaItems.map(item => ({ ...item, topicos: sortNamedCounts(topicsByMateria.get(item.name)) }));
+  const bankRows = subset('banca');
+  const bankLabels = getIndexExtras(index).canonicalBancasDisplay;
+  const bankCounts = new Map<string, number>();
+  const bankCategories = new Map<string, Map<string, number>>();
+  for (const row of bankRows) {
+    if (!row.banca?.trim()) continue;
+    const bankKey = fold(row.banca);
+    const displayName = bankLabels.get(bankKey) ?? row.banca.trim();
+    bankCounts.set(displayName, (bankCounts.get(displayName) ?? 0) + 1);
+    const category = row.categoria_banca?.trim();
+    if (category) {
+      let counts = bankCategories.get(bankKey);
+      if (!counts) { counts = new Map<string, number>(); bankCategories.set(bankKey, counts); }
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+  }
+  const bancas = [{ name: 'Todas', count: bankRows.length, categoria: 'Todas' }, ...sortNamedCounts(bankCounts).map(item => ({
     ...item,
-    categoria: aggregate(bankRows.filter(row => row.banca && fold(row.banca) === fold(item.name)), row => row.categoria_banca)[0]?.name ?? null,
+    categoria: sortNamedCounts(bankCategories.get(fold(item.name)))[0]?.name ?? null,
   }))];
   return {
     bancas, categorias_banca: idFacets('categoria_banca', 'Todas', 'Todas as Categorias'),
     tipos_prova: idFacets('tipo_prova', 'Todos', 'Todos os Tipos de Prova'), fases: idFacets('fase_nivel', 'Todas', 'Todas as Fases / Níveis'),
-    materias, materias_com_topicos: materias.slice(1).map(item => ({ ...item, topicos: aggregate(contextual.filter(row => getUiMateriaName(row.materia) === item.name), row => index.canonicalTopicsDisplay.get(fold(row.topico ?? '')) ?? null) })),
+    materias, materias_com_topicos,
     topicos: named('topico', 'Todos'), subtopicos: named('subtopico', 'Todos'),
     anos: [{ label: min == null ? 'Todos os Anos da Prova' : `Todos os Anos da Prova (${min}–${max})`, count: yearRows.length }, ...years], ano_min: min, ano_max: max,
     tipos: idFacets('tipo', 'Todos', 'Todos os Tipos'),
-    dificuldades: [{ id: 'Todas', label: 'Todas', count: difficultyRows.length }, ...DIFFICULTIES.map(value => ({ id: value, label: difficultyLabels[value], count: difficultyRows.filter(row => evaluate(row, difficulty(value))).length })).filter(item => item.count > 0)],
-    total_filtered: subset().length,
+    dificuldades: [{ id: 'Todas', label: 'Todas', count: difficultyRows.length }, ...DIFFICULTIES.filter(value => diffCounts[value] > 0).map(value => ({ id: value, label: DIFFICULTY_LABELS[value], count: diffCounts[value] }))],
+    total_filtered: baseRows.length,
   };
 }
