@@ -11,6 +11,215 @@ const LATEX_N_COMMANDS = new Set([
   "nobreakspace",
 ]);
 
+const LATEX_ENV_NAMES = "(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\\*?|align\\*?)";
+const INLINE_MATH_SOURCE = `\\$(?:[^\\$\\n]+?|[^\\$\\n]*?\\\\begin\\{${LATEX_ENV_NAMES}\\}[^\\$]*?\\\\end\\{${LATEX_ENV_NAMES}\\}[ \\t]*)\\$`;
+const TEXT_COMMAND_OPEN_RE = /^\\(?:text(?:bf|it|rm|sf|tt)?|mbox)\s*\{/;
+const BRL_PRECEDED_BLOCK_RE = /[a-zA-Z0-9_\\$]/;
+const BRL_FOLLOWED_DIGIT_RE = /^\s*\d/;
+
+type MathDelimiterMode = null | "inline-dollar" | "block-dollar" | "inline-paren" | "block-bracket";
+
+interface TextRegionFrame {
+  depth: number;
+  prevInInnerMath: boolean;
+}
+
+function stripTrailingUnescapedDollars(text: string): string {
+  const match = text.match(/(\\*)(\$+)$/);
+  if (!match) return text;
+  const [, slashes, dollars] = match;
+  const escapedLeadingDollar = slashes.length % 2 === 1 ? 1 : 0;
+  const unescapedCount = dollars.length - escapedLeadingDollar;
+  const stripCount = Math.min(unescapedCount, 2);
+  return stripCount > 0 ? text.slice(0, -stripCount) : text;
+}
+
+function canShieldBrlAt(text: string, index: number, requireDigitsAfter: boolean): boolean {
+  if (text[index] !== "R" || text[index + 1] !== "$" || text[index + 2] === "$") {
+    return false;
+  }
+  if (index > 0 && BRL_PRECEDED_BLOCK_RE.test(text[index - 1])) {
+    return false;
+  }
+  if (requireDigitsAfter && !BRL_FOLLOWED_DIGIT_RE.test(text.slice(index + 2))) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Protege ocorrências de moeda "R$" com TOKEN_REAL apenas fora de modo matemático
+ * (ou dentro de \text{...} seguido de dígitos), evitando corromper variáveis como $R$ ou $$x = R$$.
+ */
+export function shieldBrlCurrency(text: string): string {
+  if (!text || typeof text !== "string" || !text.includes("R$")) return text || "";
+
+  let out = "";
+  let i = 0;
+  let mode: MathDelimiterMode = null;
+  let braceDepth = 0;
+  let inInnerMath = false;
+  const textStack: TextRegionFrame[] = [];
+
+  const resetMathState = () => {
+    mode = null;
+    braceDepth = 0;
+    inInnerMath = false;
+    textStack.length = 0;
+  };
+
+  while (i < text.length) {
+    if (text[i] === "\\") {
+      const next = text[i + 1];
+      if (next === "\\") {
+        out += "\\\\";
+        i += 2;
+        continue;
+      }
+      if (mode === null && next === "(") {
+        mode = "inline-paren";
+        out += "\\(";
+        i += 2;
+        continue;
+      }
+      if (mode === null && next === "[") {
+        mode = "block-bracket";
+        out += "\\[";
+        i += 2;
+        continue;
+      }
+      if (mode === "inline-paren" && next === ")") {
+        resetMathState();
+        out += "\\)";
+        i += 2;
+        continue;
+      }
+      if (mode === "block-bracket" && next === "]") {
+        resetMathState();
+        out += "\\]";
+        i += 2;
+        continue;
+      }
+      if (next === "$") {
+        out += "\\$";
+        i += 2;
+        continue;
+      }
+      if (mode !== null && (next === "{" || next === "}")) {
+        out += `\\${next}`;
+        i += 2;
+        continue;
+      }
+      if (mode !== null) {
+        const textOpen = TEXT_COMMAND_OPEN_RE.exec(text.slice(i));
+        if (textOpen) {
+          out += textOpen[0];
+          braceDepth++;
+          textStack.push({ depth: braceDepth, prevInInnerMath: inInnerMath });
+          inInnerMath = false;
+          i += textOpen[0].length;
+          continue;
+        }
+      }
+      out += "\\";
+      i += 1;
+      continue;
+    }
+
+    if (mode !== null) {
+      if (mode === "inline-dollar" && text[i] === "\n" && /^\n[ \t]*\n/.test(text.slice(i))) {
+        resetMathState();
+        out += "\n";
+        i += 1;
+        continue;
+      }
+      if (text[i] === "{") {
+        braceDepth++;
+        out += "{";
+        i += 1;
+        continue;
+      }
+      if (text[i] === "}") {
+        if (textStack.length > 0 && textStack[textStack.length - 1].depth === braceDepth) {
+          const popped = textStack.pop();
+          if (popped) {
+            inInnerMath = popped.prevInInnerMath;
+          }
+        }
+        if (braceDepth > 0) {
+          braceDepth--;
+        }
+        out += "}";
+        i += 1;
+        continue;
+      }
+      if (textStack.length > 0 && !inInnerMath && canShieldBrlAt(text, i, true)) {
+        out += TOKEN_REAL;
+        i += 2;
+        continue;
+      }
+      if (text[i] === "$") {
+        if (textStack.length > 0) {
+          if (inInnerMath) {
+            inInnerMath = false;
+            out += "$";
+            i += 1;
+            continue;
+          }
+          if (text[i + 1] !== "$") {
+            inInnerMath = true;
+            out += "$";
+            i += 1;
+            continue;
+          }
+        }
+        if (mode === "block-dollar" && text[i + 1] === "$") {
+          resetMathState();
+          out += "$$";
+          i += 2;
+          continue;
+        }
+        if (mode === "inline-dollar") {
+          resetMathState();
+          out += "$";
+          i += 1;
+          continue;
+        }
+      }
+      out += text[i];
+      i += 1;
+      continue;
+    }
+
+    if (canShieldBrlAt(text, i, false)) {
+      out += TOKEN_REAL;
+      i += 2;
+      continue;
+    }
+
+    if (text[i] === "$") {
+      braceDepth = 0;
+      inInnerMath = false;
+      textStack.length = 0;
+      if (text[i + 1] === "$") {
+        mode = "block-dollar";
+        out += "$$";
+        i += 2;
+        continue;
+      }
+      mode = "inline-dollar";
+      out += "$";
+      i += 1;
+      continue;
+    }
+
+    out += text[i];
+    i += 1;
+  }
+
+  return out;
+}
+
 export function isLikelyProseMistakenlyWrappedInMath(inner: string, minWords: number): boolean {
   // Argumentos de comandos são rótulos matemáticos, não palavras da prosa envolvente.
   const withoutLatex = inner
@@ -55,10 +264,12 @@ export const KATEX_MACROS: Record<string, string> = {
 export function cleanLatexForKatex(latex: string): string {
   if (!latex || typeof latex !== "string") return "";
   let clean = latex.trim();
-  // Remove $ ou $$ externos se por acaso foram passados como filhos diretos
-  clean = clean.replace(/^\${1,2}/, "").replace(/\${1,2}$/, "").trim();
-  // Remove $ soltos internos que quebram o parser do KaTeX
-  clean = clean.replace(/(?<!\\)\$/g, "");
+  // Remove $ ou $$ externos não escapados se por acaso foram passados como filhos diretos
+  clean = stripTrailingUnescapedDollars(clean.replace(/^\${1,2}/, "")).trim();
+  // Remove $ soltos internos não escapados que quebram o parser do KaTeX (preserva \$ com número ímpar de barras)
+  clean = clean
+    .replace(/(\\*)\$/g, (match, slashes: string) => (slashes.length % 2 === 1 ? match : slashes))
+    .trim();
   // Remove artefatos de \undefined ou undefined gerados por templates ou alucinações
   clean = clean.replace(/\\?undefined\b/gi, "");
   // Converte macros comuns de lógica matemática que quebram o KaTeX
@@ -98,7 +309,7 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
   if (!raw || typeof raw !== "string") return "";
 
   // 1. Normaliza quebras de linha literais (\n, \r\n) preservando comandos LaTeX que começam com \n (\neq, \notin, \nu, \nabla, etc)
-  let text = raw.replace(/(?<![a-zA-Z\\])R\$/g, TOKEN_REAL)
+  let text = raw
     .replace(/\\r\\n/g, "\n")
     .replace(/(\\+)(n[a-zA-Z]*)/g, (match, slashes: string, cmd: string) => {
       if (slashes.length % 2 === 0 || LATEX_N_COMMANDS.has(cmd)) return match;
@@ -116,6 +327,8 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
   text = text.replace(/!\[(.*?)\]\(\s*(?:null|undefined)?\s*\)/gi, "");
   // Remove artefatos de \undefined ou undefined gerados por modelos
   text = text.replace(/\\?undefined\s*/gi, "");
+  // Protege moeda R$ fora de delimitadores matemáticos (e dentro de \text{...} seguido de dígito)
+  text = shieldBrlCurrency(text);
   // Normaliza blocos de código markdown com math/latex
   text = text.replace(/```(?:latex|math)\s*([\s\S]+?)\s*```/gi, (_, math) => `$$${math.trim()}$$`);
   // Converte delimitadores canônicos \[ \] e \( \)
@@ -134,11 +347,6 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
     const token = `___LEMMAS_MATH_BLOCK_${blockCounter++}___`;
     blockMap.set(token, `$$${inner.trim()}$$`);
     return `\n${token}\n`;
-  });
-
-  // Converte equações matemáticas inline delimitadas por $ que contêm quebras de linha internas para blocos $$ ... $$
-  text = text.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)/g, (match, inner) => {
-    return match;
   });
 
   // Desembrulha inline $...$ que contém frases em português (apenas com delimitadores estritos de inline)
@@ -230,7 +438,8 @@ export function renderMathText(text: string) {
   // Auto-envolve expressões matemáticas com comandos LaTeX soltos que vieram sem delimitadores $ (ex: \triangle OXM \sim \triangle OYN, \frac{XM}{YN} = \frac{OM}{ON})
   const looseMathRegex = /(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+[A-Za-z0-9]+(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to|\\sim|\\approx|\\perp|\\parallel|\\cong)\s*(?:\\(?:triangle|angle|overrightarrow|overline|vec|hat)\s+)?[A-Za-z0-9]+)*|\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}(?:\s*(?:=|\+|-|\*|\/|<|>|\\le|\\ge|\\to)\s*(?:\\frac\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|[a-zA-Z0-9_{}^]+))*|\\(?:sqrt|sum|int|lim)\b(?:\{[^{}]*\}|\[[^\]]*\])*(?:[a-zA-Z0-9_{}^+\-*\/=<>]+)*|\b[a-zA-Z0-9]+\s*\\sim\s*[a-zA-Z0-9]+|\\overrightarrow\{[^{}]+\}(?:\s*[+\-*=]\s*\\overrightarrow\{[^{}]+\})*)+/g;
 
-  const tempParts = preprocessed.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$)/g);
+  const inlineAndBlockSplitRegex = new RegExp(`(\\$\\$[\\s\\S]+?\\$\\$|${INLINE_MATH_SOURCE})`, "g");
+  const tempParts = preprocessed.split(inlineAndBlockSplitRegex);
   for (let i = 0; i < tempParts.length; i += 2) {
     if (tempParts[i]) {
       tempParts[i] = tempParts[i].replace(looseMathRegex, (m) => `$${m.trim()}$`);
@@ -263,7 +472,10 @@ export function renderMathText(text: string) {
   }
   
   // 3. Extrai ambientes isolados, preservando primeiro as expressões inline completas.
-  const envRegex = /(\$[^\$\n]+?\$)|(\\begin\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\}[\s\S]+?\\end\{(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\*?|align\*?)\})/g;
+  const envRegex = new RegExp(
+    `(${INLINE_MATH_SOURCE})|(\\\\begin\\{${LATEX_ENV_NAMES}\\}[\\s\\S]+?\\\\end\\{${LATEX_ENV_NAMES}\\})`,
+    "g",
+  );
   const stage2Parts: Array<{ type: "text" | "block"; content: string }> = [];
 
   for (const part of stage1Parts) {
@@ -272,7 +484,7 @@ export function renderMathText(text: string) {
       continue;
     }
 
-    let textRemaining = part.content;
+    const textRemaining = part.content;
     let envLastIndex = 0;
     let envMatch;
 
@@ -305,7 +517,7 @@ export function renderMathText(text: string) {
       continue;
     }
     
-    let textRemaining = part.content;
+    const textRemaining = part.content;
     let textLastIndex = 0;
     let inlineMatch;
     
