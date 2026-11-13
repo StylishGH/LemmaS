@@ -27,12 +27,13 @@ export const LegalConsentCheckbox = ({
       <input
         type="checkbox"
         id="legal-consent"
+        aria-describedby="legal-consent-description"
         checked={accepted}
         onChange={handleToggle}
-        className="mt-0.5 h-4 w-4 rounded border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
         required
       />
-      <div className="leading-relaxed">
+      <div id="legal-consent-description" className="leading-relaxed">
         <label htmlFor="legal-consent" className="cursor-pointer">
           Li e concordo com os
         </label>{" "}

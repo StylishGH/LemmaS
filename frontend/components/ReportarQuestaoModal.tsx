@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Flag, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
@@ -64,6 +64,8 @@ export default function ReportarQuestaoModal({
   const [erroMsg, setErroMsg] = useState<string | null>(null);
 
   const [mounted, setMounted] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const isDialogOpen = mounted && isOpen && Boolean(questaoId);
 
   // The portal must wait for hydration before accessing document.body.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -78,6 +80,24 @@ export default function ReportarQuestaoModal({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, questaoId, enviando, onClose]);
+
+  useEffect(() => {
+    // Move initial focus into the dialog and restore trigger focus on close/unmount.
+    if (!isDialogOpen) return;
+
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      if (
+        previousActiveElement &&
+        previousActiveElement.isConnected &&
+        typeof previousActiveElement.focus === "function"
+      ) {
+        previousActiveElement.focus({ preventScroll: true });
+      }
+    };
+  }, [isDialogOpen]);
 
   if (!mounted || !isOpen || !questaoId) return null;
 
@@ -122,10 +142,23 @@ export default function ReportarQuestaoModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xs flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn">
-      <div className="max-w-lg w-full my-auto bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/25 rounded-2xl shadow-2xl p-6 relative text-slate-800 dark:text-[#f5f0df] space-y-5">
+    <div
+      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xs flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !enviando) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reportar-questao-modal-title"
+        tabIndex={-1}
+        className="max-w-lg w-full my-auto bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/25 rounded-2xl shadow-2xl p-6 relative text-slate-800 dark:text-[#f5f0df] space-y-5 outline-none"
+      >
         {/* BOTÃO FECHAR */}
         <button
+          type="button"
           onClick={onClose}
           disabled={enviando}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
@@ -140,7 +173,10 @@ export default function ReportarQuestaoModal({
             <Flag className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-serif-math text-lg font-bold text-slate-900 dark:text-[#f5f0df]">
+            <h3
+              id="reportar-questao-modal-title"
+              className="font-serif-math text-lg font-bold text-slate-900 dark:text-[#f5f0df]"
+            >
               Reportar Inconsistência
             </h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400">

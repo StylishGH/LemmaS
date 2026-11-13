@@ -70,6 +70,8 @@ export function CriarSimuladoModal({
 
   const [mounted, setMounted] = useState(false);
   const wasOpenRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const isDialogOpen = mounted && isOpen;
 
   // The portal must wait for hydration before accessing document.body.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -98,6 +100,24 @@ export function CriarSimuladoModal({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, loading, onClose]);
+
+  useEffect(() => {
+    // Move initial focus into the dialog and restore trigger focus on close/unmount.
+    if (!isDialogOpen) return;
+
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      if (
+        previousActiveElement &&
+        previousActiveElement.isConnected &&
+        typeof previousActiveElement.focus === "function"
+      ) {
+        previousActiveElement.focus({ preventScroll: true });
+      }
+    };
+  }, [isDialogOpen]);
 
   if (!mounted || !isOpen) return null;
 
@@ -215,12 +235,26 @@ export function CriarSimuladoModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn">
-      <div className="max-w-xl w-full my-auto rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6">
+    <div
+      className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !loading) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="criar-simulado-modal-title"
+        tabIndex={-1}
+        className="max-w-xl w-full my-auto rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6 outline-none"
+      >
         {/* BOTÃO FECHAR */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+          disabled={loading}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
           aria-label="Fechar modal"
         >
           <X className="w-5 h-5" />
@@ -232,7 +266,10 @@ export function CriarSimuladoModal({
             <Timer className="w-3.5 h-3.5" />
             <span>Condições Oficiais de Prova</span>
           </div>
-          <h2 className="font-serif-math text-2xl font-bold text-slate-900 dark:text-[#f5f0df] tracking-tight">
+          <h2
+            id="criar-simulado-modal-title"
+            className="font-serif-math text-2xl font-bold text-slate-900 dark:text-[#f5f0df] tracking-tight"
+          >
             Configurar Simulado Cronometrado
           </h2>
           <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
@@ -506,7 +543,8 @@ export function CriarSimuladoModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+            disabled={loading}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
           >
             Cancelar
           </button>
