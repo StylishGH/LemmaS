@@ -40,7 +40,7 @@ try {
   const css = await postcss([tailwind({ base: root })]).process(fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8'), { from: path.join(root, 'app/globals.css') });
   fs.writeFileSync(path.join(dir, 'style.css'), css.css + fs.readFileSync(require.resolve('katex/dist/katex.min.css'), 'utf8'));
   fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="style.css"><div id="root"></div><script src="bundle.js"></script>');
- const server=http.createServer((req,res)=>{const p=req.url.startsWith('/fonts/') ? path.join(path.dirname(require.resolve('katex/dist/katex.min.css')),req.url) : path.join(dir,req.url==='/'?'index.html':req.url); if(!fs.existsSync(p)){res.writeHead(404).end();return;}res.setHeader('Content-Type',p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':'text/html');res.end(fs.readFileSync(p));});
+ const server=http.createServer((req,res)=>{const p=req.url.startsWith('/fonts/') ? path.join(path.dirname(require.resolve('katex/dist/katex.min.css')),req.url) : req.url.startsWith('/images/') ? path.join(root,'public',req.url) : path.join(dir,req.url==='/'?'index.html':req.url); if(!fs.existsSync(p)){res.writeHead(404).end();return;}res.setHeader('Content-Type',p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':p.endsWith('.png')?'image/png':'text/html');res.end(fs.readFileSync(p));});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH || '/usr/bin/google-chrome',headless:true,userDataDir:path.join(dir,'chrome-profile'),args:['--no-sandbox','--disable-dev-shm-usage']}).catch(error=>{server.close();throw error;});
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -129,6 +129,10 @@ try {
  await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
  await page.waitForSelector('button[title="Limpar Lousa"]');
  await clickTitle('Limpar Lousa');
+ const watermarkOk=await page.evaluate(()=>{const img=document.querySelector('img[src="/images/lemmas-watermark.png"]');return Boolean(img&&getComputedStyle(img.parentElement).pointerEvents==='none');});
+ assert.ok(watermarkOk,'watermark image should be rendered with pointer-events: none');
+ const cleanExportCenter=await page.evaluate(async()=>{const img=new Image();img.src=window.exportDrawing();await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);return Array.from(ctx.getImageData(Math.floor(img.width/2),Math.floor(img.height/2),1,1).data);});
+ assert.deepEqual(cleanExportCenter,[255,255,255,255],'exported OCR canvas must not include background watermark');
  await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],r=c.getBoundingClientRect();for(let i=0;i<=12;i++){const type=i===0?'pointerdown':'pointermove';const y=120+Math.sin(i)*3;c.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:9,pointerType:'pen',button:0,buttons:1,clientX:r.left+40+i*18,clientY:r.top+y,pressure:.7}));}});
  await page.waitForFunction(()=>document.body.innerText.includes('Linha reta'),{timeout:2500});
  await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],r=c.getBoundingClientRect();c.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:9,pointerType:'pen',button:0,clientX:r.left+256,clientY:r.top+120,pressure:0}));});
