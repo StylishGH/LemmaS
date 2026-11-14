@@ -320,3 +320,375 @@ html:not(.dark) .lemmas-grain-overlay {
     transform: none;
   }
 }
+
+
+/* ==========================================================================
+   PROTOTYPE VARIANT PICKER (verbatim from prototype/PICKER.md)
+   ========================================================================== */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative; /* sits above the highlight */
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 150ms ease-out,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .proto-picker-item:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+
+html[data-proto-replay="1"] .animate-fadeIn,
+html[data-proto-replay="1"] .lemmas-mode-view-enter,
+html[data-proto-replay="1"] .lemmas-popover-enter,
+html[data-proto-replay="1"] .lemmas-stagger-group > *,
+html[data-proto-replay="1"] .lemmas-kpi-grid > *,
+html[data-proto-replay="1"] .lemmas-hero-copy > * {
+  animation: none !important;
+}
+
+/* ==========================================================================
+   COREOGRAFIA STAGGER (Dashboard & KPIs — exceto variante Original)
+   ========================================================================== */
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *,
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > * {
+  animation: lemmasFadeIn 260ms var(--ease-out) both;
+}
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(1),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(1) { animation-delay: 0ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(2),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(2) { animation-delay: 45ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(3),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(3) { animation-delay: 85ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(4),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(4) { animation-delay: 120ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(n+5) { animation-delay: 155ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-design-variant="original"]) .lemmas-stagger-group > *,
+  html:not([data-design-variant="original"]) .lemmas-kpi-grid > * {
+    animation-duration: 120ms;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 2 · EDITORIAL (Tratado Matemático, Dupla Moldura & Ouro/Ardósia)
+   ========================================================================== */
+html[data-design-variant="editorial"].dark .lemmas-app-frame,
+html[data-design-variant="editorial"][data-theme="lemmas-dark"] .lemmas-app-frame,
+html[data-design-variant="editorial"][data-theme="lemmas-dark"] .lemmas-page {
+  background-color: #111015;
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(217, 180, 82, 0.09), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(217, 180, 82, 0.025) 39px 40px);
+}
+
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-app-frame,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-app-frame {
+  background-color: #f6f2e8;
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(180, 83, 9, 0.06), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(148, 120, 72, 0.04) 39px 40px);
+}
+
+html[data-design-variant="editorial"] .lemmas-hero-banner,
+html[data-design-variant="editorial"] .lemmas-kpi-card,
+html[data-design-variant="editorial"] .lemmas-surface-card,
+html[data-design-variant="editorial"] .lemmas-roadmap-card,
+html[data-design-variant="editorial"] .lemmas-magic-step {
+  border-color: rgba(217, 180, 82, 0.34) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 180, 82, 0.22),
+    inset 0 1px 0 0 rgba(255, 240, 198, 0.14),
+    0 12px 32px -8px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 200ms var(--ease-out),
+    border-color 180ms ease,
+    box-shadow 220ms var(--ease-out);
+}
+
+html[data-design-variant="editorial"]:not(.dark) .lemmas-hero-banner,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-surface-card,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-hero-banner,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-surface-card {
+  background: #fdfaf2 !important;
+  border-color: rgba(180, 83, 9, 0.26) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(180, 83, 9, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 12px 28px -10px rgba(92, 64, 24, 0.14);
+}
+
+html[data-design-variant="editorial"] .lemmas-hero-banner h1,
+html[data-design-variant="editorial"] .lemmas-hero h1 {
+  letter-spacing: -0.025em;
+  text-shadow: 0 1px 16px rgba(217, 180, 82, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="editorial"] .lemmas-kpi-card:hover,
+  html[data-design-variant="editorial"] .lemmas-question-item:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 0 0 1px rgba(217, 180, 82, 0.38),
+      0 18px 36px -10px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 3 · LINEAR GLASS (Apple/Linear Translucent Glass & Specular Highlights)
+   ========================================================================== */
+html[data-design-variant="glass"].dark .lemmas-app-frame,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-app-frame,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-page {
+  background-color: #080910;
+  background-image:
+    radial-gradient(ellipse 75% 50% at 15% 0%, rgba(56, 189, 248, 0.12), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 88% 8%, rgba(217, 180, 82, 0.12), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(99, 102, 241, 0.08), transparent 65%);
+}
+
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-app-frame,
+html[data-design-variant="glass"]:not(.dark) .lemmas-app-frame {
+  background-color: #eef3fb;
+  background-image:
+    radial-gradient(ellipse 75% 50% at 15% 0%, rgba(37, 99, 235, 0.11), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 88% 10%, rgba(14, 165, 233, 0.1), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(99, 102, 241, 0.07), transparent 65%);
+}
+
+html[data-design-variant="glass"] .lemmas-hero-banner,
+html[data-design-variant="glass"] .lemmas-kpi-card,
+html[data-design-variant="glass"] .lemmas-surface-card,
+html[data-design-variant="glass"] .lemmas-question-item,
+html[data-design-variant="glass"] .lemmas-roadmap-card,
+html[data-design-variant="glass"] .lemmas-magic-step {
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  transition:
+    transform 220ms var(--ease-out),
+    border-color 180ms ease,
+    box-shadow 220ms var(--ease-out),
+    background-color 180ms ease;
+}
+
+html[data-design-variant="glass"].dark .lemmas-hero-banner,
+html[data-design-variant="glass"].dark .lemmas-kpi-card,
+html[data-design-variant="glass"].dark .lemmas-surface-card,
+html[data-design-variant="glass"].dark .lemmas-question-item,
+html[data-design-variant="glass"].dark .lemmas-roadmap-card,
+html[data-design-variant="glass"].dark .lemmas-magic-step,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-hero-banner,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-kpi-card,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-surface-card,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-question-item {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(18, 20, 30, 0.68) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 16px 36px -10px rgba(0, 0, 0, 0.45);
+}
+
+html[data-design-variant="glass"]:not(.dark) .lemmas-hero-banner,
+html[data-design-variant="glass"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="glass"]:not(.dark) .lemmas-surface-card,
+html[data-design-variant="glass"]:not(.dark) .lemmas-question-item,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-hero-banner,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-surface-card,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-question-item {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85) 0%, rgba(248, 250, 255, 0.65) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    0 14px 30px -10px rgba(29, 78, 216, 0.12);
+}
+
+html[data-design-variant="glass"] header.sticky {
+  margin: 10px auto 0;
+  width: min(1240px, calc(100% - 24px));
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+}
+
+html[data-design-variant="glass"]:not(.dark) header.sticky,
+html[data-design-variant="glass"][data-theme="lemmas-light"] header.sticky {
+  border-color: rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 28px -12px rgba(15, 23, 42, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="glass"] .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"] .lemmas-question-item:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(253, 224, 71, 0.45) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+      0 24px 44px -12px rgba(0, 0, 0, 0.55),
+      0 0 24px -6px rgba(217, 180, 82, 0.2);
+  }
+
+  html[data-design-variant="glass"]:not(.dark) .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"]:not(.dark) .lemmas-question-item:hover,
+  html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-question-item:hover {
+    border-color: rgba(37, 99, 235, 0.4) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      0 20px 38px -12px rgba(37, 99, 235, 0.2);
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 4 · FOCUS STUDIO (Geometria Precisa, Faixa Lateral & Snap 120ms)
+   ========================================================================== */
+html[data-design-variant="studio"] .lemmas-hero-banner,
+html[data-design-variant="studio"] .lemmas-kpi-card,
+html[data-design-variant="studio"] .lemmas-surface-card,
+html[data-design-variant="studio"] .lemmas-question-item,
+html[data-design-variant="studio"] .lemmas-roadmap-card,
+html[data-design-variant="studio"] .lemmas-magic-step {
+  border-radius: 10px !important;
+  transition:
+    transform 120ms var(--ease-out),
+    border-color 120ms ease,
+    box-shadow 120ms var(--ease-out);
+}
+
+html[data-design-variant="studio"] .lemmas-kpi-card,
+html[data-design-variant="studio"] .lemmas-question-item,
+html[data-design-variant="studio"] .lemmas-roadmap-card {
+  border-left: 3px solid var(--accent-gold, #fde047) !important;
+}
+
+html[data-design-variant="studio"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="studio"]:not(.dark) .lemmas-question-item,
+html[data-design-variant="studio"]:not(.dark) .lemmas-roadmap-card,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-question-item,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-roadmap-card {
+  border-left: 3px solid var(--marker-blue, #1d4ed8) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+html[data-design-variant="studio"].dark .lemmas-hero-banner,
+html[data-design-variant="studio"].dark .lemmas-kpi-card,
+html[data-design-variant="studio"].dark .lemmas-surface-card,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-hero-banner,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-kpi-card,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-surface-card {
+  background: #0d0f13 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  border-left-color: #fde047 !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="studio"] .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"] .lemmas-question-item:hover {
+    transform: translateX(3px);
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    border-left-color: #fde047 !important;
+  }
+
+  html[data-design-variant="studio"]:not(.dark) .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"]:not(.dark) .lemmas-question-item:hover,
+  html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-question-item:hover {
+    border-color: rgba(29, 78, 216, 0.45) !important;
+    border-left-color: #1d4ed8 !important;
+  }
+}

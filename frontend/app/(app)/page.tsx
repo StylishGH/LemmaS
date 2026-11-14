@@ -238,7 +238,7 @@ export default function DashboardPage() {
         .join(" ");
 
   return (
-    <div className="space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+    <div className="space-y-8 animate-fadeIn lemmas-dashboard-root lemmas-stagger-group text-slate-800 dark:text-[#f5f0df]">
       {/* BANNER INFORMATIVO PARA VISITANTES (DESLOGADOS) */}
       {!isAuthenticated && !userLoading && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
@@ -273,7 +273,7 @@ export default function DashboardPage() {
       )}
 
       {/* 1. HERO BANNER EDITORIAL LEMMAS */}
-      <div className="relative rounded-3xl overflow-hidden border border-[var(--border-board)] dark:border-amber-500/20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 dark:from-[#161a1e] dark:via-[#13171b] dark:to-[#101316] p-8 md:p-10 shadow-sm dark:shadow-2xl">
+      <div className="lemmas-hero-banner relative rounded-3xl overflow-hidden border border-[var(--border-board)] dark:border-amber-500/20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 dark:from-[#161a1e] dark:via-[#13171b] dark:to-[#101316] p-8 md:p-10 shadow-sm dark:shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -312,9 +312,9 @@ export default function DashboardPage() {
       </div>
 
       {/* 2. KPIS COM DESIGN EDITORIAL E DADOS REAIS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="lemmas-kpi-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Aproveitamento */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="lemmas-kpi-card bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Aproveitamento</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -336,7 +336,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 2: Total Resolvidas */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="lemmas-kpi-card bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Resolvidas</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -354,7 +354,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 3: Tempo Médio */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="lemmas-kpi-card bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Tempo Médio</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -370,7 +370,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 4: Acervo de Questões */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
+        <div className="lemmas-kpi-card bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
           <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Questões</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
@@ -387,7 +387,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 2.5. QUESTÕES RECOMENDADAS PARA O SEU PERFIL */}
-      <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+      <div className="lemmas-surface-card bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
@@ -430,7 +430,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={q.id}
-                  className="p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all group"
+                  className="lemmas-question-item p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
