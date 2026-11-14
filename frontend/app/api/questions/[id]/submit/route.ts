@@ -93,7 +93,7 @@ export async function POST(
       tipoErro = "conceitual";
     } else if (isDiscursiva) {
       const veredito = body.veredito;
-      if (body.precisa_revisao_humana) {
+      if (body.precisa_revisao_humana || body.avaliacao_ia?.precisa_revisao_humana || body.avaliacao_ia?.ocr_review_required) {
         return NextResponse.json(
           { error: "Avaliação inconclusiva não pode ser registrada como tentativa definitiva." },
           { status: 400 }

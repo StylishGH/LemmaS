@@ -18,6 +18,17 @@ from app.models.student import Student
 router = APIRouter(prefix="/tutor", tags=["MathAI Engine (Tutor & Avaliador)"])
 
 
+class ArithmeticCheckRequest(BaseModel):
+    transcription: str = Field(..., max_length=8000)
+
+
+@router.post("/verify-arithmetic")
+def verify_arithmetic(payload: ArithmeticCheckRequest, current_student: Student = Depends(get_current_student)):
+    """Numeric verification only; never triggers model inference or records attempts."""
+    from app.services.mathai.arithmetic import check_arithmetic
+    return check_arithmetic(payload.transcription)
+
+
 class SocraticHintRequest(BaseModel):
     """Payload para solicitação de dica socrática."""
 
@@ -200,7 +211,7 @@ def evaluate_resolution(
     # 2. Se houver imagem anexada, processa OCR primeiro
     ocr_transcription = None
     ocr_legibility = None
-    if payload.imagem_base64:
+    if payload.imagem_base64 and payload.transcricao_confirmada is None:
         ocr_res = vision_processor.process_image(
             image_data=payload.imagem_base64,
             mime_type=payload.mime_type,
@@ -209,14 +220,14 @@ def evaluate_resolution(
         ocr_legibility = ocr_res.get("legibilidade")
 
     # 3. Executa a avaliação cognitiva
-    student_text = payload.justificativa_texto or ""
+    student_text = payload.transcricao_confirmada if payload.transcricao_confirmada is not None else (payload.justificativa_texto or "")
     eval_result = cognitive_evaluator.evaluate_attempt(
         exercise=exercise_dict,
         student_input=student_text,
         input_type="multimodal" if payload.imagem_base64 else "text",
         transcription_latex=ocr_transcription,
         ocr_legibility=ocr_legibility,
-        has_image=bool(payload.imagem_base64),
+        has_image=bool(payload.imagem_base64) and payload.transcricao_confirmada is None,
     )
 
     return AiEvaluationResponse(
@@ -243,6 +254,8 @@ def evaluate_resolution(
         erros_identificados=eval_result.get("erros_identificados", []),
         feedback_latex=eval_result.get("feedback_latex", ""),
         precisa_revisao_humana=eval_result.get("precisa_revisao_humana", False),
+        arithmetic_check=eval_result.get("arithmetic_check"),
+        ocr_review_required=eval_result.get("ocr_review_required", False),
         created_at=datetime.now(timezone.utc),
     )
 

@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { OcrReview } from "@/components/avaliacao/OcrReview";
 import { MathText } from "@/components/math/MathDisplay";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { resolveFigureUrl } from "@/lib/image-url";
@@ -39,6 +40,9 @@ export interface DiscursiveEvaluationData {
   veredito: "aprovado" | "parcial" | "sem_desenvolvimento" | "incorreto";
   desenvolvimento_presente: boolean;
   resultado_final_correto: boolean;
+  precisa_revisao_humana?: boolean;
+  ocr_review_required?: boolean;
+  transcricao_latex?: string;
   feedback_latex?: string;
   diagnostico?: string;
   etapas_corretas?: string[];
@@ -57,6 +61,7 @@ export interface FloatingQuestionHUDProps {
   onEvaluate?: () => void;
   isEvaluating?: boolean;
   evaluationResult?: DiscursiveEvaluationData;
+  onConfirmOcr?: (text: string) => Promise<void>;
   onCloseFocusMode?: () => void;
 }
 
@@ -71,6 +76,7 @@ export default function FloatingQuestionHUD({
   onEvaluate,
   isEvaluating = false,
   evaluationResult,
+  onConfirmOcr,
 }: FloatingQuestionHUDProps) {
   const { isLight } = useTheme();
   const [isMinimized, setIsMinimized] = useState(false);
@@ -388,7 +394,9 @@ export default function FloatingQuestionHUD({
             )}
 
             {/* CARD DE VEREDITO / FEEDBACK SOCRÁTICO DA IA */}
-            {evaluationResult && (
+            {evaluationResult?.ocr_review_required && onConfirmOcr && <OcrReview key={`${question.id}:${evaluationResult.transcricao_latex}`} transcription={evaluationResult.transcricao_latex || ""} pending={isEvaluating} onConfirm={onConfirmOcr} />}
+            {evaluationResult?.precisa_revisao_humana && !evaluationResult.ocr_review_required && <p className="rounded-xl border border-amber-400 p-3 text-sm">Avaliação pendente de revisão. Seu rascunho foi preservado.</p>}
+            {evaluationResult && !evaluationResult.precisa_revisao_humana && (
               <div
                 className={`p-3 rounded-xl border space-y-2 animate-fadeIn ${
                   evaluationResult.veredito === "aprovado"

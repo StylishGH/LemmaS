@@ -31,6 +31,7 @@ class AiEvaluationRequest(BaseModel):
         max_length=7_000_000,
         description="Foto de caderno ou print de tablet codificado em Base64 (limite de segurança ~5MB binário)",
     )
+    transcricao_confirmada: Optional[str] = Field(None, min_length=1, max_length=8000)
     mime_type: str = Field(default="image/png", description="MIME type da imagem (image/png, image/jpeg, application/pdf)")
 
 
@@ -106,6 +107,8 @@ class AiEvaluationResponse(BaseModel):
         default=False,
         description="Sinaliza avaliação inconclusiva, imagem ilegível ou falha de OCR"
     )
+    arithmetic_check: Optional[Dict[str, Any]] = None
+    ocr_review_required: bool = False
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Data e hora da avaliação cognitiva"
