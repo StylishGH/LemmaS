@@ -52,6 +52,7 @@ import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ImmersiveFocusOverlay from "@/components/bancada/ImmersiveFocusOverlay";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import ThoughtLine from "@/components/ui/thought-line";
+import QuestionDiscussion from "@/components/community/QuestionDiscussion";
 import LemaBadge from "@/components/math/LemaBadge";
 
 interface Question {
@@ -657,7 +658,14 @@ function ResolverContent() {
     return () => {
       ignore = true;
     };
-  }, [queryId, sessionQuery, modeQuery, profile?.id, profile?.objetivoPrincipal]);
+  }, [
+    queryId,
+    sessionQuery,
+    modeQuery,
+    // Apenas standby consome preferências do perfil; sessões explícitas não devem reiniciar com a hidratação do perfil.
+    !queryId && sessionQuery !== "simulado" && sessionQuery !== "treino" ? profile?.id : undefined,
+    !queryId && sessionQuery !== "simulado" && sessionQuery !== "treino" ? profile?.objetivoPrincipal : undefined,
+  ]);
 
   // Carregamento paginado sob demanda (em lotes de 100) quando o aluno avança ou salta
   useEffect(() => {
@@ -2014,6 +2022,7 @@ function ResolverContent() {
                           )}
                         </div>
                       )}
+                      <QuestionDiscussion questionId={q.id} />
                     </div>
                   )}
                 </div>
@@ -3429,10 +3438,16 @@ function ResolverContent() {
         )}
       </div>
 
-      {!modoFocoAtivo && renderSocraticTutor()}
+      {!modoFocoAtivo || !isDiscursiva ? (
+        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo}>
+          {!modoFocoAtivo && renderSocraticTutor()}
 
-      {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
-      {!isDiscursiva && renderBancadaResolucao()}
+          {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
+          {!isDiscursiva && renderBancadaResolucao()}
+        </QuestionDiscussion>
+      ) : (
+        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo} />
+      )}
 
       {/* NAVEGAÇÃO INFERIOR */}
       <div className="flex items-center justify-between pt-2">

@@ -69,6 +69,12 @@ Este documento consolida fontes que divergem. Quando há conflito entre um relat
 
 - [x] Prévias das recomendações no painel preservam fórmulas delimitadas completas ao resumir o enunciado, com altura limitada e regressão para sistemas de equações.
 
+## 0.4 Sanear acervo (Blocos A e B) e comentários por questão (implementação local)
+
+- [x] **Bloco A (Frontend / filtros / simulado):** ajustes de renderização KaTeX segura (`strict: "ignore"`), filtros de matéria/subtópico e estabilidade de UI no resolver verificados localmente em testes unitários, TypeScript e build de produção.
+- [~] **Bloco B (Sanitização e reclassificação do acervo):** script determinístico (`scripts/maintenance/bloco_b_remediation.py`), suíte TDD (`tests/test_bloco_b_remediation.py`) e migration transacional (`data/schemas/20_bloco_b_sanitization_and_reclassification.sql`) preparados e auditados localmente contra snapshot de 21.638 questões; aguardam aplicação da migration no Supabase.
+- [~] **Comentários humanos por questão (antecipação isolada da Fase 04):** schema com RLS/rate-limit em RPC (`data/schemas/19_question_comments.sql`), rotas Next.js (`/api/community`, `/api/admin/comments`), UI (`QuestionDiscussion`, `/admin/comments`), testes SQL em PostgreSQL local (`tests/community/`) e testes de contrato validados localmente; migration remota e fluxo autenticado em produção pendentes de aplicação. [Arquitetura e limites](architecture/community-comments.md).
+
 ## 1. Visão do produto
 
 ### 1.1 Identidade
@@ -678,7 +684,7 @@ Conforme consolidado em `docs/roadmap_produto_lemmas.html`:
 | **Fase 01** | Fundação Canônica & Lousa Digital | **[x] Concluído & Estável** | 2.000 Lemas em `public.lemmas`, acervo com contagem dinâmica, SpenSmartCanvas Dual-Canvas, KaTeX Anti-Crash. |
 | **Fase 02** | Motor Socrático & Cascata de IA Resiliente | **[x] Operando / Produção** | Escada Socrática 5 Níveis com Polya, Segunda Opinião Ortogonal (Gemini + NVIDIA), MathAI Gateway desacoplado. |
 | **Fase 03** | Retenção, Simulados & Métricas do Aluno | **[~] Próximo Foco Imediato** | Radar de Habilidades (6 eixos), Modo Simulado Militar Realista cronometrado, Caderno de Erros SM-2. |
-| **Fase 04** | Gamificação, Comunidade & Mobile First | **[ ] Fase de Engajamento** | Patentes & Ranks Militares (Cadete a Coronel), Streaks diários, PWA instalável para tablets com modo offline. |
+| **Fase 04** | Gamificação, Comunidade & Mobile First | **[~] Comentários locais prontos; restante planejado** | Comentários por questão + moderação implementados localmente (pendente migration remota); Patentes & Ranks Militares, Streaks diários e PWA seguem planejados. |
 | **Fase 05** | Monetização, Assinaturas & Go-To-Market | **[ ] Escala Comercial** | Checkout transparente PIX/Cartão (Asaas/Stripe), Planos Free vs Pro, B2B para Cursos Preparatórios. |
 
 ---
