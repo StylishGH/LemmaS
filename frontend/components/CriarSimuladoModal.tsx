@@ -70,6 +70,7 @@ export function CriarSimuladoModal({
 
   const [mounted, setMounted] = useState(false);
   const wasOpenRef = useRef(false);
+  const hasSyncedInitialCountRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const isDialogOpen = mounted && isOpen;
 
@@ -78,18 +79,26 @@ export function CriarSimuladoModal({
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    // Reopening or receiving the initial count restores defaults without replacing manual edits.
-    const shouldSync = isOpen && (
-      !wasOpenRef.current || (quantidadeDesejada === 0 && totalFiltradas > 0)
-    );
-    wasOpenRef.current = isOpen;
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      hasSyncedInitialCountRef.current = false;
+      return;
+    }
+
+    // Reopening or receiving the first non-zero total restores defaults without overwriting manual clearing to 0.
+    const shouldSync = !wasOpenRef.current || (!hasSyncedInitialCountRef.current && totalFiltradas > 0);
+    wasOpenRef.current = true;
     if (!shouldSync) return;
+
+    if (selectedIds.length > 0 || totalFiltradas > 0) {
+      hasSyncedInitialCountRef.current = true;
+    }
 
     setOrigemQuestoes(selectedIds.length > 0 ? "selecionadas" : "todas_filtradas");
     setQuantidadeDesejada(selectedIds.length > 0
       ? selectedIds.length
       : (totalFiltradas > 0 ? Math.min(DEFAULT_QUESTION_COUNT, totalFiltradas) : 0));
-  }, [isOpen, selectedIds.length, totalFiltradas, quantidadeDesejada]);
+  }, [isOpen, selectedIds.length, totalFiltradas]);
 
   useEffect(() => {
     // Register keyboard dismissal only while the dialog can be closed.

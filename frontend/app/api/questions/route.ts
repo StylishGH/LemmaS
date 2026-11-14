@@ -34,15 +34,32 @@ function splitPreferenceValues(params: URLSearchParams, key: string): string[] {
   return [...new Set(values)];
 }
 
+function isPostSentinel(value: unknown): boolean {
+  return value === "Todos" || value === "Todas" || value === "";
+}
+
 function sanitizePostFilters(raw: Record<string, unknown>): Record<string, unknown> {
-  const cleaned = { ...raw };
-  if (cleaned.ano === "Todos" || cleaned.ano === "Todas" || cleaned.ano === "") {
-    cleaned.ano = undefined;
-  } else if (Array.isArray(cleaned.ano)) {
-    const valid = cleaned.ano.filter((v) => v !== "Todos" && v !== "Todas" && v !== "");
-    cleaned.ano = valid.length > 0 ? valid : undefined;
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (isPostSentinel(value)) {
+      cleaned[key] = undefined;
+    } else if (Array.isArray(value)) {
+      const valid = value.filter((item) => !isPostSentinel(item));
+      cleaned[key] = value.length === 0 ? value : (valid.length > 0 ? valid : undefined);
+    } else {
+      cleaned[key] = value;
+    }
   }
   return cleaned;
+}
+
+function fisherYatesShuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 async function loadSearchMatchingIds(
@@ -271,7 +288,7 @@ export async function GET(req: NextRequest) {
     // a origem do total antigo na vitrine. Em falha, a página mostra estado
     // vazio ("—") em vez de um número inventado.
     return NextResponse.json(
-      { error: message, questoes: [], total: 0, total_pages: 1 },
+      { error: message, questoes: [], total: 0, total_pages: 0 },
       { status: 503 }
     );
   }
@@ -321,12 +338,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // shuffle=true: embaralha antes de aplicar quality score para garantir sessões diferentes
-    const rawData = shuffle
-      ? (data || []).sort(() => Math.random() - 0.5)
-      : (data || []);
-
-    const sortedData = sortQuestionsByQuality(rawData);
+    // shuffle=true preserva a ordem aleatória em vez de reordenar por quality score.
+    const sortedData = shuffle
+      ? fisherYatesShuffle(data || [])
+      : sortQuestionsByQuality(data || []);
 
     return NextResponse.json({
       questoes: sortedData,

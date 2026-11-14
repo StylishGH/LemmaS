@@ -279,3 +279,111 @@ test("empty and invalid runtime inputs return empty results", () => {
     assert.deepEqual(renderMathText(value), []);
   }
 });
+
+test("balanced absolute bars survive cleanup while an orphan cursor is removed", () => {
+  for (const latex of [String.raw`|Z_1 - Z_2| = |Z_2|`, 'N=|5|+|3-8|-|-4|', String.raw`\|x\| + |5|`]) {
+    assert.equal(cleanLatexForKatex(latex), latex);
+    formulasOf(`$${latex}$`);
+  }
+  for (const [input, expected] of [[String.raw`\text{abc} |`, String.raw`\text{abc}`], ['x = 2 |', 'x = 2'], [String.raw`\|x\| + 2 |`, String.raw`\|x\| + 2`]]) {
+    assert.equal(cleanLatexForKatex(input).trim(), expected);
+  }
+});
+
+test("compact environment row breaks and single letter row starts survive cleanup", () => {
+  for (const env of ['matrix', 'pmatrix', 'bmatrix', 'Bmatrix', 'vmatrix', 'Vmatrix', 'smallmatrix', 'cases', 'rcases', 'aligned', 'gathered', 'array', 'split']) {
+    const latex = `\\begin{${env}}${env === 'array' ? '{cc}' : ''}a ${env === 'gathered' ? '' : '& b'}\\\\c ${env === 'gathered' ? '' : '& d'}\\end{${env}}`;
+    assert.equal(cleanLatexForKatex(latex), latex);
+    formulasOf(env === 'split' ? `$$${latex}$$` : `$${latex}$`);
+  }
+  assert.equal(cleanLatexForKatex(String.raw`a\\c`), String.raw`a\\c`);
+  assert.equal(cleanLatexForKatex(String.raw`\\alpha`), String.raw`\alpha`);
+});
+
+test("geometry aliases render with the shared KaTeX macros", () => {
+  for (const latex of [String.raw`\Varangle ABC`, String.raw`\varangle ABC`, String.raw`\overarc{AB}`, String.raw`\widearc{AB}`]) formulasOf(`$${latex}$`);
+});
+
+test("geometry labels and command arguments are never mistaken for prose", () => {
+  for (const latex of [String.raw`\widehat{BAT} = \widehat{DAC}`, String.raw`\widehat{ABC} - \widehat{ATD} = \widehat{DAC}`, String.raw`\triangle ABC \cong \triangle DAC`, String.raw`\custom{lowercase words here}`]) {
+    assert.equal(isLikelyProseMistakenlyWrappedInMath(latex, 2), false);
+    if (!latex.includes('custom')) for (const delimiter of ['$', '$$']) assert.deepEqual(formulasOf(`${delimiter}${latex}${delimiter}`).formulas.map(p => p.content), [latex]);
+  }
+});
+
+test("auto wrapping never inserts dollars inside nested LaTeX arguments", async () => {
+  const { autoWrapLatexExpressions } = await import(parserUrl);
+  for (const latex of [String.raw`\widehat{ATD} = \widehat{DAC}`, String.raw`\text{a = 2 e sen(x)}`, String.raw`\text{antes {x = 2} depois}`, String.raw`\text{a \neq b}`]) {
+    const wrapped = autoWrapLatexExpressions(latex);
+    let depth = 0;
+    for (const ch of wrapped) {
+      if (ch === '{') depth++;
+      if (ch === '}') depth--;
+      if (ch === '$') assert.equal(depth, 0, wrapped);
+    }
+  }
+});
+
+test("escaped dollars stay inside complete inline and block formulas and out of prose math", () => {
+  for (const latex of [String.raw`R\$ 1994,00`, String.raw`\text{R\$} 4,00`, String.raw`x + \$ + y`]) {
+    for (const delimiter of ['$', '$$']) {
+      const input = `${delimiter}${latex}${delimiter}`;
+      assert.equal(sanitizeMathText(input).trim(), input);
+      assert.deepEqual(formulasOf(input).formulas, [{ type: delimiter === '$' ? 'inline' : 'block', content: latex }]);
+    }
+  }
+  const proseEscaped = String.raw`Custou R\$ 100 e $x = 1$.`;
+  assert.equal(sanitizeMathText(proseEscaped), proseEscaped);
+  assert.deepEqual(formulasOf(proseEscaped).formulas, [{ type: 'inline', content: 'x = 1' }]);
+});
+
+test("ordinals, zero-width radicals, trig sqrt equations, bare align*, and array @ spacing render cleanly", () => {
+  const ordinalCase = String.raw`There is a $4$th degree polynomial with $p(x) = x^4 - 1$ and $p\left(\frac{15}{8}\right) < 0$.`;
+  assert.equal(sanitizeMathText(ordinalCase), ordinalCase);
+  assert.equal(formulasOf(ordinalCase).formulas.length, 3);
+
+  const unclosed = "$QS intersectando-se no ponto P";
+  assert.equal(sanitizeMathText(unclosed), "$QS$ intersectando-se no ponto P");
+
+  const zwRad = formulasOf("6\u221a\u200b5\u200b\u200b cm");
+  assert.deepEqual(zwRad.formulas, [{ type: 'inline', content: String.raw`\sqrt{5}` }]);
+
+  const trigSqrt = formulasOf("sen (60°) =  \\sqrt{3}/2");
+  assert.equal(trigSqrt.formulas.length, 1);
+
+  const bareAlign = formulasOf("\\begin{align*}\nabc &= a^2c = \\frac{1}{2} \\\\\n&= \\frac{3}{6}\n\\end{align*}");
+  assert.equal(bareAlign.formulas.length, 1);
+  assert.equal(bareAlign.formulas[0].type, 'block');
+
+  formulasOf(String.raw`$$\begin{array}{r@{\;}c@{\;}l} a & = & b \end{array} + \tr(A) + \rank(B) + \lcm(2,3) + \ctg x$$`);
+});
+
+test("aligned monomials, trig inline equations, \\n-arrow commands, currency \\$, and unclosed $$ before aligned render cleanly", () => {
+  const alignedVars = String.raw`$$
+\begin{aligned}
+xyzt &= a^2 b^2 \\
+abc &= 12
+\end{aligned}
+$$`;
+  const alignedRes = formulasOf(alignedVars);
+  assert.equal(alignedRes.formulas.length, 1);
+  assert.equal(alignedRes.formulas[0].type, "block");
+
+  const trigInline = String.raw`Seja $g(x) = cos(x) - sen(x)$ para todo real.`;
+  const trigRes = formulasOf(trigInline);
+  assert.deepEqual(trigRes.formulas, [{ type: "inline", content: "g(x) = cos(x) - sen(x)" }]);
+
+  const arrowFormula = String.raw`$f(x) \nearrow +\infty$ e $A \nprec B$`;
+  const arrowSanitized = sanitizeMathText(arrowFormula);
+  assert.ok(!arrowSanitized.includes("\nearrow"), arrowSanitized);
+  assert.equal(formulasOf(arrowFormula).formulas.length, 2);
+
+  const brlInsideMath = String.raw`O valor total é $\text{R}\$ 12500,00$ no final.`;
+  const brlRes = formulasOf(brlInsideMath);
+  assert.deepEqual(brlRes.formulas, [{ type: "inline", content: String.raw`\text{R}\$ 12500,00` }]);
+
+  const strayDollarBeforeAligned = "Considere $$\n\\begin{aligned}\nx &= 1 \\\\\ny &= 2\n\\end{aligned}";
+  const strayRes = formulasOf(strayDollarBeforeAligned);
+  assert.equal(strayRes.formulas.length, 1);
+  assert.equal(strayRes.formulas[0].type, "block");
+});
