@@ -32,6 +32,9 @@ PRINCÍPIO EPISTÊMICO FUNDAMENTAL: EVIDÊNCIA ANTES DE INFERÊNCIA
 - Analise estritamente aquilo que está explicitamente escrito, justificado ou desenhado.
 - Se houver imagem ou rascunho anexado, realize a transcrição OCR das equações manuscritas.
 - Identifique o primeiro ponto em que o procedimento deixa de ser matematicamente válido.
+- Uma resolução curta como $5 * 7 / 2 = 17,5$ pode demonstrar todo o procedimento necessário. Não exija texto longo artificialmente.
+- Transcreva fielmente também resultados intermediários e finais. Nunca substitua algarismos para fazer a conta bater.
+- Se houver ambiguidade visual (por exemplo 5/8), retorne "ocr_ambiguo": true e "precisa_revisao_humana": true. Dúvida de leitura não é erro matemático confirmado.
 
 VEREDITO CATEGORIAL OBRIGATÓRIO (veredito):
 Deve ser EXATAMENTE um dos quatro valores:
@@ -84,7 +87,12 @@ export async function POST(req: NextRequest) {
   try {
     const authorization = req.headers.get("authorization");
     const body = await req.json();
-    const { enunciado, gabarito, justificativa, imagem_base64, modo } = body;
+    const { enunciado, gabarito, imagem_base64, modo } = body;
+    const confirmed = body.transcricao_confirmada;
+    if (confirmed !== undefined && (typeof confirmed !== "string" || !confirmed.trim() || confirmed.length > 8000)) {
+      return NextResponse.json({ error: "Transcrição inválida." }, { status: 400 });
+    }
+    const justificativa = confirmed !== undefined ? confirmed : body.justificativa;
     if (!enunciado || typeof enunciado !== "string") {
       return NextResponse.json({ error: "Enunciado é obrigatório." }, { status: 400 });
     }
@@ -100,12 +108,12 @@ export async function POST(req: NextRequest) {
     }
 
     const rawJustificativa = (justificativa || "").trim();
-    const hasImage = Boolean(cleanImage);
+    const hasImage = Boolean(cleanImage) && confirmed === undefined;
 
     // Detecta se a chamada é um pedido de explicação/resolução passo a passo
     const isExplanation = Boolean(
       modo === "explicar" ||
-      /expli(?:que|cação)|resolução axiomática|passo a passo completo/i.test(rawJustificativa)
+      (confirmed === undefined && /expli(?:que|cação)|resolução axiomática|passo a passo completo/i.test(rawJustificativa))
     );
 
     // Validação de entrada sem desenvolvimento matemático (Apenas resposta final no modo avaliação)
@@ -137,6 +145,43 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Final gate shared by FastAPI and direct-provider fallbacks.
+    const finalize = async (evaluation: Record<string, any>) => {
+      if (isExplanation) return NextResponse.json(evaluation);
+      let check = evaluation.arithmetic_check;
+      if (!check) {
+        try {
+          const verified = await fetch(BACKEND_URL + "/api/tutor/verify-arithmetic", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...(authorization ? { Authorization: authorization } : {}) },
+            body: JSON.stringify({ transcription: confirmed ?? evaluation.transcricao_latex ?? "" }),
+            signal: AbortSignal.timeout(800), cache: "no-store",
+          });
+          if (verified.ok) {
+            const candidate = await verified.json();
+            if (["consistent", "conflict", "unsupported"].includes(candidate.status)) check = candidate;
+          }
+        } catch { /* Verification failure stays explicit, never means approval. */ }
+      }
+      evaluation.ocr_ambiguo = evaluation.ocr_ambiguo === true;
+      evaluation.arithmetic_check = check ?? { status: "unavailable", checks: [] };
+      const needsReview = ((hasImage && confirmed === undefined) || confirmed !== undefined) && (
+        (hasImage && check?.status === "conflict") || !check || (hasImage && evaluation.ocr_ambiguo === true) || evaluation.ocr_review_required === true
+      );
+      if (needsReview) {
+        const message = check ? "A leitura do manuscrito precisa de confirmação. Confira a transcrição; sua tentativa e seu rascunho foram preservados." : "Não foi possível conferir a leitura agora. Confira a transcrição ou tente novamente; sua tentativa foi preservada.";
+        Object.assign(evaluation, { precisa_revisao_humana: true, ocr_review_required: true,
+          feedback_latex: message, diagnostico: message, status_resolucao: "incompleto", resultado_final_correto: false });
+      } else if (check?.status === "conflict") {
+        evaluation.resultado_final_correto = false;
+        if (evaluation.veredito === "aprovado") Object.assign(evaluation, {
+          veredito: "parcial", status_resolucao: "erro_conta_sinal",
+          feedback_latex: "Há uma igualdade numérica inconsistente no desenvolvimento confirmado. Revise a conta antes de concluir.",
+        });
+      }
+      return NextResponse.json(evaluation);
+    };
+
     // 1. No modo de avaliação, tenta o Backend FastAPI (tolerância curta de 4.0s para não bloquear o fallback direto)
     if (!isExplanation && authorization?.startsWith("Bearer ")) {
       try {
@@ -154,6 +199,7 @@ export async function POST(req: NextRequest) {
             justificativa_texto: justificativa || "",
             imagem_base64: cleanImage,
             mime_type: mimeType,
+            transcricao_confirmada: confirmed,
           }),
           signal: AbortSignal.timeout(4000),
           cache: "no-store",
@@ -171,7 +217,7 @@ export async function POST(req: NextRequest) {
           if (
             (data.veredito || data.status_resolucao) &&
             data.model_provider !== "fallback" &&
-            !data.precisa_revisao_humana
+            (!data.precisa_revisao_humana || data.ocr_review_required === true)
           ) {
             const rawVeredito =
               data.veredito ||
@@ -180,8 +226,9 @@ export async function POST(req: NextRequest) {
                 : data.status_resolucao === "erro_conta_sinal"
                   ? "parcial"
                   : "incorreto");
-            return NextResponse.json({
+            return finalize({
               ...data,
+              ocr_ambiguo: data.ocr_ambiguo === true,
               veredito: rawVeredito,
               desenvolvimento_presente:
                 data.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento"),
@@ -226,6 +273,8 @@ export async function POST(req: NextRequest) {
         );
       }
     }
+
+    if (confirmed !== undefined) cleanImage = undefined;
 
     // 2. Montagem do prompt para inferência de alta precisão (Texto + Visão Multimodal OCR)
     const prompt = isExplanation
@@ -290,7 +339,8 @@ INSTRUÇÕES:
           ? "aprovado"
           : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
 
-        return NextResponse.json({
+        return finalize({
+          ocr_ambiguo: parsed.ocr_ambiguo === true,
           veredito: rawVeredito,
           desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
           resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),
@@ -344,7 +394,8 @@ INSTRUÇÕES:
             ? "aprovado"
             : (parsed.veredito || (parsed.status_resolucao === "correto" ? "aprovado" : "incorreto"));
 
-          return NextResponse.json({
+          return finalize({
+            ocr_ambiguo: parsed.ocr_ambiguo === true,
             veredito: rawVeredito,
             desenvolvimento_presente: isExplanation ? true : (parsed.desenvolvimento_presente ?? (rawVeredito !== "sem_desenvolvimento")),
             resultado_final_correto: isExplanation ? true : (parsed.resultado_final_correto ?? (rawVeredito === "aprovado")),

@@ -35,6 +35,7 @@ import {
   Filter,
   CheckCheck
 } from "lucide-react";
+import CommunityAliasField from "@/components/community/CommunityAliasField";
 import { useUserProfile, getInitials, inferirMotivacoes } from "@/lib/use-user";
 import { AdminAnalyticsShortcut } from "@/components/AdminAnalyticsShortcut";
 import {
@@ -574,6 +575,7 @@ export default function PerfilPage() {
         </div>
       </div>
 
+      <CommunityAliasField />
       <AdminAnalyticsShortcut />
 
       {/* 2. NAVEGAÇÃO POR ABAS */}

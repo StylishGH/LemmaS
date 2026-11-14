@@ -53,6 +53,7 @@ export interface ImmersiveFocusOverlayProps {
   onEvaluateDiscursive: (tipo: "lousa" | "geometria", payload: { imagemBase64?: string; texto?: string }) => Promise<void>;
   isEvaluating: boolean;
   evaluationResult?: DiscursiveEvaluationData;
+  onConfirmOcr?: (text: string) => Promise<void>;
   socraticTutor: React.ReactNode;
   // Ação de Sair
   onClose: () => void;
@@ -75,6 +76,7 @@ export default function ImmersiveFocusOverlay({
   onEvaluateDiscursive,
   isEvaluating,
   evaluationResult,
+  onConfirmOcr,
   socraticTutor,
   onClose,
 }: ImmersiveFocusOverlayProps) {
@@ -318,6 +320,7 @@ export default function ImmersiveFocusOverlay({
             onEvaluate={handleEvaluateFromHUD}
             isEvaluating={isEvaluating}
             evaluationResult={evaluationResult}
+            onConfirmOcr={onConfirmOcr}
             onCloseFocusMode={onClose}
           />
         </div>
