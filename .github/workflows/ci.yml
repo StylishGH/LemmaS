@@ -52,7 +52,7 @@ jobs:
         run: npm ci
       - name: Test question filters, prefetch cache, and math rendering
         working-directory: frontend
-        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs ../tests/community/contracts.test.mjs
+        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs scripts/test-canvas-shapes.mjs ../tests/community/contracts.test.mjs
       - name: Build Next.js 16 (Turbopack)
         working-directory: frontend
         env:
