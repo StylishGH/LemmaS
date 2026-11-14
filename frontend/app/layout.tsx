@@ -1,10 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/lib/use-user";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { StudentPresenceHeartbeat } from "@/components/StudentPresenceHeartbeat";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#101316" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "LEMMAS — Plataforma Cognitiva de Aprendizagem | Powered by MathAI Engine",

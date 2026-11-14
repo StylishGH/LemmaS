@@ -6,6 +6,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Escala padrão da plataforma LEMMAS (equivalente a zoom 120%-128%) para legibilidade editorial e matemática */
@@ -34,6 +35,10 @@ html {
      ========================================================================== */
   :root,
   html[data-theme="lemmas-light"] {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
     --background: #f8fafc;
     --foreground: #0f172a;
     --bg-board: #f8fafc;          /* Superfície geral (Porcelana fria) */
@@ -108,6 +113,21 @@ html {
     --scrollbar-track: #101316;
     --scrollbar-thumb: #1e2329;
   }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  button, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 150ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(0.97);
+  }
 }
 
 /* ==========================================================================
@@ -126,7 +146,7 @@ html {
   background-color: var(--badge-bg);
   border: 1px solid var(--border-badge);
   color: var(--ink-secondary);
-  transition: all 0.15s ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms var(--ease-out);
 }
 
 /* Indicador pontual (Bolinha de giz/piloto em vez de pintar o fundo inteiro) */
@@ -184,7 +204,7 @@ body {
   background-color: var(--marker-blue, #1d4ed8);
   color: #ffffff;
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: transform 150ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms var(--ease-out);
 }
 .lemmas-gold-cta:hover {
   background-color: #1e40af;
@@ -257,4 +277,46 @@ html:not(.dark) .lemmas-app-frame {
 html[data-theme="lemmas-light"] .lemmas-grain-overlay,
 html:not(.dark) .lemmas-grain-overlay {
   opacity: 0.035;
+}
+
+@keyframes lemmasFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lemmasPopoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: lemmasFadeIn 180ms var(--ease-out) both;
+}
+
+.lemmas-popover-enter {
+  animation: lemmasPopoverIn 160ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .lemmas-popover-enter {
+    animation-duration: 120ms;
+    transform: none !important;
+  }
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: none;
+  }
 }
