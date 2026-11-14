@@ -4,6 +4,7 @@ export interface CommunityComment {
   parentId: string | null;
   body: string;
   alias: string;
+  avatarUrl?: string | null;
   spoiler: boolean;
   status: 'visible' | 'hidden' | 'removed';
   createdAt: string;
@@ -11,6 +12,30 @@ export interface CommunityComment {
   liked: boolean;
   likes: number;
   replyCount: number;
+}
+
+const HTTPS_AVATAR_RE = /^https:\/\/[^\s"<>']+$/;
+const DATA_AVATAR_RE = /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+
+export function sanitizeAvatarUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.length <= 2048 && HTTPS_AVATAR_RE.test(trimmed)) return trimmed;
+  if (trimmed.length <= 150000 && DATA_AVATAR_RE.test(trimmed)) return trimmed;
+  return null;
+}
+
+export function getCommentInitials(alias?: string | null): string {
+  const tokens = (alias || '').trim().match(/[\p{L}\p{N}]+/gu) || [];
+  if (tokens.length === 0) return 'ES';
+  const meaningful =
+    tokens.length > 2 ? tokens.filter((t) => !/^(?:da|de|do|das|dos)$/i.test(t)) : tokens;
+  const parts = meaningful.length > 0 ? meaningful : tokens;
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
 }
 
 export interface CommunityPage {
