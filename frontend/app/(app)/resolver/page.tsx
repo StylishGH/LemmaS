@@ -51,6 +51,7 @@ import SpenSmartCanvas, { type Stroke } from "@/components/lousa/SpenSmartCanvas
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ImmersiveFocusOverlay from "@/components/bancada/ImmersiveFocusOverlay";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
+import { OcrReview } from "@/components/avaliacao/OcrReview";
 import ThoughtLine from "@/components/ui/thought-line";
 import QuestionDiscussion from "@/components/community/QuestionDiscussion";
 import LemaBadge from "@/components/math/LemaBadge";
@@ -124,6 +125,7 @@ interface DiscursiveEvaluationResult {
   erros_identificados: string[];
   feedback_latex: string;
   precisa_revisao_humana: boolean;
+  ocr_review_required?: boolean;
   diagnostico?: string;
   modelo?: string;
   confianca?: number | string;
@@ -417,6 +419,7 @@ function ResolverContent() {
 
   // Avaliação Discursiva da MathAI Engine & Ativação de Bancada
   const [discursiveEvaluations, setDiscursiveEvaluations] = useState<Record<number, DiscursiveEvaluationResult>>({});
+  const ocrEvidence = useRef<Record<number, { origem: "lousa" | "geometria" | "texto"; texto: string; imagemBase64?: string }>>({});
   const [loadingDiscursive, setLoadingDiscursive] = useState<boolean>(false);
   const [geometricCommands, setGeometricCommands] = useState<Record<number, string[]>>({});
   const [lousaHasStrokes, setLousaHasStrokes] = useState<Record<number, boolean>>({});
@@ -1072,7 +1075,7 @@ function ResolverContent() {
   // Avaliação Discursiva com MathAI Engine (Lousa, Geometria e Dedução & OCR)
   const submeterResolucaoDiscursiva = async (
     origem: "lousa" | "geometria" | "texto",
-    overrideContent?: { texto?: string; imagemBase64?: string }
+    overrideContent?: { texto?: string; imagemBase64?: string; transcricaoConfirmada?: string }
   ) => {
     const q = questions[currentIndex];
     if (!q) return;
@@ -1113,6 +1116,9 @@ function ResolverContent() {
           ? "Resolução manuscrita desenhada na Lousa de Rascunho."
           : "Construção geométrica desenvolvida na Bancada Euclidiana.");
 
+    if (!overrideContent?.transcricaoConfirmada) {
+      ocrEvidence.current[q.id] = { origem, texto: textoDeducao, imagemBase64: imageBase64 || undefined };
+    }
     setLoadingDiscursive(true);
     setLoadingIa(true);
     try {
@@ -1145,6 +1151,7 @@ function ResolverContent() {
           gabarito: q.gabarito || "",
           justificativa: justificativaRequest,
           imagem_base64: imageBase64 || null,
+          transcricao_confirmada: overrideContent?.transcricaoConfirmada,
         }),
       });
 
@@ -1168,6 +1175,7 @@ function ResolverContent() {
         erros_identificados: data.erros_identificados || (data.linha_do_erro ? [data.linha_do_erro] : []),
         feedback_latex: data.feedback_latex || data.diagnostico || "Avaliação realizada.",
         precisa_revisao_humana: Boolean(data.precisa_revisao_humana),
+        ocr_review_required: data.ocr_review_required === true,
         diagnostico: data.diagnostico,
         modelo: data.modelo,
         confianca: data.confianca,
@@ -1262,6 +1270,8 @@ function ResolverContent() {
               nivel_max_dica: maxHintLevel,
               total_dicas_solicitadas: qHints.length,
               avaliacao_ia: data,
+              precisa_revisao_humana: data.precisa_revisao_humana === true,
+              transcricao_confirmada: overrideContent?.transcricaoConfirmada || null,
               justificativa_texto: justificativaRequest || null,
               imagem_base64: imageBase64 || null,
               origem: origem || "bancada",
@@ -1283,6 +1293,14 @@ function ResolverContent() {
       setLoadingIa(false);
     }
   };
+
+  const confirmarLeituraOcr = async (text: string) => {
+    if (!currentQ) return;
+    const evidence = ocrEvidence.current[currentQ.id];
+    if (!evidence) return;
+    await submeterResolucaoDiscursiva(evidence.origem, { ...evidence, transcricaoConfirmada: text });
+  };
+
 
   const enviarParaMathAiEngine = async () => {
     await submeterResolucaoDiscursiva("texto");
@@ -2923,6 +2941,10 @@ function ResolverContent() {
         {/* BANCADA DE RESOLUÇÃO INTEGRADA (PARA QUESTÕES DISCURSIVAS) */}
         {isDiscursiva && renderBancadaResolucao()}
 
+        {discursiveEval?.ocr_review_required && (
+          <OcrReview key={`${currentQ.id}:${discursiveEval.transcricao_latex}`} transcription={discursiveEval.transcricao_latex || ""} pending={loadingDiscursive} onConfirm={confirmarLeituraOcr} />
+        )}
+
         {/* FEEDBACK ESTRUTURADO DA AVALIAÇÃO DISCURSIVA (MATHAI ENGINE) */}
         {isDiscursiva && discursiveEval && (
           <div className="space-y-3 animate-fadeIn">
@@ -3677,6 +3699,7 @@ function ResolverContent() {
           }}
           isEvaluating={loadingDiscursive}
           evaluationResult={discursiveEvaluations[currentQ.id]}
+          onConfirmOcr={confirmarLeituraOcr}
           socraticTutor={renderSocraticTutor()}
           onClose={() => setModoFocoAtivo(false)}
         />

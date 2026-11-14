@@ -21,6 +21,11 @@ Os status abaixo refletem o estado real verificado do código, testes e ambiente
 
 Este documento consolida fontes que divergem. Quando há conflito entre um relatório antigo e um erro reproduzido agora, prevalece a evidência mais recente do teste — e a divergência fica registrada para auditoria.
 
+## Ajustes locais de 14/11/2026 — publicação pendente
+
+- [~] Conferência aritmética em Python e confirmação da transcrição em caso de conflito no manuscrito; preserva tentativa pendente e exigência de desenvolvimento. [Comportamento, evidências e limites](architecture/ocr-arithmetic-review.md).
+- [~] Apelido público configurado no perfil; migration `21_community_profile_alias.sql` validada somente em banco local, aplicação remota pendente.
+
 ## 0.1 Release publicada em 11/11/2026
 
 **Evidência:** [PR #83 integrado](https://github.com/StylishGH/LemmaS/pull/83), commit de produção `1a6ed119e340f19ebae04e211f555fb1659890d7`, checks de CI e deploy Vercel aprovados. Site: [lemmas.com.br](https://lemmas.com.br).
