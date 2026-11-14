@@ -5,9 +5,9 @@
  */
 
 const GEMINI_MODELS = [
-  "gemini-3-flash-preview",
   "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
+  "gemini-3-flash-preview",
 ];
 
 export interface GeminiContentOptions {
@@ -57,8 +57,8 @@ export async function generateGeminiContent(
 
   for (let idx = 0; idx < GEMINI_MODELS.length; idx++) {
     const model = GEMINI_MODELS[idx];
-    // O modelo primário (gemini-3-flash-preview) recebe até 8.5s; modelos secundários têm timeout curto (2.8s) para não travar o fallback para NVIDIA NIM
-    const perModelTimeoutMs = idx === 0 ? Math.min(timeoutMs, 8500) : Math.min(timeoutMs, 2800);
+    // O modelo primário (gemini-flash-lite-latest) recebe até 5.5s; fallbacks têm até 4.0s para não travar a cascata para NVIDIA NIM
+    const perModelTimeoutMs = idx === 0 ? Math.min(timeoutMs, 5500) : Math.min(timeoutMs, 4000);
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
