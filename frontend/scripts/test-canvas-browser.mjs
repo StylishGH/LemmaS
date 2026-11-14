@@ -125,6 +125,16 @@ try {
  const longPanel=await page.$eval('[title="Minimizar"]',b=>b.closest('.rounded-2xl').getBoundingClientRect().bottom);
  assert.ok(longPanel<=844, 'long question stays within mobile viewport');
  console.log('PASS resize during stroke, DPR change, retained pen settings and long mobile questions');
+ await page.evaluate(()=>Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Sair do Modo Foco')).click());
+ await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
+ await page.waitForSelector('button[title="Limpar Lousa"]');
+ await clickTitle('Limpar Lousa');
+ await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],r=c.getBoundingClientRect();for(let i=0;i<=12;i++){const type=i===0?'pointerdown':'pointermove';const y=120+Math.sin(i)*3;c.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:9,pointerType:'pen',button:0,buttons:1,clientX:r.left+40+i*18,clientY:r.top+y,pressure:.7}));}});
+ await page.waitForFunction(()=>document.body.innerText.includes('Linha reta'),{timeout:2500});
+ await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],r=c.getBoundingClientRect();c.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:9,pointerType:'pen',button:0,clientX:r.left+256,clientY:r.top+120,pressure:0}));});
+ const snapped=await page.evaluate(()=>window.testDocs[0].strokes.at(-1));
+ assert.ok(snapped&&Math.abs(snapped.points[0].y-snapped.points.at(-1).y)<1,'draw-and-hold snaps wobbly horizontal stroke to horizontal line');
+ console.log('PASS draw-and-hold shape snap');
  assert.deepEqual(errors,[]);console.log('ALL BROWSER CHECKS PASSED');
  }finally{await browser.close();server.close();}
 
