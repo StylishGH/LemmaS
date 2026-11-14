@@ -461,7 +461,7 @@ export function LandingPage() {
         {/* 1. VISÃO DO ESTUDANTE (FLUXO V3 MIX REAL COM CORES LEMMAS)    */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {view === "student" ? (
-          <div className="animate-fadeIn">
+          <div className="lemmas-mode-view-enter">
             {/* HERO DO ESTUDANTE */}
             <section className="lemmas-section lemmas-hero" aria-labelledby="student-title">
               <div className="lemmas-hero-grid">
@@ -879,7 +879,7 @@ export function LandingPage() {
           /* ═══════════════════════════════════════════════════════════════ */
           /* 2. VISÃO DO PORTFÓLIO TÉCNICO (DADOS, ML & GEN AI REAL)        */
           /* ═══════════════════════════════════════════════════════════════ */
-          <div className="animate-fadeIn">
+          <div className="lemmas-mode-view-enter">
             {/* HERO DO PORTFÓLIO COM TERMINAL DE DADOS & CONTRATOS */}
             <section className="lemmas-section lemmas-hero" aria-labelledby="tech-title">
               <div className="lemmas-hero-grid">

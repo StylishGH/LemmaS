@@ -921,7 +921,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "banca" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 lemmas-popover-enter origin-top-left">
               {/* Header do Popover */}
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
@@ -1076,7 +1076,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "materia" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 lemmas-popover-enter origin-top-left">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Grandes Áreas, Tópicos & Subtópicos
@@ -1267,7 +1267,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "dificuldade" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 lemmas-popover-enter origin-top-right">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Nível de Dificuldade
@@ -1344,7 +1344,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "ano" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-84 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-84 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 lemmas-popover-enter origin-top-right">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Anos da Prova ({anoMin}–{anoMax})
@@ -1443,7 +1443,7 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "formato" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 lemmas-popover-enter origin-top-right">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
                   Formato, Prova & Fase

@@ -254,7 +254,7 @@ export default function LemaBadge({
         ref={popoverRef}
         className={`absolute z-50 left-0 sm:left-auto sm:right-0 ${
           opensUpward ? "bottom-full mb-2" : "top-full mt-2"
-        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left animate-fadeIn backdrop-blur-md`}
+        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left lemmas-popover-enter origin-top backdrop-blur-md`}
         role="dialog"
         aria-modal="true"
       >

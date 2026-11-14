@@ -44,7 +44,7 @@ html {
   font-size: 0.85rem;
   letter-spacing: .01em;
   opacity: .9;
-  transition: all .2s ease;
+  transition: color 160ms ease, background-color 160ms ease, opacity 160ms ease, transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
   white-space: nowrap;
   background: transparent;
   border: 0;
@@ -186,7 +186,7 @@ html {
   font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 180ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
   color: #a8a29e;
   background: transparent;
   white-space: nowrap;
@@ -195,6 +195,10 @@ html {
 .lemmas-mode-btn:hover {
   color: #f5f0df;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.lemmas-mode-btn:active {
+  transform: scale(0.97);
 }
 
 .lemmas-mode-btn.active {
@@ -269,22 +273,19 @@ html {
   font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.22s ease;
+  transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
   cursor: pointer;
   white-space: nowrap;
+}
+
+.lemmas-cta:active {
+  transform: scale(0.97);
 }
 
 .lemmas-cta-primary {
   background: #e1bb55;
   color: #18150f;
   box-shadow: 0 4px 16px rgba(225, 187, 85, 0.28);
-}
-
-.lemmas-cta-primary:hover {
-  background: #f0cd73;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 22px rgba(225, 187, 85, 0.4);
-  color: #110e08;
 }
 
 .lemmas-cta-secondary {
@@ -294,11 +295,20 @@ html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.lemmas-cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.32);
-  color: #ffffff;
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .lemmas-cta-primary:hover {
+    background: #f0cd73;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(225, 187, 85, 0.4);
+    color: #110e08;
+  }
+
+  .lemmas-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
 }
 
 .lemmas-hero-note {
@@ -397,7 +407,7 @@ html {
   flex-direction: column;
   gap: 12px;
   box-shadow: 0 4px 18px rgb(0 0 0 / .18);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 220ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), border-color 200ms ease, box-shadow 220ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /* Linha laser híbrida azul → giz no topo (acende no hover) */
@@ -419,14 +429,16 @@ html {
   pointer-events: none;
 }
 
-.lemmas-roadmap-card:hover {
-  transform: translateY(-4px);
-  border-color: rgb(56 189 248 / .4);
-  box-shadow: 0 24px 48px rgb(0 0 0 / .55), 0 2px 10px rgb(0 0 0 / .4);
-}
+@media (hover: hover) and (pointer: fine) {
+  .lemmas-roadmap-card:hover {
+    transform: translateY(-4px);
+    border-color: rgb(56 189 248 / .4);
+    box-shadow: 0 24px 48px rgb(0 0 0 / .55), 0 2px 10px rgb(0 0 0 / .4);
+  }
 
-.lemmas-roadmap-card:hover::before {
-  opacity: 1;
+  .lemmas-roadmap-card:hover::before {
+    opacity: 1;
+  }
 }
 
 .lemmas-roadmap-header {
@@ -1834,3 +1846,38 @@ html[data-theme="lemmas-light"] .lemmas-student-login:focus-visible { outline-co
 .lemmas-question-card { min-width: 0; }
 .lemmas-question-lemma-formula { max-width: 100%; overflow-x: auto; }
 html[data-theme="lemmas-light"] .lemmas-verdict-row { color: #344054; }
+
+@keyframes lemmasBlurCrossfade {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(6px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lemmas-mode-view-enter {
+  animation: lemmasBlurCrossfade 220ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
+}
+
+.lemmas-hero-copy > * {
+  animation: lemmasFadeIn 240ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
+}
+.lemmas-hero-copy > *:nth-child(1) { animation-delay: 0ms; }
+.lemmas-hero-copy > *:nth-child(2) { animation-delay: 45ms; }
+.lemmas-hero-copy > *:nth-child(3) { animation-delay: 85ms; }
+.lemmas-hero-copy > *:nth-child(4) { animation-delay: 120ms; }
+.lemmas-hero-copy > *:nth-child(5) { animation-delay: 150ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lemmas-mode-view-enter,
+  .lemmas-hero-copy > * {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}
