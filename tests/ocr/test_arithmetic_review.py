@@ -29,5 +29,20 @@ class ArithmeticReviewTests(unittest.TestCase):
         result = protect_evaluation({'veredito':'incorreto', 'transcricao_latex':'5*7/2=17.5'}, has_image=True)
         self.assertEqual(result['veredito'], 'incorreto')
         self.assertFalse(result.get('ocr_review_required', False))
+    def test_sympy_radicals_and_trig_trigger_ocr_recheck_on_conflict(self):
+        self.assertEqual(check_arithmetic(r'$\sqrt{8} = 2\sqrt{2}$')['status'], 'consistent')
+        self.assertEqual(check_arithmetic(r'$\sqrt{8} = 4\sqrt{2}$')['status'], 'conflict')
+        self.assertEqual(check_arithmetic(r'$\sin(\pi/6) = 1/2$')['status'], 'consistent')
+        self.assertEqual(check_arithmetic(r'$\sin(\pi/6) = 1$')['status'], 'conflict')
+        result = protect_evaluation(
+            {'veredito': 'aprovado', 'transcricao_latex': r'$\sqrt{8} = 4\sqrt{2}$', 'diagnostico': 'ok'},
+            has_image=True,
+        )
+        self.assertTrue(result['precisa_revisao_humana'])
+        self.assertTrue(result['ocr_review_required'])
+    def test_sympy_algebraic_identity_vs_contingent_equation(self):
+        self.assertEqual(check_arithmetic('$(x+1)^2 = x^2 + 2x + 1$')['status'], 'consistent')
+        self.assertEqual(check_arithmetic('$(x+1)^2 - x^2 - 2x = 5$')['status'], 'conflict')
+        self.assertEqual(check_arithmetic('$2x = 6$')['status'], 'unsupported')
 
 if __name__ == '__main__': unittest.main()
