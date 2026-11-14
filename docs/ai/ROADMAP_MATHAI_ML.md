@@ -4,6 +4,19 @@
 
 ---
 
+## Consenso Nov 2026 — RAG grounded primeiro, fine-tuning depois
+
+Decisão fechada com o ChatGPT em 14/11/2026 (ver issue #108): **RAG grounded primeiro. Fine-tuning depois.**
+
+- **RAG:** embedding `BAAI/bge-m3` (mantido); recuperação separada de lemas e questões; testar RRF contra o híbrido atual (lema 0,65 / semântico 0,20 / LaTeX 0,15); reranker experimental `Qwen3-Reranker-0.6B`; gerador RAG `Qwen3-8B-AWQ` (`Qwen/Qwen3-8B-AWQ`); citações por contrato JSON validadas no backend; benchmark de 150 consultas revisadas + RAGAS com avaliador local.
+- **Fine-tuning (adiado):** candidato `Qwen3-4B-Instruct-2507` com LoRA/QLoRA, só com dados e se bater o baseline. Não treinar o solver de 14B agora.
+- **Guardrails:** 3 níveis (determinístico, matemático, pedagógico); lema inexistente → bloquear citação; resposta errada → bloquear; nunca declarar verificado o que não foi.
+- **Modelos (Colab L4, 24 GB):** solver Qwen3-14B-AWQ vs Qwen2.5-Math-7B-Instruct BF16; juiz Qwen2.5-7B-Instruct-AWQ; critério de promoção +5 p.p. em teste cego com ≥100 questões.
+- **Plano (7 passos):** 1) comparação dos solvers nas 12 questões; 2) corrigir ancoragem; 3) benchmark RAG de 150; 4) retrieval A/B; 5) geração grounded; 6) guardrails + RAGAS; 7) expandir dados e decidir fine-tuning.
+- **Próximo passo:** rodar o Qwen2.5-Math BF16 nas mesmas 12 questões + revisão humana cega.
+
+---
+
 ## 1. Visão Geral da Arquitetura Pedagógica
 
 O **MathAI Engine** atua como o cérebro cognitivo da plataforma **LEMMAS**, operando através de quatro pilares complementares e desacoplados:
@@ -44,9 +57,13 @@ O **MathAI Engine** atua como o cérebro cognitivo da plataforma **LEMMAS**, ope
 - **Armazenamento:** Extensão `pgvector` nativa no PostgreSQL do Supabase.
 - **Caso de Uso:** Encontrar exercícios com estrutura matemática equivalente para alimentar o recomendador quando o agendador FSRS acionar uma revisão.
 
+> **Atualização Nov 2026:** ver Consenso Nov 2026 acima — RAG grounded primeiro (bge-m3 mantido, RRF vs híbrido, gerador Qwen3-8B-AWQ).
+
 ### Fase 4: Learning to Rank (LTR) & Calibração do FSRS
 - **Ranking Preditivo:** Ordenar questões candidatas maximizando a zona de desenvolvimento proximal (XGBoost / LightGBM com função objetivo de ranking).
 - **Calibração do FSRS:** Ajuste fino dos 17 parâmetros de peso do FSRS-v4 por aluno usando otimização numérica via SciPy / PyTorch.
 
 ### Fase 5: Fine-Tuning de SLM Pedagógico
 - Ajuste fino supervisionado (SFT) de um Small Language Model local (ex: Qwen 2.5 7B Math) usando pares auditados de intervenção socrática extraídos da telemetria real do LEMMAS.
+
+> **Atualização Nov 2026:** SFT adiado — ver Consenso Nov 2026 acima. Candidato passa a ser Qwen3-4B-Instruct-2507 com LoRA/QLoRA, só com dados e se bater o baseline.
