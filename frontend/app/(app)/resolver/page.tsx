@@ -2040,7 +2040,7 @@ function ResolverContent() {
                           )}
                         </div>
                       )}
-                      <QuestionDiscussion questionId={q.id} />
+                      <QuestionDiscussion key={`simulado-disc-${q.id}`} questionId={q.id} variant="inline" />
                     </div>
                   )}
                 </div>
@@ -2886,7 +2886,15 @@ function ResolverContent() {
               <LemaBadge lemaCodigo={currentQ?.lema_codigo} lemaId={currentQ?.lema_id} />
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {!isSimuladoAtivo && currentQ && (
+              <QuestionDiscussion
+                key={`q-disc-${currentQ.id}`}
+                questionId={currentQ.id}
+                variant="header"
+                showEdgeTab={!modoFocoAtivo}
+              />
+            )}
             <button
               type="button"
               onClick={() => setShowReportModal(true)}
@@ -3460,16 +3468,10 @@ function ResolverContent() {
         )}
       </div>
 
-      {!modoFocoAtivo || !isDiscursiva ? (
-        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo}>
-          {!modoFocoAtivo && renderSocraticTutor()}
+      {!modoFocoAtivo && renderSocraticTutor()}
 
-          {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
-          {!isDiscursiva && renderBancadaResolucao()}
-        </QuestionDiscussion>
-      ) : (
-        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo} />
-      )}
+      {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
+      {!isDiscursiva && renderBancadaResolucao()}
 
       {/* NAVEGAÇÃO INFERIOR */}
       <div className="flex items-center justify-between pt-2">
