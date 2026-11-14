@@ -56,6 +56,14 @@ test('missing verifier does not silently approve an image',async()=>{
   assert.equal(data.precisa_revisao_humana,true);
   assert.equal(data.arithmetic_check.status,'unavailable');
 });
+test('confirmed transcription is not trapped in OCR review loop when verifier is unavailable',async()=>{
+  directPayload={...payload,veredito:'aprovado',resultado_final_correto:true,transcricao_latex:'5*7/2=17.5'};
+  global.fetch=async()=>new Response('',{status:503});
+  const data=await (await moduleExports.POST(request({transcricao_confirmada:'5*7/2=17.5'}))).json();
+  assert.equal(data.veredito,'aprovado');
+  assert.notEqual(data.ocr_review_required,true);
+  assert.notEqual(data.precisa_revisao_humana,true);
+});
 test('answer-only confirmation still requires development',async()=>{
   const data=await (await moduleExports.POST(request({transcricao_confirmada:'17.5'}))).json();
   assert.equal(data.veredito,'sem_desenvolvimento');
