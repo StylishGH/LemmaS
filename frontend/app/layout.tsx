@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/lib/use-user";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { StudentPresenceHeartbeat } from "@/components/StudentPresenceHeartbeat";
+import { ProtoDesignPicker } from "@/components/ProtoDesignPicker";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -40,6 +41,7 @@ export default function RootLayout({
           <UserProvider>
             <StudentPresenceHeartbeat />
             {children}
+            <ProtoDesignPicker />
           </UserProvider>
         </ThemeProvider>
       </body>
