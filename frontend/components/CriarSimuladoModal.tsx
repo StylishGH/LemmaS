@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState, useId } from "react";
+import React, { useState, useId, useEffect, useRef } from "react";
 import { 
   Clock, 
   Play, 
   X, 
-  HelpCircle, 
   ShieldAlert, 
-  Sparkles, 
   Timer, 
   Calculator,
-  CheckCircle2,
   AlertCircle
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+
+const DEFAULT_QUESTION_COUNT = 20;
 
 export interface SimuladoConfig {
   modo: "simulado";
@@ -62,13 +62,73 @@ export function CriarSimuladoModal({
 
   // Limite de questões (opcional, para não fazer 200 de uma vez)
   const [quantidadeDesejada, setQuantidadeDesejada] = useState<number>(
-    selectedIds.length > 0 ? selectedIds.length : Math.min(20, totalFiltradas)
+    selectedIds.length > 0 ? selectedIds.length : (totalFiltradas > 0 ? Math.min(DEFAULT_QUESTION_COUNT, totalFiltradas) : 0)
   );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  const wasOpenRef = useRef(false);
+  const hasSyncedInitialCountRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const isDialogOpen = mounted && isOpen;
+
+  // The portal must wait for hydration before accessing document.body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      hasSyncedInitialCountRef.current = false;
+      return;
+    }
+
+    // Reopening or receiving the first non-zero total restores defaults without overwriting manual clearing to 0.
+    const shouldSync = !wasOpenRef.current || (!hasSyncedInitialCountRef.current && totalFiltradas > 0);
+    wasOpenRef.current = true;
+    if (!shouldSync) return;
+
+    if (selectedIds.length > 0 || totalFiltradas > 0) {
+      hasSyncedInitialCountRef.current = true;
+    }
+
+    setOrigemQuestoes(selectedIds.length > 0 ? "selecionadas" : "todas_filtradas");
+    setQuantidadeDesejada(selectedIds.length > 0
+      ? selectedIds.length
+      : (totalFiltradas > 0 ? Math.min(DEFAULT_QUESTION_COUNT, totalFiltradas) : 0));
+  }, [isOpen, selectedIds.length, totalFiltradas]);
+
+  useEffect(() => {
+    // Register keyboard dismissal only while the dialog can be closed.
+    if (!isOpen || loading) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, loading, onClose]);
+
+  useEffect(() => {
+    // Move initial focus into the dialog and restore trigger focus on close/unmount.
+    if (!isDialogOpen) return;
+
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      if (
+        previousActiveElement &&
+        previousActiveElement.isConnected &&
+        typeof previousActiveElement.focus === "function"
+      ) {
+        previousActiveElement.focus({ preventScroll: true });
+      }
+    };
+  }, [isDialogOpen]);
+
+  if (!mounted || !isOpen) return null;
 
   const totalEfetivoQuestoes = origemQuestoes === "selecionadas" 
     ? (selectedIds.length || 1) 
@@ -132,7 +192,7 @@ export function CriarSimuladoModal({
         return;
       }
 
-      let data: { questions?: any[]; simuladoId?: string } = {};
+      let data: { questions?: { id: number }[]; simuladoId?: string } = {};
       let res: Response | null = null;
 
       try {
@@ -157,7 +217,7 @@ export function CriarSimuladoModal({
 
       const simuladoIdFinal = data.simuladoId || crypto.randomUUID();
       const idsConfig = data.questions && data.questions.length > 0
-        ? data.questions.map((q: any) => q.id)
+        ? data.questions.map((q) => q.id)
         : idsFinais;
 
       const config: SimuladoConfig = {
@@ -183,13 +243,27 @@ export function CriarSimuladoModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
-      <div className="max-w-xl w-full my-8 rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !loading) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="criar-simulado-modal-title"
+        tabIndex={-1}
+        className="max-w-xl w-full my-auto rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6 outline-none"
+      >
         {/* BOTÃO FECHAR */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+          disabled={loading}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
           aria-label="Fechar modal"
         >
           <X className="w-5 h-5" />
@@ -201,7 +275,10 @@ export function CriarSimuladoModal({
             <Timer className="w-3.5 h-3.5" />
             <span>Condições Oficiais de Prova</span>
           </div>
-          <h2 className="font-serif-math text-2xl font-bold text-slate-900 dark:text-[#f5f0df] tracking-tight">
+          <h2
+            id="criar-simulado-modal-title"
+            className="font-serif-math text-2xl font-bold text-slate-900 dark:text-[#f5f0df] tracking-tight"
+          >
             Configurar Simulado Cronometrado
           </h2>
           <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
@@ -475,7 +552,8 @@ export function CriarSimuladoModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+            disabled={loading}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -490,6 +568,7 @@ export function CriarSimuladoModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

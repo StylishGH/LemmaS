@@ -55,6 +55,7 @@ function extrairParentesesBalanceados(str: string, startIndex: number): { conteu
  */
 export function normalizarRadicais(texto: string): string {
   if (!texto) return "";
+  texto = texto.replace(/[\u200b-\u200d\ufeff]/g, "");
   let res = "";
   let i = 0;
 
@@ -155,10 +156,19 @@ export function normalizarMatematica(texto: string): string {
  */
 export function applyOutsideMath(text: string, fn: (plainText: string) => string): string {
   if (!text || typeof text !== "string") return "";
-  const tokens = text.split(/(\$\$[\s\S]+?\$\$|\$[^\$\n]+?\$)/g);
+  const tokens = text.split(/(\$\$[\s\S]+?\$\$|(?<![\\$])\$(?:\\[^\n]|[^\\$\n])+?\$)/g);
   return tokens.map((token) => {
     if (token.startsWith("$")) return token;
-    return fn(token);
+    const transformed = fn(token);
+    // Reject automatic delimiters inside arguments, including nested command arguments.
+    let depth = 0;
+    for (let i = 0; i < transformed.length; i++) {
+      if (transformed[i] === "\\") { i++; continue; }
+      if (transformed[i] === "{") depth++;
+      if (transformed[i] === "}") depth--;
+      if (transformed[i] === "$" && depth > 0) return token;
+    }
+    return transformed;
   }).join("");
 }
 
@@ -172,8 +182,12 @@ export function autoWrapLatexExpressions(text: string): string {
   const trigPattern = /\b(tg|sen|cossec|cosec|cotg|arcsen|arctg)\b/g;
 
   // 1. Equações completas com funções trigonométricas, letras gregas ou comandos LaTeX
-  // Ex: tg(\theta ) = tg(\alpha - \beta ) ou \theta =\alpha -\beta ou y = \alpha + \beta
-  const equationRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)(?:\s*[-+*/]\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*\s*=\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+)(?:\s*[-+*/]\s*(?:\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)|\\(?:[a-zA-Z]+)|[a-zA-Z0-9_{}^]+))*)(?!\$)/g;
+  // Ex: tg(\theta ) = tg(\alpha - \beta ) ou \theta =\alpha -\beta ou sen (60°) = \sqrt{3}/2
+  const cmdAtom = String.raw`\\(?:[a-zA-Z]+)(?:\[[^\]]*\])?(?:\{(?:[^{}]|\{[^{}]*\})*\})*`;
+  const trigAtom = String.raw`\\?(?:tg|sen|tan|sin|cos|sec|cossec|cosec|cotg|arcsen|arccos|arctg|arctan)\s*\([^)]*\)`;
+  const operandAtom = `(?:${trigAtom}|${cmdAtom}|[a-zA-Z0-9_{}^]+)`;
+  const sideExpr = `${operandAtom}(?:\\s*[-+*/]\\s*${operandAtom})*`;
+  const equationRegex = new RegExp(`(?<!\\$)(?:(?<=^|[\\s([:;])|^)(${sideExpr}\\s*=\\s*${sideExpr})(?!\\$)`, "g");
   res = applyOutsideMath(res, (chunk) => {
     return chunk.replace(equationRegex, (match) => {
       if (/\\|[()]|\b(?:tg|sen|cos|tan|sin|sec|cotg)\b/.test(match)) {
@@ -187,7 +201,7 @@ export function autoWrapLatexExpressions(text: string): string {
 
   // 2. Funções trigonométricas isoladas com argumento entre parênteses:
   // Ex: tg(\alpha ), tg(\beta ), sen(x), cos(\theta)
-  const trigCallRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((?:tg|sen|cossec|cosec|cotg|arcsen|arctg|tan|sin|cos|sec|cot|arccos|arctan)\s*\([^)]+\))(?!\$)/g;
+  const trigCallRegex = /(?<!\$)(?:(?<=^|[\s([:;])|^)((?:tg|sen|cossec|cosec|cotg|arcsen|arctg|tan|sin|cos|sec|cot|arccos|arctan)\s*\([^)]+\))(?!\$)/g;
   res = applyOutsideMath(res, (chunk) => {
     return chunk.replace(trigCallRegex, (match) => {
       let clean = match.replace(trigPattern, "\\operatorname{$1}");
@@ -223,7 +237,7 @@ export function autoWrapLatexExpressions(text: string): string {
 
   // 8. Equações com comandos com contrabarra soltos e operadores (+, -, =, /)
   // Ex: \theta =\alpha -\beta (caso com espaços ou caracteres especiais)
-  const looseCmdEqRegex = /(?<!\$)(?:(?<=^|[\s([{:;])|^)((\\[a-zA-Z]+|[a-zA-Z0-9])\s*=\s*(\\[a-zA-Z]+|[a-zA-Z0-9])(?:\s*[-+*/]\s*(\\[a-zA-Z]+|[a-zA-Z0-9]))*)(?!\$)/g;
+  const looseCmdEqRegex = /(?<!\$)(?:(?<=^|[\s([:;])|^)((\\[a-zA-Z]+|[a-zA-Z0-9])\s*=\s*(\\[a-zA-Z]+|[a-zA-Z0-9])(?:\s*[-+*/]\s*(\\[a-zA-Z]+|[a-zA-Z0-9]))*)(?!\$)/g;
   res = applyOutsideMath(res, (chunk) => {
     return chunk.replace(looseCmdEqRegex, (match) => {
       if (match.includes("\\")) {
@@ -448,6 +462,6 @@ export function extrairEnunciadoEAlternativas(texto: string, isDiscursiva: boole
 
 export function corrigirLatex(texto: string): string {
   if (!texto) return "";
-  let res = texto.replace(/(\w)imes(\w)/g, "$1\\times $2");
+  const res = texto.replace(/(\w)imes(\w)/g, "$1\\times $2");
   return normalizarMatematica(res);
 }

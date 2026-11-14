@@ -46,11 +46,13 @@ import { useUserProfile } from "@/lib/use-user";
 import { obterFiltrosApiPerfil } from "@/lib/pedagogical-engine";
 import { createClient } from "@/lib/supabase";
 import { resolveFigureUrl, getFallbackFigureUrl } from "@/lib/image-url";
+import { createCanvasDocument, type CanvasDocument } from "@/lib/canvas-document";
 import SpenSmartCanvas, { type Stroke } from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 import ImmersiveFocusOverlay from "@/components/bancada/ImmersiveFocusOverlay";
 import ReportarQuestaoModal from "@/components/ReportarQuestaoModal";
 import ThoughtLine from "@/components/ui/thought-line";
+import QuestionDiscussion from "@/components/community/QuestionDiscussion";
 import LemaBadge from "@/components/math/LemaBadge";
 
 interface Question {
@@ -395,7 +397,9 @@ function ResolverContent() {
   const [hintError, setHintError] = useState<string | null>(null);
 
   // Armazenamento em Ref para ZERO re-renders do componente pai (3600+ linhas) durante a escrita ativa
-  const lousaStrokesRef = useRef<Record<number, Stroke[]>>({});
+  const lousaDocumentsRef = useRef<Record<number, CanvasDocument>>({});
+  const getLousaDocument = (index: number) =>
+    lousaDocumentsRef.current[index] ??= createCanvasDocument();
 
   // Diagnóstico Multimodal & MathAI Engine
   const [imageFiles, setImageFiles] = useState<Record<number, string>>({});
@@ -420,7 +424,6 @@ function ResolverContent() {
   const bancadaRef = React.useRef<HTMLDivElement>(null);
 
   const handleLousaStrokesChange = useCallback((strokes: Stroke[]) => {
-    lousaStrokesRef.current[currentIndex] = strokes;
     const hasStrokes = strokes.length > 0;
     setLousaHasStrokes((prev) =>
       prev[currentIndex] === hasStrokes
@@ -468,10 +471,12 @@ function ResolverContent() {
             const { corpo, alternativas } = extrairEnunciadoEAlternativas(data.enunciado);
             setQuestions([{ ...data, enunciado_limpo: corpo, alternativas }]);
             setTotalCount(1);
-            setSessionType(modeQuery === "treino" ? "treino" : "simulado");
+            const nextSessionType =
+              modeQuery === "simulado" || sessionQuery === "simulado" ? "simulado" : "treino";
+            setSessionType(nextSessionType);
             setSessionMode("active");
-            setTotalTimeInitial(30 * 60);
-            setTimeLeft(30 * 60);
+            setTotalTimeInitial(nextSessionType === "simulado" ? 30 * 60 : 0);
+            setTimeLeft(nextSessionType === "simulado" ? 30 * 60 : 0);
           }
           return;
         }
@@ -653,7 +658,14 @@ function ResolverContent() {
     return () => {
       ignore = true;
     };
-  }, [queryId, sessionQuery, modeQuery, profile?.id, profile?.objetivoPrincipal]);
+  }, [
+    queryId,
+    sessionQuery,
+    modeQuery,
+    // Apenas standby consome preferências do perfil; sessões explícitas não devem reiniciar com a hidratação do perfil.
+    !queryId && sessionQuery !== "simulado" && sessionQuery !== "treino" ? profile?.id : undefined,
+    !queryId && sessionQuery !== "simulado" && sessionQuery !== "treino" ? profile?.objetivoPrincipal : undefined,
+  ]);
 
   // Carregamento paginado sob demanda (em lotes de 100) quando o aluno avança ou salta
   useEffect(() => {
@@ -768,7 +780,7 @@ function ResolverContent() {
     setFeedbacks({});
     setJustificativas({});
     setBookmarks(new Set());
-    lousaStrokesRef.current = {};
+    lousaDocumentsRef.current = {};
     setTotalTimeInitial(45 * 60);
     setTimeLeft(45 * 60);
   };
@@ -2010,6 +2022,7 @@ function ResolverContent() {
                           )}
                         </div>
                       )}
+                      <QuestionDiscussion questionId={q.id} />
                     </div>
                   )}
                 </div>
@@ -2199,7 +2212,7 @@ function ResolverContent() {
             title="Abrir a Lousa ou GeoGebra em tela cheia com card flutuante da questão"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="font-bold">✨ Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
+            <span className="font-bold">Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
           </button>
         </div>
       </div>
@@ -2218,11 +2231,11 @@ function ResolverContent() {
       )}
 
       {/* CONTEÚDO ATIVO DA BANCADA */}
-      {bancadaModo === "lousa" && (
+      {bancadaModo === "lousa" && !modoFocoAtivo && (
         <div className="space-y-3 animate-fadeIn">
           <SpenSmartCanvas
             key={`spen-canvas-q${currentIndex}-${currentQ?.id ?? 'none'}`}
-            initialStrokes={lousaStrokesRef.current[currentIndex] || []}
+            documentState={getLousaDocument(currentIndex)}
             onStrokesChange={handleLousaStrokesChange}
             onEvaluateOcr={async (b64) => {
               setLousaHasStrokes((prev) => ({ ...prev, [currentIndex]: true }));
@@ -2234,7 +2247,7 @@ function ResolverContent() {
         </div>
       )}
 
-      {bancadaModo === "geometria" && (
+      {bancadaModo === "geometria" && !modoFocoAtivo && (
         <div className="space-y-3 animate-fadeIn">
           <GeometricCompassBoard
             key={`geo-board-q${currentIndex}-${currentQ?.id ?? 'none'}`}
@@ -3425,10 +3438,16 @@ function ResolverContent() {
         )}
       </div>
 
-      {!modoFocoAtivo && renderSocraticTutor()}
+      {!modoFocoAtivo || !isDiscursiva ? (
+        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo}>
+          {!modoFocoAtivo && renderSocraticTutor()}
 
-      {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
-      {!isDiscursiva && renderBancadaResolucao()}
+          {/* BANCADA DE RASCUNHO PARA QUESTÕES OBJETIVAS (QUESTÕES DISCURSIVAS RESOLVEM NA BANCADA INTEGRADA AO CARD) */}
+          {!isDiscursiva && renderBancadaResolucao()}
+        </QuestionDiscussion>
+      ) : (
+        <QuestionDiscussion questionId={currentQ.id} blocked={isSimuladoAtivo} />
+      )}
 
       {/* NAVEGAÇÃO INFERIOR */}
       <div className="flex items-center justify-between pt-2">
@@ -3649,7 +3668,7 @@ function ResolverContent() {
               setBancadaModo("lousa");
             }
           }}
-          lousaStrokes={lousaStrokesRef.current[currentIndex] || []}
+          lousaDocument={getLousaDocument(currentIndex)}
           onLousaStrokesChange={handleLousaStrokesChange}
           geometricCommands={geometricCommands[currentIndex] || []}
           onGeometricCommandsChange={handleGeometricCommandsChange}
