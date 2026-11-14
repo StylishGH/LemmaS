@@ -261,7 +261,13 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     onStrokesChangeRef.current?.(strokesRef.current);
   }, [isLight, redrawBaseCanvas, drawFullStroke]);
 
-  // Inicializa o tamanho do Canvas apenas quando as dimensões físicas mudam
+  // Inicializa o tamanho do Canvas e nunca encolhe o backing store durante aberturas de teclado virtual
+  const maxLogicalSizeRef = useRef<{ width: number; height: number; zoom: number }>({
+    width: 0,
+    height: 0,
+    zoom,
+  });
+
   useEffect(() => {
     const viewport = viewportRef.current;
     const container = containerRef.current;
@@ -269,11 +275,16 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const inkCanvas = inkCanvasRef.current;
     if (!viewport || !container || !baseCanvas || !inkCanvas) return;
 
+    if (maxLogicalSizeRef.current.zoom !== zoom) {
+      maxLogicalSizeRef.current = { width: 0, height: 0, zoom };
+    }
+
     const setupDimensions = () => {
       if (viewport.clientWidth <= 0 || viewport.clientHeight <= 0) return;
       const content = canvasContentSize(strokesRef.current);
-      const width = Math.max(viewport.clientWidth / zoom, content.width);
-      const height = Math.max(viewport.clientHeight / zoom, content.height);
+      const width = Math.max(maxLogicalSizeRef.current.width, viewport.clientWidth / zoom, content.width);
+      const height = Math.max(maxLogicalSizeRef.current.height, viewport.clientHeight / zoom, content.height);
+      maxLogicalSizeRef.current = { width, height, zoom };
       container.style.width = `${width}px`;
       container.style.height = `${height}px`;
       setBaseSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
