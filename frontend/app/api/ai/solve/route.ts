@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: { "Content-Type": "application/json", ...(authorization ? { Authorization: authorization } : {}) },
             body: JSON.stringify({ transcription: confirmed ?? evaluation.transcricao_latex ?? "" }),
-            signal: AbortSignal.timeout(800), cache: "no-store",
+            signal: AbortSignal.timeout(3500), cache: "no-store",
           });
           if (verified.ok) {
             const candidate = await verified.json();
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       evaluation.ocr_ambiguo = evaluation.ocr_ambiguo === true;
       evaluation.arithmetic_check = check ?? { status: "unavailable", checks: [] };
       const needsReview = ((hasImage && confirmed === undefined) || confirmed !== undefined) && (
-        (hasImage && check?.status === "conflict") || !check || (hasImage && evaluation.ocr_ambiguo === true) || evaluation.ocr_review_required === true
+        (hasImage && check?.status === "conflict") || (hasImage && !check) || (hasImage && evaluation.ocr_ambiguo === true) || evaluation.ocr_review_required === true
       );
       if (needsReview) {
         const message = check ? "A leitura do manuscrito precisa de confirmação. Confira a transcrição; sua tentativa e seu rascunho foram preservados." : "Não foi possível conferir a leitura agora. Confira a transcrição ou tente novamente; sua tentativa foi preservada.";
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
             mime_type: mimeType,
             transcricao_confirmada: confirmed,
           }),
-          signal: AbortSignal.timeout(4000),
+          signal: AbortSignal.timeout(6500),
           cache: "no-store",
         });
 
