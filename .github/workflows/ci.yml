@@ -29,6 +29,7 @@ jobs:
             tests/test_lemmas_core.py \
             tests/test_flashcards_fsrs.py \
             tests/test_gateway_strategy.py \
+            tests/ocr \
             tests/test_discursive_evaluation.py \
             tests/test_discursive_bench_suite.py \
             tests/test_fase2_personalizacao.py \
@@ -52,7 +53,7 @@ jobs:
         run: npm ci
       - name: Test question filters, prefetch cache, and math rendering
         working-directory: frontend
-        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs scripts/test-canvas-shapes.mjs ../tests/community/contracts.test.mjs
+        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs scripts/test-canvas-shapes.mjs ../tests/community/contracts.test.mjs ../tests/ocr/solve-route.test.cjs
       - name: Build Next.js 16 (Turbopack)
         working-directory: frontend
         env:

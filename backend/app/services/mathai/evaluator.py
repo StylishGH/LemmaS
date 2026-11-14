@@ -12,6 +12,7 @@ import time
 from typing import Any, Dict, List, Optional
 import uuid
 
+from app.services.mathai.arithmetic import protect_evaluation
 from app.core.security import compute_sha256
 from app.services.mathai.gateway import mathai_gateway
 
@@ -24,6 +25,8 @@ PRINCÍPIO FUNDAMENTAL: EVIDÊNCIA ANTES DE INFERÊNCIA
 - Analise somente aquilo que está explicitamente escrito, construído ou demonstrado.
 - NÃO complete contas que não estejam visíveis.
 - NÃO atribua intenções ou pensamentos sem suporte no texto.
+- Uma aplicação direta correta como 5*7/2=17,5 é desenvolvimento suficiente quando resolve a questão.
+- Não confunda ambiguidade na transcrição (ex.: 5/8) com erro matemático confirmado; sinalize ocr_ambiguo=true e precisa_revisao_humana=true. Nunca ajuste os números para fazer uma conta bater.
 - Identifique o primeiro ponto onde o procedimento deixa de ser matematicamente válido.
 
 VEREDITO CATEGORIAL DE NEGÓCIO OBRIGATÓRIO (veredito):
@@ -236,6 +239,11 @@ Instruções:
             ocr_legibility=ocr_legibility,
         )
 
+        if has_image and transcription_latex:
+            eval_dict["transcricao_latex"] = transcription_latex
+
+        eval_dict = protect_evaluation(eval_dict, has_image=has_image, confirmed_text=student_input if not has_image else None)
+
         total_latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         return {
@@ -265,6 +273,8 @@ Instruções:
             "linha_do_erro": eval_dict.get("linha_do_erro"),
             "dica_proximo_passo": eval_dict.get("dica_proximo_passo"),
             "confianca_diagnostico": eval_dict.get("confianca_diagnostico", "media"),
+            "arithmetic_check": eval_dict.get("arithmetic_check"),
+            "ocr_review_required": eval_dict.get("ocr_review_required", False),
             "raw_response": res.get("raw_response", {}),
         }
 
@@ -392,6 +402,7 @@ Instruções:
             "resultado_final_correto": bool(parsed.get("resultado_final_correto", veredito == "aprovado")),
             "etapas_corretas": parsed.get("etapas_corretas") or parsed.get("passos") or [],
             "erros_identificados": parsed.get("erros_identificados") or ([parsed.get("linha_do_erro")] if parsed.get("linha_do_erro") else []),
+            "ocr_ambiguo": parsed.get("ocr_ambiguo") is True,
             "feedback_latex": feedback_latex,
             "precisa_revisao_humana": bool(parsed.get("precisa_revisao_humana", False)),
             "transcricao_latex": parsed.get("transcricao_latex", ""),
