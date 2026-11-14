@@ -168,7 +168,7 @@ function predicates(filters: QuestionFilterInput, index?: QuestionTaxonomyIndex 
     result.push(group('or', values.map(value => {
       if (key === 'banca') return bank(value, index);
       if (key === 'materia') return exact(key, getDbMateriaValue(value) ?? value.trim(), index);
-      if (['categoria_banca', 'tipo_prova', 'fase_nivel', 'tipo_material'].includes(key)) return leaf(key, 'contains', value);
+      if (['categoria_banca', 'tipo_prova', 'fase_nivel', 'tipo_material'].includes(key)) return exact(key, value, index);
       return exact(key, value, index);
     })));
   }
@@ -325,7 +325,9 @@ function getIndexExtras(index: QuestionTaxonomyIndex): ExtraIndexData {
       if (!row.banca?.trim() || !row.categoria_banca?.trim()) continue;
       const bankKey = fold(row.banca);
       const counts = bankCats.get(bankKey) ?? new Map<string, number>();
-      counts.set(row.categoria_banca.trim(), (counts.get(row.categoria_banca.trim()) ?? 0) + 1);
+      const raw = row.categoria_banca.trim();
+      const category = CATEGORIA_BANCA_LABELS[fold(raw)]?.id ?? raw;
+      counts.set(category, (counts.get(category) ?? 0) + 1);
       bankCats.set(bankKey, counts);
     }
     const canonicalBancaCategorias = new Map<string, string>();
@@ -534,7 +536,8 @@ export function computeCrossFilteredFacets(index: QuestionTaxonomyIndex, filters
     const bankKey = fold(row.banca);
     const displayName = bankLabels.get(bankKey) ?? row.banca.trim();
     bankCounts.set(displayName, (bankCounts.get(displayName) ?? 0) + 1);
-    const category = row.categoria_banca?.trim();
+    const raw = row.categoria_banca?.trim();
+    const category = raw ? CATEGORIA_BANCA_LABELS[fold(raw)]?.id ?? raw : undefined;
     if (category) {
       let counts = bankCategories.get(bankKey);
       if (!counts) { counts = new Map<string, number>(); bankCategories.set(bankKey, counts); }

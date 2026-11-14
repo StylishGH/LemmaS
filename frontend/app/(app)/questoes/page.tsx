@@ -200,7 +200,15 @@ export default function BancoQuestoesPage() {
       const urlMateria = sp.get("materia");
       const urlBanca = sp.get("banca");
       const urlCategoriaBanca = sp.get("categoria_banca");
-      const urlTopico = sp.get("topico");
+      const urlTopico = Array.from(
+        new Set(
+          sp
+            .getAll("topico")
+            .flatMap((entry) => entry.split(","))
+            .map((s) => s.trim())
+            .filter(Boolean)
+        )
+      );
       const urlSubtopico = Array.from(
         new Set(sp.getAll("subtopico").map((s) => s.trim()).filter(Boolean))
       );
@@ -213,7 +221,7 @@ export default function BancoQuestoesPage() {
 
       const hasUrlFilters = !!(
         urlLema || urlMateria || urlBanca || urlCategoriaBanca ||
-        urlTopico || urlSubtopico.length > 0 || urlTipoProva || urlFaseNivel || urlAno ||
+        urlTopico.length > 0 || urlSubtopico.length > 0 || urlTipoProva || urlFaseNivel || urlAno ||
         urlTipo || urlDificuldade || urlBusca
       );
 
@@ -222,7 +230,7 @@ export default function BancoQuestoesPage() {
         if (urlMateria) setMateriaFiltro(urlMateria.split(",").map((s) => s.trim()));
         if (urlBanca) setBancaFiltro(urlBanca.split(",").map((s) => s.trim()));
         if (urlCategoriaBanca) setCategoriaBancaFiltro(urlCategoriaBanca.trim());
-        if (urlTopico) setTopicoFiltro(urlTopico.split(",").map((s) => s.trim()));
+        if (urlTopico.length > 0) setTopicoFiltro(urlTopico);
         if (urlSubtopico.length > 0) setSubtopicoFiltro(urlSubtopico);
         if (urlTipoProva) setTipoProvaFiltro(urlTipoProva.split(",").map((s) => s.trim()));
         if (urlFaseNivel) setFaseNivelFiltro(urlFaseNivel.split(",").map((s) => s.trim()));
@@ -246,6 +254,7 @@ export default function BancoQuestoesPage() {
   // Estado dos dados da página
   const [questoes, setQuestoes] = useState<Question[]>([]);
   const [total, setTotal] = useState<number>(0);
+  const [catalogTotal, setCatalogTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
@@ -254,11 +263,9 @@ export default function BancoQuestoesPage() {
 
   // Facets dinâmicos carregados da API — começam vazios, como as demais
   // facets da página, e são preenchidos pelo primeiro retorno da API.
-  // Antes, um snapshot antigo (snapshot antigo) ficava visível antes do
+  // Antes, um snapshot antigo ficava visível antes do
   // carregamento e permanecia se a API falhasse.
   const [bancasDisponiveis, setBancasDisponiveis] = useState<{ name: string; count: number; categoria?: string }[]>([]);
-
-  const [categoriasBancaDisponiveis, setCategoriasBancaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
   const [tiposProvaDisponiveis, setTiposProvaDisponiveis] = useState<{ id: string; label: string; count: number }[]>([]);
 
@@ -459,6 +466,19 @@ export default function BancoQuestoesPage() {
     if (personalizationEnabled) {
       new URLSearchParams(profilePreferenceQuery).forEach((value, key) => params.set(key, value));
     }
+    const isUnfilteredQuery =
+      categoriaBancaFiltro === "Todas" &&
+      !tipoProvaParam &&
+      !faseNivelParam &&
+      !bancaParam &&
+      !materiaParam &&
+      !topicoParam &&
+      subtopicoFiltro.every((v) => v === VAL_TODOS) &&
+      !anoParam &&
+      !tipoParam &&
+      !dificuldadeParam &&
+      !buscaTrim &&
+      !lemaFiltro;
 
 
     const query = new URLSearchParams(params);
@@ -486,7 +506,11 @@ export default function BancoQuestoesPage() {
         if (!ignore) {
           if (data && data.questoes) {
             setQuestoes(data.questoes);
-            setTotal(data.total || 0);
+            const nextTotal = data.total || 0;
+            setTotal(nextTotal);
+            if (isUnfilteredQuery && nextTotal > 0) {
+              setCatalogTotal(nextTotal);
+            }
             setTotalPages(data.total_pages || 1);
             if (page < (data.total_pages || 1)) {
               // Let the current page paint before requesting the next 15.
@@ -500,9 +524,6 @@ export default function BancoQuestoesPage() {
 
             if (data.bancas && Array.isArray(data.bancas)) {
               setBancasDisponiveis(data.bancas);
-            }
-            if (data.categorias_banca && Array.isArray(data.categorias_banca)) {
-              setCategoriasBancaDisponiveis(data.categorias_banca);
             }
             if (data.tipos_prova && Array.isArray(data.tipos_prova)) {
               setTiposProvaDisponiveis(data.tipos_prova);
@@ -688,28 +709,6 @@ export default function BancoQuestoesPage() {
   };
 
 
-  // Função para reportar uma questão
-  const handleReport = async (questionId: number) => {
-    const reason = window.prompt(
-      "Motivo do relatório (formatação LaTeX, resposta errada, imagem incorreta, ilegível, outro):"
-    );
-    if (reason === null) return; // usuário cancelou
-    try {
-      const res = await fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_id: questionId,
-          reason,
-          description: "", // opcional
-        }),
-      });
-      if (!res.ok) throw new Error("Falha ao enviar");
-      alert("Relatório enviado com sucesso!");
-    } catch (e: any) {
-      alert("Erro ao enviar relatório: " + e.message);
-    }
-  };
   const filtrosAtivosCount = [
     numBancas > 0,
     numMaterias > 0,
@@ -912,7 +911,9 @@ export default function BancoQuestoesPage() {
             }`}
           >
             <Filter className={`w-3.5 h-3.5 shrink-0 ${numBancas > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
-            <span>{numBancas === 0 ? "Banca" : numBancas === 1 ? bancaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numBancas} Bancas`}</span>
+            <span className="truncate max-w-[160px] sm:max-w-[200px]">
+              {numBancas === 0 ? "Banca" : numBancas === 1 ? bancaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numBancas} Bancas`}
+            </span>
             {numBancas > 0 && (
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] shrink-0" />
             )}
@@ -1055,7 +1056,7 @@ export default function BancoQuestoesPage() {
             }`}
           >
             <Layers className={`w-3.5 h-3.5 shrink-0 ${numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
-            <span>
+            <span className="truncate max-w-[160px] sm:max-w-[210px]">
               {numMaterias === 0 && numTopicos === 0 && numSubtopicos === 0
                 ? "Matéria, Tópico & Subtópico"
                 : numMaterias > 0 && numTopicos === 0 && numSubtopicos === 0
@@ -1387,7 +1388,7 @@ export default function BancoQuestoesPage() {
               {/* Grade de Anos */}
               <div className="grid grid-cols-3 gap-1 max-h-52 overflow-y-auto pr-1">
                 {anosDisponiveis
-                  .filter((a) => a.ano > 0 && a.count > 0)
+                  .filter((a) => a.ano > 0 && (a.count > 0 || anoFiltro.includes(a.ano.toString())))
                   .map((a) => {
                     const anoStr = a.ano.toString();
                     const isSelected = anoFiltro.includes(anoStr);
@@ -1575,7 +1576,7 @@ export default function BancoQuestoesPage() {
               }}
               className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
             >
-              <span>Busca: "{busca.trim()}"</span>
+              <span>Busca: &ldquo;{busca.trim()}&rdquo;</span>
               <X className="w-3 h-3" />
             </button>
           )}
@@ -1808,7 +1809,11 @@ export default function BancoQuestoesPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:text-[#d9b452] dark:hover:bg-amber-500/20 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Ver todas as {total > 0 ? total.toLocaleString("pt-BR") : "—"} questões</span>
+              <span>
+                {catalogTotal > 0
+                  ? `Ver todas as ${catalogTotal.toLocaleString("pt-BR")} questões`
+                  : "Ver todas as questões"}
+              </span>
             </button>
           </div>
         ) : (

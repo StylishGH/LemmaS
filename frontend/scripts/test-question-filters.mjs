@@ -153,13 +153,13 @@ test('case-folded subjects and bank facets count exactly the rows selected by th
   assert.equal(calls[0].args[0], 'materia.eq." cálculo 3 ",materia.eq."Cálculo 3"');
 });
 
-test('bank categories and material substring semantics preserve the route response contract', async () => {
+test('bank categories and exact material semantics preserve the route response contract', async () => {
   const idx = await index();
   const facets = f.computeCrossFilteredFacets(idx, {});
   assert.equal(facets.bancas[0].categoria, 'Todas');
   assert.equal(facets.bancas.find(b => b.name === 'CEDERJ').categoria, 'Vestibular & Superior');
-  assert(f.matchesMetadataRow(row(1, { tipo_material: 'prova oficial' }), { tipo_material: ['prova'] }));
-  assert.equal(emitted({ tipo_material: ['prova'] })[0].args[0], 'tipo_material.ilike."%prova%"');
+  assert(!f.matchesMetadataRow(row(1, { tipo_material: 'prova oficial' }), { tipo_material: ['prova'] }));
+  assert.equal(emitted({ tipo_material: ['prova'] })[0].args[0], 'tipo_material.ilike."prova"');
 });
 
 test('topic and subtopic labels prefer frequency then lexical spelling and retain LaTeX bytes', async () => {
@@ -331,4 +331,15 @@ test('retains selected zero-count facets across dimensions while hiding unselect
   assert.equal(facets.materias.some(m => m.name === 'Geometria Plana'), false);
   assert.equal(facets.topicos.some(t => t.name === 'Polinômios'), false);
   assert.equal(facets.subtopicos.some(s => s.name === 'Girard'), false);
+});
+
+test('category, exam type, phase and material chips match exact values', async () => {
+  for (const key of ['categoria_banca', 'tipo_prova', 'fase_nivel', 'tipo_material']) {
+    assert(f.matchesMetadataRow(row(1, { [key]: 'Oficial' }), { [key]: ['Oficial'] }));
+    assert(!f.matchesMetadataRow(row(1, { [key]: 'Oficial extra' }), { [key]: ['Oficial'] }));
+    assert.equal(emitted({ [key]: ['Oficial'] })[0].args[0], `${key}.ilike."Oficial"`);
+  }
+  const idx = await index([row(1, { banca: 'ITA', categoria_banca: ' concurso militar ' }), row(2, { banca: 'CEDERJ', categoria_banca: 'Vestibular & Superior', materia: 'Álgebra' })]);
+  assert.equal(f.computeCrossFilteredFacets(idx, {}).bancas.find(b => b.name === 'ITA').categoria, 'Concurso Militar');
+  assert.equal(f.computeCrossFilteredFacets(idx, { banca: ['ITA'], materia: ['Álgebra'] }).bancas.find(b => b.name === 'ITA').categoria, 'Concurso Militar');
 });

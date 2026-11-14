@@ -1,4 +1,4 @@
-import { normalizarMatematica, autoWrapLatexExpressions } from "./math-parser";
+import { applyOutsideMath, normalizarMatematica, autoWrapLatexExpressions } from "./math-parser";
 
 export const TOKEN_REAL = "\uE00001\uE001";
 
@@ -6,15 +6,17 @@ const LATEX_N_COMMANDS = new Set([
   "not", "ne", "neq", "neg", "nexists", "newline", "notin", "ni", "nu", "nabla",
   "natural", "ncong", "nmid", "nleq", "ngeq", "nless", "ngtr", "nsubset",
   "nsubseteq", "nsupset", "nsupseteq", "nparallel", "nrightarrow", "nleftarrow",
-  "nRightarrow", "nLeftarrow", "nshortmid", "nshortparallel", "nsim", "nvDash",
-  "nvdash", "nVDash", "nolimits", "normalsize", "noindent", "nonumber", "notag",
+  "nRightarrow", "nLeftarrow", "nshortmid", "nshortparallel", "nsim", "nsimeq",
+  "nvDash", "nvdash", "nVdash", "nVDash", "nearrow", "nwarrow", "nprec", "nsucc",
+  "npreceq", "nsucceq", "ntriangleleft", "ntrianglelefteq", "ntriangleright",
+  "ntrianglerighteq", "nolimits", "normalsize", "noindent", "nonumber", "notag",
   "nobreakspace",
 ]);
 
 const LATEX_ENV_NAMES = "(?:aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases|equation\\*?|align\\*?)";
 const MULTILINE_INLINE_MATH_SOURCE = `\\$[^\\$\\n]*?\\\\begin\\{${LATEX_ENV_NAMES}\\}(?:[^\\$\\n]|\\n(?![ \\t]*\\n))*?\\\\end\\{${LATEX_ENV_NAMES}\\}[^\\$\\n]*\\$`;
 // Match single-line $...$ before multiline env so closing $ of an earlier $...$ can never open a multiline match.
-const INLINE_MATH_SOURCE = `(?:\\$[^\\$\\n]+?\\$|${MULTILINE_INLINE_MATH_SOURCE})`;
+const INLINE_MATH_SOURCE = `(?:(?<![\\\\$])\\$(?:\\\\[^\\n]|[^\\\\$\\n])+?\\$|${MULTILINE_INLINE_MATH_SOURCE})`;
 const TEXT_COMMAND_OPEN_RE = /^\\(?:text(?:bf|it|rm|sf|tt)?|mbox)\s*\{/;
 const BRL_PRECEDED_BLOCK_RE = /[a-zA-Z0-9_\\$]/;
 const BRL_FOLLOWED_DIGIT_RE = /^\s*\d/;
@@ -222,13 +224,20 @@ export function shieldBrlCurrency(text: string): string {
   return out;
 }
 
+const GEOMETRY_LABELS_RE = /\b[A-Z]{2,}\b/g;
+const MATH_OPERATOR_WORDS_RE = /\b(?:sen|cos|tan|tg|cot|cotg|sec|csc|cossec|cosec|arcsen|arcsin|arccos|arctan|arctg|senh|cosh|tanh|tgh|cossech|cotgh|log|ln|exp|lim|max|min|sup|inf|det|dim|ker|tr|rank|lcm|gcd|mmc|mdc|mod|bmod|pmod|deg|arg|sgn|cyc|sym|iff)\b/g;
+const MATH_ENV_INSIDE_RE = new RegExp(`\\\\begin\\{${LATEX_ENV_NAMES}\\}`);
+
 export function isLikelyProseMistakenlyWrappedInMath(inner: string, minWords: number): boolean {
-  // Argumentos de comandos são rótulos matemáticos, não palavras da prosa envolvente.
+  if (MATH_ENV_INSIDE_RE.test(inner)) return false;
+  // Argumentos de comandos, siglas geométricas (AB, ABC) e operadores matemáticos (sen, cos, log...) não são palavras da prosa.
   const withoutLatex = inner
-    .replace(/\\(?:text|textbf|textit|textrm|operatorname|begin|end|mathrm|mathbf|mathit|mathcal|mathbb|mathsf|mathtt|boldsymbol|color|textcolor|phantom|hspace|vspace)\*?\{[^}]*\}/g, "")
-    .replace(/\\[a-zA-Z]+/g, "");
+    .replace(/\\[a-zA-Z]+\*?\{[^}]*\}/g, "")
+    .replace(/\\[a-zA-Z]+/g, "")
+    .replace(GEOMETRY_LABELS_RE, "")
+    .replace(MATH_OPERATOR_WORDS_RE, "");
   const words = withoutLatex.match(/[a-zA-ZÀ-ÿ]{3,}|\b(?:de|em|se|da|do|na|no|um|uma|os|as|ao|aos|com|por|para|onde|que)\b/gi) || [];
-  const hasMathStructure = /\\(?:begin|frac|dfrac|tfrac|sqrt|sum|int|lim|prod|operatorname|binom|overparen)\b/.test(inner);
+  const hasMathStructure = /\\(?:begin|frac|dfrac|tfrac|sqrt|sum|int|lim|prod|operatorname|binom|overparen|widehat|hat|overline|vec|overrightarrow|triangle|angle|sim|cong|perp|parallel|equiv)\b/.test(inner);
   return words.length >= (hasMathStructure ? Math.max(minWords + 2, 4) : minWords);
 }
 
@@ -256,8 +265,56 @@ export const KATEX_MACROS: Record<string, string> = {
   "\\tgh": "\\operatorname{tgh}",
   "\\cossech": "\\operatorname{cossech}",
   "\\cotgh": "\\operatorname{cotgh}",
+  "\\ctg": "\\operatorname{ctg}",
+  "\\tr": "\\operatorname{tr}",
+  "\\rank": "\\operatorname{rank}",
+  "\\lcm": "\\operatorname{lcm}",
+  "\\Varangle": "\\sphericalangle",
+  "\\varangle": "\\measuredangle",
+  "\\overarc": "\\overgroup",
+  "\\widearc": "\\overgroup",
   "\\overparen": "\\widehat{#1}",
 };
+
+function stripArrayColumnAtSpecs(latex: string): string {
+  const openRe = /\\begin\{array\}\s*\{/g;
+  let out = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = openRe.exec(latex)) !== null) {
+    const specStart = match.index + match[0].length;
+    let depth = 1;
+    let i = specStart;
+    while (i < latex.length && depth > 0) {
+      if (latex[i] === "\\") { i += 2; continue; }
+      if (latex[i] === "{") depth++;
+      else if (latex[i] === "}") depth--;
+      i++;
+    }
+    if (depth !== 0) break;
+    const rawSpec = latex.slice(specStart, i - 1);
+    let cleanedSpec = "";
+    for (let j = 0; j < rawSpec.length; ) {
+      if (rawSpec[j] === "@" && rawSpec[j + 1] === "{") {
+        let atDepth = 1;
+        j += 2;
+        while (j < rawSpec.length && atDepth > 0) {
+          if (rawSpec[j] === "\\") { j += 2; continue; }
+          if (rawSpec[j] === "{") atDepth++;
+          else if (rawSpec[j] === "}") atDepth--;
+          j++;
+        }
+        continue;
+      }
+      cleanedSpec += rawSpec[j];
+      j++;
+    }
+    out += latex.slice(cursor, specStart) + (cleanedSpec.trim() || "c") + "}";
+    cursor = i;
+    openRe.lastIndex = i;
+  }
+  return cursor === 0 ? latex : out + latex.slice(cursor);
+}
 
 /**
  * Sanitiza expressões LaTeX antes de enviar ao KaTeX:
@@ -282,7 +339,10 @@ export function cleanLatexForKatex(latex: string): string {
   clean = clean.replace(/\\begin\{align\*?\}/g, "\\begin{aligned}");
   clean = clean.replace(/\\end\{align\*?\}/g, "\\end{aligned}");
   // Remove cursor pipe | residual comum no final de expressões geradas por LLM
-  clean = clean.replace(/(?:\\text\{[^\}]*\}|\d+|\})\s*\|\s*$/g, "$1");
+  const singlePipes = clean.match(/(?<![\\|])\|(?!\|)/g) ?? [];
+  if (singlePipes.length % 2 === 1) {
+    clean = clean.replace(/(\\text\{[^}]*\}|\d+|\})\s*(?<!\\)\|\s*$/g, "$1");
+  }
   // Corrige parênteses angulares desbalanceados (\right\rangle sem \left\langle ou vice-versa)
   if (clean.includes("\\right\\rangle") && !clean.includes("\\left\\langle")) {
     clean = clean.replace(/\\right\\rangle/g, "\\rangle");
@@ -298,8 +358,12 @@ export function cleanLatexForKatex(latex: string): string {
   clean = clean.replace(/(?:^|[\s=+\-*/])_\s*\{/g, " {}_{");
   // Corrige barras verticais duplas com espaçamento indevido (| | -> \|)
   clean = clean.replace(/\|\s*\|/g, "\\|");
+  // Remove especificadores @{\hspace{...}} não suportados pelo KaTeX no cabeçalho de \begin{array}{...}
+  clean = stripArrayColumnAtSpecs(clean);
   // Converte barras invertidas duplas desnecessárias
-  clean = clean.replace(/\\\\(?=[a-zA-Z])/g, "\\");
+  if (!/\\begin\{(?:matrix|pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|smallmatrix|cases|rcases|aligned|gathered|array|split)\}/.test(clean)) {
+    clean = clean.replace(/\\\\(?=[a-zA-Z]{2,}\b)/g, "\\");
+  }
   return clean;
 }
 
@@ -311,7 +375,7 @@ function shieldMultilineInlineEnvs(
 ): string {
   // Consume $$...$$ and single-line $...$ left-to-right so closing $ never pairs with a later standalone \begin{...}.
   const regex = new RegExp(
-    `(\\$\\$[\\s\\S]+?\\$\\$|(?<!\\$)\\$(?!\\$)[^\\$\\n]+?(?<!\\$)\\$(?!\\$))|((?<!\\$)${MULTILINE_INLINE_MATH_SOURCE}(?!\\$))`,
+    `(\\$\\$[\\s\\S]+?\\$\\$|(?<![\\\\$])\\$(?!\\$)(?:\\\\[^\\n]|[^\\\\$\\n])+?(?<![\\\\$])\\$(?!\\$))|((?<![\\\\$])${MULTILINE_INLINE_MATH_SOURCE}(?!\\$))`,
     "g",
   );
   return text.replace(regex, (fullMatch, passthrough?: string, multiline?: string) => {
@@ -331,6 +395,7 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
 
   // 1. Normaliza quebras de linha literais (\n, \r\n) preservando comandos LaTeX que começam com \n (\neq, \notin, \nu, \nabla, etc)
   let text = raw
+    .replace(/[\u200b-\u200d\ufeff]/g, "")
     .replace(/\\r\\n/g, "\n")
     .replace(/(\\+)(n[a-zA-Z]*)/g, (match, slashes: string, cmd: string) => {
       if (slashes.length % 2 === 0 || LATEX_N_COMMANDS.has(cmd)) return match;
@@ -360,7 +425,7 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
   // Extrai blocos $$...$$ existentes para nunca serem rompidos ou violados por regexes de inline math ($...$)
   const blockMap = new Map<string, string>();
   let blockCounter = 0;
-  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match, inner) => {
+  text = text.replace(/(?<!\\)\$\$((?:\\[\s\S]|[^\\])+?)\$\$/g, (match, inner) => {
     // Desembrulha blocos $$...$$ que modelos LLM erroneamente colocam ao redor de frases inteiras em português (texto puro)
     if (isLikelyProseMistakenlyWrappedInMath(inner, 3)) {
       return "\n" + autoWrapLatexExpressions(inner.trim()) + "\n";
@@ -373,16 +438,44 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
   // Extrai também ambientes $...\begin{...}...\end{...}...$ multilinha para não serem corrompidos por autoWrap nem pelo loop por linha
   text = shieldMultilineInlineEnvs(text, "LEMMAS_MATH_BLOCK", blockMap, () => blockCounter++);
 
+  // Protege ambientes matemáticos nus (ou precedidos por $$ sem fechamento) antes do autoWrap para não fragmentar equações internas
+  text = applyOutsideMath(text, (plainChunk) =>
+    plainChunk
+      .replace(
+        new RegExp(`(?<!\\\\)\\$\\$\\s*\\n?(\\\\begin\\{(${LATEX_ENV_NAMES})\\}[\\s\\S]*?\\\\end\\{\\2\\})(?!\\s*\\$\\$)`, "g"),
+        (_, envMatch) => {
+          const token = `___LEMMAS_MATH_BLOCK_${blockCounter++}___`;
+          blockMap.set(token, `$$${envMatch.trim()}$$`);
+          return `\n${token}\n`;
+        },
+      )
+      .replace(
+        new RegExp(`(\\\\begin\\{(${LATEX_ENV_NAMES})\\}[\\s\\S]*?\\\\end\\{\\2\\})`, "g"),
+        (envMatch) => {
+          const token = `___LEMMAS_MATH_BLOCK_${blockCounter++}___`;
+          blockMap.set(token, `$$${envMatch.trim()}$$`);
+          return `\n${token}\n`;
+        },
+      ),
+  );
+
   // Desembrulha inline $...$ que contém frases em português (apenas com delimitadores estritos de inline)
-  text = text.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)/g, (fullMatch, inner) => {
+  text = text.replace(/(?<![\\$])\$(?!\$)((?:\\[^\n]|[^\\$\n])+?)(?<![\\$])\$(?!\$)/g, (fullMatch, inner) => {
     if (isLikelyProseMistakenlyWrappedInMath(inner, 2)) {
       return autoWrapLatexExpressions(inner);
     }
     return fullMatch;
   });
 
-  // Corrige $ não fechado em variáveis pontuais seguido de palavra em português (ex: "$QS intersectando-se" -> "$QS$ intersectando-se")
-  text = text.replace(/(^|[^\\$])\$([A-Za-z]{1,2}(?:_[0-9a-zA-Z]+)?|\d+(?:\.\d+)?)\s+([a-zA-ZÀ-ÿ]{2,})/g, '$1$$$2$$ $3');
+  // Corrige $ não fechado apenas em linhas com contagem ímpar de $ simples e iniciado após separador/borda (nunca fechamento como "$4$th degree")
+  text = text
+    .split("\n")
+    .map((line) => {
+      const singles = line.match(/(?<![\\$])\$(?!\$)/g) ?? [];
+      if (singles.length % 2 === 0) return line;
+      return line.replace(/(^|[\s([:;—–-])\$([A-Za-z]{1,2}(?:_[0-9a-zA-Z]+)?|\d+(?:\.\d+)?)\s+([a-zA-ZÀ-ÿ]{2,})/g, "$1$$$2$$ $3");
+    })
+    .join("\n");
 
   // Envolve expressões matemáticas e comandos soltos usando o autoWrapLatexExpressions nos trechos fora de blocos protegidos
   text = autoWrapLatexExpressions(text);
@@ -414,7 +507,7 @@ export function sanitizeMathText(raw: string, opts?: { preserveCurrencyToken?: b
         return line;
       }
 
-      const dollarCount = (l.match(/\$/g) || []).length;
+      const dollarCount = (l.match(/(?<!\\)\$/g) || []).length;
       if (dollarCount % 2 === 0 && dollarCount > 0) {
         return line;
       }
@@ -454,7 +547,7 @@ export function renderMathText(text: string) {
 
   // 1. Sanitização profunda de delimitadores e caracteres matemáticos
   let preprocessed = sanitizeMathText(text, { preserveCurrencyToken: true });
-  preprocessed = normalizarMatematica(preprocessed);
+  preprocessed = stripArrayColumnAtSpecs(normalizarMatematica(preprocessed));
 
   // Protege expressões $...\begin{...}...\end{...}...$ multilinha antes de autoWrapLatexExpressions (que só divide $...$ em linha única)
   const protectedMultilineInline = new Map<string, string>();
@@ -482,7 +575,7 @@ export function renderMathText(text: string) {
 
   // 2. Extrai blocos explícitos $$...$$ primeiro (preserva ambientes como \begin{cases} intactos dentro de $$)
   const stage1Parts: Array<{ type: "text" | "block"; content: string }> = [];
-  const blockRegex = /\$\$([\s\S]+?)\$\$/g;
+  const blockRegex = /(?<!\\)\$\$((?:\\[\s\S]|[^\\])+?)\$\$/g;
   let lastIndex = 0;
   let match;
 
@@ -539,7 +632,7 @@ export function renderMathText(text: string) {
 
   // 4. Processa matemática em linha $...$ nos trechos de texto restantes
   const finalParts: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
-  const inlineRegex = /\$([^\$]+)\$/g;
+  const inlineRegex = /(?<![\\$])\$((?:\\[\s\S]|[^\\$])+?)\$/g;
 
   for (const part of stage2Parts) {
     if (part.type === "block") {

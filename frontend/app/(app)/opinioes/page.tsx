@@ -129,9 +129,10 @@ export default function OpinioesPage() {
           </div>
           <div className="flex justify-end pt-2">
             <button
+              type="button"
               onClick={handleCompare}
               disabled={loading}
-              className="lemmas-gold-cta flex items-center gap-1.5 px-4 py-2 font-bold disabled:opacity-50 rounded-lg text-xs shadow-md transition-transform hover:scale-[1.02]"
+              className="lemmas-gold-cta flex items-center gap-1.5 px-4 py-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-xs shadow-md transition-transform enabled:hover:scale-[1.02]"
             >
               {loading ? (
                 <>
