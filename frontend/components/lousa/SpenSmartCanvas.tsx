@@ -967,6 +967,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
         } ${canvasHeightClass}`}
       >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/lemmas-watermark.png"
+            alt=""
+            draggable={false}
+            className={`h-auto w-[min(65%,400px)] rounded-2xl object-contain transition-opacity ${
+              isLight ? "opacity-[0.14]" : "opacity-[0.12]"
+            }`}
+          />
+        </div>
         <div style={{ width: baseSize.width * zoom || "100%", height: baseSize.height * zoom || "100%" }} aria-hidden="true" />
         <div
           ref={containerRef}
@@ -976,7 +990,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             width: baseSize.width || "100%",
             height: baseSize.height || "100%",
           }}
-          className="absolute left-0 top-0 min-h-full min-w-full"
+          className="absolute left-0 top-0 z-10 min-h-full min-w-full"
         >
         <canvas
           ref={baseCanvasRef}
