@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
+import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed, Shapes } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 import {
@@ -10,6 +10,7 @@ import {
   remapCanvasColors, strokeIntersectsEraser, canvasContentSize,
   type CanvasDocument, type Point, type Stroke, type ToolType,
 } from "@/lib/canvas-document";
+import { buildSnappedLine, recognizeAndSnapShape, type RecognizedShapeKind } from "@/lib/canvas-shapes";
 export type { Point, Stroke, ToolType } from "@/lib/canvas-document";
 
 export interface SpenSmartCanvasProps {
@@ -102,6 +103,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const activeColor = COLORS[colorIndex].hex;
   const [activeWidth, setActiveWidth] = useState<number>(documentState?.settings.width ?? 2);
   const [stylusMode, setStylusMode] = useState<boolean>(documentState?.settings.stylusMode ?? false);
+  const [autoShape, setAutoShape] = useState<boolean>(true);
+  const [shapeBadge, setShapeBadge] = useState<string | null>(null);
   const [zoom, setZoom] = useState(documentState?.settings.zoom ?? 1);
   const [baseSize, setBaseSize] = useState({ width: 0, height: 0 });
   const [strokeCount, setStrokeCount] = useState(documentState?.strokes.length ?? initialStrokes?.length ?? 0);
@@ -119,6 +122,12 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const colorRef = useRef<string>(activeColor);
   const widthRef = useRef<number>(activeWidth);
   const stylusModeRef = useRef<boolean>(stylusMode);
+  const autoShapeRef = useRef<boolean>(autoShape);
+  const holdTimerRef = useRef<number | null>(null);
+  const badgeTimerRef = useRef<number | null>(null);
+  const holdAnchorRef = useRef<Point | null>(null);
+  const snappedLineAnchorRef = useRef<Point | null>(null);
+  const shapeSnappedRef = useRef<boolean>(false);
 
   useEffect(() => {
     toolRef.current = activeTool;
@@ -132,6 +141,9 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   useEffect(() => {
     stylusModeRef.current = stylusMode;
   }, [stylusMode]);
+  useEffect(() => {
+    autoShapeRef.current = autoShape;
+  }, [autoShape]);
 
   // Inicializa a Ink API de traço delegado (hardware compositor) do navegador
   useEffect(() => {
@@ -356,6 +368,57 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     if (!inkCanvas || !baseCanvas) return;
     const drawingDocument = documentRef.current;
 
+    const SHAPE_LABELS: Record<RecognizedShapeKind, string> = {
+      line: "Linha reta",
+      circle: "Círculo",
+      ellipse: "Elipse",
+      triangle: "Triângulo",
+      rectangle: "Retângulo",
+      square: "Quadrado",
+    };
+
+    const clearHoldTimer = () => {
+      if (holdTimerRef.current !== null) {
+        window.clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+    };
+
+    const showShapeBadge = (kind: RecognizedShapeKind) => {
+      setShapeBadge(SHAPE_LABELS[kind]);
+      if (badgeTimerRef.current !== null) window.clearTimeout(badgeTimerRef.current);
+      badgeTimerRef.current = window.setTimeout(() => {
+        setShapeBadge(null);
+        badgeTimerRef.current = null;
+      }, 1400);
+    };
+
+    const scheduleHoldCheck = () => {
+      clearHoldTimer();
+      if (!autoShapeRef.current) return;
+      holdTimerRef.current = window.setTimeout(() => {
+        holdTimerRef.current = null;
+        if (!isDrawingRef.current || shapeSnappedRef.current) return;
+        const state = activeStrokeStateRef.current;
+        if (!state) return;
+        const recognized = recognizeAndSnapShape(state.stroke.points);
+        if (!recognized) return;
+
+        state.stroke.points = recognized.points;
+        shapeSnappedRef.current = true;
+        if (recognized.kind === "line" && recognized.anchorStart) {
+          snappedLineAnchorRef.current = recognized.anchorStart;
+        }
+        const inkCtx = inkCtxRef.current;
+        if (inkCtx) {
+          const dpr = dprRef.current;
+          inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
+          drawFullStroke(inkCtx, state.stroke);
+        }
+        showShapeBadge(recognized.kind);
+      }, 480);
+    };
+
     const getPoint = (e: PointerEvent, rect: DOMRect): Point => ({
       x: Math.max(0, Math.min(rect.width / zoom, (e.clientX - rect.left) / zoom)),
       y: Math.max(0, Math.min(rect.height / zoom, (e.clientY - rect.top) / zoom)),
@@ -424,6 +487,10 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         lastMidX: pt.x,
         lastMidY: pt.y,
       };
+      snappedLineAnchorRef.current = null;
+      shapeSnappedRef.current = false;
+      holdAnchorRef.current = pt;
+      scheduleHoldCheck();
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -444,6 +511,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       const state = activeStrokeStateRef.current;
       if (!state) return;
       const stroke = state.stroke;
+
+      // Samsung Notes style: after snapping a straight line, dragging rotates/resizes it live.
+      if (snappedLineAnchorRef.current) {
+        const latest = getPoint(coalesced[coalesced.length - 1], rect);
+        stroke.points = buildSnappedLine(snappedLineAnchorRef.current, latest);
+        const inkCtx = inkCtxRef.current;
+        if (inkCtx) {
+          const dpr = dprRef.current;
+          inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
+          drawFullStroke(inkCtx, stroke);
+        }
+        return;
+      }
+
       const pts = stroke.points;
       const inkCtx = inkCtxRef.current;
 
@@ -456,6 +537,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         // Limiar sutil (0.5px) para capturar curvas precisas sem ruído
         if (dx * dx + dy * dy >= 0.25) {
           pts.push(pt);
+          const anchor = holdAnchorRef.current;
+          if (!anchor || Math.hypot(pt.x - anchor.x, pt.y - anchor.y) > 5) {
+            holdAnchorRef.current = pt;
+            scheduleHoldCheck();
+          }
 
           if (stroke.tool === "highlighter") {
             // Renderizado uma vez após incorporar todas as amostras do evento.
@@ -506,8 +592,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
     const onPointerUpOrCancel = (e: PointerEvent) => {
       if (e.pointerId !== activePointerIdRef.current) return;
+      clearHoldTimer();
+      holdAnchorRef.current = null;
+      const wasSnapped = shapeSnappedRef.current;
+      snappedLineAnchorRef.current = null;
+      shapeSnappedRef.current = false;
+
       const state = activeStrokeStateRef.current;
-      if (state && e.type === "pointerup") {
+      if (state && e.type === "pointerup" && !wasSnapped) {
         const endpoint = getPoint(e, inkCanvas.getBoundingClientRect());
         const last = state.stroke.points[state.stroke.points.length - 1];
         // pointerup pode trazer uma posição que não chegou em pointermove.
@@ -587,6 +679,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       eraserStartRef.current = null;
       isDrawingRef.current = false;
       activePointerIdRef.current = null;
+      clearHoldTimer();
+      if (badgeTimerRef.current !== null) {
+        window.clearTimeout(badgeTimerRef.current);
+        badgeTimerRef.current = null;
+      }
+      holdAnchorRef.current = null;
+      snappedLineAnchorRef.current = null;
+      shapeSnappedRef.current = false;
     };
   }, [drawFullStroke, eraseStrokeAtPoints, publishStrokes, zoom]);
 
@@ -768,6 +868,37 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
               <button type="button" onClick={() => { setZoom(1); if (viewportRef.current) { viewportRef.current.scrollLeft = 0; viewportRef.current.scrollTop = 0; } }} className="rounded p-1.5" title="Centralizar lousa"><LocateFixed className="h-4 w-4" /></button>
             </div>
           )}
+          {shapeBadge && (
+            <span
+              role="status"
+              aria-live="polite"
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                isLight
+                  ? "border-amber-400/50 bg-amber-50 text-amber-800"
+                  : "border-amber-400/40 bg-amber-500/15 text-amber-300"
+              }`}
+            >
+              <Shapes className="h-3 w-3" />
+              <span>{shapeBadge}</span>
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setAutoShape((prev) => !prev)}
+            title="Completar figuras geométricas ao segurar a ponta no final do traço"
+            aria-pressed={autoShape}
+            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
+              autoShape
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold"
+                : isLight
+                ? "border-slate-300 bg-slate-100 text-slate-500 hover:text-slate-900"
+                : "border-white/10 bg-white/5 text-gray-400 hover:text-white"
+            }`}
+          >
+            <Shapes className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Formas</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setStylusMode((prev) => !prev)}
