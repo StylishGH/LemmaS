@@ -837,7 +837,16 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         } ${canvasHeightClass}`}
       >
         <div style={{ width: baseSize.width * zoom || "100%", height: baseSize.height * zoom || "100%" }} aria-hidden="true" />
-        <div ref={containerRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: baseSize.width || "100%", height: baseSize.height || "100%" }} className="relative min-h-full min-w-full">
+        <div
+          ref={containerRef}
+          style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: "top left",
+            width: baseSize.width || "100%",
+            height: baseSize.height || "100%",
+          }}
+          className="absolute left-0 top-0 min-h-full min-w-full"
+        >
         <canvas
           ref={baseCanvasRef}
           style={{
