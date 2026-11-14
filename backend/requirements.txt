@@ -8,6 +8,7 @@ python-dotenv==1.2.4
 google-genai==1.0.0
 pytest==9.1.1
 slowapi==0.1.9
+sympy>=1.13,<2.0
 
 
 
