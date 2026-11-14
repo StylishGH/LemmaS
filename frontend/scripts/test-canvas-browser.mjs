@@ -49,6 +49,7 @@ try {
  await page.goto(`http://127.0.0.1:${server.address().port}`);
  await page.waitForSelector('canvas');
  await page.waitForFunction(()=>document.querySelector('canvas').width>300);
+ await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],vp=c.parentElement.parentElement,cr=c.getBoundingClientRect(),vr=vp.getBoundingClientRect();if(Math.abs(cr.top-vr.top)>=3||Math.abs(cr.left-vr.left)>=3)throw new Error(`Canvas displaced inside viewport: canvas=(${cr.left},${cr.top}) viewport=(${vr.left},${vr.top})`);const hit=document.elementFromPoint(vr.left+60,vr.top+60);if(hit!==c)throw new Error(`Top-left of lousa hit ${hit?.tagName} instead of ink canvas`);});
  const stroke=async(points,pointerType='pen')=>page.evaluate((points,pointerType)=>{const c=document.querySelectorAll('canvas')[1],r=c.getBoundingClientRect();points.forEach(([x,y,pressure=.7],i)=>c.dispatchEvent(new PointerEvent(i===0?'pointerdown':i===points.length-1?'pointerup':'pointermove',{bubbles:true,pointerId:1,pointerType,button:0,buttons:i===points.length-1?0:1,clientX:r.left+x,clientY:r.top+y,pressure})));},points,pointerType);
  const count=()=>page.evaluate(()=>window.testDocs[window.testIndex].strokes.length);
  const clickTitle=title=>page.click(`button[title="${title}"]`);
