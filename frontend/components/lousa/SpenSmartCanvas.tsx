@@ -2,33 +2,26 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Undo2, Redo2, Trash2 } from "lucide-react";
+import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
-export type ToolType = "pen" | "highlighter" | "stroke-eraser";
-
-export interface Point {
-  x: number;
-  y: number;
-  pressure: number;
-}
-
-export interface Stroke {
-  id: string;
-  tool: ToolType;
-  color: string;
-  baseWidth: number;
-  points: Point[];
-}
+import {
+  createCanvasDocument, commitCanvas, undoCanvas, redoCanvas,
+  remapCanvasColors, strokeIntersectsEraser, canvasContentSize,
+  type CanvasDocument, type Point, type Stroke, type ToolType,
+} from "@/lib/canvas-document";
+export type { Point, Stroke, ToolType } from "@/lib/canvas-document";
 
 export interface SpenSmartCanvasProps {
   onEvaluateOcr: (imageBase64: string) => Promise<void>;
   isEvaluating?: boolean;
   initialStrokes?: Stroke[];
+  documentState?: CanvasDocument;
   onStrokesChange?: (strokes: Stroke[]) => void;
   canvasHeightClass?: string;
   hideFooterEvaluate?: boolean;
   exportCanvasRef?: React.MutableRefObject<(() => string | null) | null>;
+  showZoomControls?: boolean;
 }
 
 const COLORS_DARK = [
@@ -49,6 +42,13 @@ const COLORS_LIGHT = [
 
 const WIDTHS = [2, 4, 8, 14];
 
+interface InkPresenter {
+  updateInkTrailStartPoint(event: PointerEvent, style: { color: string; diameter: number }): void;
+}
+type InkNavigator = Navigator & {
+  ink?: { requestPresenter(options: { presentationArea: HTMLCanvasElement }): Promise<InkPresenter> };
+};
+
 interface ActiveStrokeState {
   stroke: Stroke;
   lastMidX: number;
@@ -59,14 +59,17 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   onEvaluateOcr,
   isEvaluating = false,
   initialStrokes,
+  documentState,
   onStrokesChange,
   canvasHeightClass = "h-[420px]",
   hideFooterEvaluate = false,
   exportCanvasRef,
+  showZoomControls = false,
 }) => {
   const { isLight } = useTheme();
   const COLORS = isLight ? COLORS_LIGHT : COLORS_DARK;
 
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Camada 1: Traços consolidados (estática durante a escrita ativa)
   const baseCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -78,23 +81,38 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const inkCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   // Delegated Ink Trails API (Chromium / Android SurfaceFlinger bypass)
-  const inkPresenterRef = useRef<any>(null);
+  const inkPresenterRef = useRef<InkPresenter | null>(null);
 
   // Histórico mantido em Refs para ZERO re-renders do React durante a escrita
-  const strokesRef = useRef<Stroke[]>(initialStrokes ? [...initialStrokes] : []);
-  const redoStackRef = useRef<Stroke[]>([]);
+  const documentRef = useRef(documentState ?? createCanvasDocument(initialStrokes));
+  const strokesRef = useRef(documentState?.strokes ?? initialStrokes ?? []);
+  const eraserStartRef = useRef<Stroke[] | null>(null);
+  const eraserPointRef = useRef<Point | null>(null);
   const isDrawingRef = useRef<boolean>(false);
   const activePointerIdRef = useRef<number | null>(null);
   const activeStrokeStateRef = useRef<ActiveStrokeState | null>(null);
   const dprRef = useRef<number>(1);
-  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resizeCanvasRef = useRef<(() => void) | null>(null);
+  const onStrokesChangeRef = useRef(onStrokesChange);
+  useEffect(() => { onStrokesChangeRef.current = onStrokesChange; }, [onStrokesChange]);
 
   // Estados leves apenas para a barra de ferramentas
-  const [activeTool, setActiveTool] = useState<ToolType>("pen");
-  const [activeColor, setActiveColor] = useState<string>(COLORS[0].hex);
-  const [activeWidth, setActiveWidth] = useState<number>(2);
-  const [stylusMode, setStylusMode] = useState<boolean>(false);
-  const [strokeCount, setStrokeCount] = useState<number>(initialStrokes ? initialStrokes.length : 0);
+  const [activeTool, setActiveTool] = useState<ToolType>(documentState?.settings.tool ?? "pen");
+  const [colorIndex, setColorIndex] = useState(documentState?.settings.colorIndex ?? 0);
+  const activeColor = COLORS[colorIndex].hex;
+  const [activeWidth, setActiveWidth] = useState<number>(documentState?.settings.width ?? 2);
+  const [stylusMode, setStylusMode] = useState<boolean>(documentState?.settings.stylusMode ?? false);
+  const [zoom, setZoom] = useState(documentState?.settings.zoom ?? 1);
+  const [baseSize, setBaseSize] = useState({ width: 0, height: 0 });
+  const [strokeCount, setStrokeCount] = useState(documentState?.strokes.length ?? initialStrokes?.length ?? 0);
+
+  const [historyState, setHistoryState] = useState({
+    undo: (documentState?.past.length ?? 0) > 0, redo: (documentState?.future.length ?? 0) > 0,
+  });
+
+  useEffect(() => {
+    documentRef.current.settings = { ...documentRef.current.settings, tool: activeTool, colorIndex, width: activeWidth, stylusMode, zoom };
+  }, [activeTool, colorIndex, activeWidth, stylusMode, zoom]);
 
   // Refs sincronizadas para leitura instantânea nos listeners nativos
   const toolRef = useRef<ToolType>(activeTool);
@@ -117,38 +135,25 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
   // Inicializa a Ink API de traço delegado (hardware compositor) do navegador
   useEffect(() => {
-    if (typeof window !== "undefined" && (navigator as any).ink?.requestPresenter) {
-      const inkCanvas = inkCanvasRef.current;
-      if (inkCanvas) {
-        (navigator as any).ink
-          .requestPresenter({ presentationArea: inkCanvas })
-          .then((presenter: any) => {
-            inkPresenterRef.current = presenter;
-          })
-          .catch(() => {});
-      }
+    const ink = (navigator as InkNavigator).ink;
+    const inkCanvas = inkCanvasRef.current;
+    let cancelled = false;
+    if (ink && inkCanvas) {
+      ink.requestPresenter({ presentationArea: inkCanvas }).then(presenter => {
+        if (!cancelled) inkPresenterRef.current = presenter;
+      }).catch(() => {});
     }
+    return () => { cancelled = true; inkPresenterRef.current = null; };
   }, []);
 
-  // Debounced sync de traços para a página pai (1s idle evita travar o React durante a escrita contínua)
-  const scheduleSync = useCallback(
-    (strokes: Stroke[]) => {
-      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      syncTimeoutRef.current = setTimeout(() => {
-        onStrokesChange?.(strokes);
-      }, 1000);
-    },
-    [onStrokesChange]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
-        onStrokesChange?.([...strokesRef.current]);
-      }
-    };
-  }, [onStrokesChange]);
+  // Publica somente operações concluídas. O pai guarda os pontos em ref, sem
+  // renderizar a página a cada movimento. Abrir o Foco já recebe o último traço.
+  const publishStrokes = useCallback((strokes: Stroke[]) => {
+    documentRef.current.strokes = strokes;
+    setStrokeCount(strokes.length);
+    setHistoryState({ undo: documentRef.current.past.length > 0, redo: documentRef.current.future.length > 0 });
+    onStrokesChangeRef.current?.(strokes);
+  }, []);
 
   // Desenha um traço completo (usado APENAS ao finalizar o traço, na troca de tema ou no Undo/Redo)
   const drawFullStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
@@ -162,28 +167,47 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     ctx.fillStyle = stroke.color;
     ctx.globalAlpha = stroke.tool === "highlighter" ? 0.35 : 1.0;
 
-    if (pts.length < 3) {
+    if (pts.length === 1) {
       ctx.beginPath();
-      const r = (stroke.baseWidth * (pts[0].pressure || 0.7)) / 2;
-      ctx.arc(pts[0].x, pts[0].y, Math.max(1, r), 0, Math.PI * 2);
+      const r = stroke.baseWidth * (stroke.tool === "highlighter" ? 1 : Math.max(0.6, Math.min(1.4, pts[0].pressure * 1.2))) / 2;
+      ctx.arc(pts[0].x, pts[0].y, Math.max(0.75, r), 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       return;
     }
 
-    ctx.beginPath();
-    ctx.lineWidth = stroke.baseWidth;
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length - 1; i++) {
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const midX = (p1.x + p2.x) * 0.5;
-      const midY = (p1.y + p2.y) * 0.5;
-      ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+    if (stroke.tool === "highlighter") {
+      ctx.beginPath();
+      ctx.lineWidth = stroke.baseWidth;
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length - 1; i++) {
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y,
+          (pts[i].x + pts[i + 1].x) / 2, (pts[i].y + pts[i + 1].y) / 2);
+      }
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, Math.max(0.75,
+        stroke.baseWidth * Math.max(0.6, Math.min(1.4, pts[0].pressure * 1.2)) / 2), 0, Math.PI * 2);
+      ctx.fill();
+      let mid = pts[0];
+      for (let i = 1; i < pts.length; i++) {
+        const previous = pts[i - 1];
+        const point = pts[i];
+        const nextMid = { x: (previous.x + point.x) / 2, y: (previous.y + point.y) / 2 };
+        ctx.lineWidth = stroke.baseWidth * Math.max(0.6, Math.min(1.4, point.pressure * 1.2));
+        ctx.beginPath();
+        ctx.moveTo(mid.x, mid.y);
+        ctx.quadraticCurveTo(previous.x, previous.y, nextMid.x, nextMid.y);
+        ctx.stroke();
+        mid = { ...point, ...nextMid };
+      }
+      ctx.beginPath();
+      ctx.moveTo(mid.x, mid.y);
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      ctx.stroke();
     }
-    const last = pts[pts.length - 1];
-    ctx.lineTo(last.x, last.y);
-    ctx.stroke();
     ctx.restore();
   }, []);
 
@@ -200,7 +224,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     }
   }, [drawFullStroke]);
 
-  // Quando o tema muda: reseta cor ativa, remapeia traços e redesenha
+  // Ao mudar o tema, mantém a escolha da paleta e remapeia desenho e histórico.
   useEffect(() => {
     const fromColors = isLight ? COLORS_DARK : COLORS_LIGHT;
     const toColors = isLight ? COLORS_LIGHT : COLORS_DARK;
@@ -210,41 +234,49 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (toColors[i]) colorMap.set(c.hex.toUpperCase(), toColors[i].hex);
     });
 
-    strokesRef.current = strokesRef.current.map((stroke) => {
-      const mapped = colorMap.get(stroke.color.toUpperCase());
-      return mapped ? { ...stroke, color: mapped } : stroke;
-    });
-
-    setActiveColor(toColors[0].hex);
-    colorRef.current = toColors[0].hex;
-
-    setTimeout(() => {
-      redrawBaseCanvas();
-    }, 0);
-  }, [isLight, redrawBaseCanvas]);
+    remapCanvasColors(documentRef.current, colorMap);
+    strokesRef.current = documentRef.current.strokes;
+    const active = activeStrokeStateRef.current?.stroke;
+    if (active) active.color = colorMap.get(active.color.toUpperCase()) ?? active.color;
+    redrawBaseCanvas();
+    const inkCanvas = inkCanvasRef.current, inkCtx = inkCtxRef.current;
+    if (inkCanvas && inkCtx && active) {
+      inkCtx.clearRect(0, 0, inkCanvas.width / dprRef.current, inkCanvas.height / dprRef.current);
+      drawFullStroke(inkCtx, active);
+      inkCtx.strokeStyle = active.color;
+      inkCtx.fillStyle = active.color;
+    }
+    onStrokesChangeRef.current?.(strokesRef.current);
+  }, [isLight, redrawBaseCanvas, drawFullStroke]);
 
   // Inicializa o tamanho do Canvas apenas quando as dimensões físicas mudam
   useEffect(() => {
+    const viewport = viewportRef.current;
     const container = containerRef.current;
     const baseCanvas = baseCanvasRef.current;
     const inkCanvas = inkCanvasRef.current;
-    if (!container || !baseCanvas || !inkCanvas) return;
+    if (!viewport || !container || !baseCanvas || !inkCanvas) return;
 
     const setupDimensions = () => {
-      const rect = container.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
+      if (viewport.clientWidth <= 0 || viewport.clientHeight <= 0) return;
+      const content = canvasContentSize(strokesRef.current);
+      const width = Math.max(viewport.clientWidth / zoom, content.width);
+      const height = Math.max(viewport.clientHeight / zoom, content.height);
+      container.style.width = `${width}px`;
+      container.style.height = `${height}px`;
+      setBaseSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
 
       // Limita DPR em 2.0 no máximo para não sobrecarregar a GPU de tablets 3x/4x
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      dprRef.current = dpr;
+      const dprChanged = dpr !== dprRef.current;
+      const targetW = Math.round(width * dpr);
+      const targetH = Math.round(height * dpr);
 
-      const targetW = Math.round(rect.width * dpr);
-      const targetH = Math.round(rect.height * dpr);
+      const widthChanged = baseCanvas.width !== targetW;
+      const heightChanged = baseCanvas.height !== targetH;
 
-      const widthChanged = Math.abs(baseCanvas.width - targetW) > 2;
-      const heightChanged = Math.abs(baseCanvas.height - targetH) > 2;
-
-      if (widthChanged || heightChanged) {
+      if (widthChanged || heightChanged || dprChanged) {
+        dprRef.current = dpr;
         baseCanvas.width = targetW;
         baseCanvas.height = targetH;
         inkCanvas.width = targetW;
@@ -280,51 +312,53 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         }
 
         redrawBaseCanvas();
+        const active = activeStrokeStateRef.current?.stroke;
+        if (inkCtx && active) {
+          drawFullStroke(inkCtx, active);
+          inkCtx.strokeStyle = active.color;
+          inkCtx.fillStyle = active.color;
+          inkCtx.globalAlpha = active.tool === "highlighter" ? 0.35 : 1;
+        }
       }
     };
 
+    resizeCanvasRef.current = setupDimensions;
     setupDimensions();
     const observer = new ResizeObserver(setupDimensions);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [redrawBaseCanvas]);
+    observer.observe(viewport);
+    window.addEventListener("resize", setupDimensions);
+    return () => {
+      observer.disconnect();
+      resizeCanvasRef.current = null;
+      window.removeEventListener("resize", setupDimensions);
+    };
+  }, [redrawBaseCanvas, drawFullStroke, zoom]);
 
-  // Borracha de Traço Otimizada
-  const eraseStrokeAtPoint = useCallback(
-    (x: number, y: number, radius = 16) => {
-      const beforeCount = strokesRef.current.length;
-      if (beforeCount === 0) return;
-      const rSq = radius * radius;
-      strokesRef.current = strokesRef.current.filter((stroke) => {
-        for (let i = 0; i < stroke.points.length; i++) {
-          const pt = stroke.points[i];
-          const dx = pt.x - x;
-          const dy = pt.y - y;
-          if (dx * dx + dy * dy <= rSq) {
-            return false;
-          }
-        }
-        return true;
-      });
-      if (strokesRef.current.length !== beforeCount) {
-        redrawBaseCanvas();
-        setStrokeCount(strokesRef.current.length);
-        scheduleSync([...strokesRef.current]);
-      }
-    },
-    [redrawBaseCanvas, scheduleSync]
-  );
+  // Um gesto da borracha é uma única operação de histórico.
+  const eraseStrokeAtPoints = useCallback((points: Point[]) => {
+    const segments = points.map(point => {
+      const previous = eraserPointRef.current ?? point;
+      eraserPointRef.current = point;
+      return { previous, point };
+    });
+    const remaining = strokesRef.current.filter(stroke =>
+      !segments.some(({ previous, point }) => strokeIntersectsEraser(stroke, previous, point)));
+    if (remaining.length !== strokesRef.current.length) {
+      strokesRef.current = remaining;
+      redrawBaseCanvas();
+    }
+  }, [redrawBaseCanvas]);
 
   // Listeners Nativos de Baixa Latência anexados diretamente ao elemento DOM
   useEffect(() => {
     const inkCanvas = inkCanvasRef.current;
     const baseCanvas = baseCanvasRef.current;
     if (!inkCanvas || !baseCanvas) return;
-    let cachedRect: DOMRect | null = null;
+    const drawingDocument = documentRef.current;
 
     const getPoint = (e: PointerEvent, rect: DOMRect): Point => ({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: Math.max(0, Math.min(rect.width / zoom, (e.clientX - rect.left) / zoom)),
+      y: Math.max(0, Math.min(rect.height / zoom, (e.clientY - rect.top) / zoom)),
       pressure: e.pointerType === "pen" ? e.pressure || 0.7 : 0.7,
     });
 
@@ -339,7 +373,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         e.preventDefault();
         return;
       }
-      if (activePointerIdRef.current !== null) return;
+      if (activePointerIdRef.current !== null || (e.pointerType === "mouse" && e.button !== 0)) return;
       e.preventDefault();
 
       activePointerIdRef.current = e.pointerId;
@@ -347,14 +381,15 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         inkCanvas.setPointerCapture(e.pointerId);
       } catch {}
 
-      cachedRect = inkCanvas.getBoundingClientRect();
-      const pt = getPoint(e, cachedRect);
+      const pt = getPoint(e, inkCanvas.getBoundingClientRect());
       const isSpenEraser = e.button === 5 || (e.buttons & 32) !== 0;
       const effectiveTool: ToolType = isSpenEraser ? "stroke-eraser" : toolRef.current;
       isDrawingRef.current = true;
 
       if (effectiveTool === "stroke-eraser") {
-        eraseStrokeAtPoint(pt.x, pt.y);
+        eraserStartRef.current = strokesRef.current;
+        eraserPointRef.current = null;
+        eraseStrokeAtPoints([pt]);
         return;
       }
 
@@ -364,7 +399,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         effectiveTool === "highlighter"
           ? Math.max(14, widthRef.current * 3)
           : widthRef.current;
-      const pressureFactor = Math.max(0.6, Math.min(1.4, pressure * 1.2));
+      const pressureFactor = effectiveTool === "highlighter" ? 1 : Math.max(0.6, Math.min(1.4, pressure * 1.2));
 
       if (inkCtx) {
         inkCtx.strokeStyle = colorRef.current;
@@ -396,19 +431,13 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       if (e.pointerType === "touch" && stylusModeRef.current) return;
       e.preventDefault();
 
-      const rect = cachedRect || inkCanvas.getBoundingClientRect();
-      const isSpenEraser = (e.buttons & 32) !== 0;
-      const effectiveTool: ToolType = isSpenEraser ? "stroke-eraser" : toolRef.current;
+      const rect = inkCanvas.getBoundingClientRect();
 
-      const coalesced =
-        e.getCoalescedEvents && e.getCoalescedEvents().length > 0
-          ? e.getCoalescedEvents()
-          : [e];
+      const samples = e.getCoalescedEvents?.();
+      const coalesced = samples?.length ? samples : [e];
 
-      if (effectiveTool === "stroke-eraser") {
-        const lastEv = coalesced[coalesced.length - 1];
-        const pt = getPoint(lastEv, rect);
-        eraseStrokeAtPoint(pt.x, pt.y);
+      if (eraserStartRef.current) {
+        eraseStrokeAtPoints(coalesced.map(sample => getPoint(sample, rect)));
         return;
       }
 
@@ -429,12 +458,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           pts.push(pt);
 
           if (stroke.tool === "highlighter") {
-            const inkCanvas = inkCanvasRef.current;
-            if (inkCanvas && inkCtx) {
-              const dpr = dprRef.current;
-              inkCtx.clearRect(0, 0, inkCanvas.width / dpr, inkCanvas.height / dpr);
-              drawFullStroke(inkCtx, stroke);
-            }
+            // Renderizado uma vez após incorporar todas as amostras do evento.
           } else if (inkCtx) {
             const pressure = pt.pressure || 0.7;
             const pressureFactor = Math.max(0.6, Math.min(1.4, pressure * 1.2));
@@ -463,6 +487,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         }
       }
 
+      if (stroke.tool === "highlighter" && inkCtx) {
+        inkCtx.clearRect(0, 0, inkCanvas.width / dprRef.current, inkCanvas.height / dprRef.current);
+        drawFullStroke(inkCtx, stroke);
+      }
+
       // Delegated Ink Trail para o compositor nativo do Android / Windows
       if (inkPresenterRef.current) {
         try {
@@ -476,12 +505,29 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     };
 
     const onPointerUpOrCancel = (e: PointerEvent) => {
-      if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return;
+      if (e.pointerId !== activePointerIdRef.current) return;
       const state = activeStrokeStateRef.current;
+      if (state && e.type === "pointerup") {
+        const endpoint = getPoint(e, inkCanvas.getBoundingClientRect());
+        const last = state.stroke.points[state.stroke.points.length - 1];
+        // pointerup pode trazer uma posição que não chegou em pointermove.
+        if (endpoint.x !== last.x || endpoint.y !== last.y) {
+          state.stroke.points.push({ ...endpoint, pressure: last.pressure });
+        }
+      }
       activeStrokeStateRef.current = null;
       isDrawingRef.current = false;
       activePointerIdRef.current = null;
-      cachedRect = null;
+      const eraserStart = eraserStartRef.current;
+      if (eraserStart) {
+        if (e.type === "pointerup") eraseStrokeAtPoints([getPoint(e, inkCanvas.getBoundingClientRect())]);
+        if (strokesRef.current !== eraserStart) {
+          commitCanvas(documentRef.current, strokesRef.current);
+          publishStrokes(strokesRef.current);
+        }
+        eraserStartRef.current = null;
+        eraserPointRef.current = null;
+      }
 
       try {
         if (inkCanvas.hasPointerCapture(e.pointerId)) {
@@ -491,19 +537,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
       if (state && state.stroke.points.length > 0) {
         const finishedStroke = state.stroke;
-        const pts = finishedStroke.points;
         const inkCtx = inkCtxRef.current;
         const baseCtx = baseCtxRef.current || baseCanvas.getContext("2d");
-
-        // Conecta o último segmento até a ponta final
-        if (inkCtx && pts.length >= 2 && finishedStroke.tool !== "highlighter") {
-          const lastPt = pts[pts.length - 1];
-          inkCtx.beginPath();
-          inkCtx.lineWidth = finishedStroke.baseWidth * (lastPt.pressure || 0.7);
-          inkCtx.moveTo(state.lastMidX, state.lastMidY);
-          inkCtx.lineTo(lastPt.x, lastPt.y);
-          inkCtx.stroke();
-        }
 
         // Consolida no canvas base permanente e limpa o buffer volátil
         const dpr = dprRef.current;
@@ -514,10 +549,9 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           drawFullStroke(baseCtx, finishedStroke);
         }
 
-        strokesRef.current.push(finishedStroke);
-        redoStackRef.current = [];
-        setStrokeCount(strokesRef.current.length);
-        scheduleSync([...strokesRef.current]);
+        commitCanvas(documentRef.current, [...strokesRef.current, finishedStroke]);
+        strokesRef.current = documentRef.current.strokes;
+        publishStrokes(strokesRef.current);
       }
     };
 
@@ -544,64 +578,72 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       inkCanvas.removeEventListener("lostpointercapture", onPointerUpOrCancel);
       window.removeEventListener("pointerup", onWindowPointerUp);
       window.removeEventListener("pointercancel", onWindowPointerUp);
+      const active = activeStrokeStateRef.current?.stroke;
+      if (active) commitCanvas(drawingDocument, [...strokesRef.current, active]);
+      else if (eraserStartRef.current && strokesRef.current !== eraserStartRef.current) {
+        commitCanvas(drawingDocument, strokesRef.current);
+      }
+      activeStrokeStateRef.current = null;
+      eraserStartRef.current = null;
+      isDrawingRef.current = false;
+      activePointerIdRef.current = null;
     };
-  }, [drawFullStroke, eraseStrokeAtPoint, scheduleSync]);
+  }, [drawFullStroke, eraseStrokeAtPoints, publishStrokes, zoom]);
 
-  const handleUndo = () => {
-    if (strokesRef.current.length === 0) return;
-    const popped = strokesRef.current.pop()!;
-    redoStackRef.current.push(popped);
+  const handleUndo = useCallback(() => {
+    if (isDrawingRef.current || !undoCanvas(documentRef.current)) return;
+    strokesRef.current = documentRef.current.strokes;
+    resizeCanvasRef.current?.();
     redrawBaseCanvas();
-    setStrokeCount(strokesRef.current.length);
-    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    onStrokesChange?.([...strokesRef.current]);
-  };
+    publishStrokes(strokesRef.current);
+  }, [redrawBaseCanvas, publishStrokes]);
 
-  const handleRedo = () => {
-    if (redoStackRef.current.length === 0) return;
-    const restored = redoStackRef.current.pop()!;
-    strokesRef.current.push(restored);
-    const baseCtx = baseCtxRef.current || baseCanvasRef.current?.getContext("2d");
-    if (baseCtx) drawFullStroke(baseCtx, restored);
-    setStrokeCount(strokesRef.current.length);
-    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    onStrokesChange?.([...strokesRef.current]);
-  };
+  const handleRedo = useCallback(() => {
+    if (isDrawingRef.current || !redoCanvas(documentRef.current)) return;
+    strokesRef.current = documentRef.current.strokes;
+    resizeCanvasRef.current?.();
+    redrawBaseCanvas();
+    publishStrokes(strokesRef.current);
+  }, [redrawBaseCanvas, publishStrokes]);
 
   const handleClear = () => {
-    strokesRef.current = [];
-    redoStackRef.current = [];
+    if (isDrawingRef.current || strokesRef.current.length === 0) return;
+    commitCanvas(documentRef.current, []);
+    strokesRef.current = documentRef.current.strokes;
+    resizeCanvasRef.current?.();
     redrawBaseCanvas();
-    setStrokeCount(0);
-    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    onStrokesChange?.([]);
+    publishStrokes(strokesRef.current);
   };
 
   const getCanvasBase64 = useCallback((): string | null => {
     const baseCanvas = baseCanvasRef.current;
     if (!baseCanvas) return null;
     const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = baseCanvas.width;
-    exportCanvas.height = baseCanvas.height;
+    const content = canvasContentSize(strokesRef.current);
+    const width = Math.max(baseCanvas.width / dprRef.current, content.width);
+    const height = Math.max(baseCanvas.height / dprRef.current, content.height);
+    // Mantém todo o desenho, limitando o bitmap enviado ao OCR a 4096px por lado.
+    const scale = Math.min(dprRef.current, 4096 / Math.max(width, height));
+    exportCanvas.width = Math.ceil(width * scale);
+    exportCanvas.height = Math.ceil(height * scale);
     const ctx = exportCanvas.getContext("2d");
     if (!ctx) return null;
     ctx.fillStyle = isLight ? "#FFFFFF" : "#0B0914";
     ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    ctx.drawImage(baseCanvas, 0, 0);
+    ctx.scale(scale, scale);
+    for (const stroke of strokesRef.current) drawFullStroke(ctx, stroke);
     return exportCanvas.toDataURL("image/png");
-  }, [isLight]);
+  }, [isLight, drawFullStroke]);
 
   useEffect(() => {
     if (exportCanvasRef) {
       exportCanvasRef.current = getCanvasBase64;
+      return () => { if (exportCanvasRef.current === getCanvasBase64) exportCanvasRef.current = null; };
     }
   }, [exportCanvasRef, getCanvasBase64]);
 
   const handleExportAndEvaluate = async () => {
-    if (syncTimeoutRef.current) {
-      clearTimeout(syncTimeoutRef.current);
-      onStrokesChange?.([...strokesRef.current]);
-    }
+    publishStrokes([...strokesRef.current]);
     const b64 = getCanvasBase64();
     if (b64) {
       await onEvaluateOcr(b64);
@@ -610,6 +652,19 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
   return (
     <div
+      tabIndex={0}
+      aria-label="Lousa de rascunho"
+      onKeyDown={e => {
+        if (e.target instanceof HTMLElement && e.target.closest("input, textarea, [contenteditable='true']")) return;
+        if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+        if (e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          if (e.shiftKey) handleRedo(); else handleUndo();
+        } else if (e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          handleRedo();
+        }
+      }}
       className={`rounded-xl border p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
         isLight
           ? "border-slate-300 bg-white"
@@ -668,11 +723,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
               isLight ? "bg-slate-100" : "bg-white/5"
             }`}
           >
-            {COLORS.map((c) => (
+            {COLORS.map((c, index) => (
               <button
                 key={c.hex}
                 type="button"
-                onClick={() => setActiveColor(c.hex)}
+                onClick={() => setColorIndex(index)}
                 className={`h-5 w-5 rounded-full transition-transform cursor-pointer ${
                   activeColor === c.hex
                     ? `scale-125 ${isLight ? "ring-2 ring-slate-400" : "ring-2 ring-white"}`
@@ -705,6 +760,14 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {showZoomControls && (
+            <div className={`flex items-center gap-1 rounded-lg border px-1 ${isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`} aria-label="Controles de zoom da lousa">
+              <button type="button" onClick={() => setZoom(value => Math.max(0.5, Math.round((value - 0.1) * 10) / 10))} disabled={zoom <= 0.5} className="rounded p-1.5 disabled:opacity-30" title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></button>
+              <span className="min-w-12 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
+              <button type="button" onClick={() => setZoom(value => Math.min(2, Math.round((value + 0.1) * 10) / 10))} disabled={zoom >= 2} className="rounded p-1.5 disabled:opacity-30" title="Aumentar zoom"><ZoomIn className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setZoom(1); if (viewportRef.current) { viewportRef.current.scrollLeft = 0; viewportRef.current.scrollTop = 0; } }} className="rounded p-1.5" title="Centralizar lousa"><LocateFixed className="h-4 w-4" /></button>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setStylusMode((prev) => !prev)}
@@ -722,7 +785,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={handleUndo}
-            disabled={strokeCount === 0}
+            disabled={!historyState.undo}
             className={`rounded p-1.5 disabled:opacity-30 transition cursor-pointer ${
               isLight
                 ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
@@ -736,7 +799,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           <button
             type="button"
             onClick={handleRedo}
-            className={`rounded p-1.5 transition cursor-pointer ${
+            disabled={!historyState.redo}
+            className={`rounded p-1.5 disabled:opacity-30 transition cursor-pointer ${
               isLight
                 ? "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 : "text-gray-400 hover:bg-white/10 hover:text-white"
@@ -760,18 +824,20 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
 
       {/* Container Dual-Canvas com touch-action: none estrito e isolamento de camada GPU */}
       <div
-        ref={containerRef}
+        ref={viewportRef}
         style={{
           touchAction: "none",
           contain: "paint layout",
           isolation: "isolate",
         }}
-        className={`relative w-full overflow-hidden rounded-lg border transition-colors select-none ${
+        className={`relative w-full overflow-auto rounded-lg border transition-colors select-none ${
           isLight
             ? "border-slate-200 bg-white bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
             : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
         } ${canvasHeightClass}`}
       >
+        <div style={{ width: baseSize.width * zoom || "100%", height: baseSize.height * zoom || "100%" }} aria-hidden="true" />
+        <div ref={containerRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: baseSize.width || "100%", height: baseSize.height || "100%" }} className="relative min-h-full min-w-full">
         <canvas
           ref={baseCanvasRef}
           style={{
@@ -791,8 +857,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             WebkitUserSelect: "none",
             userSelect: "none",
           }}
+          aria-label="Área de desenho"
+          onPointerDown={() => viewportRef.current?.parentElement?.focus({ preventScroll: true })}
           className="absolute inset-0 h-full w-full cursor-crosshair"
         />
+        </div>
       </div>
 
       {!hideFooterEvaluate && (

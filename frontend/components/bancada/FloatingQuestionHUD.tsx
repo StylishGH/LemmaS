@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   Minus,
   Maximize2,
@@ -20,6 +20,8 @@ import { MathText } from "@/components/math/MathDisplay";
 import { extrairEnunciadoEAlternativas } from "@/lib/math-parser";
 import { resolveFigureUrl } from "@/lib/image-url";
 import { useTheme } from "@/components/theme-provider";
+
+const QuestionMath = React.memo(MathText);
 
 export interface QuestionData {
   id: number;
@@ -75,7 +77,8 @@ export default function FloatingQuestionHUD({
   const [isTranslucent, setIsTranslucent] = useState(false);
 
   // ── Drag ──────────────────────────────────────────────────────────────────
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [position, setPos] = useState<{ x: number; y: number; index: number } | null>(null);
+  const pos = position?.index === currentIndex ? position : null;
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -84,19 +87,32 @@ export default function FloatingQuestionHUD({
   } | null>(null);
   const hudRef = useRef<HTMLDivElement>(null);
 
-  // Reseta posição ao trocar de questão
-  useEffect(() => { setPos(null); }, [currentIndex]);
+  // Mantém a alça acessível após rotação da tela e expansão do painel.
+  useEffect(() => {
+    const hud = hudRef.current, parent = hud?.offsetParent;
+    if (!hud || !parent) return;
+    const observer = new ResizeObserver(() => setPos(previous => {
+      if (!previous) return previous;
+      const x = Math.max(0, Math.min(parent.clientWidth - hud.offsetWidth, previous.x));
+      const y = Math.max(0, Math.min(parent.clientHeight - Math.min(hud.offsetHeight, 60), previous.y));
+      return x === previous.x && y === previous.y ? previous : { ...previous, x, y };
+    }));
+    observer.observe(parent);
+    observer.observe(hud);
+    return () => observer.disconnect();
+  }, []);
 
   const onDragStart = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     // Não inicia drag quando o clique é num botão
-    if ((e.target as HTMLElement).closest("button")) return;
+    if (e.button !== 0 || (e.target as HTMLElement).closest("button")) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const rect = hudRef.current?.getBoundingClientRect();
+    const parent = hudRef.current?.offsetParent?.getBoundingClientRect();
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      origX: rect?.left ?? 0,
-      origY: rect?.top ?? 0,
+      origX: (rect?.left ?? 0) - (parent?.left ?? 0),
+      origY: (rect?.top ?? 0) - (parent?.top ?? 0),
     };
   }, []);
 
@@ -104,14 +120,21 @@ export default function FloatingQuestionHUD({
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
-    setPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
-  }, []);
+    const hud = hudRef.current;
+    const parent = hud?.offsetParent;
+    if (!hud || !parent) return;
+    setPos({
+      index: currentIndex,
+      x: Math.max(0, Math.min(parent.clientWidth - hud.offsetWidth, dragRef.current.origX + dx)),
+      y: Math.max(0, Math.min(parent.clientHeight - Math.min(hud.offsetHeight, 60), dragRef.current.origY + dy)),
+    });
+  }, [currentIndex]);
 
   const onDragEnd = useCallback(() => { dragRef.current = null; }, []);
 
-  // Quando arrastado usa left/top; caso contrário cai no posicionamento padrão do CSS (top-3 right-4)
+  // Quando arrastado usa left/top; caso contrário cai no posicionamento padrão do CSS (top-0 right-4)
   const posStyle: React.CSSProperties = pos
-    ? { position: "absolute", left: pos.x, top: pos.y, right: "auto" }
+    ? { position: "absolute", left: pos.x, top: pos.y, right: "auto", maxHeight: `calc(100% - ${pos.y}px)` }
     : {};
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -120,10 +143,9 @@ export default function FloatingQuestionHUD({
     question?.gabarito?.toLowerCase().includes("discursiv")
   );
 
-  const { corpo, alternativas } = extrairEnunciadoEAlternativas(
-    question.enunciado,
-    isQuestionDiscursiva
-  );
+  const { corpo, alternativas } = useMemo(() => extrairEnunciadoEAlternativas(
+    question.enunciado, isQuestionDiscursiva
+  ), [question.enunciado, isQuestionDiscursiva]);
 
   const hasAlternativas = Object.keys(alternativas).length > 0;
   const figuraUrl = resolveFigureUrl(question.figura_path);
@@ -133,7 +155,7 @@ export default function FloatingQuestionHUD({
     <div
       ref={hudRef}
       style={posStyle}
-      className="absolute top-3 right-4 z-50 animate-fadeIn"
+      className="absolute top-0 right-4 z-50 pointer-events-auto animate-fadeIn flex max-h-full flex-col"
     >
       {isMinimized ? (
         /* ── PÍLULA MINIMIZADA ── */
@@ -191,7 +213,7 @@ export default function FloatingQuestionHUD({
       ) : (
         /* ── PAINEL EXPANDIDO ── */
         <div
-          className={`w-[92vw] sm:w-[480px] md:w-[520px] max-w-[94vw] rounded-2xl border flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
+          className={`w-[92vw] sm:w-[480px] md:w-[520px] max-w-[94vw] min-h-0 rounded-2xl border flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
             isLight
               ? isTranslucent
                 ? "bg-white/85 text-slate-900 border-amber-700/25 shadow-[0_12px_36px_rgba(15,23,42,0.16)]"
@@ -299,7 +321,7 @@ export default function FloatingQuestionHUD({
           <div className={`p-4 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto space-y-3.5 text-xs leading-relaxed font-sans ${isLight ? "text-slate-900" : "text-zinc-200"}`}>
             {/* Enunciado */}
             <div className="space-y-2 select-text">
-              <MathText text={corpo} />
+              <QuestionMath text={corpo} />
             </div>
 
             {/* Figura de Apoio */}
@@ -356,7 +378,7 @@ export default function FloatingQuestionHUD({
                           )}
                         </span>
                         <div className="flex-1 text-xs pt-0.5">
-                          <MathText text={textoAlt} />
+                          <QuestionMath text={textoAlt} />
                         </div>
                       </button>
                     );
@@ -399,7 +421,7 @@ export default function FloatingQuestionHUD({
                 {(evaluationResult.feedback_latex ||
                   evaluationResult.diagnostico) && (
                   <div className={`text-xs leading-relaxed pl-6 border-l-2 ${isLight ? "text-slate-800 border-slate-300" : "text-zinc-200 border-white/20"}`}>
-                    <MathText
+                    <QuestionMath
                       text={
                         evaluationResult.feedback_latex ||
                         evaluationResult.diagnostico ||

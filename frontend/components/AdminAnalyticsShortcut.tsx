@@ -29,7 +29,7 @@ export function AdminAnalyticsShortcut() {
   if (!isAdmin) return null;
 
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-wrap justify-end gap-3">
       <Link
         href="/admin/analytics"
         className="group inline-flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-emerald-950 shadow-sm transition hover:border-emerald-500 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/70"
@@ -41,6 +41,7 @@ export function AdminAnalyticsShortcut() {
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
       </Link>
+      <Link href="/admin/comments" className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-zinc-600 dark:text-zinc-100">Moderar comentários</Link>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import FloatingQuestionHUD, {
   QuestionData,
   DiscursiveEvaluationData,
 } from "./FloatingQuestionHUD";
+import type { CanvasDocument } from "@/lib/canvas-document";
 import SpenSmartCanvas, { Stroke } from "@/components/lousa/SpenSmartCanvas";
 import GeometricCompassBoard from "@/components/math/GeometricCompassBoard";
 
@@ -43,7 +44,7 @@ export interface ImmersiveFocusOverlayProps {
   onNext?: () => void;
   onPrev?: () => void;
   // Lousa State
-  lousaStrokes: Stroke[];
+  lousaDocument: CanvasDocument;
   onLousaStrokesChange: (strokes: Stroke[]) => void;
   // Geometria State
   geometricCommands: string[];
@@ -67,7 +68,7 @@ export default function ImmersiveFocusOverlay({
   onChangeEngine,
   onNext,
   onPrev,
-  lousaStrokes,
+  lousaDocument,
   onLousaStrokesChange,
   geometricCommands,
   onGeometricCommandsChange,
@@ -81,6 +82,8 @@ export default function ImmersiveFocusOverlay({
   const [showTutor, setShowTutor] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const [hudTop, setHudTop] = useState(12);
   const spenExportRef = useRef<(() => string | null) | null>(null);
 
   // Bug fix: bloqueia scroll da página por baixo do overlay
@@ -89,11 +92,16 @@ export default function ImmersiveFocusOverlay({
   // Fecha o modo imersivo via tecla Escape; navega com ← →
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey ||
+          target?.closest("input, textarea, select, [contenteditable='true'], [role='textbox']")) return;
       if (e.key === "Escape" && !document.fullscreenElement) {
         onClose();
       } else if (e.key === "ArrowRight" && onNext) {
+        e.preventDefault();
         onNext();
       } else if (e.key === "ArrowLeft" && onPrev) {
+        e.preventDefault();
         onPrev();
       }
     };
@@ -101,16 +109,36 @@ export default function ImmersiveFocusOverlay({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, onNext, onPrev]);
 
+  useEffect(() => {
+    const updateFullscreen = () => setIsNativeFullscreen(Boolean(document.fullscreenElement));
+    updateFullscreen();
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
+
+  // O painel começa abaixo das ferramentas, inclusive quando elas quebram linha.
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const viewport = main.querySelector("canvas")?.parentElement?.parentElement;
+    const observer = new ResizeObserver(() => {
+      const top = activeEngine === "spen-dual" && viewport
+        ? viewport.getBoundingClientRect().top - main.getBoundingClientRect().top + 8 : 12;
+      setHudTop(top);
+    });
+    observer.observe(main);
+    if (viewport) observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [activeEngine, currentIndex]);
+
   // Alterna tela cheia nativa do browser para tablets/iPads
   const toggleNativeFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsNativeFullscreen(true);
+      containerRef.current?.requestFullscreen?.().catch(() => {});
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
       }
-      setIsNativeFullscreen(false);
     }
   }, []);
 
@@ -225,7 +253,7 @@ export default function ImmersiveFocusOverlay({
       </header>
 
       {/* ÁREA CENTRAL EXPANDIDA COM BANCADA E HUD SOBREPOSTO */}
-      <main className={`relative flex-1 w-full overflow-hidden transition-colors ${
+      <main ref={mainRef} className={`relative flex-1 w-full overflow-hidden transition-colors ${
         isLight ? "bg-[#f8f7f2]" : "bg-[#07060f]"
       }`}>
         {/* BANCADA ATIVA — ocupa todo o espaço restante abaixo do header */}
@@ -234,7 +262,7 @@ export default function ImmersiveFocusOverlay({
             <div className="w-full h-full flex flex-col">
               <SpenSmartCanvas
                 key={`spen-focus-q${currentIndex}-${question.id}`}
-                initialStrokes={lousaStrokes}
+                documentState={lousaDocument}
                 onStrokesChange={onLousaStrokesChange}
                 onEvaluateOcr={async (b64) => {
                   await onEvaluateDiscursive("lousa", { imagemBase64: b64 });
@@ -242,6 +270,7 @@ export default function ImmersiveFocusOverlay({
                 isEvaluating={isEvaluating}
                 canvasHeightClass="flex-1 min-h-0"
                 hideFooterEvaluate={true}
+                showZoomControls={true}
                 exportCanvasRef={spenExportRef}
               />
             </div>
@@ -277,19 +306,21 @@ export default function ImmersiveFocusOverlay({
         )}
 
         {/* HUD FLUTUANTE DA QUESTÃO */}
-        <FloatingQuestionHUD
-          question={question}
-          currentIndex={currentIndex}
-          totalQuestions={totalQuestions}
-          selectedAnswer={selectedAnswer}
-          onSelectAnswer={onSelectAnswer}
-          onNext={onNext}
-          onPrev={onPrev}
-          onEvaluate={handleEvaluateFromHUD}
-          isEvaluating={isEvaluating}
-          evaluationResult={evaluationResult}
-          onCloseFocusMode={onClose}
-        />
+        <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ top: hudTop }}>
+          <FloatingQuestionHUD
+            question={question}
+            currentIndex={currentIndex}
+            totalQuestions={totalQuestions}
+            selectedAnswer={selectedAnswer}
+            onSelectAnswer={onSelectAnswer}
+            onNext={onNext}
+            onPrev={onPrev}
+            onEvaluate={handleEvaluateFromHUD}
+            isEvaluating={isEvaluating}
+            evaluationResult={evaluationResult}
+            onCloseFocusMode={onClose}
+          />
+        </div>
       </main>
     </div>,
     document.body
