@@ -9,19 +9,38 @@ const frontendRequire = createRequire(new URL('../../frontend/package.json', imp
 const ts = frontendRequire('typescript');
 const React = frontendRequire('react');
 const { renderToStaticMarkup } = frontendRequire('react-dom/server');
+const moduleCache = new Map();
+
 function loadModule(relative) {
   const filename = fileURLToPath(new URL(relative, import.meta.url));
+  if (moduleCache.has(filename)) return moduleCache.get(filename);
   const output = ts.transpileModule(readFileSync(filename, 'utf8').replace("import 'katex/dist/katex.min.css';", ''), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText;
   const compiled = new Module(filename);
   compiled.filename = filename;
   compiled.paths = Module._nodeModulePaths(fileURLToPath(new URL('../../frontend', import.meta.url)));
+  const origRequire = compiled.require.bind(compiled);
+  compiled.require = (id) => {
+    if (id === '@/lib/community') return loadModule('../../frontend/lib/community.ts');
+    return origRequire(id);
+  };
   compiled._compile(output, filename);
+  moduleCache.set(filename, compiled.exports);
   return compiled.exports;
 }
-const { positiveId, pageNumber, parseCommunityWrite, communityError, communityRequest } = loadModule('../../frontend/lib/community.ts');
+
+const {
+  positiveId,
+  pageNumber,
+  parseCommunityWrite,
+  communityError,
+  communityRequest,
+  sanitizeAvatarUrl,
+  getCommentInitials,
+} = loadModule('../../frontend/lib/community.ts');
 const { CommentText } = loadModule('../../frontend/components/community/CommentText.tsx');
+const { CommentAvatar } = loadModule('../../frontend/components/community/CommentAvatar.tsx');
 
 test('IDs and page bounds reject coercions and unsafe numbers', () => {
   for (const value of [null, false, true, [], {}, 0, -1, 1.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) assert.equal(positiveId(value), null);
@@ -72,4 +91,52 @@ test('communityRequest handles non-JSON upstream error responses without leaking
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('sanitizeAvatarUrl and getCommentInitials enforce safe URLs and clean initials', () => {
+  assert.equal(sanitizeAvatarUrl('https://lh3.googleusercontent.com/a/avatar123'), 'https://lh3.googleusercontent.com/a/avatar123');
+  assert.equal(sanitizeAvatarUrl('data:image/png;base64,iVBORw0KGgo='), 'data:image/png;base64,iVBORw0KGgo=');
+  assert.equal(sanitizeAvatarUrl('javascript:alert(1)'), null);
+  assert.equal(sanitizeAvatarUrl('http://insecure.example/a.png'), null);
+  assert.equal(sanitizeAvatarUrl('data:image/svg+xml;base64,PHN2Zz4='), null);
+  assert.equal(sanitizeAvatarUrl('https://evil.test/<script>'), null);
+  assert.equal(sanitizeAvatarUrl(null), null);
+
+  assert.equal(getCommentInitials('Admin do papiro'), 'AP');
+  assert.equal(getCommentInitials('Cadete_2027'), 'C2');
+  assert.equal(getCommentInitials('Estudante'), 'ES');
+  assert.equal(getCommentInitials(''), 'ES');
+  assert.equal(getCommentInitials(null), 'ES');
+});
+
+test('CommentAvatar renders sanitized photo or initials fallback safely', () => {
+  const photoHtml = renderToStaticMarkup(
+    React.createElement(CommentAvatar, {
+      alias: 'Admin do papiro',
+      avatarUrl: 'https://cdn.lemmas.test/foto.png',
+    }),
+  );
+  assert.ok(photoHtml.includes('<img'));
+  assert.ok(photoHtml.includes('src="https://cdn.lemmas.test/foto.png"'));
+  assert.ok(photoHtml.includes('referrerPolicy="no-referrer"') || photoHtml.includes('referrerpolicy="no-referrer"'));
+  assert.ok(photoHtml.includes('alt="Foto de Admin do papiro"'));
+
+  const fallbackHtml = renderToStaticMarkup(
+    React.createElement(CommentAvatar, {
+      alias: 'Admin do papiro',
+      avatarUrl: 'javascript:alert(1)',
+    }),
+  );
+  assert.ok(!fallbackHtml.includes('<img'));
+  assert.ok(fallbackHtml.includes('>AP<'));
+
+  const removedHtml = renderToStaticMarkup(
+    React.createElement(CommentAvatar, {
+      alias: 'Comentário removido',
+      avatarUrl: 'https://cdn.lemmas.test/foto.png',
+      removed: true,
+    }),
+  );
+  assert.ok(!removedHtml.includes('<img'));
+  assert.ok(removedHtml.includes('>?<'));
 });
