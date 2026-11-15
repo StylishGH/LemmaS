@@ -171,11 +171,11 @@ export default function LemaBadge({
           ref={buttonRef}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
+          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer"
           title="Ver Teorema / Lema Canônico"
         >
           <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-amber-400 shrink-0 group-hover:rotate-45 transition-transform" />
-          <span className="font-mono font-bold">Lema {shortNum}</span>
+          <span className="font-mono tabular-nums font-bold">Lema {shortNum}</span>
           {data?.titulo && (
             <span className="text-slate-600 dark:text-zinc-400 font-normal truncate max-w-[180px]">
               · {data.titulo}
@@ -195,7 +195,7 @@ export default function LemaBadge({
           ref={buttonRef}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer"
+          className="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono tabular-nums font-bold bg-blue-500/10 text-blue-800 dark:bg-amber-500/10 dark:text-[#d9b452] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/20 dark:hover:bg-amber-500/20 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer"
           title="Ver Teorema / Lema Canônico"
         >
           <Compass className="w-3 h-3 text-blue-600 dark:text-amber-400 shrink-0" />
@@ -213,13 +213,13 @@ export default function LemaBadge({
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-500/10 text-slate-800 dark:text-[#dedbd0] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/15 dark:hover:bg-amber-500/15 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer shadow-2xs"
+        className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-500/10 text-slate-800 dark:text-[#dedbd0] border border-blue-500/25 dark:border-amber-500/25 hover:bg-blue-500/15 dark:hover:bg-amber-500/15 hover:border-blue-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer"
         title="Clique para ver KaTeX, gatilho de prova e intuição deste lema"
       >
-        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/15 text-blue-700 dark:bg-amber-500/20 dark:text-amber-300">
+        <span className="flex items-center justify-center w-4 h-4 rounded-md bg-blue-500/15 text-blue-700 dark:bg-amber-500/20 dark:text-amber-300">
           <Compass className="w-2.5 h-2.5" />
         </span>
-        <span className="font-mono font-bold text-blue-700 dark:text-[#d9b452]">
+        <span className="font-mono tabular-nums font-bold text-blue-700 dark:text-[#d9b452]">
           Lema {shortNum}
         </span>
         {data?.titulo && (
@@ -254,12 +254,12 @@ export default function LemaBadge({
         ref={popoverRef}
         className={`absolute z-50 left-0 sm:left-auto sm:right-0 ${
           opensUpward ? "bottom-full mb-2" : "top-full mt-2"
-        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-2xl bg-white dark:bg-[#161426] border-2 border-blue-500/35 dark:border-amber-500/35 shadow-2xl space-y-3.5 text-left lemmas-popover-enter origin-top backdrop-blur-md`}
+        } w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[min(80vh,520px)] overflow-y-auto p-4 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xl space-y-3.5 text-left lemmas-popover-enter origin-top backdrop-blur-md`}
         role="dialog"
         aria-modal="true"
       >
         {/* CABEÇALHO */}
-        <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-amber-500/15">
+        <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-zinc-200/80 dark:border-zinc-800/80">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-800 border border-blue-500/30 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
@@ -286,7 +286,7 @@ export default function LemaBadge({
 
         {/* FÓRMULA EM KATEX */}
         {data?.formula_latex ? (
-          <div className="p-3 rounded-xl bg-blue-500/5 dark:bg-[#1f1b33] border border-blue-500/20 dark:border-amber-500/20 overflow-x-auto text-center font-mono text-xs shadow-2xs">
+          <div className="p-3 rounded-lg bg-zinc-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 overflow-x-auto text-center font-mono text-xs">
             <MathText text={sanitizeLemmaLatex(data.formula_latex)} />
           </div>
         ) : (
@@ -322,11 +322,11 @@ export default function LemaBadge({
         )}
 
         {/* RODAPÉ COM CONTAGEM E LINK PARA O BANCO */}
-        <div className="pt-2 border-t border-slate-100 dark:border-amber-500/15 flex items-center justify-between gap-2 text-[11px]">
+        <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between gap-2 text-[11px]">
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 font-medium">
             <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>
-              <strong className="text-slate-800 dark:text-[#f5f0df]">
+              <strong className="tabular-nums text-slate-800 dark:text-[#f5f0df]">
                 {data?.questoes_vinculadas_count ?? 1}
               </strong>{" "}
               questões associadas
