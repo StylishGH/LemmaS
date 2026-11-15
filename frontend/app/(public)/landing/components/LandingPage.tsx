@@ -28,7 +28,8 @@ import {
   BarChart3,
   Maximize2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  GraduationCap
 } from "lucide-react";
 import AppBackground from "@/components/AppBackground";
 import { BoardFrame } from "./BoardFrame";
@@ -430,23 +431,26 @@ export function LandingPage() {
             <button
               type="button"
               onClick={() => switchView("student")}
-              className={`text-left ${view === "student" ? "text-amber-400 font-bold" : ""}`}
+              className={`text-left flex items-center gap-2 ${view === "student" ? "text-amber-700 dark:text-[#d9b452] font-semibold" : ""}`}
             >
-              🎓 Para estudar
+              <GraduationCap size={15} aria-hidden="true" />
+              <span>Para estudar</span>
             </button>
             <button
               type="button"
               onClick={() => switchView("portfolio")}
-              className={`text-left ${view === "portfolio" ? "text-amber-400 font-bold" : ""}`}
+              className={`text-left flex items-center gap-2 ${view === "portfolio" ? "text-amber-700 dark:text-[#d9b452] font-semibold" : ""}`}
             >
-              ⚡ Portfólio técnico, Dados & IA
+              <Cpu size={15} aria-hidden="true" />
+              <span>Portfólio técnico, Dados & IA</span>
             </button>
             <button
               type="button"
               onClick={() => switchView("portfolio", "story")}
-              className="text-left"
+              className="text-left flex items-center gap-2"
             >
-              📖 Sobre o LemmaS & UFF
+              <BookOpen size={15} aria-hidden="true" />
+              <span>Sobre o LemmaS & UFF</span>
             </button>
             <Link href="/questoes" onClick={() => setMobileMenuOpen(false)} className="lemmas-nav-mobile-cta">
               Explorar Questões →
@@ -467,7 +471,6 @@ export function LandingPage() {
               <div className="lemmas-hero-grid">
                 <div className="lemmas-hero-copy">
                   <span className="lemmas-eyebrow">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
                     PLATAFORMA GRATUITA DE MATEMÁTICA
                   </span>
 
@@ -497,7 +500,7 @@ export function LandingPage() {
                   </div>
 
                   <div className="lemmas-trust">
-                    <span><b>✓</b> Questões por banca e assunto</span>
+                    <span><b>✓</b> <span className="tabular-nums">{questionsLabel}</span> questões e <span className="tabular-nums">{lemmasLabel}</span> lemas</span>
                     <span><b>✓</b> Bancada discursiva</span>
                     <span><b>✓</b> Revisão do que você estudou</span>
                   </div>
@@ -532,53 +535,53 @@ export function LandingPage() {
               </div>
 
               <div className="lemmas-principles">
-                <div className="p-6 rounded-2xl bg-white/95 dark:bg-[#141222]/95 border border-slate-200/90 dark:border-amber-500/25 shadow-md flex flex-col justify-between">
+                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
                   <div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[#d9b452] font-serif font-bold text-xl flex items-center justify-center mb-4">
-                      01
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] mb-2">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                      PASSO 01
+                    </span>
+                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
                       Encontre sua questão
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
                       Filtre o acervo por banca, matéria, ano e dificuldade. Escolha entre concursos militares, vestibulares, olimpíadas e graduação.
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-amber-600 dark:text-[#d9b452]">
+                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
                     Filtros rápidos de 1 clique
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-white/95 dark:bg-[#141222]/95 border border-slate-200/90 dark:border-amber-500/25 shadow-md flex flex-col justify-between">
+                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
                   <div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[#d9b452] font-serif font-bold text-xl flex items-center justify-center mb-4">
-                      02
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] mb-2">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                      PASSO 02
+                    </span>
+                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
                       Desenvolva a solução
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
                       Desenvolva sua solução na lousa, digite ou envie uma foto do caderno. No treino, peça uma dica se precisar de um próximo passo.
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-amber-600 dark:text-[#d9b452]">
+                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
                     Lousa, texto ou foto
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-white/95 dark:bg-[#141222]/95 border border-slate-200/90 dark:border-amber-500/25 shadow-md flex flex-col justify-between">
+                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
                   <div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[#d9b452] font-serif font-bold text-xl flex items-center justify-center mb-4">
-                      03
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-[#f5f0df] mb-2">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                      PASSO 03
+                    </span>
+                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
                       Reflita e revise
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
                       Compare formas de resolver, entenda a ideia por trás da questão e retome o conteúdo nas próximas revisões.
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-amber-600 dark:text-[#d9b452]">
+                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
                     Entender agora. Revisar depois.
                   </div>
                 </div>
@@ -658,7 +661,9 @@ export function LandingPage() {
             {/* SEÇÃO 3: ACERVO VIVO · QUESTÕES REAIS COM EXPLICAÇÃO & LEMAS MATEMÁTICOS */}
             <section id="questoes-amostra" className="lemmas-section">
               <div className="lemmas-section-heading">
-                <span className="lemmas-eyebrow">ACERVO VIVO · {questionsLabel} QUESTÕES & {lemmasLabel} LEMAS</span>
+                <span className="lemmas-eyebrow">
+                  ACERVO VIVO · <span className="tabular-nums">{questionsLabel}</span> QUESTÕES &amp; <span className="tabular-nums">{lemmasLabel}</span> LEMAS
+                </span>
                 <h2>Aprenda a pensar com os Lemas fundamentais.</h2>
                 <p>
                   Um lema é uma ideia matemática que ajuda a destravar vários problemas. Nestes exemplos didáticos, veja como reconhecer e aplicar essa ideia.
@@ -700,10 +705,10 @@ export function LandingPage() {
                                 key={alt.letra}
                                 className={`lemmas-question-option-item ${isGabarito ? "correct" : ""}`}
                               >
-                                <span className="font-mono font-bold">({alt.letra})</span>
+                                <span className="font-mono font-semibold tabular-nums">({alt.letra})</span>
                                 <span><MathText text={alt.texto} /></span>
                                 {isGabarito && (
-                                  <span className="ml-auto text-[9px] uppercase font-mono tracking-wider font-bold text-emerald-700 dark:text-emerald-400">
+                                  <span className="ml-auto text-[10px] uppercase font-mono tracking-wider font-semibold text-emerald-700 dark:text-emerald-400">
                                     Gabarito
                                   </span>
                                 )}
@@ -719,7 +724,7 @@ export function LandingPage() {
                               <BookOpen size={13} />
                               <span>{q.lema.nome}</span>
                             </span>
-                            <span className="text-[9px] uppercase tracking-wider text-amber-500/80">
+                            <span className="text-[9px] uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
                               REPERTÓRIO
                             </span>
                           </div>
@@ -729,25 +734,25 @@ export function LandingPage() {
                             <MathText text={`$${q.lema.formula}$`} />
                           </div>
 
-                          <p className="text-[10px] text-slate-600 dark:text-zinc-300 mb-1 leading-snug">
-                            <strong className="text-amber-700 dark:text-amber-400">Quando usar: </strong>
+                          <p className="text-xs text-slate-600 dark:text-zinc-300 mb-1.5 leading-relaxed">
+                            <strong className="text-amber-700 dark:text-[#d9b452]">Quando usar: </strong>
                             {q.lema.gatilho}
                           </p>
 
-                          <p className="text-[10px] text-slate-600 dark:text-zinc-300 leading-snug">
-                            <strong className="text-amber-700 dark:text-amber-400">Como aplicar: </strong>
+                          <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+                            <strong className="text-amber-700 dark:text-[#d9b452]">Como aplicar: </strong>
                             {q.lema.acao}
                           </p>
                         </div>
 
                         {/* Explicação Detalhada Passo a Passo (Expansível) */}
                         {isExpanded && (
-                          <div className="mt-3 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/25 text-xs text-slate-700 dark:text-zinc-200 leading-relaxed animate-fadeIn space-y-2">
-                            <strong className="text-[11px] font-bold text-amber-600 dark:text-[#d9b452] flex items-center gap-1">
-                              <CheckCircle2 size={13} />
-                              <span>Demonstração & Resolução pelo Lema:</span>
+                          <div className="mt-3 p-4 rounded-lg bg-slate-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-slate-700 dark:text-zinc-200 leading-relaxed animate-fadeIn space-y-2">
+                            <strong className="text-xs font-semibold text-amber-700 dark:text-[#d9b452] flex items-center gap-1.5">
+                              <CheckCircle2 size={14} />
+                              <span>Demonstração &amp; Resolução pelo Lema:</span>
                             </strong>
-                            <div className="whitespace-pre-line text-[11px]">
+                            <div className="whitespace-pre-line text-[13px] leading-relaxed overflow-x-auto">
                               <MathText text={q.explicacao} />
                             </div>
                           </div>
@@ -776,7 +781,7 @@ export function LandingPage() {
                         <div className="mt-2.5 text-center">
                           <Link
                             href="/questoes"
-                            className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 hover:text-amber-500 transition inline-flex items-center gap-1"
+                            className="text-xs font-mono text-slate-600 dark:text-zinc-400 hover:text-amber-700 dark:hover:text-[#d9b452] transition inline-flex items-center gap-1"
                           >
                             <span>Praticar no Banco de Questões</span>
                             <ArrowRight size={11} />
@@ -794,10 +799,10 @@ export function LandingPage() {
               <div className="lemmas-demo-box">
                 <div>
                   <span className="lemmas-eyebrow">APRENDA COM SEUS ERROS</span>
-                  <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 dark:text-[#f5f0df] my-3">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] my-3">
                     Seu erro tem uma história. Não apenas uma nota.
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                  <p className="text-[15px] max-w-[68ch] text-slate-600 dark:text-slate-300 leading-relaxed">
                     Na Bancada, você desenvolve a resolução e envia seus passos para análise. O retorno da MathAI Engine distingue quatro situações para ajudar você a revisar o raciocínio:
                   </p>
 
@@ -856,16 +861,16 @@ export function LandingPage() {
 
             {/* SEÇÃO 4: CTA FINAL DO ESTUDANTE */}
             <section className="lemmas-section">
-              <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+              <div className="p-6 sm:p-8 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-left">
                 <div>
-                  <h3 className="font-serif text-2xl sm:text-3xl text-slate-900 dark:text-[#f5f0df] font-normal mb-2">
+                  <h3 className="font-serif text-2xl sm:text-3xl tracking-tight text-slate-900 dark:text-[#eceff4] font-semibold mb-2">
                     Pronto para a sua próxima questão?
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-zinc-300 max-w-xl">
+                  <p className="text-[15px] text-slate-600 dark:text-slate-300 max-w-[60ch] leading-relaxed">
                     Defina seu objetivo para organizar o estudo ou escolha uma questão e comece a praticar.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
                   <Link href="/perfil" className="lemmas-cta lemmas-cta-primary">
                     <span>Definir meu objetivo</span>
                     <ArrowRight size={16} />
@@ -885,17 +890,16 @@ export function LandingPage() {
               <div className="lemmas-hero-grid">
                 <div className="lemmas-hero-copy">
                   <span className="lemmas-eyebrow">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />
-                    CASE PRÁTICO · CIÊNCIA DE DADOS, ML & GEN AI
+                    CASE PRÁTICO · CIÊNCIA DE DADOS, ML &amp; GEN AI
                   </span>
 
                   <h1 id="tech-title">
                     Matemática rigorosa.<br />
-                    <em>Dados, Machine Learning & GenAI.</em>
+                    <em>Dados, Machine Learning &amp; GenAI.</em>
                   </h1>
 
                   <p className="lemmas-hero-lede">
-                    O LEMMAS resolve o desafio da personalização educacional unindo o tripé analítico moderno: <strong>Ciência de Dados</strong> para governança e telemetria analítica de 21.000+ questões; <strong>Machine Learning & NLP</strong> para vetorização ontológica e ancoragem de 3.000 lemas matemáticos; e <strong>IA Generativa (GenAI)</strong> para orquestração socrática multi-modelo com contratos estritos e sem alucinações.
+                    O LEMMAS resolve o desafio da personalização educacional unindo o tripé analítico moderno: <strong>Ciência de Dados</strong> para governança e telemetria analítica de <span className="tabular-nums">21.000+</span> questões; <strong>Machine Learning &amp; NLP</strong> para vetorização ontológica e ancoragem de <span className="tabular-nums">3.000</span> lemas matemáticos; e <strong>IA Generativa (GenAI)</strong> para orquestração socrática multi-modelo com contratos estritos e sem alucinações.
                   </p>
 
                   <div className="lemmas-hero-actions">
@@ -920,17 +924,17 @@ export function LandingPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-6">
-                    <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Ciência de Dados (Python & SQL)
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                      Ciência de Dados (Python &amp; SQL)
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Machine Learning & NLP (BGE-M3 + LaTeX)
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                      Machine Learning &amp; NLP (BGE-M3 + LaTeX)
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
                       GenAI Multi-LLM (Nemotron · DeepSeek · Gemini)
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141222] border border-amber-500/25 text-[#dedbd0]">
-                      Governança SHA-256 & Supabase RLS
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                      Governança SHA-256 &amp; Supabase RLS
                     </span>
                   </div>
 
@@ -943,7 +947,7 @@ export function LandingPage() {
                 <div className="lemmas-terminal" aria-label="Representação do fluxo de proveniência de dados">
                   <div className="lemmas-terminal-top">
                     <span>mathai / provenance.pipeline</span>
-                    <span className="text-[#d9b452] font-bold">● DATA CONTRACT</span>
+                    <span className="text-amber-700 dark:text-[#d9b452] font-semibold">● DATA CONTRACT</span>
                   </div>
 
                   <div className="lemmas-terminal-body">
@@ -955,21 +959,21 @@ export function LandingPage() {
                     <div className="lemmas-term-divider" />
 
                     <div className="lemmas-term-stage">
-                      01 / <b>DADO OBSERVADO (CIÊNCIA DE DADOS)</b>
+                      <span className="tabular-nums">01</span> / <b>DADO OBSERVADO (CIÊNCIA DE DADOS)</b>
                       <small>telemetria de resolução • tempo de tela • lousa vetorial • SHA-256</small>
                     </div>
 
                     <div className="lemmas-term-arrow">↓</div>
 
                     <div className="lemmas-term-stage">
-                      02 / <b>MACHINE LEARNING & NLP</b>
+                      <span className="tabular-nums">02</span> / <b>MACHINE LEARNING &amp; NLP</b>
                       <small>embeddings BGE-M3 • TF-IDF de LaTeX • similaridade de cosseno • GPU L4</small>
                     </div>
 
                     <div className="lemmas-term-arrow">↓</div>
 
                     <div className="lemmas-term-stage">
-                      03 / <b>GEN AI & TUTORIA SOCRÁTICA</b>
+                      <span className="tabular-nums">03</span> / <b>GEN AI &amp; TUTORIA SOCRÁTICA</b>
                       <small>gateway multi-LLM (Nemotron/DeepSeek) • visão multimodal • JSON Schema</small>
                     </div>
 
@@ -977,7 +981,7 @@ export function LandingPage() {
 
                     <div className="flex items-center justify-between text-[11px]">
                       <span>status: <span className="lemmas-term-accent">tríade analítica integrada</span></span>
-                      <span className="lemmas-term-comment">telemetria N:1 no gateway</span>
+                      <span className="lemmas-term-comment tabular-nums">telemetria N:1 no gateway</span>
                     </div>
                   </div>
                 </div>
@@ -994,25 +998,25 @@ export function LandingPage() {
 
               <div className="lemmas-stat-grid">
                 <div className="lemmas-stat">
-                  <b>{questionsLabel}</b>
+                  <b className="tabular-nums">{questionsLabel}</b>
                   <small>questões indexadas no Supabase Postgres</small>
                   <div className="foot">fonte: API do acervo</div>
                 </div>
 
                 <div className="lemmas-stat">
-                  <b>{lemmasLabel}</b>
+                  <b className="tabular-nums">{lemmasLabel}</b>
                   <small>lemas e gatilhos conceituais catalogados</small>
                   <div className="foot">fonte: API do catálogo</div>
                 </div>
 
                 <div className="lemmas-stat">
-                  <b>12</b>
+                  <b className="tabular-nums">12</b>
                   <small>grandes áreas matemáticas na taxonomia</small>
                   <div className="foot">classificação documentada</div>
                 </div>
 
                 <div className="lemmas-stat">
-                  <b>4</b>
+                  <b className="tabular-nums">4</b>
                   <small>vereditos para avaliação discursiva</small>
                   <div className="foot">MathAI Cognitive Engine</div>
                 </div>
@@ -1022,7 +1026,7 @@ export function LandingPage() {
             {/* SEÇÃO 2: FIRST PRINCIPLES (FILOSOFIA DE DADOS & GOVERNANÇA) */}
             <section className="lemmas-section" id="story">
               <div className="lemmas-section-heading">
-                <span className="lemmas-eyebrow">FIRST PRINCIPLES & DATA GOVERNANCE</span>
+                <span className="lemmas-eyebrow">FIRST PRINCIPLES &amp; DATA GOVERNANCE</span>
                 <h2>O problema não é saber se o aluno errou. É saber o que o erro significa.</h2>
                 <p>O projeto nasce de uma dificuldade pedagógica e analítica concreta: dois alunos podem marcar a mesma alternativa errada por causas cognitivas completamente diferentes.</p>
               </div>
@@ -1057,28 +1061,28 @@ export function LandingPage() {
               <div className="lemmas-demo-box">
                 <div>
                   <span className="lemmas-eyebrow">SYSTEM.MAP CLICÁVEL · PIPELINE MULTICAMADA</span>
-                  <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 dark:text-[#f5f0df] my-3">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] my-3">
                     Do pipeline de dados à inferência multi-modelo.
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed mb-4">
+                  <p className="text-[15px] max-w-[68ch] text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
                     O LEMMAS integra Ciência de Dados, Machine Learning e GenAI em uma arquitetura desacoplada: governança estrita de telemetria, representação vetorial em NLP e agentes generativos socráticos com contratos explícitos.
                   </p>
                   <p className="text-xs text-slate-500 dark:text-zinc-400">
                     Clique em qualquer camada ao lado para entender a decisão técnica e inspecionar os arquivos e notebooks correspondentes.
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-4">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">Python · Pandas · NumPy</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">SQL Analítico · PostgreSQL</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">NLP · BGE-M3 + TF-IDF</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">GenAI Multi-LLM</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">FastAPI · Pydantic</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-[#1a172e] border border-slate-200 dark:border-amber-500/25">Next.js 16</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">Python · Pandas · NumPy</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">SQL Analítico · PostgreSQL</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">NLP · BGE-M3 + TF-IDF</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">GenAI Multi-LLM</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">FastAPI · Pydantic</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">Next.js 16</span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-4 rounded-2xl bg-[#141222] border border-amber-500/25 shadow-xl space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-mono text-[#d9b452] pb-2 border-b border-amber-500/15">
+                  <div className="p-4 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-mono text-amber-700 dark:text-[#d9b452] pb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
                       <span>LEMMAS / SYSTEM.MAP</span>
                       <span>◉ REPOSITORY ARCHITECTURE</span>
                     </div>
@@ -1088,24 +1092,24 @@ export function LandingPage() {
                         key={n.key}
                         type="button"
                         onClick={() => setSelectedArchKey(n.key)}
-                        className={`w-full p-3 rounded-xl border text-left transition flex items-center justify-between ${
+                        className={`w-full p-3 rounded-lg border text-left transition-colors flex items-center justify-between cursor-pointer ${
                           selectedArchKey === n.key
-                            ? "bg-amber-500/15 border-amber-500 text-[#f5f0df] shadow-sm font-bold"
-                            : "bg-[#18152a] border-zinc-800 text-zinc-300 hover:border-amber-500/40"
+                            ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-600/50 dark:border-amber-400/50 text-slate-900 dark:text-[#eceff4]"
+                            : "bg-slate-50 dark:bg-[#101316] border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700"
                         }`}
                       >
                         <div>
-                          <strong className="text-xs block text-slate-100">{n.title}</strong>
-                          <small className="text-[10px] text-zinc-400 font-mono block mt-0.5">{n.subtitle}</small>
+                          <strong className="text-xs font-semibold block text-slate-900 dark:text-[#eceff4] tabular-nums">{n.title}</strong>
+                          <small className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono block mt-0.5">{n.subtitle}</small>
                         </div>
-                        <span className="text-[10px] font-mono text-amber-500">{n.badge}</span>
+                        <span className="text-[10px] font-mono text-amber-700 dark:text-[#d9b452] shrink-0 ml-2">{n.badge}</span>
                       </button>
                     ))}
                   </div>
 
                   {/* Detalhe do Nó Selecionado */}
-                  <div className="p-4 rounded-xl bg-slate-100 dark:bg-[#1a172e] border border-amber-500/30">
-                    <strong className="text-xs font-bold text-slate-900 dark:text-[#d9b452] block mb-1">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80">
+                    <strong className="text-xs font-semibold text-slate-900 dark:text-[#d9b452] block mb-1">
                       {selectedArch.detailTitle}
                     </strong>
                     <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed mb-3">
@@ -1115,7 +1119,7 @@ export function LandingPage() {
                       href={selectedArch.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-mono font-bold text-amber-600 dark:text-[#d9b452] hover:underline flex items-center gap-1"
+                      className="text-xs font-mono font-semibold text-amber-700 dark:text-[#d9b452] hover:underline flex items-center gap-1"
                     >
                       <span>{selectedArch.linkLabel}</span>
                       <ExternalLink size={12} />
@@ -1358,54 +1362,54 @@ export function LandingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <a
-                  className="p-5 rounded-2xl bg-[#141222] border border-amber-500/20 hover:border-amber-500/50 hover:-translate-y-1 transition shadow-md flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/frontend"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-2xl font-serif text-[#d9b452] mb-3">▣</span>
+                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">▣</span>
                   <div>
-                    <strong className="text-sm text-slate-100 block">Frontend</strong>
-                    <small className="text-xs text-zinc-400 block mt-1">App Router, banco de questões, Bancada e apresentação ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Frontend</strong>
+                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">App Router, banco de questões, Bancada e apresentação ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-2xl bg-[#141222] border border-amber-500/20 hover:border-amber-500/50 hover:-translate-y-1 transition shadow-md flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/backend"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-2xl font-serif text-[#d9b452] mb-3">⌘</span>
+                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">⌘</span>
                   <div>
-                    <strong className="text-sm text-slate-100 block">Backend & MathAI</strong>
-                    <small className="text-xs text-zinc-400 block mt-1">API Python, DTOs, avaliação, tutor e gateway multi-modelo ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Backend &amp; MathAI</strong>
+                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">API Python, DTOs, avaliação, tutor e gateway multi-modelo ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-2xl bg-[#141222] border border-amber-500/20 hover:border-amber-500/50 hover:-translate-y-1 transition shadow-md flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/tests"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-2xl font-serif text-[#d9b452] mb-3">✓</span>
+                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">✓</span>
                   <div>
-                    <strong className="text-sm text-slate-100 block">Testes Unitários</strong>
-                    <small className="text-xs text-zinc-400 block mt-1">17 testes cobrindo rotas, proveniência e repetição espaçada ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Testes Unitários</strong>
+                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed tabular-nums">17 testes cobrindo rotas, proveniência e repetição espaçada ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-2xl bg-[#141222] border border-amber-500/20 hover:border-amber-500/50 hover:-translate-y-1 transition shadow-md flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/blob/main/docs/roadmap.md"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-2xl font-serif text-[#d9b452] mb-3">∑</span>
+                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">∑</span>
                   <div>
-                    <strong className="text-sm text-slate-100 block">Roadmap Auditado</strong>
-                    <small className="text-xs text-zinc-400 block mt-1">Status das entregas, contagens e próximos experimentos ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Roadmap Auditado</strong>
+                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">Status das entregas, contagens e próximos experimentos ↗</small>
                   </div>
                 </a>
               </div>
@@ -1441,8 +1445,8 @@ export function LandingPage() {
             onClick={() => setLightboxImg(null)}
           >
             <div className="lemmas-dialog-card" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-3">
-                <div className="flex items-center gap-2 text-xs font-mono text-[#d9b452] font-bold">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80 mb-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-amber-700 dark:text-[#d9b452] font-semibold">
                   <Sparkles size={14} />
                   <span>{lightboxImg.title}</span>
                 </div>
@@ -1455,16 +1459,16 @@ export function LandingPage() {
                   ✕ Fechar (ESC)
                 </button>
               </div>
-              <div className="overflow-hidden rounded-xl border border-amber-500/25 bg-[#090812] flex items-center justify-center p-1">
+              <div className="overflow-hidden rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-[#0d1014] flex items-center justify-center p-1">
                 <img
                   src={lightboxImg.src}
                   alt={lightboxImg.title}
                   className="w-full max-h-[75vh] object-contain rounded-lg"
                 />
               </div>
-              <div className="text-[11px] font-mono text-zinc-400 mt-3 flex items-center justify-between">
+              <div className="text-[11px] font-mono text-slate-600 dark:text-zinc-400 mt-3 flex flex-wrap items-center justify-between gap-2 tabular-nums">
                 <span>✦ Captura em alta resolução (1440×900) da plataforma LEMMAS</span>
-                <span className="text-amber-500 font-bold">Clique fora para fechar</span>
+                <span className="text-amber-700 dark:text-[#d9b452] font-semibold">Clique fora para fechar</span>
               </div>
             </div>
           </div>,
