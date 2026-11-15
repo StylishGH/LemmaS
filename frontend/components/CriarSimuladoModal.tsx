@@ -256,14 +256,14 @@ export function CriarSimuladoModal({
         aria-modal="true"
         aria-labelledby="criar-simulado-modal-title"
         tabIndex={-1}
-        className="max-w-xl w-full my-auto rounded-2xl bg-white dark:bg-[#151324] border border-blue-500/35 dark:border-amber-500/35 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-6 outline-none"
+        className="max-w-xl w-full my-auto rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-xl relative text-slate-900 dark:text-[#f5f0df] space-y-6 outline-none"
       >
         {/* BOTÃO FECHAR */}
         <button
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
           aria-label="Fechar modal"
         >
           <X className="w-5 h-5" />
@@ -271,13 +271,13 @@ export function CriarSimuladoModal({
 
         {/* CABEÇALHO */}
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-[#d9b452] text-xs font-semibold">
             <Timer className="w-3.5 h-3.5" />
             <span>Condições Oficiais de Prova</span>
           </div>
           <h2
             id="criar-simulado-modal-title"
-            className="font-serif-math text-2xl font-bold text-slate-900 dark:text-[#f5f0df] tracking-tight"
+            className="font-serif-math text-2xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight"
           >
             Configurar Simulado Cronometrado
           </h2>
@@ -287,7 +287,7 @@ export function CriarSimuladoModal({
         </div>
 
         {/* ORIGEM E QUANTIDADE DE QUESTÕES */}
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/15 space-y-3">
+        <div className="p-4 rounded-xl bg-zinc-50/80 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
           <div className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider font-serif-math">
             1. Questões do Simulado
           </div>
@@ -297,17 +297,17 @@ export function CriarSimuladoModal({
               type="button"
               onClick={() => setOrigemQuestoes("selecionadas")}
               disabled={selectedIds.length === 0}
-              className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+              className={`p-3 rounded-lg border text-left flex flex-col justify-between transition-colors ${
                 origemQuestoes === "selecionadas"
-                  ? "bg-blue-500/10 border-blue-500 text-blue-800 dark:bg-amber-500/10 dark:border-amber-500 dark:text-[#d9b452] font-semibold shadow-xs"
+                  ? "bg-blue-500/10 border-blue-500/50 text-blue-800 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-semibold"
                   : selectedIds.length === 0
-                  ? "opacity-50 cursor-not-allowed border-slate-200 dark:border-zinc-800"
-                  : "bg-white dark:bg-[#141222] border-slate-200 dark:border-zinc-800 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                  ? "opacity-50 cursor-not-allowed border-zinc-200/80 dark:border-zinc-800/80"
+                  : "bg-white dark:bg-[#14171c] border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
               }`}
             >
-              <div className="font-bold flex items-center justify-between">
+              <div className="font-semibold flex items-center justify-between gap-2">
                 <span>Selecionadas Manualmente</span>
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-500/15 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452]">
+                <span className="font-mono tabular-nums text-xs px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:bg-amber-500/15 dark:text-[#d9b452]">
                   {selectedIds.length}
                 </span>
               </div>
@@ -319,15 +319,15 @@ export function CriarSimuladoModal({
             <button
               type="button"
               onClick={() => setOrigemQuestoes("todas_filtradas")}
-              className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+              className={`p-3 rounded-lg border text-left flex flex-col justify-between transition-colors ${
                 origemQuestoes === "todas_filtradas"
-                  ? "bg-blue-500/10 border-blue-500 text-blue-800 dark:bg-amber-500/10 dark:border-amber-500 dark:text-[#d9b452] font-semibold shadow-xs"
-                  : "bg-white dark:bg-[#141222] border-slate-200 dark:border-zinc-800 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                  ? "bg-blue-500/10 border-blue-500/50 text-blue-800 dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-[#d9b452] font-semibold"
+                  : "bg-white dark:bg-[#14171c] border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
               }`}
             >
-              <div className="font-bold flex items-center justify-between">
+              <div className="font-semibold flex items-center justify-between gap-2">
                 <span>Todas Filtradas</span>
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                <span className="font-mono tabular-nums text-xs px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
                   {totalFiltradas} disponíveis
                 </span>
               </div>
@@ -349,16 +349,16 @@ export function CriarSimuladoModal({
                   max={Math.min(totalFiltradas, 100)}
                   value={quantidadeDesejada}
                   onChange={(e) => setQuantidadeDesejada(Math.max(1, Math.min(totalFiltradas, parseInt(e.target.value) || 1)))}
-                  className="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[#141222] text-center font-mono font-bold"
+                  className="w-16 px-2 py-1 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] text-center font-mono tabular-nums font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-500/20"
                 />
-                <span className="text-slate-400 text-[11px]">de {totalFiltradas}</span>
+                <span className="text-slate-400 text-[11px] font-mono tabular-nums">de {totalFiltradas}</span>
               </div>
             </div>
           )}
         </div>
 
         {/* CONFIGURAÇÃO DE TEMPO */}
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1a172c] border border-slate-200 dark:border-amber-500/15 space-y-4">
+        <div className="p-4 rounded-xl bg-zinc-50/80 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider font-serif-math">
               2. Como deseja estipular o tempo?
@@ -366,14 +366,14 @@ export function CriarSimuladoModal({
           </div>
 
           {/* SELETOR DE MODO DE TEMPO */}
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-200/60 dark:bg-[#131120] text-xs font-semibold">
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-zinc-200/60 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setTipoTempo("por_questao")}
-              className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              className={`py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
                 tipoTempo === "por_questao"
-                  ? "bg-white dark:bg-[#201c38] text-blue-700 dark:text-[#d9b452] shadow-sm font-bold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+                  ? "bg-white dark:bg-zinc-800 text-blue-700 dark:text-[#d9b452] shadow-2xs font-bold"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
@@ -382,10 +382,10 @@ export function CriarSimuladoModal({
             <button
               type="button"
               onClick={() => setTipoTempo("total_fixo")}
-              className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              className={`py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
                 tipoTempo === "total_fixo"
-                  ? "bg-white dark:bg-[#201c38] text-blue-700 dark:text-[#d9b452] shadow-sm font-bold"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+                  ? "bg-white dark:bg-zinc-800 text-blue-700 dark:text-[#d9b452] shadow-2xs font-bold"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -398,7 +398,7 @@ export function CriarSimuladoModal({
             <div className="space-y-3 pt-1 animate-fadeIn">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600 dark:text-zinc-400">Tempo estimado por questão:</span>
-                <div className="flex items-center gap-1 font-mono font-bold text-blue-700 dark:text-[#d9b452]">
+                <div className="flex items-center gap-1 font-mono tabular-nums font-bold text-blue-700 dark:text-[#d9b452]">
                   <span>{minutosPorQuestao}m</span>
                   <span>{segundosPorQuestao.toString().padStart(2, "0")}s</span>
                 </div>
@@ -418,13 +418,13 @@ export function CriarSimuladoModal({
                       key={preset.label}
                       type="button"
                       onClick={() => handlePresetTempoQuestao(preset.m, preset.s)}
-                      className={`p-2 rounded-xl text-xs border text-center transition-all ${
+                      className={`p-2 rounded-lg text-xs border text-center transition-colors ${
                         active
-                          ? "bg-blue-500/15 border-blue-500 text-blue-800 dark:bg-amber-500/20 dark:border-amber-500 dark:text-[#d9b452] font-bold shadow-xs"
-                          : "bg-white dark:bg-[#141222] border-slate-200 dark:border-zinc-800 hover:border-blue-500/30 dark:hover:border-amber-500/30 text-slate-700 dark:text-zinc-300"
+                          ? "bg-blue-500/10 border-blue-500/50 text-blue-800 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
+                          : "bg-white dark:bg-[#14171c] border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 text-slate-700 dark:text-zinc-300"
                       }`}
                     >
-                      <div className="font-mono font-bold">{preset.m}:{preset.s.toString().padStart(2, "0")}</div>
+                      <div className="font-mono tabular-nums font-bold">{preset.m}:{preset.s.toString().padStart(2, "0")}</div>
                       <div className="text-[10px] text-slate-400 dark:text-zinc-500 truncate">{preset.label.split(" ")[1]}</div>
                     </button>
                   );
@@ -442,7 +442,7 @@ export function CriarSimuladoModal({
                     max={15}
                     value={minutosPorQuestao}
                     onChange={(e) => setMinutosPorQuestao(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#141222] text-center font-mono font-bold"
+                    className="w-16 px-2 py-1 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] text-center font-mono tabular-nums font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-500/20"
                   />
                 </div>
                 <div className="flex-1 flex items-center gap-2 text-xs">
@@ -455,7 +455,7 @@ export function CriarSimuladoModal({
                     step={15}
                     value={segundosPorQuestao}
                     onChange={(e) => setSegundosPorQuestao(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    className="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#141222] text-center font-mono font-bold"
+                    className="w-16 px-2 py-1 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] text-center font-mono tabular-nums font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-500/20"
                   />
                 </div>
               </div>
@@ -467,7 +467,7 @@ export function CriarSimuladoModal({
             <div className="space-y-3 pt-1 animate-fadeIn">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600 dark:text-zinc-400">Duração total da prova:</span>
-                <span className="font-mono font-bold text-blue-700 dark:text-[#d9b452] text-sm">
+                <span className="font-mono tabular-nums font-bold text-blue-700 dark:text-[#d9b452] text-sm">
                   {tempoTotalMinutos} minutos ({Math.floor(tempoTotalMinutos / 60)}h {tempoTotalMinutos % 60}m)
                 </span>
               </div>
@@ -486,13 +486,13 @@ export function CriarSimuladoModal({
                       key={preset.m}
                       type="button"
                       onClick={() => handlePresetTempoTotal(preset.m)}
-                      className={`p-2 rounded-xl text-xs border text-center transition-all ${
+                      className={`p-2 rounded-lg text-xs border text-center transition-colors ${
                         active
-                          ? "bg-blue-500/15 border-blue-500 text-blue-800 dark:bg-amber-500/20 dark:border-amber-500 dark:text-[#d9b452] font-bold shadow-xs"
-                          : "bg-white dark:bg-[#141222] border-slate-200 dark:border-zinc-800 hover:border-blue-500/30 dark:hover:border-amber-500/30 text-slate-700 dark:text-zinc-300"
+                          ? "bg-blue-500/10 border-blue-500/50 text-blue-800 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
+                          : "bg-white dark:bg-[#14171c] border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 text-slate-700 dark:text-zinc-300"
                       }`}
                     >
-                      <div className="font-mono font-bold">{preset.label}</div>
+                      <div className="font-mono tabular-nums font-bold">{preset.label}</div>
                     </button>
                   );
                 })}
@@ -507,20 +507,20 @@ export function CriarSimuladoModal({
                   max={360}
                   value={tempoTotalMinutos}
                   onChange={(e) => setTempoTotalMinutos(Math.max(5, parseInt(e.target.value) || 5))}
-                  className="w-24 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#141222] font-mono font-bold"
+                  className="w-24 px-2.5 py-1.5 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] font-mono tabular-nums font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-500/20"
                 />
               </div>
             </div>
           )}
 
           {/* DESTAQUE DE CÁLCULO DINÂMICO */}
-          <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 flex items-start gap-3">
-            <Calculator className="w-5 h-5 text-blue-600 dark:text-[#d9b452] shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-xl bg-blue-500/[0.06] border border-blue-500/20 dark:bg-amber-500/[0.06] dark:border-amber-500/20 flex items-start gap-3">
+            <Calculator className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs">
-              <div className="font-semibold text-slate-900 dark:text-[#f5f0df]">
-                Tempo Total do Simulado: <strong className="text-blue-700 dark:text-[#d9b452] font-mono text-sm">{formatTempoCalculado()}</strong>
+              <div className="font-semibold text-slate-900 dark:text-[#f5f0df] tabular-nums">
+                Tempo Total do Simulado: <strong className="text-blue-700 dark:text-[#d9b452] font-mono tabular-nums text-sm">{formatTempoCalculado()}</strong>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed tabular-nums">
                 Você terá <strong>{formatTempoCalculado()} corridos</strong> para gerenciar livremente entre as <strong>{totalEfetivoQuestoes} questões</strong>. Não há bloqueio individual por questão; você pode pular, revisar e mudar de ideia até o tempo esgotar.
               </p>
             </div>
@@ -528,7 +528,7 @@ export function CriarSimuladoModal({
         </div>
 
         {/* REGRAS OFICIAIS DO SIMULADO */}
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1a172c] border border-slate-200 dark:border-zinc-800 text-xs space-y-2">
+        <div className="p-3.5 rounded-xl bg-zinc-50/80 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 text-xs space-y-2">
           <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider font-serif-math">
             <ShieldAlert className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>Regras do Modo Simulado</span>
@@ -553,7 +553,7 @@ export function CriarSimuladoModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -561,7 +561,7 @@ export function CriarSimuladoModal({
             type="button"
             onClick={handleIniciarSimulado}
             disabled={loading || totalEfetivoQuestoes === 0}
-            className="lemmas-gold-cta px-6 py-2.5 rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition hover:scale-[1.02] disabled:opacity-50"
+            className="lemmas-gold-cta px-5 py-2.5 rounded-lg text-xs font-bold shadow-xs flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>{loading ? "Preparando..." : "Começar Simulado Agora"}</span>
