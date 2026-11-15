@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Cpu, Lightbulb, CheckCheck, RefreshCw, Send } from "lucide-react";
+import { Sparkles, Cpu, Lightbulb, CheckCheck, RefreshCw, Send, Scale, AlertTriangle, BrainCircuit } from "lucide-react";
 import { MathText } from "@/components/math/MathDisplay";
 import ThoughtLine from "@/components/ui/thought-line";
 
@@ -93,17 +93,17 @@ export default function OpinioesPage() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
       {/* HEADER DA PÁGINA EDITORIAL */}
-      <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] p-6 md:p-8 rounded-3xl space-y-4 shadow-sm">
+      <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 p-6 md:p-8 rounded-xl space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-500 flex items-center justify-center text-2xl">
-            ⚖️
+          <div className="w-11 h-11 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Scale className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
                 Segunda Opinião: Disputa de Lemas & Métodos.
               </h1>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 border border-blue-500/30 dark:bg-amber-500/10 dark:text-[#d9b452] dark:border-amber-500/30">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 border border-blue-500/30 dark:bg-amber-500/10 dark:text-[#d9b452] dark:border-amber-500/30">
                 Metacognição
               </span>
             </div>
@@ -123,7 +123,7 @@ export default function OpinioesPage() {
               value={problemText}
               onChange={(e) => setProblemText(e.target.value)}
               rows={3}
-              className="w-full bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/20 rounded-xl p-4 text-sm text-slate-900 dark:text-[#dedbd0] focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 transition"
+              className="w-full bg-zinc-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 rounded-lg p-4 text-sm text-slate-900 dark:text-[#dedbd0] focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 transition"
               placeholder="Digite o enunciado de uma questão matemática ou propriedade para ver a análise de dois modelos..."
             />
           </div>
@@ -132,7 +132,7 @@ export default function OpinioesPage() {
               type="button"
               onClick={handleCompare}
               disabled={loading}
-              className="lemmas-gold-cta flex items-center gap-1.5 px-4 py-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-xs shadow-md transition-transform enabled:hover:scale-[1.02]"
+              className="lemmas-gold-cta flex items-center gap-1.5 px-4 py-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-xs shadow-xs transition-colors"
             >
               {loading ? (
                 <>
@@ -149,14 +149,14 @@ export default function OpinioesPage() {
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 animate-fadeIn">
-              <span>⚠️</span>
+            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 animate-fadeIn">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {loading && (
-            <div className="p-4 md:p-5 rounded-2xl bg-blue-500/5 border border-blue-500/25 dark:bg-amber-500/5 dark:border-amber-500/25 text-xs shadow-xs animate-fadeIn">
+            <div className="p-4 md:p-5 rounded-xl bg-blue-500/5 border border-blue-500/25 dark:bg-amber-500/5 dark:border-amber-500/25 text-xs animate-fadeIn">
               <ThoughtLine
                 working={true}
                 label="MathAI Engine orquestrando Segunda Opinião…"
@@ -177,8 +177,8 @@ export default function OpinioesPage() {
       {/* CARDS COMPARATIVOS LADO A LADO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* MODELO A: NEMOTRON (RIGOR) */}
-        <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] rounded-2xl p-6 shadow-sm space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+        <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Cpu className="w-5 h-5" />
@@ -190,19 +190,19 @@ export default function OpinioesPage() {
             </div>
           </div>
 
-          <div className="text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
+          <div className="max-w-[68ch] overflow-x-auto text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
             <MathText text={modelA.content} />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
+          <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
             <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>Foco: demonstração analítica e precisão de definições.</span>
           </div>
         </div>
 
         {/* MODELO B: HEURÍSTICA & ATALHOS */}
-        <div className="bg-white dark:bg-[#161a1e] border border border-[var(--border-board)] rounded-2xl p-6 shadow-sm space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+        <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-500 flex items-center justify-center">
                 <Lightbulb className="w-5 h-5" />
@@ -212,16 +212,16 @@ export default function OpinioesPage() {
                 <p className="text-[11px] text-blue-600 dark:text-[#d9b452] font-medium">{modelB.role}</p>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-amber-500/15">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-[#101316] text-slate-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-800/80">
               Heuristic
             </span>
           </div>
 
-          <div className="text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
+          <div className="max-w-[68ch] overflow-x-auto text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
             <MathText text={modelB.content} />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
+          <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
             <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
             <span>Foco: analogias visuais, atalhos de prova e intuição socrática.</span>
           </div>
@@ -229,11 +229,11 @@ export default function OpinioesPage() {
       </div>
 
       {/* SÍNTESE METACOGNITIVA */}
-      <div className="bg-slate-50 dark:bg-[#1e2329] border border border-[var(--border-board)] rounded-2xl p-6 text-xs text-slate-700 dark:text-zinc-300 space-y-2">
+      <div className="bg-zinc-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 text-xs text-slate-700 dark:text-zinc-300 space-y-2">
         <h4 className="font-serif-math font-semibold text-sm text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-          <span>🧠</span> Síntese Pedagógica para o Licenciando em Matemática
+          <BrainCircuit className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" /> Síntese Pedagógica para o Licenciando em Matemática
         </h4>
-        <div className="text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+        <div className="max-w-[68ch] overflow-x-auto text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
           <MathText text={sintese} />
         </div>
       </div>
