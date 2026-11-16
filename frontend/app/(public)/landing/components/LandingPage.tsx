@@ -108,7 +108,7 @@ const SHOWCASE_ITEMS = [
     desc: "Abra a questão em Modo Foco e desenvolva sua solução na lousa. Se precisar, consulte as dicas socráticas sem sair do exercício.",
     img: "/assets/modo_foco.png",
     alt: "Captura real do Modo Foco Imersivo na Bancada do LemmaS",
-    fallbackIcon: "✎",
+    fallbackIcon: "dx/dt",
     fallbackLabel: "Modo Foco & Lousa",
     path: "lemmas.com.br/resolver"
   },
@@ -283,8 +283,8 @@ export function LandingPage() {
   const { isLight, toggleTheme } = useTheme();
   const [view, setView] = useState<"student" | "portfolio">("student");
   const [selectedArchKey, setSelectedArchKey] = useState<string>("data");
-  const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
-  const [totalLemmas, setTotalLemmas] = useState<number | null>(null);
+  const [totalQuestions, setTotalQuestions] = useState<number>(21442);
+  const [totalLemmas, setTotalLemmas] = useState<number>(3000);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string } | null>(null);
   const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({});
@@ -335,9 +335,8 @@ export function LandingPage() {
     }
   }, []);
 
-  const questionsLabel =
-    totalQuestions !== null ? totalQuestions.toLocaleString("pt-BR") : "—";
-  const lemmasLabel = totalLemmas !== null ? totalLemmas.toLocaleString("pt-BR") : "—";
+  const questionsLabel = totalQuestions.toLocaleString("pt-BR");
+  const lemmasLabel = totalLemmas.toLocaleString("pt-BR");
 
   const switchView = (newView: "student" | "portfolio", anchorId?: string) => {
     setView(newView);
@@ -364,7 +363,7 @@ export function LandingPage() {
         {/* Malha de coordenadas técnica global (caderno de engenharia) */}
         <AppBackground />
 
-        {/* NAVEGAÇÃO SUPERIOR REFINADA (ESTILO V3) */}
+        {/* NAVEGAÇÃO SUPERIOR REFINADA (DESIGN SYSTEM 2.0) */}
         <nav className="lemmas-nav" aria-label="Navegação principal">
           <button
             type="button"
@@ -387,7 +386,7 @@ export function LandingPage() {
               onClick={() => switchView("portfolio")}
               className={`flex items-center gap-1.5 ${view === "portfolio" ? "active" : ""}`}
             >
-              <Cpu size={14} className="text-amber-500" />
+              <Cpu size={14} className="text-[var(--marker-amber)] dark:text-[var(--marker-amber)]" />
               <span>Portfólio técnico ↗</span>
             </button>
             <button
@@ -407,8 +406,8 @@ export function LandingPage() {
               type="button"
               className="lemmas-theme-toggle"
               onClick={toggleTheme}
-              aria-label={isLight ? "Ativar Lousa de Giz Clássica (Dark)" : "Ativar Quadro Branco Moderno (Light)"}
-              title={isLight ? "Mudar para Lousa de Giz (Dark)" : "Mudar para Quadro Branco (Light)"}
+              aria-label={isLight ? "Ativar Quadro & Giz (Modo Clássico Escuro)" : "Ativar Lousa & Piloto (Modo Contemporâneo Claro)"}
+              title={isLight ? "Quadro & Giz (Ardósia Mineral Dark)" : "Lousa & Piloto (Porcelana Acetinada Light)"}
             >
               {isLight ? <Moon size={17} /> : <Sun size={17} />}
             </button>
@@ -431,7 +430,7 @@ export function LandingPage() {
             <button
               type="button"
               onClick={() => switchView("student")}
-              className={`text-left flex items-center gap-2 ${view === "student" ? "text-amber-700 dark:text-[#d9b452] font-semibold" : ""}`}
+              className={`text-left flex items-center gap-2 ${view === "student" ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold" : ""}`}
             >
               <GraduationCap size={15} aria-hidden="true" />
               <span>Para estudar</span>
@@ -439,7 +438,7 @@ export function LandingPage() {
             <button
               type="button"
               onClick={() => switchView("portfolio")}
-              className={`text-left flex items-center gap-2 ${view === "portfolio" ? "text-amber-700 dark:text-[#d9b452] font-semibold" : ""}`}
+              className={`text-left flex items-center gap-2 ${view === "portfolio" ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold" : ""}`}
             >
               <Cpu size={15} aria-hidden="true" />
               <span>Portfólio técnico, Dados & IA</span>
@@ -462,7 +461,7 @@ export function LandingPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* 1. VISÃO DO ESTUDANTE (FLUXO V3 MIX REAL COM CORES LEMMAS)    */}
+        {/* 1. VISÃO DO ESTUDANTE                                           */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {view === "student" ? (
           <div className="lemmas-mode-view-enter">
@@ -471,7 +470,7 @@ export function LandingPage() {
               <div className="lemmas-hero-grid">
                 <div className="lemmas-hero-copy">
                   <span className="lemmas-eyebrow">
-                    PLATAFORMA GRATUITA DE MATEMÁTICA
+                    MATEMÁTICA CLÁSSICA · INTELIGÊNCIA CONTEMPORÂNEA
                   </span>
 
                   <h1 id="student-title">
@@ -480,7 +479,7 @@ export function LandingPage() {
                   </h1>
 
                   <p className="lemmas-hero-lede">
-                    Questões de concursos, olimpíadas e graduação. Uma bancada para desenvolver seu raciocínio, repetição espaçada e a MathAI para investigar seus erros — sem ficar preso ao gabarito seco.
+                    O quadro permanece. O instrumento evolui — questões de concursos, olimpíadas e graduação com bancada para desenvolver seu raciocínio, repetição espaçada e a MathAI para investigar seus passos sem ficar preso ao gabarito seco.
                   </p>
 
                   <div className="lemmas-hero-actions">
@@ -521,7 +520,7 @@ export function LandingPage() {
                   <span>ESA / EFOMM / ITA</span>
                   <span>ENEM / CEDERJ</span>
                   <span>Olimpíadas</span>
-                  <span>Graduação & Licenciatura</span>
+                  <span>Graduação &amp; Licenciatura</span>
                 </div>
               </div>
             </div>
@@ -535,53 +534,53 @@ export function LandingPage() {
               </div>
 
               <div className="lemmas-principles">
-                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
+                <div className="p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs flex flex-col justify-between transition-colors">
                   <div>
-                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-[var(--marker-blue)] dark:text-[var(--marker-amber)] tabular-nums">
                       PASSO 01
                     </span>
-                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
+                    <h3 className="text-lg font-semibold tracking-tight text-[var(--ink-primary)] mt-2 mb-2">
                       Encontre sua questão
                     </h3>
-                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-[15px] text-[var(--ink-secondary)] leading-relaxed">
                       Filtre o acervo por banca, matéria, ano e dificuldade. Escolha entre concursos militares, vestibulares, olimpíadas e graduação.
                     </p>
                   </div>
-                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
+                  <div className="mt-5 pt-3 border-t border-[var(--border-subtle)] text-xs font-mono text-[var(--ink-muted)]">
                     Filtros rápidos de 1 clique
                   </div>
                 </div>
 
-                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
+                <div className="p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs flex flex-col justify-between transition-colors">
                   <div>
-                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-[var(--marker-blue)] dark:text-[var(--marker-amber)] tabular-nums">
                       PASSO 02
                     </span>
-                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
+                    <h3 className="text-lg font-semibold tracking-tight text-[var(--ink-primary)] mt-2 mb-2">
                       Desenvolva a solução
                     </h3>
-                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-[15px] text-[var(--ink-secondary)] leading-relaxed">
                       Desenvolva sua solução na lousa, digite ou envie uma foto do caderno. No treino, peça uma dica se precisar de um próximo passo.
                     </p>
                   </div>
-                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
+                  <div className="mt-5 pt-3 border-t border-[var(--border-subtle)] text-xs font-mono text-[var(--ink-muted)]">
                     Lousa, texto ou foto
                   </div>
                 </div>
 
-                <div className="p-6 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between transition-colors">
+                <div className="p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs flex flex-col justify-between transition-colors">
                   <div>
-                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-amber-700 dark:text-[#d9b452] tabular-nums">
+                    <span className="inline-block font-mono text-xs font-semibold tracking-wider text-[var(--marker-blue)] dark:text-[var(--marker-amber)] tabular-nums">
                       PASSO 03
                     </span>
-                    <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] mt-2 mb-2">
+                    <h3 className="text-lg font-semibold tracking-tight text-[var(--ink-primary)] mt-2 mb-2">
                       Reflita e revise
                     </h3>
-                    <p className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-[15px] text-[var(--ink-secondary)] leading-relaxed">
                       Compare formas de resolver, entenda a ideia por trás da questão e retome o conteúdo nas próximas revisões.
                     </p>
                   </div>
-                  <div className="mt-5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs font-mono text-slate-500 dark:text-zinc-400">
+                  <div className="mt-5 pt-3 border-t border-[var(--border-subtle)] text-xs font-mono text-[var(--ink-muted)]">
                     Entender agora. Revisar depois.
                   </div>
                 </div>
@@ -734,25 +733,25 @@ export function LandingPage() {
                             <MathText text={`$${q.lema.formula}$`} />
                           </div>
 
-                          <p className="text-xs text-slate-600 dark:text-zinc-300 mb-1.5 leading-relaxed">
-                            <strong className="text-amber-700 dark:text-[#d9b452]">Quando usar: </strong>
+                          <p className="text-xs text-[var(--ink-secondary)] mb-1.5 leading-relaxed">
+                            <strong className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">Quando usar: </strong>
                             {q.lema.gatilho}
                           </p>
 
-                          <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
-                            <strong className="text-amber-700 dark:text-[#d9b452]">Como aplicar: </strong>
+                          <p className="text-xs text-[var(--ink-secondary)] leading-relaxed">
+                            <strong className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">Como aplicar: </strong>
                             {q.lema.acao}
                           </p>
                         </div>
 
                         {/* Explicação Detalhada Passo a Passo (Expansível) */}
                         {isExpanded && (
-                          <div className="mt-3 p-4 rounded-lg bg-slate-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-slate-700 dark:text-zinc-200 leading-relaxed animate-fadeIn space-y-2">
-                            <strong className="text-xs font-semibold text-amber-700 dark:text-[#d9b452] flex items-center gap-1.5">
+                          <div className="mt-3 p-4 rounded-lg bg-[var(--bg-board)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] leading-relaxed animate-fadeIn space-y-2">
+                            <strong className="text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center gap-1.5">
                               <CheckCircle2 size={14} />
                               <span>Demonstração &amp; Resolução pelo Lema:</span>
                             </strong>
-                            <div className="whitespace-pre-line text-[13px] leading-relaxed overflow-x-auto">
+                            <div className="whitespace-pre-line text-[13px] leading-relaxed overflow-x-auto text-[var(--ink-primary)]">
                               <MathText text={q.explicacao} />
                             </div>
                           </div>
@@ -781,7 +780,7 @@ export function LandingPage() {
                         <div className="mt-2.5 text-center">
                           <Link
                             href="/questoes"
-                            className="text-xs font-mono text-slate-600 dark:text-zinc-400 hover:text-amber-700 dark:hover:text-[#d9b452] transition inline-flex items-center gap-1"
+                            className="text-xs font-mono text-[var(--ink-secondary)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] transition-colors inline-flex items-center gap-1"
                           >
                             <span>Praticar no Banco de Questões</span>
                             <ArrowRight size={11} />
@@ -799,10 +798,10 @@ export function LandingPage() {
               <div className="lemmas-demo-box">
                 <div>
                   <span className="lemmas-eyebrow">APRENDA COM SEUS ERROS</span>
-                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] my-3">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--ink-primary)] my-3">
                     Seu erro tem uma história. Não apenas uma nota.
                   </h2>
-                  <p className="text-[15px] max-w-[68ch] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-[15px] max-w-[68ch] text-[var(--ink-secondary)] leading-relaxed">
                     Na Bancada, você desenvolve a resolução e envia seus passos para análise. O retorno da MathAI Engine distingue quatro situações para ajudar você a revisar o raciocínio:
                   </p>
 
@@ -861,12 +860,12 @@ export function LandingPage() {
 
             {/* SEÇÃO 4: CTA FINAL DO ESTUDANTE */}
             <section className="lemmas-section">
-              <div className="p-6 sm:p-8 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-left">
+              <div className="p-6 sm:p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-left">
                 <div>
-                  <h3 className="font-serif text-2xl sm:text-3xl tracking-tight text-slate-900 dark:text-[#eceff4] font-semibold mb-2">
+                  <h3 className="font-serif text-2xl sm:text-3xl tracking-tight text-[var(--ink-primary)] font-semibold mb-2">
                     Pronto para a sua próxima questão?
                   </h3>
-                  <p className="text-[15px] text-slate-600 dark:text-slate-300 max-w-[60ch] leading-relaxed">
+                  <p className="text-[15px] text-[var(--ink-secondary)] max-w-[60ch] leading-relaxed">
                     Defina seu objetivo para organizar o estudo ou escolha uma questão e comece a praticar.
                   </p>
                 </div>
@@ -924,21 +923,21 @@ export function LandingPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-6">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">
                       Ciência de Dados (Python &amp; SQL)
                     </span>
-                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">
                       Machine Learning &amp; NLP (BGE-M3 + LaTeX)
                     </span>
-                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">
                       GenAI Multi-LLM (Nemotron · DeepSeek · Gemini)
                     </span>
-                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">
                       Governança SHA-256 &amp; Supabase RLS
                     </span>
                   </div>
 
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 mt-4 leading-relaxed">
+                  <p className="text-[11px] font-mono text-[var(--ink-muted)] mt-4 leading-relaxed">
                     Documentação utilizada: README.pt-BR.md, docs/roadmap.md e monorepo real. Recursos planejados são auditados e rotulados com total transparência.
                   </p>
                 </div>
@@ -947,7 +946,7 @@ export function LandingPage() {
                 <div className="lemmas-terminal" aria-label="Representação do fluxo de proveniência de dados">
                   <div className="lemmas-terminal-top">
                     <span>mathai / provenance.pipeline</span>
-                    <span className="text-amber-700 dark:text-[#d9b452] font-semibold">● DATA CONTRACT</span>
+                    <span className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold">● DATA CONTRACT</span>
                   </div>
 
                   <div className="lemmas-terminal-body">
@@ -1061,28 +1060,28 @@ export function LandingPage() {
               <div className="lemmas-demo-box">
                 <div>
                   <span className="lemmas-eyebrow">SYSTEM.MAP CLICÁVEL · PIPELINE MULTICAMADA</span>
-                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] my-3">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--ink-primary)] my-3">
                     Do pipeline de dados à inferência multi-modelo.
                   </h2>
-                  <p className="text-[15px] max-w-[68ch] text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                  <p className="text-[15px] max-w-[68ch] text-[var(--ink-secondary)] leading-relaxed mb-4">
                     O LEMMAS integra Ciência de Dados, Machine Learning e GenAI em uma arquitetura desacoplada: governança estrita de telemetria, representação vetorial em NLP e agentes generativos socráticos com contratos explícitos.
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-zinc-400">
+                  <p className="text-xs text-[var(--ink-muted)]">
                     Clique em qualquer camada ao lado para entender a decisão técnica e inspecionar os arquivos e notebooks correspondentes.
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-4">
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">Python · Pandas · NumPy</span>
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">SQL Analítico · PostgreSQL</span>
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">NLP · BGE-M3 + TF-IDF</span>
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">GenAI Multi-LLM</span>
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">FastAPI · Pydantic</span>
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300">Next.js 16</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">Python · Pandas · NumPy</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">SQL Analítico · PostgreSQL</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">NLP · BGE-M3 + TF-IDF</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">GenAI Multi-LLM</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">FastAPI · Pydantic</span>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)]">Next.js 16</span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-4 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-mono text-amber-700 dark:text-[#d9b452] pb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
+                  <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-mono text-[var(--marker-blue)] dark:text-[var(--marker-amber)] pb-2 border-b border-[var(--border-subtle)]">
                       <span>LEMMAS / SYSTEM.MAP</span>
                       <span>◉ REPOSITORY ARCHITECTURE</span>
                     </div>
@@ -1094,22 +1093,22 @@ export function LandingPage() {
                         onClick={() => setSelectedArchKey(n.key)}
                         className={`w-full p-3 rounded-lg border text-left transition-colors flex items-center justify-between cursor-pointer ${
                           selectedArchKey === n.key
-                            ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-600/50 dark:border-amber-400/50 text-slate-900 dark:text-[#eceff4]"
-                            : "bg-slate-50 dark:bg-[#101316] border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700"
+                            ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-[var(--ink-primary)]"
+                            : "bg-[var(--bg-board)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)]"
                         }`}
                       >
                         <div>
-                          <strong className="text-xs font-semibold block text-slate-900 dark:text-[#eceff4] tabular-nums">{n.title}</strong>
-                          <small className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono block mt-0.5">{n.subtitle}</small>
+                          <strong className="text-xs font-semibold block text-[var(--ink-primary)] tabular-nums">{n.title}</strong>
+                          <small className="text-[11px] text-[var(--ink-muted)] font-mono block mt-0.5">{n.subtitle}</small>
                         </div>
-                        <span className="text-[10px] font-mono text-amber-700 dark:text-[#d9b452] shrink-0 ml-2">{n.badge}</span>
+                        <span className="text-[10px] font-mono text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 ml-2">{n.badge}</span>
                       </button>
                     ))}
                   </div>
 
                   {/* Detalhe do Nó Selecionado */}
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80">
-                    <strong className="text-xs font-semibold text-slate-900 dark:text-[#d9b452] block mb-1">
+                  <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
+                    <strong className="text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] block mb-1">
                       {selectedArch.detailTitle}
                     </strong>
                     <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed mb-3">
@@ -1119,7 +1118,7 @@ export function LandingPage() {
                       href={selectedArch.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-mono font-semibold text-amber-700 dark:text-[#d9b452] hover:underline flex items-center gap-1"
+                      className="text-xs font-mono font-semibold text-[var(--marker-amber)] hover:underline flex items-center gap-1"
                     >
                       <span>{selectedArch.linkLabel}</span>
                       <ExternalLink size={12} />
@@ -1362,54 +1361,54 @@ export function LandingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <a
-                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/frontend"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">▣</span>
+                  <span className="text-xl font-serif text-[var(--marker-blue)] dark:text-[var(--marker-amber)] mb-3">▣</span>
                   <div>
-                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Frontend</strong>
-                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">App Router, banco de questões, Bancada e apresentação ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-[var(--ink-primary)] block">Frontend</strong>
+                    <small className="text-xs text-[var(--ink-secondary)] block mt-1 leading-relaxed">App Router, banco de questões, Bancada e apresentação ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/backend"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">⌘</span>
+                  <span className="text-xl font-serif text-[var(--marker-blue)] dark:text-[var(--marker-amber)] mb-3">⌘</span>
                   <div>
-                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Backend &amp; MathAI</strong>
-                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">API Python, DTOs, avaliação, tutor e gateway multi-modelo ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-[var(--ink-primary)] block">Backend &amp; MathAI</strong>
+                    <small className="text-xs text-[var(--ink-secondary)] block mt-1 leading-relaxed">API Python, DTOs, avaliação, tutor e gateway multi-modelo ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/tree/main/tests"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">✓</span>
+                  <span className="text-xl font-serif text-[var(--marker-blue)] dark:text-[var(--marker-amber)] mb-3">✓</span>
                   <div>
-                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Testes Unitários</strong>
-                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed tabular-nums">17 testes cobrindo rotas, proveniência e repetição espaçada ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-[var(--ink-primary)] block">Testes Unitários</strong>
+                    <small className="text-xs text-[var(--ink-secondary)] block mt-1 leading-relaxed tabular-nums">17 testes cobrindo rotas, proveniência e repetição espaçada ↗</small>
                   </div>
                 </a>
 
                 <a
-                  className="p-5 rounded-xl bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 hover:border-amber-600/50 dark:hover:border-amber-400/40 transition-colors flex flex-col justify-between"
+                  className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors flex flex-col justify-between"
                   href="https://github.com/StylishGH/MathAI/blob/main/docs/roadmap.md"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className="text-xl font-serif text-amber-700 dark:text-[#d9b452] mb-3">∑</span>
+                  <span className="text-xl font-serif text-[var(--marker-blue)] dark:text-[var(--marker-amber)] mb-3">∑</span>
                   <div>
-                    <strong className="text-sm font-semibold tracking-tight text-slate-900 dark:text-[#eceff4] block">Roadmap Auditado</strong>
-                    <small className="text-xs text-slate-600 dark:text-zinc-400 block mt-1 leading-relaxed">Status das entregas, contagens e próximos experimentos ↗</small>
+                    <strong className="text-sm font-semibold tracking-tight text-[var(--ink-primary)] block">Roadmap Auditado</strong>
+                    <small className="text-xs text-[var(--ink-secondary)] block mt-1 leading-relaxed">Status das entregas, contagens e próximos experimentos ↗</small>
                   </div>
                 </a>
               </div>
@@ -1445,8 +1444,8 @@ export function LandingPage() {
             onClick={() => setLightboxImg(null)}
           >
             <div className="lemmas-dialog-card" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80 mb-3">
-                <div className="flex items-center gap-2 text-xs font-mono text-amber-700 dark:text-[#d9b452] font-semibold">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)] mb-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold">
                   <Sparkles size={14} />
                   <span>{lightboxImg.title}</span>
                 </div>
@@ -1459,16 +1458,16 @@ export function LandingPage() {
                   ✕ Fechar (ESC)
                 </button>
               </div>
-              <div className="overflow-hidden rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-[#0d1014] flex items-center justify-center p-1">
+              <div className="overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-board)] flex items-center justify-center p-1">
                 <img
                   src={lightboxImg.src}
                   alt={lightboxImg.title}
                   className="w-full max-h-[75vh] object-contain rounded-lg"
                 />
               </div>
-              <div className="text-[11px] font-mono text-slate-600 dark:text-zinc-400 mt-3 flex flex-wrap items-center justify-between gap-2 tabular-nums">
+              <div className="text-[11px] font-mono text-[var(--ink-secondary)] mt-3 flex flex-wrap items-center justify-between gap-2 tabular-nums">
                 <span>✦ Captura em alta resolução (1440×900) da plataforma LEMMAS</span>
-                <span className="text-amber-700 dark:text-[#d9b452] font-semibold">Clique fora para fechar</span>
+                <span className="text-[var(--marker-amber)] font-semibold">Clique fora para fechar</span>
               </div>
             </div>
           </div>,
