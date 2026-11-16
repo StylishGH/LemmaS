@@ -91,23 +91,23 @@ export default function OpinioesPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+    <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-[var(--ink-primary)]">
       {/* HEADER DA PÁGINA EDITORIAL */}
-      <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 p-6 md:p-8 rounded-xl space-y-4">
+      <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 md:p-8 rounded-xl space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-lg bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] flex items-center justify-center shrink-0">
             <Scale className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
+              <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-[var(--ink-primary)] tracking-tight">
                 Segunda Opinião: Disputa de Lemas & Métodos.
               </h1>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 border border-blue-500/30 dark:bg-amber-500/10 dark:text-[#d9b452] dark:border-amber-500/30">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] dark:border-[var(--marker-amber-border)]">
                 Metacognição
               </span>
             </div>
-            <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 mt-1 font-sans">
+            <p className="text-xs md:text-sm text-[var(--ink-secondary)] mt-1 font-sans">
               Compare diferentes arquiteturas de raciocínio matemático lado a lado para expandir seu repertório pedagógico e heurístico.
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function OpinioesPage() {
 
         {/* CAIXA DE ENTRADA DO PROBLEMA */}
         <div className="space-y-3 pt-2 font-sans">
-          <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 uppercase tracking-wider block">
+          <label className="text-xs font-semibold text-[var(--ink-secondary)] uppercase tracking-wider block">
             Problema ou Teorema para Análise Comparativa:
           </label>
           <div>
@@ -123,7 +123,7 @@ export default function OpinioesPage() {
               value={problemText}
               onChange={(e) => setProblemText(e.target.value)}
               rows={3}
-              className="w-full bg-zinc-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 rounded-lg p-4 text-sm text-slate-900 dark:text-[#dedbd0] focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 transition"
+              className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg p-4 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
               placeholder="Digite o enunciado de uma questão matemática ou propriedade para ver a análise de dois modelos..."
             />
           </div>
@@ -149,14 +149,14 @@ export default function OpinioesPage() {
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 animate-fadeIn">
+            <div className="p-3 rounded-lg bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] text-xs flex items-center gap-2 animate-fadeIn">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {loading && (
-            <div className="p-4 md:p-5 rounded-xl bg-blue-500/5 border border-blue-500/25 dark:bg-amber-500/5 dark:border-amber-500/25 text-xs animate-fadeIn">
+            <div className="p-4 md:p-5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs animate-fadeIn">
               <ThoughtLine
                 working={true}
                 label="MathAI Engine orquestrando Segunda Opinião…"
@@ -165,8 +165,8 @@ export default function OpinioesPage() {
                   "Modelo B: investigando intuição heurística e atalhos de Gauss",
                   "Síntese: consolidando conexão metacognitiva e valor didático",
                 ]}
-                color="#2563eb"
-                glyphColor="#2563eb"
+                color="var(--marker-blue)"
+                glyphColor="var(--marker-blue)"
                 fontSize={13}
               />
             </div>
@@ -177,63 +177,63 @@ export default function OpinioesPage() {
       {/* CARDS COMPARATIVOS LADO A LADO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* MODELO A: NEMOTRON (RIGOR) */}
-        <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80">
+        <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-6 space-y-4 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <div className="w-9 h-9 rounded-lg bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] flex items-center justify-center text-[var(--marker-green)]">
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-serif-math font-bold text-sm text-slate-900 dark:text-[#f5f0df]">{modelA.name}</h3>
-                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{modelA.role}</p>
+                <h3 className="font-serif-math font-bold text-sm text-[var(--ink-primary)]">{modelA.name}</h3>
+                <p className="text-[11px] text-[var(--marker-green)] font-medium">{modelA.role}</p>
               </div>
             </div>
           </div>
 
-          <div className="max-w-[68ch] overflow-x-auto text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
+          <div className="overflow-x-auto text-[var(--ink-secondary)] text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
             <MathText text={modelA.content} />
           </div>
 
-          <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
-            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center gap-2 text-[11px] text-[var(--ink-muted)]">
+            <CheckCheck className="w-3.5 h-3.5 text-[var(--marker-green)]" />
             <span>Foco: demonstração analítica e precisão de definições.</span>
           </div>
         </div>
 
         {/* MODELO B: HEURÍSTICA & ATALHOS */}
-        <div className="bg-white dark:bg-[#14171c] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 space-y-4 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-200/80 dark:border-zinc-800/80">
+        <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-6 space-y-4 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-500 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] flex items-center justify-center">
                 <Lightbulb className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-serif-math font-bold text-sm text-slate-900 dark:text-[#f5f0df]">{modelB.name}</h3>
-                <p className="text-[11px] text-blue-600 dark:text-[#d9b452] font-medium">{modelB.role}</p>
+                <h3 className="font-serif-math font-bold text-sm text-[var(--ink-primary)]">{modelB.name}</h3>
+                <p className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-medium">{modelB.role}</p>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-[#101316] text-slate-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-800/80">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--ink-muted)] border border-[var(--border-subtle)]">
               Heuristic
             </span>
           </div>
 
-          <div className="max-w-[68ch] overflow-x-auto text-slate-700 dark:text-zinc-300 text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
+          <div className="overflow-x-auto text-[var(--ink-secondary)] text-xs md:text-sm leading-relaxed whitespace-pre-line font-sans select-text">
             <MathText text={modelB.content} />
           </div>
 
-          <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+          <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center gap-2 text-[11px] text-[var(--ink-muted)]">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span>Foco: analogias visuais, atalhos de prova e intuição socrática.</span>
           </div>
         </div>
       </div>
 
       {/* SÍNTESE METACOGNITIVA */}
-      <div className="bg-zinc-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-6 text-xs text-slate-700 dark:text-zinc-300 space-y-2">
-        <h4 className="font-serif-math font-semibold text-sm text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-          <BrainCircuit className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" /> Síntese Pedagógica para o Licenciando em Matemática
+      <div className="lemmas-surface-card bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl p-6 text-xs text-[var(--ink-secondary)] space-y-2">
+        <h4 className="font-serif-math font-semibold text-sm text-[var(--ink-primary)] flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" /> Síntese Pedagógica para o Licenciando em Matemática
         </h4>
-        <div className="max-w-[68ch] overflow-x-auto text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+        <div className="overflow-x-auto text-[var(--ink-secondary)] leading-relaxed font-sans">
           <MathText text={sintese} />
         </div>
       </div>

@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Flag, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import {
+  X,
+  Flag,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  PencilLine,
+  ImageOff,
+  Target,
+  AlertTriangle,
+  MessageSquare,
+} from "lucide-react";
 
 export type MotivoReport =
   | "erro_digitacao"
@@ -18,35 +29,40 @@ interface ReportarQuestaoModalProps {
   origem?: "questoes" | "resolver";
 }
 
-const MOTIVOS: { id: MotivoReport; label: string; icon: string; desc: string }[] = [
+const MOTIVOS: {
+  id: MotivoReport;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  desc: string;
+}[] = [
   {
     id: "erro_digitacao",
     label: "Erro de Digitação / LaTeX",
-    icon: "✍️",
+    Icon: PencilLine,
     desc: "Fórmula cortada, erro ortográfico ou formatação confusa",
   },
   {
     id: "problema_imagem",
     label: "Problema na Imagem / Figura",
-    icon: "🖼️",
+    Icon: ImageOff,
     desc: "Figura não carrega, está cortada ou de baixa resolução",
   },
   {
     id: "gabarito_incorreto",
     label: "Gabarito Divergente",
-    icon: "🎯",
+    Icon: Target,
     desc: "A alternativa oficial indicada difere da banca oficial",
   },
   {
     id: "enunciado_incompleto",
     label: "Enunciado / Alternativas Incompletas",
-    icon: "⚠️",
+    Icon: AlertTriangle,
     desc: "Faltam alternativas, texto ou dados necessários para resolver",
   },
   {
     id: "outro",
     label: "Outro Problema / Sugestão",
-    icon: "💬",
+    Icon: MessageSquare,
     desc: "Outro detalhe relevante para a curadoria da MathAI Engine",
   },
 ];
@@ -143,7 +159,7 @@ export default function ReportarQuestaoModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xs flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-[100] bg-black/75 flex items-start sm:items-center justify-center p-4 py-6 overflow-y-auto animate-fadeIn"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !enviando) onClose();
       }}
@@ -154,14 +170,14 @@ export default function ReportarQuestaoModal({
         aria-modal="true"
         aria-labelledby="reportar-questao-modal-title"
         tabIndex={-1}
-        className="max-w-lg w-full my-auto bg-white dark:bg-[#141222] border border-slate-200 dark:border-amber-500/25 rounded-2xl shadow-2xl p-6 relative text-slate-800 dark:text-[#f5f0df] space-y-5 outline-none"
+        className="max-w-lg w-full my-auto bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-6 relative text-[var(--ink-primary)] space-y-5 outline-none"
       >
         {/* BOTÃO FECHAR */}
         <button
           type="button"
           onClick={onClose}
           disabled={enviando}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-50"
           aria-label="Fechar"
         >
           <X className="w-5 h-5" />
@@ -169,17 +185,17 @@ export default function ReportarQuestaoModal({
 
         {/* CABEÇALHO */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] flex items-center justify-center shrink-0">
             <Flag className="w-5 h-5" />
           </div>
           <div>
             <h3
               id="reportar-questao-modal-title"
-              className="font-serif-math text-lg font-bold text-slate-900 dark:text-[#f5f0df]"
+              className="font-serif-math text-lg font-bold text-[var(--ink-primary)]"
             >
               Reportar Inconsistência
             </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-[var(--ink-muted)]">
               Questão Lema #{questaoId.toString().padStart(3, "0")} · Ajude a manter o acervo impecável
             </p>
           </div>
@@ -187,13 +203,13 @@ export default function ReportarQuestaoModal({
 
         {sucesso ? (
           <div className="py-8 text-center space-y-3 animate-fadeIn">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-[#f5f0df]">
+            <h4 className="font-bold text-sm text-[var(--ink-primary)]">
               Relato Enviado com Sucesso!
             </h4>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
+            <p className="text-xs text-[var(--ink-secondary)] max-w-xs mx-auto">
               Obrigado pela contribuição! Nossa curadoria matemática analisará a correção.
             </p>
           </div>
@@ -201,38 +217,41 @@ export default function ReportarQuestaoModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* MOTIVOS SELECIONÁVEIS */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+              <label className="text-xs font-bold text-[var(--ink-secondary)] block">
                 Selecione o tipo de inconsistência:
               </label>
               <div className="space-y-1.5">
                 {MOTIVOS.map((m) => {
                   const isSelected = motivo === m.id;
+                  const IconComponent = m.Icon;
                   return (
                     <button
                       key={m.id}
                       type="button"
                       onClick={() => setMotivo(m.id)}
-                      className={`w-full text-left p-2.5 rounded-xl border flex items-center gap-3 transition-all ${
+                      className={`w-full text-left p-2.5 rounded-xl border flex items-center gap-3 transition-colors ${
                         isSelected
-                          ? "bg-blue-500/10 border-blue-500/80 text-blue-900 dark:bg-amber-500/15 dark:border-amber-500/80 dark:text-[#f5f0df] shadow-xs"
-                          : "bg-slate-50/50 dark:bg-[#18152a] border-slate-200/80 dark:border-amber-500/10 text-slate-600 dark:text-zinc-400 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                          ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue)] text-[var(--ink-primary)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber)] shadow-xs"
+                          : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                       }`}
                     >
-                      <span className="text-base shrink-0">{m.icon}</span>
+                      <span className="w-8 h-8 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0">
+                        <IconComponent className={`w-4 h-4 ${isSelected ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold">{m.label}</div>
-                        <div className="text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+                        <div className="text-xs font-semibold text-[var(--ink-primary)]">{m.label}</div>
+                        <div className="text-[10px] text-[var(--ink-muted)] truncate">
                           {m.desc}
                         </div>
                       </div>
                       <div
                         className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                           isSelected
-                            ? "border-blue-600 bg-blue-600 dark:border-[#d9b452] dark:bg-[#d9b452]"
-                            : "border-slate-300 dark:border-zinc-700"
+                            ? "border-[var(--marker-blue)] bg-[var(--marker-blue)] dark:border-[var(--marker-amber)] dark:bg-[var(--marker-amber)]"
+                            : "border-[var(--border-default)]"
                         }`}
                       >
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black" />}
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#101316]" />}
                       </div>
                     </button>
                   );
@@ -242,9 +261,9 @@ export default function ReportarQuestaoModal({
 
             {/* DETALHES / DESCRIÇÃO */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center justify-between">
+              <label className="text-xs font-bold text-[var(--ink-secondary)] flex items-center justify-between">
                 <span>Detalhes adicionais (opcional):</span>
-                <span className="text-[10px] font-normal text-slate-400">
+                <span className="text-[10px] font-normal text-[var(--ink-muted)] font-mono tabular-nums">
                   {descricao.length}/500
                 </span>
               </label>
@@ -253,25 +272,25 @@ export default function ReportarQuestaoModal({
                 onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
                 rows={3}
                 placeholder="Ex: No terceiro parágrafo o expoente deveria ser x² em vez de 2x; a imagem está com resolução muito baixa..."
-                className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-[#18152a] border border-slate-200 dark:border-amber-500/15 text-slate-900 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
+                className="w-full p-2.5 text-xs rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-hidden focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
               />
             </div>
 
             {/* MENSAGEM DE ERRO SE HOUVER */}
             {erroMsg && (
-              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+              <div className="p-2.5 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{erroMsg}</span>
               </div>
             )}
 
             {/* BOTÕES DE AÇÃO */}
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={enviando}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>
