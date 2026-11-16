@@ -27,23 +27,23 @@ export function BancadaShowcase() {
         <button
           type="button"
           onClick={() => setActiveTab("lousa")}
-          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
+          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-[transform,background-color,border-color,color] cursor-pointer shadow-xs ${
             activeTab === "lousa"
               ? "lemmas-gold-cta scale-105"
-              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
+              : "bg-[var(--bg-card)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] hover:border-[var(--border-default)]"
           }`}
         >
-          <PenTool className="w-4 h-4 text-blue-600 dark:text-amber-500" />
+          <PenTool className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
           <span>Lousa de Rascunho Digital</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("geometria")}
-          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
+          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-[transform,background-color,border-color,color] cursor-pointer shadow-xs ${
             activeTab === "geometria"
-              ? "bg-sky-500 text-white font-bold scale-105"
-              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+              ? "bg-sky-600 text-white font-bold scale-105"
+              : "bg-[var(--bg-card)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] hover:border-sky-500/45"
           }`}
         >
           <Compass className="w-4 h-4 text-sky-500" />
@@ -53,10 +53,10 @@ export function BancadaShowcase() {
         <button
           type="button"
           onClick={() => setActiveTab("ocr")}
-          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-xs ${
+          className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-[transform,background-color,border-color,color] cursor-pointer shadow-xs ${
             activeTab === "ocr"
               ? "bg-sky-600 text-white font-bold scale-105"
-              : "bg-white/80 dark:bg-[var(--bg-elevated)] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15 hover:border-sky-500/35"
+              : "bg-[var(--bg-card)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] hover:border-sky-500/45"
           }`}
         >
           <Camera className="w-4 h-4 text-sky-500" />
@@ -65,7 +65,7 @@ export function BancadaShowcase() {
       </div>
 
       {/* ÁREA VISUAL PRINCIPAL DA FERRAMENTA SELECIONADA */}
-      <div className="rounded-3xl border border-slate-200/90 dark:border-amber-500/25 bg-white dark:bg-[var(--bg-card)] shadow-xl overflow-hidden transition-all">
+      <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-xl overflow-hidden transition-colors">
         {/* ABA 1: LOUSA DE RASCUNHO */}
         {activeTab === "lousa" && (
           <div className="p-6 md:p-8 space-y-6 animate-fadeIn">

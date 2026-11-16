@@ -23,14 +23,11 @@ export default function AppLayout({
 }) {
   return (
     <BoardFrame>
-      <div className="lemmas-app-frame min-h-[calc(100vh-48px)] flex flex-col text-slate-900 dark:text-[#f5f0df] relative selection:bg-amber-500/30">
-        {/* TEXTURA E GRÃO DE LOUSA / QUADRO */}
-        <div className="lemmas-grain-overlay" aria-hidden="true" />
-
+      <div className="lemmas-app-frame min-h-[calc(100vh-24px)] flex flex-col text-[var(--ink-primary)] relative selection:bg-[var(--marker-blue-dim)] dark:selection:bg-[var(--marker-amber-dim)]">
         {/* ONDAS HARMÔNICAS SUTIS EM SEGUNDO PLANO */}
         <AppBackground />
 
-        {/* BARRA DE NAVEGAÇÃO SUPERIOR UNIFICADA (TOP NAVIGATION ROOM) */}
+        {/* BARRA DE NAVEGAÇÃO SUPERIOR UNIFICADA */}
         <AppNavbar />
 
         {/* BANNER DE ALERTA DE E-MAIL NÃO VERIFICADO */}
@@ -40,7 +37,7 @@ export default function AppLayout({
         <FeedbackPopup />
 
         {/* CONTEÚDO PRINCIPAL CENTRALIZADO */}
-        <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {children}
         </main>
       </div>

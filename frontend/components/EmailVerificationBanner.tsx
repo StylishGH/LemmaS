@@ -85,17 +85,17 @@ export default function EmailVerificationBanner() {
   };
 
   return (
-    <div className="w-full bg-amber-500/10 dark:bg-amber-950/30 border-b border-amber-500/30 text-slate-800 dark:text-[#f5f0df] px-4 py-2.5 transition-all text-xs z-30 relative animate-fadeIn">
+    <div className="w-full bg-[var(--marker-amber-dim)] border-b border-[var(--marker-amber-border)] text-[var(--ink-primary)] px-4 py-2.5 transition-colors text-xs z-30 relative animate-fadeIn">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
         
         {/* Lado Esquerdo: Mensagem de Alerta */}
         <div className="flex items-center gap-2.5 text-center md:text-left">
-          <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-[#d9b452] shrink-0">
+          <span className="p-1.5 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] shrink-0">
             <ShieldAlert className="w-4 h-4" />
           </span>
           <div>
-            <span className="font-bold text-amber-700 dark:text-[#d9b452]">Confirmação de e-mail pendente: </span>
-            <span className="text-slate-600 dark:text-zinc-300">
+            <span className="font-bold text-[var(--marker-amber)]">Confirmação de e-mail pendente: </span>
+            <span className="text-[var(--ink-secondary)]">
               Enviamos um link para <strong>{profile.email}</strong>. Basta abrir seu e-mail e clicar no link para confirmar sua conta.
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function EmailVerificationBanner() {
             type="button"
             onClick={handleReenviar}
             disabled={loadingReenvio}
-            className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-[#d9b452] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] hover:opacity-90 text-[var(--marker-amber)] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="Reenviar link de confirmação para sua caixa de entrada"
           >
             <Mail className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export default function EmailVerificationBanner() {
             type="button"
             onClick={handleAtualizarStatus}
             disabled={loadingRefresh}
-            className="px-3 py-1.5 rounded-lg bg-slate-200/80 hover:bg-slate-300/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--ink-primary)] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="Verificar se o link já foi clicado"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loadingRefresh ? "animate-spin" : ""}`} />
@@ -128,7 +128,7 @@ export default function EmailVerificationBanner() {
           <button
             type="button"
             onClick={handleDispensar}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition-colors cursor-pointer ml-1"
+            className="p-1 rounded-md text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer ml-1"
             title="Lembrar mais tarde nesta sessão"
             aria-label="Fechar aviso"
           >
