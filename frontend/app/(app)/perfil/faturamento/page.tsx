@@ -229,40 +229,40 @@ export default function FaturamentoPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto py-2 animate-fadeIn">
       {/* Navegação Superior */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-amber-500/20">
+      <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
         <Link
           href="/perfil"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-[#a9aaa1] hover:text-blue-600 dark:hover:text-amber-500 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--ink-secondary)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] transition-colors"
         >
           <ArrowLeft size={16} /> Voltar ao Perfil
         </Link>
-        <span className="text-xs font-mono text-slate-400">LEMMAS · Faturamento & NFS-e</span>
+        <span className="text-xs font-mono text-[var(--ink-muted)]">LEMMAS · Faturamento & NFS-e</span>
       </div>
 
       {/* Cabeçalho */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-blue-600 dark:text-[#d9b452] text-xs font-semibold">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] text-xs font-semibold">
           <CreditCard size={14} />
           <span>Conformidade Fiscal & LGPD · Nota Fiscal Eletrônica</span>
         </div>
-        <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
-          Dados Fiscais & <em className="italic text-blue-600 dark:text-[#d9b452]">Faturamento.</em>
+        <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-[var(--ink-primary)] tracking-tight">
+          Dados Fiscais & <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">Faturamento.</em>
         </h1>
-        <p className="text-xs md:text-sm text-slate-600 dark:text-[#a9aaa1] max-w-2xl leading-relaxed">
+        <p className="text-xs md:text-sm text-[var(--ink-secondary)] max-w-2xl leading-relaxed">
           Mantenha suas informações civis e fiscais atualizadas para emissão correta de Nota Fiscal de Serviços Eletrônica (NFS-e) e transações de planos pagos.
         </p>
       </div>
 
       {/* Aviso de Segurança e Privacidade */}
-      <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 text-xs text-slate-600 dark:text-[#a9aaa1] flex items-start gap-3">
-        <Lock size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] flex items-start gap-3">
+        <Lock size={18} className="text-[var(--marker-green)] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="font-semibold text-slate-800 dark:text-zinc-200">
+          <p className="font-semibold text-[var(--ink-primary)]">
             Armazenamento Seguro e Criptografado
           </p>
           <p>
             Seus dados fiscais são protegidos por Row Level Security (RLS) no Supabase e utilizados estritamente para o cumprimento de obrigações tributárias e emissão de notas fiscais, conforme estabelecido na nossa{" "}
-            <Link href="/privacidade" className="text-blue-600 dark:text-amber-500 underline font-semibold">
+            <Link href="/privacidade" className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] underline font-semibold">
               Política de Privacidade
             </Link>.
           </p>
@@ -271,14 +271,14 @@ export default function FaturamentoPage() {
 
       {/* Feedback de Sucesso e Erro */}
       {erro && (
-        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+        <div className="p-3.5 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] text-xs flex items-center gap-2">
           <AlertCircle size={16} className="shrink-0" />
           <span>{erro}</span>
         </div>
       )}
 
       {sucesso && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+        <div className="p-3.5 rounded-xl bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] text-xs flex items-center gap-2">
           <CheckCircle2 size={16} className="shrink-0" />
           <span>Dados fiscais e de faturamento salvos com sucesso!</span>
         </div>
@@ -287,10 +287,10 @@ export default function FaturamentoPage() {
       {/* Formulário de Faturamento */}
       <form onSubmit={handleSalvar} className="space-y-6">
         {/* BLOCO 1: IDENTIFICAÇÃO CIVIL E FISCAL */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-sm space-y-5">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <FileText size={16} className="text-blue-500 dark:text-amber-500" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#f5f0df]">
+        <div className="lemmas-surface-card p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-sm space-y-5">
+          <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-subtle)]">
+            <FileText size={16} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--ink-primary)] font-serif-math">
               Identificação Civil e Fiscal
             </h2>
           </div>
@@ -298,15 +298,15 @@ export default function FaturamentoPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Campo CPF */}
             <div className="space-y-1.5">
-              <label htmlFor="cpf" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center justify-between">
+              <label htmlFor="cpf" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center justify-between">
                 <span>CPF *</span>
                 {cpfValido === true && (
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
+                  <span className="text-[10px] text-[var(--marker-green)] font-semibold flex items-center gap-0.5">
                     <CheckCircle2 size={11} /> Válido
                   </span>
                 )}
                 {cpfValido === false && (
-                  <span className="text-[10px] text-rose-500 font-semibold flex items-center gap-0.5">
+                  <span className="text-[10px] text-[var(--marker-red)] font-semibold flex items-center gap-0.5">
                     <AlertCircle size={11} /> Inválido
                   </span>
                 )}
@@ -318,24 +318,24 @@ export default function FaturamentoPage() {
                 onChange={handleCpfChange}
                 placeholder="000.000.000-00"
                 maxLength={14}
-                className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 ${
+                className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] font-mono focus:outline-none focus:ring-1 ${
                   cpfValido === true
-                    ? "border-emerald-500/60 focus:ring-emerald-500"
+                    ? "border-[var(--marker-green)] focus:ring-[var(--marker-green)]"
                     : cpfValido === false
-                    ? "border-rose-500/60 focus:ring-rose-500"
-                    : "border-slate-200 dark:border-zinc-800 focus:ring-blue-500 dark:focus:ring-amber-500"
+                    ? "border-[var(--marker-red)] focus:ring-[var(--marker-red)]"
+                    : "border-[var(--border-default)] focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 }`}
                 required
               />
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[10px] text-[var(--ink-muted)] block">
                 Validação de dígitos verificadores (módulo 11)
               </span>
             </div>
 
             {/* Campo Telefone / WhatsApp */}
             <div className="space-y-1.5">
-              <label htmlFor="tel" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                <Phone size={13} className="text-blue-500 dark:text-amber-500" /> Telefone / WhatsApp *
+              <label htmlFor="tel" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                <Phone size={13} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Telefone / WhatsApp *
               </label>
               <input
                 type="text"
@@ -344,18 +344,18 @@ export default function FaturamentoPage() {
                 onChange={handleTelefoneChange}
                 placeholder="(00) 00000-0000"
                 maxLength={15}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] font-mono focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[10px] text-[var(--ink-muted)] block">
                 Para confirmação e avisos do plano
               </span>
             </div>
 
             {/* Campo Data de Nascimento */}
             <div className="space-y-1.5">
-              <label htmlFor="nasc" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                <Calendar size={13} className="text-blue-500 dark:text-amber-500" /> Data de Nascimento *
+              <label htmlFor="nasc" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                <Calendar size={13} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Data de Nascimento *
               </label>
               <input
                 type="text"
@@ -364,10 +364,10 @@ export default function FaturamentoPage() {
                 onChange={handleNascimentoChange}
                 placeholder="DD/MM/AAAA"
                 maxLength={10}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] font-mono focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[10px] text-[var(--ink-muted)] block">
                 Validação de maioridade civil
               </span>
             </div>
@@ -375,12 +375,12 @@ export default function FaturamentoPage() {
 
           {/* Opt-in Notificações */}
           <div className="pt-2">
-            <label className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-[#a9aaa1] cursor-pointer">
+            <label className="flex items-center gap-2.5 text-xs text-[var(--ink-secondary)] cursor-pointer">
               <input
                 type="checkbox"
                 checked={optInNotificacoes}
                 onChange={(e) => setOptInNotificacoes(e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 dark:text-amber-500 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="rounded border-[var(--border-default)] accent-[var(--marker-blue)] dark:accent-[var(--marker-amber)]"
               />
               <span>
                 Aceito receber comunicações acadêmicas e operacionais da plataforma LEMMAS via WhatsApp/SMS.
@@ -390,10 +390,10 @@ export default function FaturamentoPage() {
         </div>
 
         {/* BLOCO 2: ENDEREÇO E LOGRADOURO */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#141222] border border-slate-200/90 dark:border-amber-500/20 shadow-sm space-y-5">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <MapPin size={16} className="text-blue-500 dark:text-amber-500" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#f5f0df]">
+        <div className="lemmas-surface-card p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-sm space-y-5">
+          <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-subtle)]">
+            <MapPin size={16} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--ink-primary)] font-serif-math">
               Endereço de Cobrança (NFS-e)
             </h2>
           </div>
@@ -401,10 +401,10 @@ export default function FaturamentoPage() {
           {/* Linha do CEP */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div className="space-y-1.5">
-              <label htmlFor="cep" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center justify-between">
+              <label htmlFor="cep" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center justify-between">
                 <span>CEP *</span>
                 {buscandoCep && (
-                  <span className="text-[10px] text-blue-600 dark:text-amber-500 flex items-center gap-1 font-mono">
+                  <span className="text-[10px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center gap-1 font-mono">
                     <Loader2 size={11} className="animate-spin" /> Consultando ViaCEP...
                   </span>
                 )}
@@ -417,20 +417,20 @@ export default function FaturamentoPage() {
                   onChange={handleCepChange}
                   placeholder="00000-000"
                   maxLength={9}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] font-mono focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                   required
                 />
-                <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none" />
               </div>
               {cepMensagem && (
-                <span className="text-[10px] text-blue-600 dark:text-[#d9b452] font-semibold block">
+                <span className="text-[10px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold block">
                   {cepMensagem}
                 </span>
               )}
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label htmlFor="logradouro" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="logradouro" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Logradouro (Rua, Avenida, Estrada) *
               </label>
               <input
@@ -439,7 +439,7 @@ export default function FaturamentoPage() {
                 value={logradouro}
                 onChange={(e) => setLogradouro(e.target.value)}
                 placeholder="Ex: Av. Rio Branco"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
             </div>
@@ -448,7 +448,7 @@ export default function FaturamentoPage() {
           {/* Número, Complemento e Bairro */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="numero" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="numero" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Número * (comporta S/N)
               </label>
               <input
@@ -457,13 +457,13 @@ export default function FaturamentoPage() {
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
                 placeholder="Ex: 123 ou S/N"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="complemento" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="complemento" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Complemento (Opcional)
               </label>
               <input
@@ -472,12 +472,12 @@ export default function FaturamentoPage() {
                 value={complemento}
                 onChange={(e) => setComplemento(e.target.value)}
                 placeholder="Ex: Apto 402, Bloco B"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="bairro" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="bairro" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Bairro *
               </label>
               <input
@@ -486,7 +486,7 @@ export default function FaturamentoPage() {
                 value={bairro}
                 onChange={(e) => setBairro(e.target.value)}
                 placeholder="Ex: Centro"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
             </div>
@@ -495,7 +495,7 @@ export default function FaturamentoPage() {
           {/* Cidade e Estado (UF) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5 md:col-span-2">
-              <label htmlFor="cidade" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="cidade" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Cidade *
               </label>
               <input
@@ -504,20 +504,20 @@ export default function FaturamentoPage() {
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
                 placeholder="Ex: Niterói"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="uf" className="text-xs font-bold text-slate-700 dark:text-[#d9b452]">
+              <label htmlFor="uf" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Estado (UF) *
               </label>
               <select
                 id="uf"
                 value={estadoUf}
                 onChange={(e) => setEstadoUf(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                 required
               >
                 {ESTADOS_BRASIL.map((est) => (
@@ -534,7 +534,7 @@ export default function FaturamentoPage() {
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link
             href="/perfil"
-            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-secondary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors"
           >
             Cancelar
           </Link>
@@ -542,7 +542,7 @@ export default function FaturamentoPage() {
           <button
             type="submit"
             disabled={salvando}
-            className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer"
+            className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-colors cursor-pointer"
           >
             {salvando ? (
               <>

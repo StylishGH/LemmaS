@@ -33,7 +33,8 @@ import {
   Clock,
   ArrowRight,
   Filter,
-  CheckCheck
+  CheckCheck,
+  Lightbulb
 } from "lucide-react";
 import CommunityAliasField from "@/components/community/CommunityAliasField";
 import { useUserProfile, getInitials, inferirMotivacoes } from "@/lib/use-user";
@@ -404,11 +405,11 @@ export default function PerfilPage() {
 
   if (loading) {
     return (
-      <div className="max-w-xl mx-auto py-24 text-center space-y-4 animate-pulse text-slate-800 dark:text-[#f5f0df]">
-        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 flex items-center justify-center mx-auto shadow-sm">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-[#d9b452]" />
+      <div className="max-w-xl mx-auto py-24 text-center space-y-4 animate-pulse text-[var(--ink-primary)]">
+        <div className="w-14 h-14 rounded-2xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] flex items-center justify-center mx-auto shadow-sm">
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
         </div>
-        <p className="text-xs text-slate-500 dark:text-zinc-400 font-sans">
+        <p className="text-xs text-[var(--ink-secondary)] font-sans">
           Sincronizando perfil e preferências pedagógicas com a nuvem...
         </p>
       </div>
@@ -417,15 +418,15 @@ export default function PerfilPage() {
 
   if (profile.isGuest) {
     return (
-      <div className="max-w-xl mx-auto py-12 px-4 animate-fadeIn text-center space-y-6 text-slate-800 dark:text-[#f5f0df]">
-        <div className="w-16 h-16 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+      <div className="max-w-xl mx-auto py-12 px-4 animate-fadeIn text-center space-y-6 text-[var(--ink-primary)]">
+        <div className="w-16 h-16 rounded-2xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] flex items-center justify-center mx-auto shadow-sm">
           <User className="w-8 h-8" />
         </div>
         <div className="space-y-3">
           <h1 className="font-serif-math text-3xl font-bold tracking-tight">
             Perfil de Estudante
           </h1>
-          <p className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-sans max-w-md mx-auto">
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed font-sans max-w-md mx-auto">
             Você não está conectado a nenhuma conta. Para personalizar seus objetivos pedagógicos, calibrar o tutor MathAI e sincronizar sua rotina na nuvem, entre na sua conta ou cadastre-se gratuitamente.
           </p>
         </div>
@@ -438,7 +439,7 @@ export default function PerfilPage() {
           </Link>
           <Link
             href="/login"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-blue-500/40 hover:bg-blue-500/10 text-slate-800 dark:border-amber-500/40 dark:hover:bg-amber-500/10 dark:text-[#f5f0df] font-semibold text-xs flex items-center justify-center gap-2 transition"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-[var(--border-default)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
           >
             <LogIn className="w-4 h-4" />
             <span>Já tenho conta (Entrar)</span>
@@ -449,16 +450,16 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+    <div className="space-y-8 max-w-5xl mx-auto py-2 animate-fadeIn text-[var(--ink-primary)]">
       {/* 1. HEADER DO PERFIL ESTILO EDITORIAL LEMMAS */}
-      <div className="relative rounded-3xl overflow-hidden border border-[var(--border-board)] bg-white dark:bg-[#161a1e] p-6 md:p-8 shadow-sm">
+      <div className="lemmas-surface-card relative rounded-3xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 md:p-8 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             {/* AVATAR COM FOTO E BOTÃO DE CÂMERA */}
             <div className="relative group shrink-0">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 p-0.5 shadow-md overflow-hidden relative cursor-pointer group-hover:scale-[1.02] transition-transform"
+                className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] p-0.5 shadow-sm overflow-hidden relative cursor-pointer group-hover:scale-[1.02] transition-transform"
                 title="Clique para alterar sua foto de perfil"
               >
                 {currentFoto && !imgError ? (
@@ -469,17 +470,17 @@ export default function PerfilPage() {
                     className="w-full h-full rounded-[14px] object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-[14px] bg-[#0e0d16] flex items-center justify-center text-blue-500 dark:text-[#d9b452] font-black text-2xl tracking-wider font-serif-math">
+                  <div className="w-full h-full rounded-[14px] bg-[var(--bg-board)] flex items-center justify-center text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-black text-2xl tracking-wider font-serif-math">
                     {userInitials}
                   </div>
                 )}
                 {salvandoFoto && (
                   <div className="absolute inset-0 bg-black/60 rounded-[14px] flex items-center justify-center z-20">
-                    <Loader2 className="w-6 h-6 text-blue-400 dark:text-amber-400 animate-spin" />
+                    <Loader2 className="w-6 h-6 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] animate-spin" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold gap-1 rounded-[14px]">
-                  <Camera className="w-4 h-4 text-blue-300 dark:text-amber-400" />
+                  <Camera className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                   <span>Trocar</span>
                 </div>
               </div>
@@ -488,7 +489,7 @@ export default function PerfilPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={salvandoFoto}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-500 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 flex items-center justify-center shadow-lg border-2 border-white dark:border-[#141222] transition-transform hover:scale-110 cursor-pointer z-10"
+                className="lemmas-gold-cta absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center shadow-sm border-2 border-[var(--bg-card)] transition-transform hover:scale-110 cursor-pointer z-10"
                 title="Alterar foto de perfil"
                 aria-label="Alterar foto de perfil"
               >
@@ -505,27 +506,27 @@ export default function PerfilPage() {
             </div>
 
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-slate-900 dark:text-[#f5f0df] tracking-tight">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-serif-math text-2xl md:text-3xl font-semibold text-[var(--ink-primary)] tracking-tight">
                   {nome || "Estudante Convidado"}
                 </h1>
                 {profile.emailVerificado ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] text-[11px] font-bold">
                     <ShieldCheck className="w-3.5 h-3.5" /> E-mail Verificado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-[#d9b452] text-[11px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] text-[11px] font-bold">
                     <AlertTriangle className="w-3.5 h-3.5" /> E-mail Não Verificado
                   </span>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-slate-600 dark:text-zinc-400 font-medium">
+              <p className="text-xs md:text-sm text-[var(--ink-secondary)] font-medium">
                 {escolaridade || "Ensino Superior"} • {faculdade || "Universidade"}
               </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-[var(--ink-muted)]">
                 <span>{email || "Sem e-mail cadastrado"}</span>
                 <span>•</span>
-                <span className="font-mono text-blue-600 dark:text-[#d9b452] font-semibold">
+                <span className="font-mono tabular-nums text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold">
                   ID #{profile.id || "LEMMAS-STUDENT"}
                 </span>
                 <span>•</span>
@@ -533,7 +534,7 @@ export default function PerfilPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={salvandoFoto}
-                  className="inline-flex items-center gap-1 font-semibold text-blue-600 dark:text-[#d9b452] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline cursor-pointer"
                 >
                   <Camera className="w-3 h-3" />
                   <span>{currentFoto ? "Alterar foto" : "Adicionar foto"}</span>
@@ -545,7 +546,7 @@ export default function PerfilPage() {
                       type="button"
                       onClick={handleRemoverFoto}
                       disabled={salvandoFoto}
-                      className="inline-flex items-center gap-1 font-semibold text-rose-500 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 font-semibold text-[var(--marker-red)] hover:underline cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
                       <span>Remover foto</span>
@@ -553,7 +554,7 @@ export default function PerfilPage() {
                   </>
                 )}
                 {fotoFeedback && (
-                  <span className="text-emerald-500 font-bold ml-1 animate-fadeIn">
+                  <span className="text-[var(--marker-green)] font-bold ml-1 animate-fadeIn">
                     ✓ {fotoFeedback}
                   </span>
                 )}
@@ -563,12 +564,12 @@ export default function PerfilPage() {
 
           {/* CHIPS RÁPIDOS DE STATUS */}
           <div className="flex sm:flex-col gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-xs font-bold text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452]">
-              <Flame className="w-4 h-4 fill-blue-600 text-blue-600 dark:fill-amber-500 dark:text-amber-500" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs font-bold text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)]">
+              <Flame className="w-4 h-4 fill-current" />
               <span>{profile.streakDias} {profile.streakDias === 1 ? "dia consecutivo" : "dias consecutivos"}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-700 dark:bg-[#1b172e] dark:border-amber-500/20 dark:text-[#dedbd0]">
-              <Target className="w-4 h-4 text-blue-600 dark:text-amber-500" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-bold text-[var(--ink-secondary)]">
+              <Target className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
               <span>Foco: {profile.focoConcurso || "Matemática Geral"}</span>
             </div>
           </div>
@@ -579,14 +580,14 @@ export default function PerfilPage() {
       <AdminAnalyticsShortcut />
 
       {/* 2. NAVEGAÇÃO POR ABAS */}
-      <div className="flex border-b border-slate-200 dark:border-amber-500/20 gap-2 overflow-x-auto">
+      <div className="flex border-b border-[var(--border-subtle)] gap-2 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab("concursos")}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
+          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-colors relative flex items-center gap-2 shrink-0 ${
             activeTab === "concursos"
-              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
+              ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border-b-2 border-[var(--marker-blue)] dark:border-[var(--marker-amber)] font-bold"
+              : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
           }`}
         >
           <Target className="w-4 h-4" />
@@ -596,10 +597,10 @@ export default function PerfilPage() {
         <button
           type="button"
           onClick={() => setActiveTab("academico")}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
+          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-colors relative flex items-center gap-2 shrink-0 ${
             activeTab === "academico"
-              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
+              ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border-b-2 border-[var(--marker-blue)] dark:border-[var(--marker-amber)] font-bold"
+              : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
           }`}
         >
           <GraduationCap className="w-4 h-4" />
@@ -609,10 +610,10 @@ export default function PerfilPage() {
         <button
           type="button"
           onClick={() => setActiveTab("engine")}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 shrink-0 ${
+          className={`pb-3 px-4 text-xs md:text-sm font-semibold transition-colors relative flex items-center gap-2 shrink-0 ${
             activeTab === "engine"
-              ? "text-blue-600 dark:text-[#d9b452] border-b-2 border-blue-600 dark:border-[#d9b452] font-bold"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df]"
+              ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border-b-2 border-[var(--marker-blue)] dark:border-[var(--marker-amber)] font-bold"
+              : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
           }`}
         >
           <Cpu className="w-4 h-4" />
@@ -621,9 +622,9 @@ export default function PerfilPage() {
 
         <Link
           href="/perfil/faturamento"
-          className="pb-3 px-4 text-xs md:text-sm font-semibold transition-all relative flex items-center gap-2 text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-[#d9b452] ml-auto sm:ml-0 shrink-0"
+          className="pb-3 px-4 text-xs md:text-sm font-semibold transition-colors relative flex items-center gap-2 text-[var(--ink-secondary)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] ml-auto sm:ml-0 shrink-0"
         >
-          <CreditCard className="w-4 h-4 text-blue-600 dark:text-amber-500" />
+          <CreditCard className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
           <span>Dados Fiscais & Faturamento</span>
         </Link>
       </div>
@@ -631,31 +632,31 @@ export default function PerfilPage() {
       {/* 3. CONTEÚDO PRINCIPAL: 5 ETAPAS PROGRESSIVAS */}
       <form onSubmit={handleSalvar} className="space-y-6">
         {activeTab === "concursos" && (
-          <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-10 shadow-sm">
+          <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 md:p-8 space-y-10 shadow-sm">
             
             <div className="space-y-1">
-              <h2 className="font-serif-math text-2xl font-semibold text-slate-900 dark:text-[#f5f0df]">
+              <h2 className="font-serif-math text-2xl font-semibold text-[var(--ink-primary)]">
                 Personalização Pedagógica do Estudante
               </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Configure sua jornada em 5 etapas pedagógicas estruturadas: objetivos, modo do tutor, trilha recomendada com justificativas, catálogo avançado e rotina de estudos.
               </p>
             </div>
 
             {/* ETAPA 1: OBJETIVOS (PRINCIPAL EXCLUSIVO + SECUNDÁRIOS OPCIONAIS) */}
             <div className="space-y-5 pt-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-zinc-800 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
                 <div className="space-y-0.5">
-                  <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">1</span>
+                  <label className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center text-[11px] font-mono tabular-nums font-bold">1</span>
                     <span>Seus Objetivos de Estudo</span>
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  <p className="text-[11px] text-[var(--ink-secondary)]">
                     Defina <strong>1 Objetivo Principal</strong> prioritário e, se desejar, adicione interesses secundários complementares.
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:bg-amber-500/15 dark:text-[#d9b452] text-xs font-bold">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] text-xs font-bold">
                     <Crown className="w-3.5 h-3.5" />
                     <span>Principal: {objetivoPrincipal ? getObjectiveLabel(objetivoPrincipal) : "Nenhum selecionado"}</span>
                   </span>
@@ -667,49 +668,63 @@ export default function PerfilPage() {
                 {TRILHAS_MOTIVACOES.map((trilha) => {
                   const isPrincipal = objetivoPrincipal === trilha.id;
                   const isSecundario = objetivosSecundarios.includes(trilha.id);
+                  const TrilhaIcon =
+                    trilha.id === "enem_vestibulares"
+                      ? GraduationCap
+                      : trilha.id === "concursos_publicos"
+                      ? ShieldCheck
+                      : trilha.id === "concursos_militares"
+                      ? Target
+                      : trilha.id === "superior_docencia"
+                      ? BookOpen
+                      : trilha.id === "data_science_ml"
+                      ? Binary
+                      : trilha.id === "olimpiadas_mat"
+                      ? Award
+                      : Compass;
                   
                   return (
                     <div
                       key={trilha.id}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 text-xs select-none ${
+                      className={`p-4 rounded-2xl border transition-colors flex flex-col justify-between gap-3 text-xs select-none ${
                         isPrincipal
-                          ? "bg-blue-500/10 dark:bg-amber-500/15 border-blue-500 dark:border-[#d9b452] shadow-sm ring-1 ring-blue-500/30 dark:ring-amber-500/30"
+                          ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] shadow-sm ring-1 ring-[var(--marker-blue)]/30 dark:ring-[var(--marker-amber)]/30"
                           : isSecundario
-                          ? "bg-slate-50 dark:bg-[#1a2028] border-blue-400/50 dark:border-amber-500/35"
-                          : "bg-slate-50/70 dark:bg-[#1e2329]/70 border-slate-200 dark:border-amber-500/15 hover:border-blue-400/40 dark:hover:border-amber-500/35"
+                          ? "bg-[var(--bg-elevated)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]"
+                          : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-[#f5f0df]">
-                          <span className="text-xl">{trilha.icone}</span>
+                        <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
+                          <TrilhaIcon className="w-4 h-4 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                           <span className="text-xs font-bold">{trilha.titulo}</span>
                         </div>
                         {isPrincipal && (
-                          <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white dark:bg-amber-500 dark:text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
+                          <span className="lemmas-gold-cta px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
                             <Crown className="w-3 h-3" />
                             <span>Principal</span>
                           </span>
                         )}
                         {isSecundario && (
-                          <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider shrink-0">
+                          <span className="px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] text-[10px] font-bold uppercase tracking-wider shrink-0">
                             Secundário
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+                      <p className="text-[11px] text-[var(--ink-secondary)] leading-relaxed font-sans">
                         {trilha.subtitulo}
                       </p>
 
                       {/* BOTÕES DE DEFINIÇÃO EXPLÍCITA */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-200/50 dark:border-zinc-800">
+                      <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
                         <button
                           type="button"
                           onClick={() => handleDefinirObjetivoPrincipal(trilha.id)}
-                          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer ${
                             isPrincipal
-                              ? "bg-blue-600 text-white dark:bg-amber-500 dark:text-slate-950"
-                              : "bg-slate-200/70 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200"
+                              ? "lemmas-gold-cta"
+                              : "bg-[var(--bg-subtle)] hover:bg-[var(--bg-card)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-subtle)]"
                           }`}
                         >
                           <Crown className="w-3 h-3" />
@@ -720,10 +735,10 @@ export default function PerfilPage() {
                           type="button"
                           onClick={() => handleToggleObjetivoSecundario(trilha.id)}
                           disabled={isPrincipal}
-                          className={`py-1.5 px-2.5 rounded-lg text-[11px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                          className={`py-1.5 px-2.5 rounded-lg text-[11px] font-semibold transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                             isSecundario
-                              ? "bg-blue-100 text-blue-800 dark:bg-amber-500/20 dark:text-amber-300 border border-blue-300 dark:border-amber-500/30"
-                              : "hover:bg-slate-200/60 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400"
+                              ? "bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]"
+                              : "hover:bg-[var(--bg-subtle)] text-[var(--ink-secondary)]"
                           }`}
                           title={isPrincipal ? "O objetivo principal já inclui priorização máxima" : "Adicionar como interesse secundário"}
                         >
@@ -738,18 +753,18 @@ export default function PerfilPage() {
             </div>
 
             {/* ETAPA 2: COMO DESEJA APRENDER (PREFERÊNCIA PEDAGÓGICA SOBERANA DO TUTOR MATHAI) */}
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <div className="space-y-4 pt-4 border-t border-[var(--border-subtle)]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
-                  <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">2</span>
+                  <label className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center text-[11px] font-mono tabular-nums font-bold">2</span>
                     <span>Como Deseja Aprender (Tutor Socrático MathAI)</span>
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  <p className="text-[11px] text-[var(--ink-secondary)]">
                     Defina a abordagem didática das dicas socráticas. Sua escolha é <strong>soberana</strong> e nunca será substituída automaticamente.
                   </p>
                 </div>
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 self-start sm:self-auto">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] font-bold flex items-center gap-1 self-start sm:self-auto">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Escolha Manual Soberana</span>
                 </span>
@@ -760,60 +775,61 @@ export default function PerfilPage() {
                   {
                     id: "conceitual" as const,
                     titulo: "Conceitual & Intuitivo",
-                    icone: "💡",
+                    Icon: Lightbulb,
                     badge: "Padrão Pedagógico",
                     descricao: "Começa pela intuição geométrica e numérica, exemplos pertinentes e explicação do porquê antes da formalização abstrata.",
                   },
                   {
                     id: "rigor_formal" as const,
                     titulo: "Rigor Formal & Axiomas",
-                    icone: "📐",
+                    Icon: BookOpen,
                     badge: "Ensino Superior / Licenciatura",
                     descricao: "Identifica definições axiomáticas com precisão, hipóteses formais, teoremas e lemas estruturais passo a passo.",
                   },
                   {
                     id: "aplicado_ml" as const,
                     titulo: "Aplicado a Dados & ML",
-                    icone: "📊",
+                    Icon: Binary,
                     badge: "Data Science & IA",
                     descricao: "Conecta conceitos matemáticos a matrizes, espaços vetoriais, otimização convexa, gradientes e modelos de Machine Learning.",
                   },
                   {
                     id: "competitivo" as const,
                     titulo: "Competitivo & Eficiente",
-                    icone: "⚡",
+                    Icon: Flame,
                     badge: "Bancas Militares & Concursos",
                     descricao: "Destaca o 'pulo do gato', atalhos algébricos, padrões de bancas de alta pressão e técnicas de eliminação ágil.",
                   },
                 ].map((modo) => {
                   const isSelected = pedagogicalPreference === modo.id;
+                  const ModoIcon = modo.Icon;
                   return (
                     <div
                       key={modo.id}
                       onClick={() => setPedagogicalPreference(modo.id)}
-                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2.5 text-xs select-none ${
+                      className={`p-4 rounded-2xl border cursor-pointer transition-colors flex flex-col justify-between gap-2.5 text-xs select-none ${
                         isSelected
-                          ? "bg-blue-500/10 dark:bg-amber-500/15 border-blue-500 dark:border-[#d9b452] shadow-sm ring-1 ring-blue-500/20 dark:ring-amber-500/20"
-                          : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
+                          ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] shadow-sm ring-1 ring-[var(--marker-blue)]/20 dark:ring-[var(--marker-amber)]/20"
+                          : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                       }`}
                     >
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-[#f5f0df]">
-                            <span className="text-lg">{modo.icone}</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 font-bold text-[var(--ink-primary)]">
+                            <ModoIcon className="w-4 h-4 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                             <span className="text-xs font-bold">{modo.titulo}</span>
                           </div>
                           <div className={`w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-colors ${
-                            isSelected ? "bg-blue-600 border-blue-600 text-white dark:bg-amber-500 dark:border-amber-500 dark:text-slate-950 font-bold" : "border-slate-300 dark:border-zinc-700"
+                            isSelected ? "lemmas-gold-cta border-transparent font-bold" : "border-[var(--border-default)]"
                           }`}>
                             {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
                         </div>
-                        <span className="inline-block text-[10px] font-semibold text-blue-600 dark:text-[#d9b452]">
+                        <span className="inline-block text-[10px] font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
                           {modo.badge}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
+                      <p className="text-[11px] text-[var(--ink-secondary)] leading-relaxed font-sans">
                         {modo.descricao}
                       </p>
                     </div>
@@ -823,27 +839,27 @@ export default function PerfilPage() {
             </div>
 
             {/* ETAPA 3: SUA TRILHA SUGERIDA (MOTOR DETERMINÍSTICO E EXPLICÁVEL V1) */}
-            <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <div className="space-y-5 pt-4 border-t border-[var(--border-subtle)]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
-                  <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">3</span>
+                  <label className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center text-[11px] font-mono tabular-nums font-bold">3</span>
                     <span>Sua Trilha Sugerida (Motor Pedagógico Explicável)</span>
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  <p className="text-[11px] text-[var(--ink-secondary)]">
                     Sugestões calculadas por relevância, pré-requisitos e acervo real. As matérias <strong>não são selecionadas automaticamente</strong>: você decide o que adicionar.
                   </p>
                 </div>
 
                 {/* FILTROS POR GRAU DE PRIORIDADE */}
-                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1a2028] p-1 rounded-xl text-[11px] font-semibold">
+                <div className="flex items-center gap-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] p-1 rounded-xl text-[11px] font-semibold">
                   <button
                     type="button"
                     onClick={() => setFiltroGrauRecomendacao("todas")}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-2.5 py-1 rounded-lg transition-colors ${
                       filtroGrauRecomendacao === "todas"
-                        ? "bg-white dark:bg-[#252b33] shadow-xs text-blue-600 dark:text-[#d9b452] font-bold"
-                        : "text-slate-600 dark:text-zinc-400"
+                        ? "bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold"
+                        : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                     }`}
                   >
                     Todas ({contagensCategorias.total})
@@ -851,10 +867,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setFiltroGrauRecomendacao("prioritarias")}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-2.5 py-1 rounded-lg transition-colors ${
                       filtroGrauRecomendacao === "prioritarias"
-                        ? "bg-white dark:bg-[#252b33] shadow-xs text-emerald-600 dark:text-emerald-400 font-bold"
-                        : "text-slate-600 dark:text-zinc-400"
+                        ? "bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs text-[var(--marker-green)] font-bold"
+                        : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                     }`}
                   >
                     Prioritárias ({contagensCategorias.prioritarias})
@@ -862,10 +878,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setFiltroGrauRecomendacao("complementares")}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-2.5 py-1 rounded-lg transition-colors ${
                       filtroGrauRecomendacao === "complementares"
-                        ? "bg-white dark:bg-[#252b33] shadow-xs text-blue-600 dark:text-blue-400 font-bold"
-                        : "text-slate-600 dark:text-zinc-400"
+                        ? "bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs text-[var(--marker-blue)] font-bold"
+                        : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                     }`}
                   >
                     Complementares ({contagensCategorias.complementares})
@@ -873,10 +889,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setFiltroGrauRecomendacao("futuras")}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-2.5 py-1 rounded-lg transition-colors ${
                       filtroGrauRecomendacao === "futuras"
-                        ? "bg-white dark:bg-[#252b33] shadow-xs text-amber-600 dark:text-amber-400 font-bold"
-                        : "text-slate-600 dark:text-zinc-400"
+                        ? "bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xs text-[var(--marker-amber)] font-bold"
+                        : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                     }`}
                   >
                     Futuras ({contagensCategorias.futuras})
@@ -894,41 +910,41 @@ export default function PerfilPage() {
                   return (
                     <div
                       key={rec.topicId}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 text-xs ${
+                      className={`p-4 rounded-2xl border transition-colors flex flex-col justify-between gap-3 text-xs ${
                         jaSelecionado
-                          ? "bg-blue-500/10 dark:bg-amber-500/10 border-blue-500/50 dark:border-amber-500/40"
-                          : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15"
+                          ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]"
+                          : "bg-[var(--bg-elevated)] border-[var(--border-subtle)]"
                       }`}
                     >
                       <div className="space-y-2">
                         {/* HEADER DO CARD COM CATEGORIA E SCORE */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-serif-math font-bold text-sm text-slate-900 dark:text-[#f5f0df]">
+                            <span className="font-serif-math font-bold text-sm text-[var(--ink-primary)]">
                               {rec.titulo}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-zinc-400">
+                            <span className="text-[10px] text-[var(--ink-muted)]">
                               • {rec.categoriaOrigem}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isPrioritaria && (
-                              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-wider">
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--marker-green-dim)] text-[var(--marker-green)] font-bold text-[10px] uppercase tracking-wider">
                                 Prioritária
                               </span>
                             )}
                             {isComplementar && (
-                              <span className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold text-[10px] uppercase tracking-wider">
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] font-bold text-[10px] uppercase tracking-wider">
                                 Complementar
                               </span>
                             )}
                             {rec.categoria === "futura" && (
-                              <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] font-bold text-[10px] uppercase tracking-wider">
                                 Trilha Futura
                               </span>
                             )}
-                            <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--bg-subtle)] text-[var(--ink-secondary)] font-mono tabular-nums text-[10px] font-bold">
                               {rec.score} pts
                             </span>
                           </div>
@@ -936,21 +952,21 @@ export default function PerfilPage() {
 
                         {/* DESCRIÇÃO RÁPIDA */}
                         {rec.descricao && (
-                          <p className="text-[11px] text-slate-600 dark:text-zinc-400 font-sans leading-relaxed">
+                          <p className="text-[11px] text-[var(--ink-secondary)] font-sans leading-relaxed">
                             {rec.descricao}
                           </p>
                         )}
 
                         {/* MOTIVOS E JUSTIFICATIVAS PEDAGÓGICAS EXPLICÁVEIS */}
-                        <div className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#161a1e]/80 border border-slate-200/60 dark:border-zinc-800 space-y-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-blue-600 dark:text-[#d9b452]" />
+                        <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                             <span>Por que recomendamos:</span>
                           </span>
-                          <ul className="space-y-1 text-[11px] text-slate-700 dark:text-zinc-300 font-sans">
+                          <ul className="space-y-1 text-[11px] text-[var(--ink-secondary)] font-sans">
                             {rec.motivos.map((motivo, idx) => (
                               <li key={idx} className="flex items-start gap-1.5 leading-snug">
-                                <span className="text-blue-500 dark:text-amber-400 shrink-0 font-bold">›</span>
+                                <span className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 font-bold">›</span>
                                 <span>{motivo}</span>
                               </li>
                             ))}
@@ -959,7 +975,7 @@ export default function PerfilPage() {
 
                         {/* PRÉ-REQUISITOS PENDENTES (SE HOUVER) */}
                         {rec.preRequisitosPendentes.length > 0 && (
-                          <div className="flex items-center gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 font-medium">
+                          <div className="flex items-center gap-1.5 text-[10px] text-[var(--marker-amber)] font-medium">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                             <span>Pré-requisitos conceituais recomendados: {rec.preRequisitosPendentes.map(getTopicLabel).join(", ")}</span>
                           </div>
@@ -967,14 +983,14 @@ export default function PerfilPage() {
                       </div>
 
                       {/* RODAPÉ DO CARD COM STATUS DO ACERVO E BOTÃO DE ADICIONAR */}
-                      <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-200/50 dark:border-zinc-800">
+                      <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-[var(--border-subtle)]">
                         <div>
                           {rec.disponivel ? (
-                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
+                            <span className="text-[10px] text-[var(--marker-green)] font-bold font-mono tabular-nums">
                               ✓ {rec.quantidadeQuestoes} questões ativas
                             </span>
                           ) : (
-                            <span className="text-[10px] text-zinc-500 font-medium">
+                            <span className="text-[10px] text-[var(--ink-muted)] font-medium">
                               Trilha teórica planejada
                             </span>
                           )}
@@ -983,9 +999,9 @@ export default function PerfilPage() {
                         <button
                           type="button"
                           onClick={() => toggleConceitoSelecionado(rec.titulo)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ${
                             jaSelecionado
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:text-slate-950"
+                              ? "bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] hover:opacity-90"
                               : "lemmas-gold-cta"
                           }`}
                         >
@@ -1007,9 +1023,9 @@ export default function PerfilPage() {
               </div>
 
               {/* BANCAS RECOMENDADAS PELO MOTOR */}
-              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
-                  <Award className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+              <div className="space-y-3 pt-4 border-t border-[var(--border-subtle)]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-secondary)] flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                   <span>Bancas e Exames Recomendados para o seu Objetivo</span>
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -1018,36 +1034,36 @@ export default function PerfilPage() {
                     return (
                       <div
                         key={b.bancaId}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 ${
+                        className={`p-3 rounded-xl border text-left transition-colors flex flex-col justify-between gap-2 ${
                           isSelected
-                            ? "bg-blue-500/10 dark:bg-amber-500/15 border-blue-500 dark:border-[#d9b452] shadow-xs"
-                            : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15"
+                            ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] shadow-xs"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)]"
                         }`}
                       >
                         <div className="space-y-1">
                           <div className="flex items-center justify-between gap-1">
-                            <span className="font-semibold text-xs truncate text-slate-900 dark:text-[#f5f0df]">
+                            <span className="font-semibold text-xs truncate text-[var(--ink-primary)]">
                               {b.label}
                             </span>
-                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3] text-blue-600 dark:text-amber-400" />}
+                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />}
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-zinc-400 line-clamp-1">
+                          <p className="text-[10px] text-[var(--ink-muted)] line-clamp-1">
                             {b.motivos[0] || b.categoriaOrigem}
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/40 dark:border-zinc-800">
+                        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[var(--border-subtle)]">
                           {b.disponivel ? (
-                            <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                            <span className="text-[var(--marker-green)] font-bold font-mono tabular-nums">
                               ✓ {b.quantidadeQuestoes} q.
                             </span>
                           ) : (
-                            <span className="text-zinc-500">Planejada</span>
+                            <span className="text-[var(--ink-muted)]">Planejada</span>
                           )}
                           <button
                             type="button"
                             onClick={() => toggleBancaSelecionada(b.label)}
-                            className="text-[10px] font-bold text-blue-600 dark:text-[#d9b452] hover:underline cursor-pointer"
+                            className="text-[10px] font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline cursor-pointer"
                           >
                             {isSelected ? "Remover" : "+ Adicionar"}
                           </button>
@@ -1060,19 +1076,19 @@ export default function PerfilPage() {
             </div>
 
             {/* ETAPA 4: AJUSTES AVANÇADOS & CATÁLOGO COMPLETO */}
-            <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <div className="space-y-5 pt-4 border-t border-[var(--border-subtle)]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
-                  <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">4</span>
+                  <label className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center text-[11px] font-mono tabular-nums font-bold">4</span>
                     <span>Ajustes Avançados & Catálogo Amplo</span>
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  <p className="text-[11px] text-[var(--ink-secondary)]">
                     Explore o acervo completo, selecione bancas específicas ou defina um foco customizado para a barra superior.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
+                  <span className="text-[11px] text-[var(--ink-muted)] font-medium font-mono tabular-nums">
                     {selectedConceituais.length} disciplinas, {selectedBancas.length} bancas ativas
                   </span>
                   {(selectedConceituais.length > 0 || selectedBancas.length > 0) && (
@@ -1082,7 +1098,7 @@ export default function PerfilPage() {
                         setSelectedBancas([]);
                         setSelectedConceituais([]);
                       }}
-                      className="text-[10px] text-rose-500 hover:underline font-semibold"
+                      className="text-[10px] text-[var(--marker-red)] hover:underline font-semibold"
                     >
                       Limpar tudo
                     </button>
@@ -1091,9 +1107,9 @@ export default function PerfilPage() {
               </div>
 
               {/* FOCO PERSONALIZADO COM PREVIEW */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1a2028] border border-slate-200/80 dark:border-amber-500/15 space-y-3">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-600 dark:text-[#d9b452]" />
+              <div className="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-3">
+                <label className="text-xs font-bold text-[var(--ink-primary)] flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                   <span>Foco Customizado ou Concurso Específico (Opcional):</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
@@ -1102,15 +1118,15 @@ export default function PerfilPage() {
                     value={focoCustomizado}
                     onChange={(e) => setFocoCustomizado(e.target.value)}
                     placeholder="Ex: Concurso Professor SEEDUC, Perito PF, Mestrado PROFMAT..."
-                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#161a1e] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                   />
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-[#161a1e] border border-[var(--border-board)] flex items-center justify-between text-xs">
-                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
+                  <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-[var(--ink-muted)] font-medium">
                       Exibição na barra superior:
                     </span>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-800 dark:text-[#dedbd0] max-w-[220px] truncate">
-                      <Target className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400">Foco:</span>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--ink-primary)] max-w-[220px] truncate">
+                      <Target className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
+                      <span className="text-[10px] text-[var(--ink-muted)]">Foco:</span>
                       <span className="truncate">{focoFinal}</span>
                     </div>
                   </div>
@@ -1123,10 +1139,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setCatalogoVisualizacao("recomendadas")}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                       catalogoVisualizacao === "recomendadas"
                         ? "lemmas-gold-cta font-bold shadow-xs"
-                        : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                        : "bg-[var(--bg-elevated)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-subtle)]"
                     }`}
                   >
                     <Sparkles className="w-3.5 h-3.5" />
@@ -1136,10 +1152,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setCatalogoVisualizacao("conceituais")}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                       catalogoVisualizacao === "conceituais"
                         ? "lemmas-gold-cta font-bold shadow-xs"
-                        : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                        : "bg-[var(--bg-elevated)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-subtle)]"
                     }`}
                   >
                     <Compass className="w-3.5 h-3.5" />
@@ -1149,10 +1165,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setCatalogoVisualizacao("bancas")}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                       catalogoVisualizacao === "bancas"
                         ? "lemmas-gold-cta font-bold shadow-xs"
-                        : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                        : "bg-[var(--bg-elevated)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-subtle)]"
                     }`}
                   >
                     <Award className="w-3.5 h-3.5" />
@@ -1162,10 +1178,10 @@ export default function PerfilPage() {
                   <button
                     type="button"
                     onClick={() => setCatalogoVisualizacao("todas")}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                       catalogoVisualizacao === "todas"
                         ? "lemmas-gold-cta font-bold shadow-xs"
-                        : "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-amber-500/15"
+                        : "bg-[var(--bg-elevated)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-subtle)]"
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5" />
@@ -1175,19 +1191,19 @@ export default function PerfilPage() {
 
                 {/* BUSCA RÁPIDA NO CATÁLOGO */}
                 <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[var(--ink-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={buscaCatalogo}
                     onChange={(e) => setBuscaCatalogo(e.target.value)}
                     placeholder="Filtrar catálogo por disciplina, área ou banca..."
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-900 dark:text-[#f5f0df] outline-none focus:border-blue-500 dark:focus:border-amber-500"
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
                   />
                   {buscaCatalogo && (
                     <button
                       type="button"
                       onClick={() => setBuscaCatalogo("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] text-xs"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1198,8 +1214,8 @@ export default function PerfilPage() {
                 <div className="pt-2">
                   {(catalogoVisualizacao === "conceituais" || catalogoVisualizacao === "todas" || catalogoFiltradoBusca) && (
                     <div className="space-y-4">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
-                        <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-secondary)] flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                         <span>Disciplinas Conceituais ({catalogoFiltradoBusca ? catalogoFiltradoBusca.conceituais.length : TRILHAS_CONCEITUAIS_CATALOGO.length})</span>
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -1210,27 +1226,27 @@ export default function PerfilPage() {
                               type="button"
                               key={item.id}
                               onClick={() => toggleConceitoSelecionado(item.label)}
-                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 cursor-pointer ${
+                              className={`p-3 rounded-xl border text-left transition-colors flex flex-col justify-between gap-1.5 cursor-pointer ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
+                                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
                                 <span className="font-semibold text-xs truncate">{item.label}</span>
                                 {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-zinc-400 line-clamp-2">
+                              <p className={`text-[10px] line-clamp-2 ${isSelected ? "opacity-85" : "text-[var(--ink-secondary)]"}`}>
                                 {item.descricao}
                               </p>
-                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/40 dark:border-zinc-800">
+                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[var(--border-subtle)]">
                                 <span className="opacity-75">{item.categoriaOrigem}</span>
                                 {item.disponivel ? (
-                                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-[var(--marker-green-dim)] text-[var(--marker-green)] font-mono tabular-nums font-bold">
                                     ✓ {item.contagemQuestoes} q.
                                   </span>
                                 ) : (
-                                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] font-medium">
                                     Trilha Teórica
                                   </span>
                                 )}
@@ -1243,9 +1259,9 @@ export default function PerfilPage() {
                   )}
 
                   {(catalogoVisualizacao === "bancas" || catalogoVisualizacao === "todas" || catalogoFiltradoBusca) && (
-                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800 mt-4">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+                    <div className="space-y-4 pt-4 border-t border-[var(--border-subtle)] mt-4">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-secondary)] flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                         <span>Bancas e Exames ({catalogoFiltradoBusca ? catalogoFiltradoBusca.bancas.length : BANCAS_EXAMES_CATALOGO.length})</span>
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -1256,24 +1272,24 @@ export default function PerfilPage() {
                               type="button"
                               key={item.id}
                               onClick={() => toggleBancaSelecionada(item.label)}
-                              className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 cursor-pointer ${
+                              className={`p-3 rounded-xl border text-left transition-colors flex flex-col justify-between gap-1.5 cursor-pointer ${
                                 isSelected
                                   ? "lemmas-gold-cta font-bold shadow-xs scale-[1.01]"
-                                  : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/15 hover:border-blue-500/35 dark:hover:border-amber-500/35"
+                                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                               }`}
                             >
                               <div className="flex items-center justify-between gap-1">
                                 <span className="font-semibold text-xs truncate">{item.label}</span>
                                 {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
                               </div>
-                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/40 dark:border-zinc-800">
+                              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[var(--border-subtle)]">
                                 <span className="opacity-75">{item.categoriaOrigem}</span>
                                 {item.disponivel ? (
-                                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-[var(--marker-green-dim)] text-[var(--marker-green)] font-mono tabular-nums font-bold">
                                     ✓ {item.contagemQuestoes} q.
                                   </span>
                                 ) : (
-                                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] font-medium">
                                     Planejada
                                   </span>
                                 )}
@@ -1289,26 +1305,26 @@ export default function PerfilPage() {
             </div>
 
             {/* ETAPA 5: SUA ROTINA DE ESTUDOS & DISPONIBILIDADE REALISTA */}
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <div className="space-y-4 pt-4 border-t border-[var(--border-subtle)]">
               <div className="space-y-0.5">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-700 dark:bg-amber-500/20 dark:text-[#d9b452] flex items-center justify-center text-[11px] font-bold">5</span>
+                <label className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center text-[11px] font-mono tabular-nums font-bold">5</span>
                   <span>Sua Rotina de Estudos & Metas de Resolução</span>
                 </label>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                <p className="text-[11px] text-[var(--ink-secondary)]">
                   Calibre sua disponibilidade real de estudo diário e o ritmo de questões para calibrar suas revisões espaçadas.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 rounded-2xl bg-slate-50 dark:bg-[#1a2028] border border-slate-200/80 dark:border-amber-500/15">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
                 {/* 1. DISPONIBILIDADE DIÁRIA (MINUTOS) */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+                    <span className="text-xs font-semibold text-[var(--ink-primary)] flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                       <span>Tempo Disponível para Estudo:</span>
                     </span>
-                    <span className="font-serif-math text-xs font-bold text-blue-600 dark:text-[#d9b452]">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
                       {disponibilidadeMinutos} minutos/dia
                     </span>
                   </div>
@@ -1319,9 +1335,9 @@ export default function PerfilPage() {
                     step="15"
                     value={disponibilidadeMinutos}
                     onChange={(e) => setDisponibilidadeMinutos(Number(e.target.value))}
-                    className="w-full accent-blue-600 dark:accent-amber-500 cursor-pointer"
+                    className="w-full accent-[var(--marker-blue)] dark:accent-[var(--marker-amber)] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-400 dark:text-zinc-500">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-[var(--ink-muted)]">
                     <span>15 min</span>
                     <span>45 min</span>
                     <span>90 min</span>
@@ -1333,17 +1349,17 @@ export default function PerfilPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                      <span className="text-xs font-semibold text-[var(--ink-primary)]">
                         Meta Diária:
                       </span>
-                      <div className="flex items-center gap-1 bg-white dark:bg-[#161a1e] p-0.5 rounded-lg border border-slate-200 dark:border-zinc-800 text-[10px]">
+                      <div className="flex items-center gap-1 bg-[var(--bg-card)] p-0.5 rounded-lg border border-[var(--border-subtle)] text-[10px]">
                         <button
                           type="button"
                           onClick={() => setMetaTipo("questoes")}
-                          className={`px-2 py-0.5 rounded-md font-bold transition ${
+                          className={`px-2 py-0.5 rounded-md font-bold transition-colors ${
                             metaTipo === "questoes"
-                              ? "bg-blue-600 text-white dark:bg-amber-500 dark:text-slate-950"
-                              : "text-slate-500 dark:text-zinc-400"
+                              ? "lemmas-gold-cta"
+                              : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                           }`}
                         >
                           Questões
@@ -1351,17 +1367,17 @@ export default function PerfilPage() {
                         <button
                           type="button"
                           onClick={() => setMetaTipo("sessoes")}
-                          className={`px-2 py-0.5 rounded-md font-bold transition ${
+                          className={`px-2 py-0.5 rounded-md font-bold transition-colors ${
                             metaTipo === "sessoes"
-                              ? "bg-blue-600 text-white dark:bg-amber-500 dark:text-slate-950"
-                              : "text-slate-500 dark:text-zinc-400"
+                              ? "lemmas-gold-cta"
+                              : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                           }`}
                         >
                           Sessões
                         </button>
                       </div>
                     </div>
-                    <span className="font-serif-math text-xs font-bold text-blue-600 dark:text-[#d9b452]">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
                       {metaQuestoesDia} {metaTipo === "questoes" ? "questões/dia" : "sessões/dia"}
                     </span>
                   </div>
@@ -1372,9 +1388,9 @@ export default function PerfilPage() {
                     step="5"
                     value={metaQuestoesDia}
                     onChange={(e) => setMetaQuestoesDia(Number(e.target.value))}
-                    className="w-full accent-blue-600 dark:accent-amber-500 cursor-pointer"
+                    className="w-full accent-[var(--marker-blue)] dark:accent-[var(--marker-amber)] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-400 dark:text-zinc-500">
+                  <div className="flex justify-between text-[10px] font-mono tabular-nums text-[var(--ink-muted)]">
                     <span>5 / dia</span>
                     <span>15 / dia</span>
                     <span>30 / dia</span>
@@ -1384,8 +1400,8 @@ export default function PerfilPage() {
               </div>
 
               {/* ESTIMATIVA REALISTA DA ROTINA */}
-              <div className="p-3.5 rounded-xl bg-blue-500/5 dark:bg-amber-500/5 border border-blue-500/20 dark:border-amber-500/20 text-xs text-slate-700 dark:text-zinc-300 flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-blue-600 dark:text-amber-500 shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-xl bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs text-[var(--ink-primary)] flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 mt-0.5" />
                 <p className="leading-relaxed font-sans">
                   Com <strong>{disponibilidadeMinutos} minutos diários</strong> e meta de <strong>{metaQuestoesDia} {metaTipo === "questoes" ? "questões" : "sessões"}</strong>, você terá em média <strong>{tempoMedioEstimado} minutos</strong> por atividade. Esse ritmo é ideal para explorar o raciocínio socrático com o tutor MathAI sem sobrecarga cognitiva.
                 </p>
@@ -1396,17 +1412,17 @@ export default function PerfilPage() {
         )}
 
         {activeTab === "academico" && (
-          <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
-              <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">Perfil Acadêmico</h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <h2 className="font-serif-math text-lg font-semibold text-[var(--ink-primary)]">Perfil Acadêmico</h2>
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Informações para calibrar a didática e o nível de profundidade matemática sugerido pelo LEMMAS Core.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   Nome Completo
                 </label>
                 <input
@@ -1414,12 +1430,12 @@ export default function PerfilPage() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Seu nome"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-sm text-[var(--ink-primary)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   E-mail Institucional ou Pessoal
                 </label>
                 <input
@@ -1427,18 +1443,18 @@ export default function PerfilPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu.email@exemplo.com"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-sm text-[var(--ink-primary)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   Nível de Escolaridade
                 </label>
                 <select
                   value={escolaridade}
                   onChange={(e) => setEscolaridade(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-sm text-[var(--ink-primary)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                 >
                   {ESCOLARIDADE_OPCOES.map((opt) => (
                     <option key={opt} value={opt}>
@@ -1449,13 +1465,13 @@ export default function PerfilPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   Universidade / Instituição de Ensino
                 </label>
                 <select
                   value={faculdade}
                   onChange={(e) => setFaculdade(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-sm text-[var(--ink-primary)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                 >
                   {FACULDADES_BRASIL.map((f) => (
                     <option key={f} value={f}>
@@ -1466,7 +1482,7 @@ export default function PerfilPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   Semestre / Período
                 </label>
                 <input
@@ -1474,19 +1490,19 @@ export default function PerfilPage() {
                   value={semestre}
                   onChange={(e) => setSemestre(e.target.value)}
                   placeholder="Ex: 5º Período"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 text-sm text-slate-900 dark:text-[#f5f0df] focus:border-blue-500 dark:focus:border-amber-500 outline-none transition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-sm text-[var(--ink-primary)] focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] outline-none transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold text-[var(--ink-secondary)]">
                   Trilha Profissional Complementar
                 </label>
                 <input
                   type="text"
                   defaultValue="Ciência de Dados & Machine Learning (Python/SQL)"
                   readOnly
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1e2329]/60 border border-slate-200 dark:border-amber-500/10 text-sm text-slate-600 dark:text-zinc-400 cursor-not-allowed"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-sm text-[var(--ink-muted)] cursor-not-allowed"
                 />
               </div>
             </div>
@@ -1494,30 +1510,30 @@ export default function PerfilPage() {
         )}
 
         {activeTab === "engine" && (
-          <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
             <div className="space-y-1">
-              <h2 className="font-serif-math text-lg font-semibold text-slate-900 dark:text-[#f5f0df]">
+              <h2 className="font-serif-math text-lg font-semibold text-[var(--ink-primary)]">
                 Calibração da MathAI Engine & Roteamento Axiomático
               </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Ajuste os parâmetros de avaliação passo a passo, OCR multimodal e telemetria socrática.
               </p>
             </div>
 
-            <div className="space-y-4 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-[#f5f0df]">
-                  <Sparkles className="w-4 h-4 text-blue-500 dark:text-amber-500" />
+            <div className="space-y-4 text-xs text-[var(--ink-secondary)] leading-relaxed font-sans">
+              <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-2">
+                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
+                  <Sparkles className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                   <span>Roteamento Multi-Modelo & Modulação Pedagógica</span>
                 </div>
                 <p>
-                  O LEMMAS opera integrado à MathAI Engine sob o padrão Strategy desacoplado: todas as dicas socráticas adaptam suas instruções internas de acordo com a preferência pedagógica selecionada (<strong className="text-blue-600 dark:text-[#d9b452]">{pedagogicalPreference}</strong>), modulando desde a intuição geométrica até axiomas formais.
+                  O LEMMAS opera integrado à MathAI Engine sob o padrão Strategy desacoplado: todas as dicas socráticas adaptam suas instruções internas de acordo com a preferência pedagógica selecionada (<strong className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">{pedagogicalPreference}</strong>), modulando desde a intuição geométrica até axiomas formais.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-amber-500/15 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-[#f5f0df]">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-2">
+                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
+                  <ShieldCheck className="w-4 h-4 text-[var(--marker-green)]" />
                   <span>Repetição Espaçada SuperMemo-2 (SM-2) Determinística</span>
                 </div>
                 <p>
@@ -1530,10 +1546,10 @@ export default function PerfilPage() {
 
         {/* BARRA DE AÇÕES INFERIOR */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-          <div className="text-xs text-slate-500 dark:text-zinc-400 flex items-center gap-2">
+          <div className="text-xs text-[var(--ink-muted)] flex items-center gap-2">
             <span>Sincronizado na nuvem (Supabase)</span>
             {salvo && (
-              <span className="inline-flex items-center gap-1 text-emerald-500 font-bold animate-fadeIn">
+              <span className="inline-flex items-center gap-1 text-[var(--marker-green)] font-bold animate-fadeIn">
                 <CheckCircle2 className="w-4 h-4" /> Alterações salvas com sucesso!
               </span>
             )}
@@ -1543,7 +1559,7 @@ export default function PerfilPage() {
             <button
               type="button"
               onClick={logout}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--marker-red-border)] text-[var(--marker-red)] hover:bg-[var(--marker-red-dim)] text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Sair da Conta</span>
