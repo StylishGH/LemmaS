@@ -142,10 +142,10 @@ export async function GET(request: Request) {
   <meta charset="utf-8">
   <title>LEMMAS · Autenticando...</title>
 </head>
-<body style="background:#141222;color:#f5f0df;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:system-ui,-apple-system,sans-serif;">
+<body style="background:#101316;color:#eceff4;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:system-ui,-apple-system,sans-serif;">
   <div style="text-align:center;">
-    <p style="font-size:16px;color:#d9b452;font-weight:600;">Autenticando na Plataforma LEMMAS...</p>
-    <p style="font-size:13px;color:#a8a29e;">Concluindo credenciais seguras...</p>
+    <p style="font-size:16px;color:#fde047;font-weight:600;">Autenticando na Plataforma LEMMAS...</p>
+    <p style="font-size:13px;color:#9aa5b4;">Concluindo credenciais seguras...</p>
   </div>
   <script>
     if (window.location.hash && window.location.hash.includes('access_token')) {

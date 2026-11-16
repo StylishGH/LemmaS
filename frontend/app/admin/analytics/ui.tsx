@@ -497,7 +497,7 @@ function FunnelStep({
       {/* Barra de Progresso Relativo */}
       <div className="mt-2 h-1.5 w-full bg-slate-200 rounded-full overflow-hidden dark:bg-white/10">
         <div
-          className={`h-full transition-all duration-500 ${isHighlight ? "bg-emerald-500" : "bg-slate-500 dark:bg-slate-400"}`}
+          className={`h-full transition-[width] duration-500 ${isHighlight ? "bg-emerald-500" : "bg-slate-500 dark:bg-slate-400"}`}
           style={{ width: `${Math.max(percentage, 4)}%` }}
         />
       </div>

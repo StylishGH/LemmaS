@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,10 +15,9 @@ import {
   Briefcase,
   Award,
   Check,
-  Moon,
-  Sun,
   Loader2,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { BoardFrame } from "../landing/components/BoardFrame";
 import { Logo } from "../landing/components/Logo";
 import { createClient } from "@/lib/supabase";
@@ -74,7 +73,6 @@ const SEGMENTOS_PROFISSIONAL = [
 export default function OnboardingPage() {
   const supabase = createClient();
   const router = useRouter();
-  const [light, setLight] = useState(false);
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [salvando, setSalvando] = useState(false);
 
@@ -98,10 +96,6 @@ export default function OnboardingPage() {
   const [instituicaoProfessor, setInstituicaoProfessor] = useState("");
   const [segmentoProfissional, setSegmentoProfissional] = useState("Ciência de Dados / IA");
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = light ? "lemmas-light" : "lemmas-dark";
-    document.documentElement.style.colorScheme = light ? "light" : "dark";
-  }, [light]);
 
   const toggleConcurso = (item: string) => {
     setConcursosSelecionados((prev) =>
@@ -212,61 +206,54 @@ export default function OnboardingPage() {
     <BoardFrame>
       <div className="lemmas-page max-w-4xl mx-auto px-4 py-8">
         {/* Navegação Superior */}
-        <nav className="flex items-center justify-between pb-6 border-b border-amber-500/20 mb-8">
+        <nav className="flex items-center justify-between pb-6 border-b border-[var(--border-subtle)] mb-8">
           <div className="flex items-center gap-4">
             <Logo compact />
           </div>
 
-          <button
-            type="button"
-            className="lemmas-theme-toggle p-2 rounded-xl border border-amber-500/20 text-slate-600 dark:text-[#d9b452] hover:bg-amber-500/10 transition-colors"
-            onClick={() => setLight((v) => !v)}
-            aria-label={light ? "Ativar quadro negro" : "Ativar quadro branco"}
-          >
-            {light ? <Moon size={16} /> : <Sun size={16} />}
-          </button>
+          <ThemeToggle compact />
         </nav>
 
         {/* Indicador de Passos (Stepper) */}
         <div className="max-w-2xl mx-auto mb-8 space-y-4">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-            <span className={etapa >= 1 ? "text-amber-600 dark:text-[#d9b452]" : ""}>
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
+            <span className={etapa >= 1 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : ""}>
               1. Escolaridade & Formação
             </span>
-            <span className={etapa >= 2 ? "text-amber-600 dark:text-[#d9b452]" : ""}>
+            <span className={etapa >= 2 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : ""}>
               2. Objetivo de Aprendizagem
             </span>
           </div>
 
-          <div className="h-1.5 w-full bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-[var(--bg-subtle)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-amber-500 dark:bg-[#d9b452] transition-all duration-300 rounded-full"
+              className="h-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] transition-[width] duration-300 rounded-full"
               style={{ width: etapa === 1 ? "50%" : "100%" }}
             />
           </div>
         </div>
 
         {/* Conteúdo do Card de Onboarding */}
-        <div className="max-w-2xl mx-auto bg-white dark:bg-[#141222] border border-amber-500/25 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="max-w-2xl mx-auto lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
           {etapa === 1 ? (
             /* ============================================================ */
             /* ETAPA 1: ESCOLARIDADE E FORMAÇÃO GERAL                       */
             /* ============================================================ */
             <div className="space-y-6">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-[#d9b452] border border-amber-500/20">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]">
                   <GraduationCap size={14} /> Passo 1 de 2
                 </div>
-                <h1 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
-                  Informações <em className="italic text-amber-600 dark:text-[#d9b452]">Pessoais & Escolaridade</em>
+                <h1 className="text-2xl font-serif-math font-normal text-[var(--ink-primary)]">
+                  Informações <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">Pessoais & Escolaridade</em>
                 </h1>
-                <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
+                <p className="text-xs text-[var(--ink-secondary)]">
                   Precisamos de alguns dados essenciais para evitar contas duplicadas e personalizar sua experiência no LEMMAS.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                <label className="text-xs font-bold text-[var(--ink-primary)] block">
                   CPF (Apenas para verificação de unicidade)
                 </label>
                 <input
@@ -279,19 +266,19 @@ export default function OnboardingPage() {
                   }}
                   placeholder="000.000.000-00"
                   maxLength={14}
-                  className={`w-full px-3.5 py-3 rounded-xl border ${erroCpf ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-zinc-800 focus:ring-amber-500'} bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 text-xs sm:text-sm focus:outline-none focus:ring-1 font-medium`}
+                  className={`w-full px-3.5 py-3 rounded-xl border ${erroCpf ? "border-[var(--marker-red)] focus:ring-[var(--marker-red)]" : "border-[var(--border-subtle)] focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"} bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] text-xs sm:text-sm focus:outline-none focus:ring-1 font-mono tabular-nums font-medium`}
                 />
-                {erroCpf && <p className="text-[10px] text-red-500 mt-1 font-semibold">{erroCpf}</p>}
+                {erroCpf && <p className="text-[10px] text-[var(--marker-red)] mt-1 font-semibold">{erroCpf}</p>}
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                <label className="text-xs font-bold text-[var(--ink-primary)] block">
                   Selecione sua escolaridade atual:
                 </label>
                 <select
                   value={escolaridade}
                   onChange={(e) => setEscolaridade(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                  className="w-full px-3.5 py-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)] font-medium"
                 >
                   {OPCOES_ESCOLARIDADE.map((op) => (
                     <option key={op.id} value={op.id}>
@@ -303,14 +290,14 @@ export default function OnboardingPage() {
 
               {/* Campos condicionais para Ensino Superior Cursando */}
               {escolaridade === "superior_cursando" && (
-                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-4 animate-fadeIn">
-                  <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-[#d9b452]">
+                <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] space-y-4 animate-fadeIn">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
                     <School size={15} /> Detalhes da Graduação
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+                      <label className="text-[11px] font-semibold text-[var(--ink-secondary)]">
                         Instituição de Ensino
                       </label>
                       <input
@@ -318,12 +305,12 @@ export default function OnboardingPage() {
                         value={instituicaoSuperior}
                         onChange={(e) => setInstituicaoSuperior(e.target.value)}
                         placeholder="Ex: UFF, UFRJ, USP, UNICAMP..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+                      <label className="text-[11px] font-semibold text-[var(--ink-secondary)]">
                         Curso de Graduação
                       </label>
                       <input
@@ -331,7 +318,7 @@ export default function OnboardingPage() {
                         value={cursoGraduacao}
                         onChange={(e) => setCursoGraduacao(e.target.value)}
                         placeholder="Ex: Matemática, Engenharia, Computação..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                       />
                     </div>
                   </div>
@@ -342,7 +329,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => { if (!validarCPF(cpf)) { setErroCpf("CPF inválido ou incompleto."); return; } setErroCpf(""); setEtapa(2); }}
-                  className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all hover:scale-[1.01]"
+                  className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-transform hover:scale-[1.01]"
                 >
                   Avançar para Objetivos <ArrowRight size={16} />
                 </button>
@@ -354,13 +341,13 @@ export default function OnboardingPage() {
             /* ============================================================ */
             <div className="space-y-6">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-[#d9b452] border border-amber-500/20">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]">
                   <Target size={14} /> Passo 2 de 2
                 </div>
-                <h1 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
-                  Qual é o seu objetivo <em className="italic text-amber-600 dark:text-[#d9b452]">principal?</em>
+                <h1 className="text-2xl font-serif-math font-normal text-[var(--ink-primary)]">
+                  Qual é o seu objetivo <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">principal?</em>
                 </h1>
-                <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
+                <p className="text-xs text-[var(--ink-secondary)]">
                   Selecione uma categoria para configurar a meta pedagógica e as listas recomendadas.
                 </p>
               </div>
@@ -371,29 +358,29 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setCategoriaObjetivo("militar")}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-3 ${
+                  className={`p-4 rounded-xl border text-left transition-colors flex flex-col justify-between gap-3 ${
                     categoriaObjetivo === "militar"
-                      ? "border-amber-500 bg-amber-500/10 shadow-sm"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/40"
+                      ? "border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] shadow-sm"
+                      : "border-[var(--border-subtle)] hover:border-[var(--border-default)] bg-[var(--bg-elevated)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl">🎖️</span>
+                    <span className="inline-flex items-center justify-center"><Target size={22} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /></span>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                         categoriaObjetivo === "militar"
-                          ? "border-amber-500 bg-amber-500 text-slate-900"
-                          : "border-slate-300 dark:border-zinc-600"
+                          ? "lemmas-gold-cta border-transparent"
+                          : "border-[var(--border-default)]"
                       }`}
                     >
                       {categoriaObjetivo === "militar" && <Check size={10} className="stroke-[3]" />}
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df]">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--ink-primary)]">
                       Concurso Militar
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-[var(--ink-secondary)]">
                       EFOMM, ESA, EsPCEx, AFA, ITA, IME e Colégio Naval.
                     </p>
                   </div>
@@ -403,29 +390,29 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setCategoriaObjetivo("vestibular")}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-3 ${
+                  className={`p-4 rounded-xl border text-left transition-colors flex flex-col justify-between gap-3 ${
                     categoriaObjetivo === "vestibular"
-                      ? "border-amber-500 bg-amber-500/10 shadow-sm"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/40"
+                      ? "border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] shadow-sm"
+                      : "border-[var(--border-subtle)] hover:border-[var(--border-default)] bg-[var(--bg-elevated)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl">📚</span>
+                    <span className="inline-flex items-center justify-center"><BookOpen size={22} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /></span>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                         categoriaObjetivo === "vestibular"
-                          ? "border-amber-500 bg-amber-500 text-slate-900"
-                          : "border-slate-300 dark:border-zinc-600"
+                          ? "lemmas-gold-cta border-transparent"
+                          : "border-[var(--border-default)]"
                       }`}
                     >
                       {categoriaObjetivo === "vestibular" && <Check size={10} className="stroke-[3]" />}
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df]">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--ink-primary)]">
                       ENEM / Vestibular
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-[var(--ink-secondary)]">
                       ENEM, Fuvest, Unicamp, UERJ e vestibulares regionais.
                     </p>
                   </div>
@@ -435,29 +422,29 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setCategoriaObjetivo("professor")}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-3 ${
+                  className={`p-4 rounded-xl border text-left transition-colors flex flex-col justify-between gap-3 ${
                     categoriaObjetivo === "professor"
-                      ? "border-amber-500 bg-amber-500/10 shadow-sm"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/40"
+                      ? "border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] shadow-sm"
+                      : "border-[var(--border-subtle)] hover:border-[var(--border-default)] bg-[var(--bg-elevated)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl">👨‍🏫</span>
+                    <span className="inline-flex items-center justify-center"><GraduationCap size={22} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /></span>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                         categoriaObjetivo === "professor"
-                          ? "border-amber-500 bg-amber-500 text-slate-900"
-                          : "border-slate-300 dark:border-zinc-600"
+                          ? "lemmas-gold-cta border-transparent"
+                          : "border-[var(--border-default)]"
                       }`}
                     >
                       {categoriaObjetivo === "professor" && <Check size={10} className="stroke-[3]" />}
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df]">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--ink-primary)]">
                       Professor / Educador
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-[var(--ink-secondary)]">
                       Criação de listas, banco de lemas e suporte didático.
                     </p>
                   </div>
@@ -467,29 +454,29 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setCategoriaObjetivo("profissional")}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-3 ${
+                  className={`p-4 rounded-xl border text-left transition-colors flex flex-col justify-between gap-3 ${
                     categoriaObjetivo === "profissional"
-                      ? "border-amber-500 bg-amber-500/10 shadow-sm"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/40"
+                      ? "border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] shadow-sm"
+                      : "border-[var(--border-subtle)] hover:border-[var(--border-default)] bg-[var(--bg-elevated)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl">💼</span>
+                    <span className="inline-flex items-center justify-center"><Briefcase size={22} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /></span>
                     <span
                       className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                         categoriaObjetivo === "profissional"
-                          ? "border-amber-500 bg-amber-500 text-slate-900"
-                          : "border-slate-300 dark:border-zinc-600"
+                          ? "lemmas-gold-cta border-transparent"
+                          : "border-[var(--border-default)]"
                       }`}
                     >
                       {categoriaObjetivo === "profissional" && <Check size={10} className="stroke-[3]" />}
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#f5f0df]">
+                    <h3 className="font-bold text-xs sm:text-sm text-[var(--ink-primary)]">
                       Uso Profissional & IA
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-[var(--ink-secondary)]">
                       Ciência de Dados, Finanças, Engenharia e Pesquisa.
                     </p>
                   </div>
@@ -497,10 +484,10 @@ export default function OnboardingPage() {
               </div>
 
               {/* Subcampos correspondentes à categoria selecionada */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 space-y-3">
+              <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-3">
                 {categoriaObjetivo === "militar" && (
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                    <label className="text-xs font-bold text-[var(--ink-primary)] block">
                       Selecione seus concursos-alvo (múltipla escolha):
                     </label>
                     <div className="flex flex-wrap gap-1.5">
@@ -511,10 +498,10 @@ export default function OnboardingPage() {
                             key={c}
                             type="button"
                             onClick={() => toggleConcurso(c)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                               ativo
-                                ? "bg-amber-500 text-slate-900 font-bold"
-                                : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-100"
+                                ? "lemmas-gold-cta font-bold"
+                                : "bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--ink-primary)]"
                             }`}
                           >
                             <span>{c}</span>
@@ -529,17 +516,17 @@ export default function OnboardingPage() {
                 {categoriaObjetivo === "vestibular" && (
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                      <label className="text-xs font-bold text-[var(--ink-primary)] block">
                         Status Atual:
                       </label>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setStatusVestibular("medio")}
-                          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border ${
+                          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border transition-colors ${
                             statusVestibular === "medio"
-                              ? "bg-amber-500 text-slate-900 border-amber-500 font-bold"
-                              : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300"
+                              ? "lemmas-gold-cta border-transparent font-bold"
+                              : "border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                           }`}
                         >
                           Cursando Ensino Médio
@@ -547,10 +534,10 @@ export default function OnboardingPage() {
                         <button
                           type="button"
                           onClick={() => setStatusVestibular("cursinho")}
-                          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border ${
+                          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold border transition-colors ${
                             statusVestibular === "cursinho"
-                              ? "bg-amber-500 text-slate-900 border-amber-500 font-bold"
-                              : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300"
+                              ? "lemmas-gold-cta border-transparent font-bold"
+                              : "border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                           }`}
                         >
                           Pré-Vestibular / Concurseiro
@@ -559,7 +546,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                      <label className="text-xs font-bold text-[var(--ink-primary)] block">
                         Vestibulares Foco:
                       </label>
                       <div className="flex flex-wrap gap-1.5">
@@ -570,10 +557,10 @@ export default function OnboardingPage() {
                               key={v}
                               type="button"
                               onClick={() => toggleVestibular(v)}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                                 ativo
-                                  ? "bg-amber-500 text-slate-900 font-bold"
-                                  : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300"
+                                  ? "lemmas-gold-cta font-bold"
+                                  : "bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                               }`}
                             >
                               <span>{v}</span>
@@ -589,13 +576,13 @@ export default function OnboardingPage() {
                 {categoriaObjetivo === "professor" && (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                      <label className="text-xs font-bold text-[var(--ink-primary)] block">
                         Segmento de Atuação:
                       </label>
                       <select
                         value={segmentoProfessor}
                         onChange={(e) => setSegmentoProfessor(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-primary)]"
                       >
                         {SEGMENTOS_PROFESSOR.map((s) => (
                           <option key={s} value={s}>
@@ -606,7 +593,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-600 dark:text-zinc-300 block">
+                      <label className="text-xs font-semibold text-[var(--ink-secondary)] block">
                         Instituição de Ensino (Opcional):
                       </label>
                       <input
@@ -614,7 +601,7 @@ export default function OnboardingPage() {
                         value={instituicaoProfessor}
                         onChange={(e) => setInstituicaoProfessor(e.target.value)}
                         placeholder="Ex: Colégio Pedro II, Escola Militar..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)]"
                       />
                     </div>
                   </div>
@@ -622,13 +609,13 @@ export default function OnboardingPage() {
 
                 {categoriaObjetivo === "profissional" && (
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-[#d9b452] block">
+                    <label className="text-xs font-bold text-[var(--ink-primary)] block">
                       Segmento de Atuação / Foco Analítico:
                     </label>
                     <select
                       value={segmentoProfissional}
                       onChange={(e) => setSegmentoProfissional(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100"
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-primary)]"
                     >
                       {SEGMENTOS_PROFISSIONAL.map((s) => (
                         <option key={s} value={s}>
@@ -645,7 +632,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setEtapa(1)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[var(--ink-secondary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors flex items-center gap-1.5"
                 >
                   <ArrowLeft size={14} /> Voltar à Escolaridade
                 </button>
@@ -654,7 +641,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleConcluir}
                   disabled={salvando}
-                  className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all hover:scale-[1.01]"
+                  className="lemmas-gold-cta py-3 px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-transform hover:scale-[1.01]"
                 >
                   {salvando ? (
                     <>

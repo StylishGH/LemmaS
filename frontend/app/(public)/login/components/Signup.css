@@ -20,9 +20,9 @@
   padding: 32px;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgb(255 255 255 / .1);
-  background: rgb(255 255 255 / .035);
-  transition: border-color .25s ease;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  transition: border-color .25s ease, background-color .25s ease;
 }
 .lemmas-founder-badge {
   display: inline-flex;
@@ -31,9 +31,9 @@
   align-self: flex-start;
   padding: 7px 9px;
   margin-bottom: 24px;
-  border: 1px solid rgb(224 184 77 / .28);
-  background: rgb(224 184 77 / .09);
-  color: #e4bd60;
+  border: 1px solid var(--marker-amber-border);
+  background: var(--marker-amber-dim);
+  color: var(--marker-amber);
   font-size: .68rem;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -52,23 +52,23 @@
   gap: 12px;
   min-height: 48px;
   padding: 0 16px;
-  border: 1px solid rgb(255 255 255 / .15);
-  background: rgb(255 255 255 / .05);
-  color: #f4efdf;
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   font-weight: 500;
   cursor: pointer;
-  transition: all .2s ease;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
 }
 .lemmas-oauth-button:hover {
-  background: rgb(255 255 255 / .1);
-  border-color: rgb(255 255 255 / .25);
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
 }
 
 .lemmas-divider {
   display: flex;
   align-items: center;
   margin: 24px 0;
-  color: #9fa29a;
+  color: var(--ink-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -78,7 +78,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: rgb(255 255 255 / .1);
+  background: var(--border-subtle);
 }
 .lemmas-divider span {
   padding: 0 16px;
@@ -105,16 +105,16 @@
   width: 100%;
   min-height: 46px;
   padding: 0 14px;
-  background: rgb(255 255 255 / .05);
-  border: 1px solid rgb(255 255 255 / .15);
-  color: #f4efdf;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--ink-primary);
   font-family: inherit;
   transition: border-color .2s ease;
 }
 .lemmas-form-group input[type="text"]:focus,
 .lemmas-form-group input[type="email"]:focus {
   outline: none;
-  border-color: rgb(224 184 77 / .55);
+  border-color: var(--marker-amber);
 }
 
 .lemmas-objectives-grid {
@@ -129,21 +129,21 @@
   align-items: center;
   gap: 10px;
   padding: 12px;
-  background: rgb(255 255 255 / .03);
-  border: 1px solid rgb(255 255 255 / .1);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: all .2s ease;
+  transition: background-color .2s ease, border-color .2s ease;
 }
 .lemmas-objective-checkbox:hover {
-  background: rgb(255 255 255 / .06);
+  border-color: var(--border-default);
 }
 .lemmas-objective-checkbox input[type="radio"] {
-  accent-color: #e4bd60;
+  accent-color: var(--marker-amber);
   width: 16px;
   height: 16px;
 }
 .lemmas-checkbox-label {
-  color: #f4efdf;
+  color: var(--ink-primary);
   font-size: 0.9rem;
 }
 
@@ -151,53 +151,23 @@
   margin-top: 12px;
 }
 
-html[data-theme="lemmas-light"] .lemmas-signup-card {
-  border-color: rgb(20 46 75 / .12);
-  background: rgb(255 255 255 / .62);
-  box-shadow: 0 15px 50px rgb(59 91 123 / .07);
-}
-html[data-theme="lemmas-light"] .lemmas-oauth-button {
-  border-color: rgb(39 88 142 / .2);
-  background: transparent;
-  color: #173a63;
-}
-html[data-theme="lemmas-light"] .lemmas-oauth-button:hover {
-  background: rgb(39 88 142 / .05);
-  border-color: rgb(39 88 142 / .35);
-}
-html[data-theme="lemmas-light"] .lemmas-divider::before,
-html[data-theme="lemmas-light"] .lemmas-divider::after {
-  background: rgb(20 46 75 / .12);
-}
-html[data-theme="lemmas-light"] .lemmas-divider {
-  color: #60748a;
-}
-html[data-theme="lemmas-light"] .lemmas-form-group input[type="text"],
-html[data-theme="lemmas-light"] .lemmas-form-group input[type="email"] {
-  background: rgb(255 255 255 / .8);
-  border-color: rgb(39 88 142 / .2);
-  color: #173a63;
+html[data-theme="lemmas-light"] .lemmas-signup-card,
+html:not(.dark) .lemmas-signup-card {
+  box-shadow: 0 15px 50px rgba(15, 23, 42, 0.06);
 }
 html[data-theme="lemmas-light"] .lemmas-form-group input[type="text"]:focus,
-html[data-theme="lemmas-light"] .lemmas-form-group input[type="email"]:focus {
-  border-color: #285889;
+html[data-theme="lemmas-light"] .lemmas-form-group input[type="email"]:focus,
+html:not(.dark) .lemmas-form-group input[type="text"]:focus,
+html:not(.dark) .lemmas-form-group input[type="email"]:focus {
+  border-color: var(--marker-blue);
 }
-html[data-theme="lemmas-light"] .lemmas-objective-checkbox {
-  background: rgb(255 255 255 / .8);
-  border-color: rgb(39 88 142 / .15);
+html[data-theme="lemmas-light"] .lemmas-objective-checkbox input[type="radio"],
+html:not(.dark) .lemmas-objective-checkbox input[type="radio"] {
+  accent-color: var(--marker-blue);
 }
-html[data-theme="lemmas-light"] .lemmas-objective-checkbox:hover {
-  background: rgb(39 88 142 / .04);
-}
-html[data-theme="lemmas-light"] .lemmas-objective-checkbox input[type="radio"] {
-  accent-color: #285889;
-}
-html[data-theme="lemmas-light"] .lemmas-checkbox-label {
-  color: #173a63;
-}
-
-html[data-theme="lemmas-light"] .lemmas-founder-badge {
-  border-color: rgb(37 99 235 / .28);
-  background: rgb(37 99 235 / .09);
-  color: #2563eb;
+html[data-theme="lemmas-light"] .lemmas-founder-badge,
+html:not(.dark) .lemmas-founder-badge {
+  border-color: var(--marker-blue-border);
+  background: var(--marker-blue-dim);
+  color: var(--marker-blue);
 }

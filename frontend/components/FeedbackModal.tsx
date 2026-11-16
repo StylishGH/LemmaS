@@ -71,7 +71,7 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !enviando) onClose();
       }}
@@ -80,27 +80,27 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-modal-title"
-        className="relative w-full max-w-lg space-y-5 rounded-2xl border border-slate-200 bg-white p-6 text-slate-800 shadow-2xl dark:border-amber-500/25 dark:bg-[#141222] dark:text-[#f5f0df]"
+        className="relative w-full max-w-lg space-y-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 text-[var(--ink-primary)] shadow-2xl"
       >
         <button
           type="button"
           onClick={onClose}
           disabled={enviando}
           aria-label="Fechar feedback"
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--ink-muted)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] disabled:opacity-50"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-600 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-[#d9b452]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)]">
             <MessageSquare className="h-5 w-5" />
           </div>
           <div>
-            <h2 id="feedback-modal-title" className="font-serif-math text-lg font-bold text-slate-900 dark:text-[#f5f0df]">
+            <h2 id="feedback-modal-title" className="font-serif-math text-lg font-bold text-[var(--ink-primary)]">
               Como está sendo sua experiência?
             </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-[var(--ink-muted)]">
               Sua opinião ajuda a melhorar o LEMMAS.
             </p>
           </div>
@@ -108,11 +108,11 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
 
         {sucesso ? (
           <div className="space-y-3 py-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[var(--marker-green-border)] bg-[var(--marker-green-dim)] text-[var(--marker-green)]">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-[#f5f0df]">Feedback enviado. Obrigado!</h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">Sua contribuição ajuda a melhorar a plataforma.</p>
+            <h3 className="text-sm font-bold text-[var(--ink-primary)]">Feedback enviado. Obrigado!</h3>
+            <p className="text-xs text-[var(--ink-secondary)]">Sua contribuição ajuda a melhorar a plataforma.</p>
             <button type="button" onClick={onClose} className="lemmas-gold-cta rounded-xl px-5 py-2 text-xs font-bold">
               Fechar
             </button>
@@ -120,7 +120,7 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <fieldset className="space-y-2">
-              <legend className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+              <legend className="text-xs font-bold text-[var(--ink-secondary)]">
                 Avaliação (opcional)
               </legend>
               <div className="flex items-center gap-1" role="group" aria-label="Nota de 1 a 5">
@@ -131,19 +131,19 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
                     aria-label={`${valor} ${valor === 1 ? "estrela" : "estrelas"}`}
                     aria-pressed={nota === valor}
                     onClick={() => setNota(nota === valor ? null : valor)}
-                    className="rounded-md p-1 text-amber-500 transition hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                    className="rounded-md p-1 text-[var(--marker-amber)] transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--marker-blue)]"
                   >
                     <Star className={`h-7 w-7 ${nota !== null && valor <= nota ? "fill-current" : ""}`} />
                   </button>
                 ))}
-                <span className="ml-2 text-xs text-slate-500 dark:text-zinc-400">
+                <span className="ml-2 text-xs text-[var(--ink-muted)] font-mono tabular-nums">
                   {nota ? `${nota} de 5` : "Escolha uma nota"}
                 </span>
               </div>
             </fieldset>
 
             <div className="space-y-1.5">
-              <label htmlFor="feedback-comentario" className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+              <label htmlFor="feedback-comentario" className="text-xs font-bold text-[var(--ink-secondary)]">
                 Comentário (opcional)
               </label>
               <textarea
@@ -153,24 +153,24 @@ export default function FeedbackModal({ isOpen, onClose, origem }: FeedbackModal
                 rows={4}
                 maxLength={500}
                 placeholder="Conte o que está funcionando bem ou o que podemos melhorar..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden dark:border-amber-500/15 dark:bg-[#18152a] dark:text-[#f5f0df] dark:focus:border-amber-500"
+                className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-3 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:border-[var(--marker-blue)] focus:outline-hidden dark:focus:border-[var(--marker-amber)]"
               />
-              <p className="text-right text-[10px] text-slate-400">{comentario.length}/500</p>
+              <p className="text-right text-[10px] text-[var(--ink-muted)] font-mono tabular-nums">{comentario.length}/500</p>
             </div>
 
             {erroMsg && (
-              <div role="alert" className="flex items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 p-2.5 text-xs text-rose-700 dark:text-rose-400">
+              <div role="alert" className="flex items-center gap-2 rounded-xl border border-[var(--marker-red-border)] bg-[var(--marker-red-dim)] p-2.5 text-xs text-[var(--marker-red)]">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{erroMsg}</span>
               </div>
             )}
 
-            <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-4 dark:border-zinc-800">
+            <div className="flex justify-end gap-2.5 border-t border-[var(--border-subtle)] pt-4">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={enviando}
-                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-[var(--ink-secondary)] transition-colors hover:bg-[var(--bg-elevated)] disabled:opacity-50"
               >
                 Cancelar
               </button>
