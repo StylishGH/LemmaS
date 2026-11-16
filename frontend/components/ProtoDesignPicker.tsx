@@ -14,12 +14,13 @@ const VARIANTS: VariantOption[] = [
   { id: "studio", label: "Focus Studio" },
 ];
 
-const DEFAULT_VARIANT_INDEX = 2; // Linear Glass active by default
+const DEFAULT_VARIANT_INDEX = 0;
 
 export function ProtoDesignPicker() {
   const pickerRef = useRef<HTMLElement | null>(null);
   const highlightRef = useRef<HTMLSpanElement | null>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
   const [activeIndex, setActiveIndex] = useState<number>(DEFAULT_VARIANT_INDEX);
   const [ready, setReady] = useState<boolean>(false);
 
@@ -66,14 +67,32 @@ export function ProtoDesignPicker() {
     []
   );
 
-  // Initialize from ?v= URL param on mount and enable highlight transition after first paint
+  // Sync ?proposal=b and optional ?proto=1 / ?v= params without injecting legacy glass variant by default
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requested = Number.parseInt(params.get("v") || "", 10);
-    const initial =
-      requested >= 1 && requested <= VARIANTS.length ? requested - 1 : DEFAULT_VARIANT_INDEX;
-    setActiveIndex(initial);
-    applyVariant(initial, false);
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const proposal = params.get("proposal")?.toLowerCase();
+      if (proposal === "b") {
+        document.documentElement.setAttribute("data-proposal", "b");
+      } else {
+        document.documentElement.removeAttribute("data-proposal");
+      }
+
+      const showProto = params.get("proto") === "1";
+      setIsVisible(showProto);
+
+      const requested = Number.parseInt(params.get("v") || "", 10);
+      if (requested >= 1 && requested <= VARIANTS.length) {
+        const initial = requested - 1;
+        setActiveIndex(initial);
+        applyVariant(initial, false);
+      } else {
+        document.documentElement.removeAttribute("data-design-variant");
+      }
+    };
+
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
 
     let raf2 = 0;
     const raf1 = window.requestAnimationFrame(() => {
@@ -82,6 +101,7 @@ export function ProtoDesignPicker() {
       });
     });
     return () => {
+      window.removeEventListener("popstate", syncFromUrl);
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
     };
@@ -108,6 +128,7 @@ export function ProtoDesignPicker() {
   );
 
   useEffect(() => {
+    if (!isVisible) return;
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (
@@ -131,7 +152,9 @@ export function ProtoDesignPicker() {
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, handleSelect, replayAnimations]);
+  }, [activeIndex, handleSelect, isVisible, replayAnimations]);
+
+  if (!isVisible) return null;
 
   return (
     <nav
