@@ -1,14 +1,24 @@
-import { ArrowRight, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Briefcase,
+  Compass,
+  GraduationCap,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import "./Signup.css";
 
 const objectives = [
-  { id: "concurso_militar", label: "🎖️ Concurso Militar" },
-  { id: "enem_vestibular", label: "📚 ENEM / Vestibular" },
-  { id: "melhoria_propria", label: "📈 Autoaperfeiçoamento" },
-  { id: "professor", label: "👨‍🏫 Professor" },
-  { id: "olimpiada", label: "🏆 Olimpíadas" },
-  { id: "uso_profissional", label: "💼 Uso Profissional" },
-  { id: "curiosidade", label: "🔍 Curiosidade Lógica" },
+  { id: "concurso_militar", label: "Concurso Militar", Icon: Target },
+  { id: "enem_vestibular", label: "ENEM / Vestibular", Icon: BookOpen },
+  { id: "melhoria_propria", label: "Autoaperfeiçoamento", Icon: TrendingUp },
+  { id: "professor", label: "Professor", Icon: GraduationCap },
+  { id: "olimpiada", label: "Olimpíadas", Icon: Award },
+  { id: "uso_profissional", label: "Uso Profissional", Icon: Briefcase },
+  { id: "curiosidade", label: "Curiosidade Lógica", Icon: Compass },
 ];
 
 export function Signup() {
@@ -58,12 +68,18 @@ export function Signup() {
             <div className="lemmas-form-group">
               <label className="lemmas-chalk-writing">Qual o seu principal objetivo?</label>
               <div className="lemmas-objectives-grid">
-                {objectives.map((obj) => (
-                  <label key={obj.id} className="lemmas-objective-checkbox">
-                    <input type="radio" name="objective" value={obj.id} />
-                    <span className="lemmas-checkbox-label">{obj.label}</span>
-                  </label>
-                ))}
+                {objectives.map((obj) => {
+                  const Icon = obj.Icon;
+                  return (
+                    <label key={obj.id} className="lemmas-objective-checkbox">
+                      <input type="radio" name="objective" value={obj.id} />
+                      <span className="lemmas-checkbox-label inline-flex items-center gap-2">
+                        <Icon size={15} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
+                        <span>{obj.label}</span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

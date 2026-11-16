@@ -18,27 +18,30 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font: 600 .68rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: #d6ad4e;
+  color: var(--marker-amber);
 }
 
 .lemmas-section-heading h2 {
   margin: 12px 0 14px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: clamp(1.75rem, 3.2vw, 2.75rem);
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.03em;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
 .lemmas-section-heading p {
   max-width: 68ch;
   margin: 0;
-  color: #a9aaa1;
+  color: var(--ink-secondary);
   font-size: 1rem;
   line-height: 1.65;
 }
@@ -51,8 +54,8 @@
   margin-top: 36px;
   padding: 28px;
   border-radius: 0.75rem;
-  border: 1px solid rgb(255 255 255 / .09);
-  background: #14171c;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
 }
 
 .lemmas-crest {
@@ -61,24 +64,24 @@
   height: 150px;
   display: grid;
   place-items: center;
-  border: 1px solid rgb(224 184 77 / .4);
+  border: 1px solid var(--marker-amber-border);
   clip-path: polygon(50% 0, 92% 16%, 82% 75%, 50% 100%, 18% 75%, 8% 16%);
-  background: radial-gradient(circle, rgb(224 184 77 / .12), transparent 65%);
+  background: radial-gradient(circle, var(--marker-amber-dim), transparent 65%);
   overflow: hidden;
 }
 
 .lemmas-crest span {
   position: relative;
   z-index: 3;
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 2rem;
   letter-spacing: .08em;
-  color: #e4bd60;
+  color: var(--marker-amber);
 }
 
 .lemmas-crest-circle {
   position: absolute;
-  border: 1px solid rgb(224 184 77 / .4);
+  border: 1px solid var(--marker-amber-border);
   border-radius: 50%;
   width: 85px;
   height: 85px;
@@ -96,18 +99,18 @@
   position: absolute;
   width: 105px;
   height: 1px;
-  background: #e4bd60;
+  background: var(--marker-amber);
   transform: rotate(31deg);
   opacity: .5;
 }
 
 .lemmas-authority-copy h3 {
   margin: 8px 0 10px;
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
 .lemmas-authority-copy p {
@@ -151,56 +154,56 @@
 }
 
 .lemmas-proof-list svg {
-  color: #d6ad4e;
+  color: var(--marker-amber);
   flex-shrink: 0;
 }
 
 html[data-theme="lemmas-light"] .lemmas-eyebrow {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-section-heading h2,
 html[data-theme="lemmas-light"] .lemmas-authority-copy h3 {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-section-heading p,
 html[data-theme="lemmas-light"] .lemmas-authority-copy p,
 html[data-theme="lemmas-light"] .lemmas-proof-list {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-authority-card {
-  border-color: #e2e8f0;
-  background: #ffffff;
+  border-color: var(--border-subtle);
+  background: var(--bg-card);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 html[data-theme="lemmas-light"] .lemmas-badge {
-  border-color: rgb(29 78 216 / .2);
-  background: rgb(29 78 216 / .06);
-  color: #1e3a8a;
+  border-color: var(--marker-blue-border);
+  background: var(--marker-blue-dim);
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-crest {
-  border-color: rgb(29 78 216 / .35);
-  background: radial-gradient(circle, rgb(29 78 216 / .08), transparent 65%);
+  border-color: var(--marker-blue-border);
+  background: radial-gradient(circle, var(--marker-blue-dim), transparent 65%);
 }
 
 html[data-theme="lemmas-light"] .lemmas-crest span {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-crest-circle {
-  border-color: rgb(29 78 216 / .35);
+  border-color: var(--marker-blue-border);
 }
 
 html[data-theme="lemmas-light"] .lemmas-crest-line {
-  background: #1d4ed8;
+  background: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-proof-list svg {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 @media (max-width: 800px) {

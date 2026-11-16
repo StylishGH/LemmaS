@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Permanent+Marker&family=Caveat:wght@500;600&display=swap');
-
 html {
   scroll-behavior: smooth;
 }
@@ -8,7 +6,7 @@ html {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  color: #f4efdf;
+  color: var(--ink-primary);
 }
 
 .lemmas-page > *:not(.lemmas-formula-layer) {
@@ -22,10 +20,10 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(1120px, calc(100% - 40px));
+  width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 24px 0;
-  gap: 28px;
+  padding: 20px 0;
+  gap: 24px;
 }
 
 .lemmas-nav-links {
@@ -37,13 +35,12 @@ html {
 
 .lemmas-nav-links a,
 .lemmas-nav-links button {
-  color: #b6b5aa;
+  color: var(--ink-secondary);
   text-decoration: none;
   font-family: inherit;
   font-weight: 550;
   font-size: 0.85rem;
   letter-spacing: .01em;
-  opacity: .9;
   transition: color 160ms ease, background-color 160ms ease, opacity 160ms ease, transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
   white-space: nowrap;
   background: transparent;
@@ -55,16 +52,14 @@ html {
 
 .lemmas-nav-links a:hover,
 .lemmas-nav-links button:hover {
-  color: #f5f0df;
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-primary);
+  background: var(--bg-elevated);
 }
 
 .lemmas-nav-links button.active {
-  color: #d9b452;
-  opacity: 1;
+  color: var(--marker-amber);
   font-weight: 700;
-  background: rgba(217, 180, 82, 0.12);
+  background: var(--marker-amber-dim);
 }
 
 .lemmas-theme-toggle {
@@ -76,11 +71,11 @@ html {
   min-width: 38px;
   min-height: 38px;
   border-radius: 0.5rem;
-  border: 1px solid rgb(255 255 255 / .12);
-  background: rgb(255 255 255 / .04);
-  color: #ded9c8;
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--marker-amber);
   cursor: pointer;
-  transition: background .2s ease, border-color .2s ease, color .2s ease;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
   flex-shrink: 0;
 }
 
@@ -95,30 +90,30 @@ html {
   min-width: 38px;
   min-height: 38px;
   border-radius: 0.5rem;
-  border: 1px solid rgb(255 255 255 / .12);
-  background: rgb(255 255 255 / .04);
-  color: #ded9c8;
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .lemmas-nav-mobile-menu {
-  width: min(1120px, calc(100% - 40px));
+  width: min(1120px, calc(100% - 32px));
   margin: -8px auto 0;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   border-radius: 0.75rem;
-  border: 1px solid rgb(255 255 255 / .1);
-  background: #14171c;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
   position: relative;
   z-index: 20;
 }
 
 .lemmas-nav-mobile-menu a,
 .lemmas-nav-mobile-menu button {
-  color: #eceff4;
+  color: var(--ink-primary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9375rem;
@@ -131,34 +126,34 @@ html {
 
 .lemmas-nav-mobile-menu a:hover,
 .lemmas-nav-mobile-menu button:hover {
-  background: rgb(255 255 255 / .06);
+  background: var(--bg-elevated);
 }
 
 .lemmas-nav-mobile-menu .lemmas-nav-mobile-cta {
   text-align: center;
-  border: 1px solid rgb(255 255 255 / .16);
+  border: 1px solid var(--border-default);
   margin-top: 6px;
 }
 
 .lemmas-nav-mobile-menu .lemmas-nav-mobile-cta-primary {
-  background: #e1bb55;
-  border-color: #e1bb55;
-  color: #14161a;
+  background: var(--marker-amber);
+  border-color: var(--marker-amber);
+  color: #101316;
   font-weight: 600;
 }
 
 .lemmas-hero {
   position: relative;
   z-index: 2;
-  width: min(1120px, calc(100% - 40px));
-  min-height: 72vh;
+  width: min(1120px, calc(100% - 32px));
+  min-height: 70vh;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   text-align: left;
-  padding: clamp(40px, 6vw, 70px) 0 clamp(50px, 7vw, 90px);
+  padding: clamp(32px, 5.5vw, 64px) 0 clamp(44px, 6.5vw, 80px);
 }
 
 /* ── SELETOR DE MODO (ESTUDANTE vs PORTFÓLIO TÉCNICO) ──────────── */
@@ -175,11 +170,9 @@ html {
   align-items: center;
   gap: 6px;
   padding: 4px;
-  background: rgba(15, 14, 23, 0.75);
-  border: 1px solid rgba(217, 180, 82, 0.3);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
 }
 
 .lemmas-mode-btn {
@@ -187,20 +180,20 @@ html {
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 180ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-  color: #a8a29e;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  color: var(--ink-secondary);
   background: transparent;
   white-space: nowrap;
 }
 
 .lemmas-mode-btn:hover {
-  color: #f5f0df;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-primary);
+  background: var(--bg-elevated);
 }
 
 .lemmas-mode-btn:active {
@@ -208,11 +201,10 @@ html {
 }
 
 .lemmas-mode-btn.active {
-  background: #e1bb55;
-  color: #141222;
+  background: var(--marker-amber);
+  color: #101316;
   font-weight: 750;
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 12px rgba(225, 187, 85, 0.35);
+  border-color: transparent;
 }
 
 /* ── GRID DO HERO DE 2 COLUNAS ────────────────────────────────── */
@@ -239,23 +231,23 @@ html {
 
 .lemmas-hero h1 {
   margin: 12px 0 18px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 3.5vw, 3.1rem);
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
   font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.03em;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
 .lemmas-hero h1 em {
-  color: #d9b452;
+  color: var(--marker-amber);
   font-style: italic;
 }
 
 .lemmas-hero-lede {
   max-width: 65ch;
   margin: 0;
-  color: #b5b5aa;
+  color: var(--ink-secondary);
   font-size: clamp(1rem, 1.15vw, 1.125rem);
   line-height: 1.65;
 }
@@ -289,28 +281,27 @@ html {
 }
 
 .lemmas-cta-primary {
-  background: #e1bb55;
-  color: #14161a;
-  border: 1px solid #e1bb55;
+  background: var(--marker-amber);
+  color: #101316;
+  border: 1px solid var(--marker-amber);
 }
 
 .lemmas-cta-secondary {
-  background: rgba(255, 255, 255, 0.04);
-  color: #eceff4;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  border: 1px solid var(--border-default);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .lemmas-cta-primary:hover {
-    background: #eccb71;
-    border-color: #eccb71;
+    filter: brightness(1.06);
     color: #101316;
   }
 
   .lemmas-cta-secondary:hover {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.28);
-    color: #ffffff;
+    background: var(--bg-elevated);
+    border-color: var(--border-strong);
+    color: var(--ink-primary);
   }
 }
 
@@ -319,7 +310,7 @@ html {
   align-items: center;
   gap: 10px;
   margin-top: 22px;
-  color: #777b75;
+  color: var(--ink-muted);
   font-size: .8rem;
 }
 
@@ -327,8 +318,7 @@ html {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #d9b452;
-  box-shadow: 0 0 14px #d9b452;
+  background: var(--marker-amber);
 }
 
 .lemmas-principles {
@@ -359,7 +349,7 @@ html {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2d6da1;
+  background: var(--marker-blue);
   color: #fff;
   display: flex;
   align-items: center;
@@ -372,14 +362,14 @@ html {
 .lemmas-magic-step strong {
   display: block;
   font-size: 1.15rem;
-  color: #f4efdf;
+  color: var(--ink-primary);
   margin-bottom: 6px;
 }
 
 .lemmas-magic-step p {
   margin: 0;
   font-size: .9rem;
-  color: #a8a9a4;
+  color: var(--ink-secondary);
   line-height: 1.5;
 }
 
@@ -402,8 +392,8 @@ html {
 .lemmas-roadmap-card {
   position: relative;
   overflow: hidden;
-  background: var(--bg-card, #14171c);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   padding: 24px;
   border-radius: 0.75rem;
   display: flex;
@@ -414,7 +404,7 @@ html {
 
 @media (hover: hover) and (pointer: fine) {
   .lemmas-roadmap-card:hover {
-    border-color: rgba(217, 180, 82, 0.4);
+    border-color: var(--marker-amber-border);
   }
 }
 
@@ -428,9 +418,9 @@ html {
   width: 36px;
   height: 36px;
   border-radius: 0.5rem;
-  background: rgba(217, 180, 82, 0.1);
-  color: #d9b452;
-  border: 1px solid rgba(217, 180, 82, 0.22);
+  background: var(--marker-amber-dim);
+  color: var(--marker-amber);
+  border: 1px solid var(--marker-amber-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -453,9 +443,9 @@ html {
 }
 
 .tag-upcoming {
-  background: rgba(217, 180, 82, 0.12);
-  color: #d9b452;
-  border: 1px solid rgba(217, 180, 82, 0.28);
+  background: var(--marker-amber-dim);
+  color: var(--marker-amber);
+  border: 1px solid var(--marker-amber-border);
 }
 
 .tag-research {
@@ -478,7 +468,7 @@ html {
 
 .lemmas-roadmap-card h3 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 1.18rem;
   color: var(--ink-primary);
 }
@@ -492,172 +482,175 @@ html {
 }
 
 .lemmas-roadmap-tech {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--ink-muted);
   padding-top: 10px;
-  border-top: 1px solid var(--border-board);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .lemmas-footer {
   position: relative;
   z-index: 2;
-  width: min(1120px, calc(100% - 40px));
+  width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
   padding: 34px 0 44px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #777c76;
+  color: var(--ink-muted);
   font-size: .72rem;
-  border-top: 1px solid rgb(255 255 255 / .1);
+  border-top: 1px solid var(--border-subtle);
 }
 
-/* ── MODO LIGHT (QUADRO BRANCO) ────────────────────────────────── */
+/* ── MODO LIGHT (LOUSA DE PORCELANA & PILOTO TÉCNICO) ──────────── */
 html[data-theme="lemmas-light"] .lemmas-page {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-links a,
 html[data-theme="lemmas-light"] .lemmas-nav-links button {
   font-family: inherit;
   font-weight: 550;
-  color: #334155;
+  color: var(--ink-secondary);
   font-size: 0.85rem;
   letter-spacing: .01em;
-  opacity: 1;
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-links a:hover,
 html[data-theme="lemmas-light"] .lemmas-nav-links button:hover {
-  color: #0f172a;
-  background: rgba(15, 23, 42, 0.05);
+  color: var(--ink-primary);
+  background: var(--bg-elevated);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-links button.active {
-  color: #1d4ed8;
+  color: var(--marker-blue);
   font-weight: 700;
-  background: rgba(29, 78, 216, 0.09);
+  background: var(--marker-blue-dim);
 }
 
 html[data-theme="lemmas-light"] .lemmas-theme-toggle,
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-toggle {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  color: #1e293b;
+  border-color: var(--border-default);
+  background: var(--bg-card);
+  color: var(--marker-blue);
+}
+
+html[data-theme="lemmas-light"] .lemmas-mode-btn.active {
+  background: var(--marker-blue);
+  color: #ffffff;
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu {
-  background: #ffffff;
-  border-color: #cbd5e1;
+  background: var(--bg-card);
+  border-color: var(--border-default);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu a,
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu button {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu a:hover,
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu button:hover {
-  background: #f1f5f9;
+  background: var(--bg-elevated);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu .lemmas-nav-mobile-cta {
-  border-color: #cbd5e1;
+  border-color: var(--border-default);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-mobile-menu .lemmas-nav-mobile-cta-primary {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: var(--marker-blue);
+  border-color: var(--marker-blue);
   color: #ffffff;
 }
 
 html[data-theme="lemmas-light"] .lemmas-hero h1 {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-hero h1 em {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-hero-lede {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-hero-note {
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 html[data-theme="lemmas-light"] .lemmas-trust {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-trust b {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-magic-step {
-  background: #ffffff;
-  border-color: #e2e8f0;
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
 html[data-theme="lemmas-light"] .lemmas-magic-step strong {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-magic-step p {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-magic-number {
-  background: #1d4ed8;
-  color: #fff;
+  background: var(--marker-blue);
+  color: #ffffff;
 }
 
 html[data-theme="lemmas-light"] .lemmas-cta-primary {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: var(--marker-blue);
+  border-color: var(--marker-blue);
   color: #ffffff;
 }
 
 html[data-theme="lemmas-light"] .lemmas-cta-primary:hover {
-  background: #1e40af;
-  border-color: #1e40af;
+  filter: brightness(1.08);
   color: #ffffff;
 }
 
 html[data-theme="lemmas-light"] .lemmas-cta-secondary {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  border: 1px solid var(--border-default);
 }
 
 html[data-theme="lemmas-light"] .lemmas-cta-secondary:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-roadmap-card {
-  background: #ffffff;
-  border-color: #e2e8f0;
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-roadmap-card:hover {
-  border-color: #94a3b8;
+  border-color: var(--border-strong);
 }
 
 html[data-theme="lemmas-light"] .lemmas-roadmap-icon {
-  background: rgba(29, 78, 216, 0.08);
-  color: #1d4ed8;
-  border-color: rgba(29, 78, 216, 0.2);
+  background: var(--marker-blue-dim);
+  color: var(--marker-blue);
+  border-color: var(--marker-blue-border);
 }
 
 html[data-theme="lemmas-light"] .lemmas-footer {
-  border-color: #e2e8f0;
-  color: #64748b;
+  border-color: var(--border-subtle);
+  color: var(--ink-muted);
 }
 
 .lemmas-nav-actions {
@@ -676,9 +669,9 @@ html[data-theme="lemmas-light"] .lemmas-footer {
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #eceff4;
-  background: rgba(225, 187, 85, 0.12);
-  border: 1px solid rgba(225, 187, 85, 0.32);
+  color: var(--ink-primary);
+  background: var(--marker-amber-dim);
+  border: 1px solid var(--marker-amber-border);
   text-decoration: none;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
   white-space: nowrap;
@@ -688,19 +681,19 @@ html[data-theme="lemmas-light"] .lemmas-footer {
 
 .lemmas-nav-auth-btn:hover {
   background: rgba(225, 187, 85, 0.2);
-  border-color: rgba(225, 187, 85, 0.5);
-  color: #ffffff;
+  border-color: var(--marker-amber);
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-auth-btn {
-  color: #1d4ed8;
-  background: rgba(29, 78, 216, 0.08);
-  border-color: rgba(29, 78, 216, 0.25);
+  color: var(--marker-blue);
+  background: var(--marker-blue-dim);
+  border-color: var(--marker-blue-border);
 }
 
 html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   background: rgba(29, 78, 216, 0.14);
-  border-color: rgba(29, 78, 216, 0.4);
+  border-color: var(--marker-blue);
 }
 
 @media(max-width: 1180px) {
@@ -774,7 +767,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   gap: 20px;
   flex-wrap: wrap;
   margin-top: 28px;
-  color: #a8a29e;
+  color: var(--ink-secondary);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -786,16 +779,15 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-trust b {
-  color: #d9b452;
+  color: var(--marker-amber);
   font-size: 0.95rem;
 }
 
 /* ── ESTÚDIO DE ARQUITETURA INTERATIVA (PORTFÓLIO DE ENGENHARIA) ─ */
 .lemmas-studio {
-  background: #141222;
-  border: 1px solid rgba(217, 180, 82, 0.25);
-  border-radius: 22px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
   overflow: hidden;
   position: relative;
 }
@@ -805,8 +797,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #18152a;
-  border-bottom: 1px solid rgba(217, 180, 82, 0.15);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .lemmas-studio-top .light {
@@ -817,9 +809,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-studio-top .filename {
   font-size: 11px;
-  color: #a8a29e;
+  color: var(--ink-muted);
   margin-left: 10px;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .lemmas-studio main {
@@ -834,10 +826,10 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-node {
   min-height: 96px;
-  background: #18152a;
-  border: 1px solid rgba(217, 180, 82, 0.18);
-  border-radius: 12px;
-  color: #f5f0df;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  color: var(--ink-primary);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -845,29 +837,28 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   text-align: left;
   gap: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 160ms ease, transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
   position: relative;
 }
 
 .lemmas-node:hover {
-  border-color: #d9b452;
+  border-color: var(--marker-amber-border);
   transform: translateY(-2px);
 }
 
 .lemmas-node.selected {
-  background: rgba(217, 180, 82, 0.14);
-  border-color: #d9b452;
-  box-shadow: inset 0 0 0 1px rgba(217, 180, 82, 0.4);
+  background: var(--marker-amber-dim);
+  border-color: var(--marker-amber);
 }
 
 .lemmas-node-title {
   font-weight: 700;
   font-size: 0.85rem;
-  color: #f5f0df;
+  color: var(--ink-primary);
 }
 
 .lemmas-node-sub {
-  color: #a8a29e;
+  color: var(--ink-secondary);
   font-size: 0.72rem;
   line-height: 1.4;
 }
@@ -876,24 +867,24 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   position: absolute;
   right: 10px;
   top: 10px;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-size: 10px;
   font-style: normal;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .lemmas-studio-detail {
   margin-top: 14px;
   padding: 14px 16px;
   min-height: 85px;
-  border: 1px solid rgba(217, 180, 82, 0.25);
-  border-radius: 12px;
-  background: #1a172e;
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  background: var(--bg-elevated);
 }
 
 .lemmas-studio-detail strong {
   font-size: 0.85rem;
-  color: #d9b452;
+  color: var(--marker-amber);
   display: block;
   margin-bottom: 4px;
 }
@@ -914,8 +905,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-case-card {
-  background: #14171c;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
   padding: 24px;
   display: flex;
@@ -925,7 +916,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-case-card:hover {
-  border-color: rgba(217, 180, 82, 0.4);
+  border-color: var(--marker-amber-border);
 }
 
 .lemmas-case-card .top-line {
@@ -933,10 +924,10 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   align-items: center;
   justify-content: space-between;
   font-weight: 600;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -945,14 +936,14 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   letter-spacing: -0.02em;
   line-height: 1.3;
   margin: 14px 0 10px;
-  color: #eceff4;
+  color: var(--ink-primary);
   font-weight: 600;
 }
 
 .lemmas-case-card p {
   font-size: 0.875rem;
   line-height: 1.65;
-  color: #a8a29e;
+  color: var(--ink-secondary);
   margin: 0;
 }
 
@@ -962,7 +953,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   gap: 4px;
   margin-top: 18px;
   font-size: 0.8rem;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-weight: 600;
   text-decoration: none;
 }
@@ -979,9 +970,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 /* ── FAIXA BANNER STRIP (DA SUA PRIMEIRA QUESTÃO À REVISÃO) ──── */
 .lemmas-banner-strip {
-  background: rgba(20, 23, 28, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 16px 0;
   width: 100%;
 }
@@ -997,10 +988,10 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-banner-inner .t {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.1em;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -1014,7 +1005,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-banner-inner .items span {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #eceff4;
+  color: var(--ink-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1022,7 +1013,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-banner-inner .items span:before {
   content: '•';
-  color: #d9b452;
+  color: var(--marker-amber);
 }
 
 /* ── SHOWCASE GRID (CAPTURAS REAIS DAS FERRAMENTAS) ───────────── */
@@ -1034,8 +1025,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-showcase-card {
-  background: #14171c;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
   overflow: hidden;
   transition: border-color 180ms ease;
@@ -1044,7 +1035,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-showcase-card:hover {
-  border-color: rgba(217, 180, 82, 0.4);
+  border-color: var(--marker-amber-border);
 }
 
 .lemmas-showcase-visual {
@@ -1052,9 +1043,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   width: 100%;
   aspect-ratio: 16 / 10;
   max-height: 250px;
-  background: #0d1014;
+  background: var(--bg-board);
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   display: block;
   padding: 0;
@@ -1100,19 +1091,19 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   gap: 6px;
   padding: 6px 10px;
   border-radius: 0.375rem;
-  background: rgba(16, 19, 22, 0.92);
-  border: 1px solid rgba(217, 180, 82, 0.35);
-  color: #d9b452;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--bg-board);
+  border: 1px solid var(--marker-amber-border);
+  color: var(--marker-amber);
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
 .lemmas-showcase-card:hover .lemmas-showcase-zoom-pill {
-  background: #e1bb55;
+  background: var(--marker-amber);
   color: #101316;
-  border-color: #e1bb55;
+  border-color: var(--marker-amber);
 }
 
 .lemmas-showcase-visual .fallback {
@@ -1123,16 +1114,16 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #f5f0df;
+  color: var(--ink-primary);
   padding: 20px;
   text-align: center;
 }
 
 .lemmas-showcase-visual .fallback i {
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 38px;
   font-style: italic;
-  color: #d9b452;
+  color: var(--marker-amber);
 }
 
 .lemmas-showcase-visual .fallback strong {
@@ -1140,9 +1131,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-showcase-visual .fallback span {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
-  color: #a8a29e;
+  color: var(--ink-muted);
 }
 
 .lemmas-showcase-desc {
@@ -1157,7 +1148,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   font-family: monospace;
   font-size: 0.7rem;
   letter-spacing: 1px;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -1165,12 +1156,12 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-showcase-desc h3 {
   font-size: 1.25rem;
   margin: 10px 0 8px;
-  color: #f5f0df;
+  color: var(--ink-primary);
   font-weight: 700;
 }
 
 .lemmas-showcase-desc p {
-  color: #a8a29e;
+  color: var(--ink-secondary);
   font-size: 0.82rem;
   line-height: 1.65;
   margin-bottom: 14px;
@@ -1179,7 +1170,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-text-link {
   font-weight: 700;
   font-size: 0.8rem;
-  color: #d9b452;
+  color: var(--marker-amber);
   background: none;
   border: none;
   padding: 0;
@@ -1213,7 +1204,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   gap: 12px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #dedbd0;
+  color: var(--ink-secondary);
 }
 
 .lemmas-v-icon {
@@ -1232,17 +1223,16 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-v-bad { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
 
 .lemmas-opinion-card {
-  border-radius: 20px;
-  border: 1px solid rgba(217, 180, 82, 0.25);
-  background: #141222;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
   overflow: hidden;
 }
 
 .lemmas-opinion-head {
   padding: 14px 20px;
-  border-bottom: 1px solid rgba(217, 180, 82, 0.15);
-  background: #18152a;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1250,13 +1240,13 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-opinion-head strong {
   font-size: 0.82rem;
-  color: #f5f0df;
+  color: var(--ink-primary);
 }
 
 .lemmas-opinion-head small {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #d9b452;
+  color: var(--marker-amber);
 }
 
 .lemmas-opinion-panels {
@@ -1269,58 +1259,58 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-opinion-part + .lemmas-opinion-part {
-  border-left: 1px solid rgba(217, 180, 82, 0.15);
-  background: rgba(255, 255, 255, 0.02);
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
 }
 
 .lemmas-opinion-part b {
   font-size: 0.88rem;
   display: block;
-  color: #f5f0df;
+  color: var(--ink-primary);
   margin-top: 4px;
 }
 
 .lemmas-opinion-part span {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #d9b452;
+  color: var(--marker-amber);
   letter-spacing: 1px;
 }
 
 .lemmas-opinion-part .formula {
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 1.4rem;
   margin: 18px 0 10px;
-  color: #d9b452;
+  color: var(--marker-amber);
   min-height: 36px;
 }
 
 .lemmas-opinion-part p {
   font-size: 0.78rem;
   line-height: 1.6;
-  color: #a8a29e;
+  color: var(--ink-secondary);
   margin: 0;
 }
 
 .lemmas-opinion-foot {
-  background: #18152a;
-  border-top: 1px solid rgba(217, 180, 82, 0.15);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
   padding: 12px 20px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #d9b452;
+  color: var(--marker-amber);
 }
 
 /* ── TERMINAL DE DADOS & CONTRATOS DO PORTFÓLIO TÉCNICO ───────── */
 .lemmas-terminal {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #0d1014;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-board);
   border-radius: 0.75rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
 .lemmas-terminal-top {
@@ -1328,9 +1318,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #14171c;
-  color: #94a3b8;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--ink-muted);
   font-size: 0.72rem;
 }
 
@@ -1351,23 +1341,23 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   line-height: 1.7;
 }
 
-.lemmas-term-comment { color: #71717a; }
-.lemmas-term-key { color: #d9b452; font-weight: 700; }
-.lemmas-term-accent { color: #38bdf8; font-weight: 700; }
-.lemmas-term-divider { border-top: 1px dashed rgba(255, 255, 255, 0.12); margin: 14px 0; }
+.lemmas-term-comment { color: var(--ink-muted); }
+.lemmas-term-key { color: var(--marker-amber); font-weight: 700; }
+.lemmas-term-accent { color: var(--marker-blue); font-weight: 700; }
+.lemmas-term-divider { border-top: 1px dashed var(--border-default); margin: 14px 0; }
 
 .lemmas-term-stage {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
   border-radius: 0.5rem;
   padding: 12px 14px;
   margin: 10px 0;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
-.lemmas-term-stage b { color: #d9b452; }
-.lemmas-term-stage small { display: block; color: #94a3b8; margin-top: 4px; font-size: 0.7rem; }
-.lemmas-term-arrow { text-align: center; color: #d9b452; font-weight: 700; }
+.lemmas-term-stage b { color: var(--marker-amber); }
+.lemmas-term-stage small { display: block; color: var(--ink-muted); margin-top: 4px; font-size: 0.7rem; }
+.lemmas-term-arrow { text-align: center; color: var(--marker-amber); font-weight: 700; }
 
 /* ── STAT GRID: O PROJETO EM NÚMEROS ─────────────────────────── */
 .lemmas-stat-grid {
@@ -1378,19 +1368,19 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-stat {
-  background: #14171c;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
   padding: 24px 22px;
 }
 
 .lemmas-stat b {
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 2.35rem;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   display: block;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-weight: 600;
   line-height: 1;
 }
@@ -1399,22 +1389,22 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   display: block;
   margin-top: 8px;
   line-height: 1.45;
-  color: #eceff4;
+  color: var(--ink-primary);
   font-size: 0.84rem;
   font-weight: 500;
 }
 
 .lemmas-stat .foot {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--ink-muted);
   margin-top: 8px;
 }
 
 /* ── FIRST PRINCIPLES: OBSERVAÇÃO ≠ INFERÊNCIA ≠ VALIDAÇÃO ──── */
 .lemmas-belief {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: #14171c;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
   border-radius: 0.75rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1428,7 +1418,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-belief > div + div {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid var(--border-subtle);
 }
 
 .lemmas-belief b {
@@ -1436,35 +1426,35 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   font-size: 1rem;
   letter-spacing: -0.015em;
   margin: 10px 0 8px;
-  color: #eceff4;
+  color: var(--ink-primary);
 }
 
 .lemmas-belief p {
   font-size: 0.875rem;
-  color: #a8a29e;
+  color: var(--ink-secondary);
   line-height: 1.65;
   margin: 0;
 }
 
 .lemmas-belief-tag {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
-  color: #d9b452;
+  color: var(--marker-amber);
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
 .lemmas-neq {
   text-align: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: 0.85rem;
-  color: #d9b452;
+  color: var(--marker-amber);
   letter-spacing: 0.08em;
   padding: 12px 16px;
-  background: rgba(217, 180, 82, 0.06);
-  border: 1px solid rgba(217, 180, 82, 0.25);
+  background: var(--marker-amber-dim);
+  border: 1px solid var(--marker-amber-border);
   border-radius: 0.5rem;
 }
 
@@ -1476,9 +1466,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(8, 10, 14, 0.84) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background: rgba(8, 10, 14, 0.88) !important;
   z-index: 999999 !important;
   display: flex !important;
   align-items: center !important;
@@ -1489,8 +1477,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-dialog-card {
   position: relative !important;
-  background: #14171c !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 0.75rem !important;
   max-width: 1100px !important;
   width: 100% !important;
@@ -1511,15 +1499,15 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-dialog-card p {
   font-size: 0.82rem;
   padding: 12px 8px 0;
-  color: #d9b452;
+  color: var(--marker-amber);
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .lemmas-close-dialog {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: #1e2329;
-  color: #eceff4;
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   border-radius: 0.5rem;
   padding: 6px 12px;
   cursor: pointer;
@@ -1530,8 +1518,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-close-dialog:hover {
-  background: #e1bb55;
-  border-color: #e1bb55;
+  background: var(--marker-amber);
+  border-color: var(--marker-amber);
   color: #101316;
 }
 
@@ -1545,8 +1533,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-question-card {
   position: relative;
-  background: #14171c;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
   padding: 24px;
   display: flex;
@@ -1556,7 +1544,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 }
 
 .lemmas-question-card:hover {
-  border-color: rgba(217, 180, 82, 0.38);
+  border-color: var(--marker-amber-border);
 }
 
 .lemmas-question-header {
@@ -1570,10 +1558,10 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-question-badge {
   padding: 3px 8px;
   border-radius: 0.375rem;
-  background: rgba(217, 180, 82, 0.1);
-  border: 1px solid rgba(217, 180, 82, 0.25);
-  color: #d9b452;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--marker-amber-dim);
+  border: 1px solid var(--marker-amber-border);
+  color: var(--marker-amber);
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-size: 11px;
   font-weight: 600;
@@ -1581,18 +1569,18 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-question-meta {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--ink-muted);
   font-weight: 500;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .lemmas-question-title {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 1.15rem;
   font-weight: 600;
   letter-spacing: -0.015em;
-  color: #eceff4;
+  color: var(--ink-primary);
   margin-bottom: 12px;
   line-height: 1.35;
 }
@@ -1600,8 +1588,7 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-question-body {
   font-size: 0.9375rem;
   line-height: 1.68;
-  max-width: 68ch;
-  color: #eceff4;
+  color: var(--ink-primary);
   margin-bottom: 16px;
 }
 
@@ -1614,10 +1601,10 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 .lemmas-question-option-item {
   padding: 8px 12px;
   border-radius: 0.5rem;
-  background: #101316;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-board);
+  border: 1px solid var(--border-subtle);
   font-size: 0.8125rem;
-  color: #eceff4;
+  color: var(--ink-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1635,8 +1622,8 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   margin-top: 14px;
   padding: 14px;
   border-radius: 0.5rem;
-  background: #101316;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-board);
+  border: 1px solid var(--border-subtle);
   font-size: 12px;
 }
 
@@ -1646,19 +1633,19 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
-  color: #d9b452;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--marker-amber);
+  font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .lemmas-question-lemma-formula {
-  background: rgba(217, 180, 82, 0.07);
-  border: 1px solid rgba(217, 180, 82, 0.2);
+  background: var(--marker-amber-dim);
+  border: 1px solid var(--marker-amber-border);
   border-radius: 0.375rem;
   padding: 8px 10px;
   text-align: center;
   margin-bottom: 10px;
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
 }
 
 .lemmas-question-expand-btn {
@@ -1666,9 +1653,9 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
   margin-top: 14px;
   padding: 9px 12px;
   border-radius: 0.5rem;
-  border: 1px solid rgba(217, 180, 82, 0.28);
-  background: rgba(217, 180, 82, 0.08);
-  color: #d9b452;
+  border: 1px solid var(--marker-amber-border);
+  background: var(--marker-amber-dim);
+  color: var(--marker-amber);
   font-size: 12px;
   font-weight: 600;
   display: flex;
@@ -1681,147 +1668,149 @@ html[data-theme="lemmas-light"] .lemmas-nav-auth-btn:hover {
 
 .lemmas-question-expand-btn:hover {
   background: rgba(217, 180, 82, 0.16);
-  border-color: rgba(217, 180, 82, 0.5);
+  border-color: var(--marker-amber);
 }
 
 /* Regras de Light Mode para os componentes da landing */
 html[data-theme="lemmas-light"] .lemmas-banner-strip {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
 }
 
 html[data-theme="lemmas-light"] .lemmas-banner-inner .t {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-banner-inner .items span {
-  color: #1e293b;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-banner-inner .items span:before {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-terminal {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--ink-primary);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 html[data-theme="lemmas-light"] .lemmas-terminal-top {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #475569;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
+  color: var(--ink-secondary);
 }
 
-html[data-theme="lemmas-light"] .lemmas-term-comment { color: #64748b; }
-html[data-theme="lemmas-light"] .lemmas-term-key { color: #b45309; }
-html[data-theme="lemmas-light"] .lemmas-term-accent { color: #1d4ed8; }
-html[data-theme="lemmas-light"] .lemmas-term-divider { border-top-color: #e2e8f0; }
+html[data-theme="lemmas-light"] .lemmas-term-comment { color: var(--ink-muted); }
+html[data-theme="lemmas-light"] .lemmas-term-key { color: var(--marker-amber); }
+html[data-theme="lemmas-light"] .lemmas-term-accent { color: var(--marker-blue); }
+html[data-theme="lemmas-light"] .lemmas-term-divider { border-top-color: var(--border-subtle); }
 
 html[data-theme="lemmas-light"] .lemmas-term-stage {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
+  color: var(--ink-primary);
 }
 
-html[data-theme="lemmas-light"] .lemmas-term-stage b { color: #1d4ed8; }
-html[data-theme="lemmas-light"] .lemmas-term-stage small { color: #475569; }
-html[data-theme="lemmas-light"] .lemmas-term-arrow { color: #1d4ed8; }
+html[data-theme="lemmas-light"] .lemmas-term-stage b { color: var(--marker-blue); }
+html[data-theme="lemmas-light"] .lemmas-term-stage small { color: var(--ink-secondary); }
+html[data-theme="lemmas-light"] .lemmas-term-arrow { color: var(--marker-blue); }
 
 html[data-theme="lemmas-light"] .lemmas-stat,
 html[data-theme="lemmas-light"] .lemmas-case-card,
 html[data-theme="lemmas-light"] .lemmas-belief {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 html[data-theme="lemmas-light"] .lemmas-case-card:hover {
-  border-color: #94a3b8;
+  border-color: var(--border-strong);
 }
 
-html[data-theme="lemmas-light"] .lemmas-stat b { color: #1d4ed8; }
-html[data-theme="lemmas-light"] .lemmas-stat small { color: #0f172a; }
-html[data-theme="lemmas-light"] .lemmas-stat .foot { color: #64748b; }
+html[data-theme="lemmas-light"] .lemmas-stat b { color: var(--marker-blue); }
+html[data-theme="lemmas-light"] .lemmas-stat small { color: var(--ink-primary); }
+html[data-theme="lemmas-light"] .lemmas-stat .foot { color: var(--ink-muted); }
 
 html[data-theme="lemmas-light"] .lemmas-case-card .top-line,
 html[data-theme="lemmas-light"] .lemmas-case-card a.link-inline,
 html[data-theme="lemmas-light"] .lemmas-belief-tag {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-case-card h3,
 html[data-theme="lemmas-light"] .lemmas-belief b {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-case-card p,
 html[data-theme="lemmas-light"] .lemmas-belief p {
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-belief > div + div {
-  border-left-color: #e2e8f0;
+  border-left-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-neq {
-  background: rgba(29, 78, 216, 0.06);
-  border-color: rgba(29, 78, 216, 0.25);
-  color: #1d4ed8;
+  background: var(--marker-blue-dim);
+  border-color: var(--marker-blue-border);
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-card,
 html[data-theme="lemmas-light"] .lemmas-question-card {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-card:hover,
 html[data-theme="lemmas-light"] .lemmas-question-card:hover {
-  border-color: #94a3b8;
+  border-color: var(--border-strong);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-visual {
-  border-bottom-color: #e2e8f0;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-subtle);
+  border-bottom-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-desc .label,
 html[data-theme="lemmas-light"] .lemmas-text-link {
-  color: #1d4ed8;
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-bar {
-  background: #f8fafc;
-  border-color: #e2e8f0;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-desc h3,
 html[data-theme="lemmas-light"] .lemmas-question-title {
-  color: #0f172a;
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-showcase-desc p,
 html[data-theme="lemmas-light"] .lemmas-question-body {
-  color: #334155;
+  color: var(--ink-secondary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-badge {
-  background: rgba(29, 78, 216, 0.08);
-  border-color: rgba(29, 78, 216, 0.22);
-  color: #1d4ed8;
+  background: var(--marker-blue-dim);
+  border-color: var(--marker-blue-border);
+  color: var(--marker-blue);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-meta {
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-option-item {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-option-item.correct {
@@ -1831,45 +1820,45 @@ html[data-theme="lemmas-light"] .lemmas-question-option-item.correct {
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-lemma-card {
-  background: #f8fafc;
-  border-color: #e2e8f0;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-lemma-header {
-  color: #b45309;
+  color: var(--marker-amber);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-lemma-formula {
-  background: #ffffff;
-  border-color: #e2e8f0;
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-expand-btn {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-question-expand-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
 }
 
 html[data-theme="lemmas-light"] .lemmas-dialog-card {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
+  background: var(--bg-card) !important;
+  border-color: var(--border-default) !important;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22) !important;
 }
 
 html[data-theme="lemmas-light"] .lemmas-close-dialog {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+  color: var(--ink-primary);
 }
 
 html[data-theme="lemmas-light"] .lemmas-close-dialog:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: var(--marker-blue);
+  border-color: var(--marker-blue);
   color: #ffffff;
 }
 
@@ -1883,14 +1872,14 @@ html[data-theme="lemmas-light"] .lemmas-close-dialog:hover {
   }
   .lemmas-belief > div + div {
     border-left: 0;
-    border-top: 1px solid rgba(217, 180, 82, 0.2);
+    border-top: 1px solid var(--border-subtle);
   }
   .lemmas-opinion-panels {
     grid-template-columns: 1fr;
   }
   .lemmas-opinion-part + .lemmas-opinion-part {
     border-left: 0;
-    border-top: 1px solid rgba(217, 180, 82, 0.15);
+    border-top: 1px solid var(--border-subtle);
   }
 }
 
@@ -1911,8 +1900,8 @@ html[data-theme="lemmas-light"] .lemmas-close-dialog:hover {
 .lemmas-real-opinion figcaption { margin-bottom: 18px; }
 .lemmas-real-opinion figcaption strong { font-size: 22px; }
 .lemmas-real-opinion figcaption p { line-height: 1.65; margin-top: 10px; }
-.lemmas-real-opinion button { width: 100%; padding: 0; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; overflow: hidden; cursor: zoom-in; background: #14171c; }
-html[data-theme="lemmas-light"] .lemmas-real-opinion button { border-color: #e2e8f0; background: #ffffff; }
+.lemmas-real-opinion button { width: 100%; padding: 0; border: 1px solid var(--border-subtle); border-radius: 0.75rem; overflow: hidden; cursor: zoom-in; background: var(--bg-card); }
+html[data-theme="lemmas-light"] .lemmas-real-opinion button { border-color: var(--border-subtle); background: var(--bg-card); }
 .lemmas-real-opinion img { display: block; width: 100%; height: auto; }
 .lemmas-real-opinion > a { display: inline-flex; margin-top: 16px; }
 .lemmas-demo-box:has(.lemmas-real-opinion) { grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); align-items: start; }
@@ -1923,9 +1912,9 @@ html[data-theme="lemmas-light"] .lemmas-real-opinion button { border-color: #e2e
 }
 
 .lemmas-engineering-example dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; margin: 24px 0; }
-.lemmas-engineering-example dt { font-weight: 700; margin-bottom: 8px; color: #d9b452; }
+.lemmas-engineering-example dt { font-weight: 700; margin-bottom: 8px; color: var(--marker-amber); }
 .lemmas-engineering-example dd { margin: 0; line-height: 1.7; }
-html[data-theme="lemmas-light"] .lemmas-engineering-example dt { color: #1d4ed8; }
+html[data-theme="lemmas-light"] .lemmas-engineering-example dt { color: var(--marker-blue); }
 @media (max-width: 700px) { .lemmas-engineering-example dl { grid-template-columns: minmax(0, 1fr); } }
 
 /* Student guidance: one clear next step and short, expandable answers. */
@@ -1936,16 +1925,17 @@ html[data-theme="lemmas-light"] .lemmas-engineering-example dt { color: #1d4ed8;
   align-items: center;
   padding: clamp(24px, 4vw, 36px);
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.75rem;
 }
 html[data-theme="lemmas-light"] .lemmas-study-goal {
-  border-color: #e2e8f0;
+  border-color: var(--border-subtle);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 .lemmas-study-goal h2,
 .lemmas-student-faq h2 {
   margin: 0 0 18px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: clamp(1.75rem, 2.8vw, 2.35rem);
   line-height: 1.18;
   letter-spacing: -0.025em;
@@ -1968,8 +1958,8 @@ html[data-theme="lemmas-light"] .lemmas-study-goal {
 }
 .lemmas-study-goal-actions small { color: var(--ink-secondary); line-height: 1.5; }
 .lemmas-student-faq { max-width: 860px; }
-.lemmas-student-faq details { border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
-html[data-theme="lemmas-light"] .lemmas-student-faq details { border-bottom-color: #e2e8f0; }
+.lemmas-student-faq details { border-bottom: 1px solid var(--border-subtle); }
+html[data-theme="lemmas-light"] .lemmas-student-faq details { border-bottom-color: var(--border-subtle); }
 .lemmas-student-faq summary {
   display: flex;
   align-items: center;
@@ -1988,17 +1978,17 @@ html[data-theme="lemmas-light"] .lemmas-student-faq details { border-bottom-colo
 .lemmas-student-faq details[open] summary svg { transform: rotate(180deg); }
 .lemmas-student-faq details p { margin: 0 0 22px; }
 .lemmas-student-faq p a { color: var(--ink-primary); text-decoration: underline; text-underline-offset: 3px; }
-.lemmas-student-login { display: none; color: #f4efdf; font-size: .85rem; font-weight: 600; text-decoration: none; padding: 8px 4px; }
+.lemmas-student-login { display: none; color: var(--ink-primary); font-size: .85rem; font-weight: 600; text-decoration: none; padding: 8px 4px; }
 .lemmas-student-login:hover { text-decoration: underline; text-underline-offset: 4px; }
 .lemmas-study-goal a:focus-visible,
 .lemmas-student-faq summary:focus-visible,
 .lemmas-student-faq a:focus-visible,
-.lemmas-student-login:focus-visible { outline: 2px solid #d9b452; outline-offset: 4px; }
-html[data-theme="lemmas-light"] .lemmas-student-login { color: #30362f; }
+.lemmas-student-login:focus-visible { outline: 2px solid var(--marker-amber); outline-offset: 4px; }
+html[data-theme="lemmas-light"] .lemmas-student-login { color: var(--ink-secondary); }
 html[data-theme="lemmas-light"] .lemmas-study-goal a:focus-visible,
 html[data-theme="lemmas-light"] .lemmas-student-faq summary:focus-visible,
 html[data-theme="lemmas-light"] .lemmas-student-faq a:focus-visible,
-html[data-theme="lemmas-light"] .lemmas-student-login:focus-visible { outline-color: #866516; }
+html[data-theme="lemmas-light"] .lemmas-student-login:focus-visible { outline-color: var(--marker-blue); }
 @media (max-width: 760px) {
   .lemmas-study-goal { grid-template-columns: minmax(0, 1fr); gap: 22px; }
 }

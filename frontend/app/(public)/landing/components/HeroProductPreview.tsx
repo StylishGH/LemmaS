@@ -139,32 +139,32 @@ export function HeroProductPreview() {
   return (
     <div className="relative w-full max-w-[560px] mx-auto">
       {/* Painel da questão estilo autêntico LemmaS */}
-      <div className="relative rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] shadow-sm overflow-hidden transition-colors">
+      <div className="relative rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-md dark:shadow-none overflow-hidden transition-colors">
 
         {/* CABEÇALHO COM BADGES REAIS DO LEMMAS */}
-        <div className="px-5 py-3.5 bg-slate-50/90 dark:bg-[#101316] border-b border-zinc-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="px-5 py-3.5 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold font-mono tabular-nums bg-amber-500/12 border border-amber-500/30 text-amber-800 dark:text-[#d9b452]">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold font-mono tabular-nums bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)]">
               {q.origin}
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/70 dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300">
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--bg-elevated)] text-[var(--ink-secondary)]">
               {q.category}
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/70 dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300">
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--bg-elevated)] text-[var(--ink-secondary)]">
               {q.type}
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium tabular-nums text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium tabular-nums text-[var(--marker-green)] bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-green)]" />
               {q.level}
             </span>
           </div>
 
           <Link
             href={`/resolver?id=${q.id}`}
-            className="text-[11px] font-semibold text-amber-700 dark:text-[#d9b452] hover:underline flex items-center gap-1 transition"
+            className="text-[11px] font-semibold text-[var(--marker-amber)] hover:underline flex items-center gap-1 transition-colors"
             title="Abrir esta questão no Modo Foco em tela cheia"
           >
-            <Sparkles size={12} className="text-amber-600 dark:text-[#d9b452]" />
+            <Sparkles size={12} />
             <span>Modo Foco ↗</span>
           </Link>
         </div>
@@ -172,33 +172,33 @@ export function HeroProductPreview() {
         {/* CORPO DA QUESTÃO */}
         <div className="p-5 sm:p-6 space-y-4">
           {/* Breadcrumb da Matéria */}
-          <div className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[11px] font-mono text-[var(--ink-muted)] flex flex-wrap items-center justify-between gap-2">
             <div>
               <span>{q.materia}</span>
               <span className="mx-1.5 opacity-40">›</span>
-              <strong className="text-slate-800 dark:text-[#eceff4] font-semibold">{q.topico}</strong>
+              <strong className="text-[var(--ink-primary)] font-semibold">{q.topico}</strong>
             </div>
-            <span className="text-[10px] tabular-nums text-slate-400 dark:text-zinc-500">
+            <span className="text-[10px] tabular-nums text-[var(--ink-muted)]">
               ID #{q.id}
             </span>
           </div>
 
           {/* Enunciado formatado com KaTeX */}
-          <div className="text-[15px] max-w-[68ch] font-normal text-slate-900 dark:text-[#eceff4] leading-relaxed whitespace-pre-line">
+          <div className="font-serif-math text-[16px] w-full font-normal text-[var(--ink-primary)] leading-relaxed whitespace-pre-line">
             <MathText text={q.question} />
           </div>
 
           {/* Figura da Questão (se houver) */}
           {q.figuraUrl && (
-            <div className="my-2 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80">
+            <div className="my-2 flex flex-col items-center justify-center p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={q.figuraUrl}
                 alt="Figura geométrica da questão"
-                className="question-diagram-invertible max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-transparent p-2 border border-zinc-200/80 dark:border-zinc-800/80"
+                className="question-diagram-invertible max-h-44 max-w-full rounded-lg object-contain bg-white dark:bg-transparent p-2 border border-[var(--border-subtle)]"
                 loading="lazy"
               />
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 mt-2">
+              <span className="text-[10px] font-mono text-[var(--ink-muted)] mt-2">
                 Diagrama geométrico da questão
               </span>
             </div>
@@ -206,7 +206,7 @@ export function HeroProductPreview() {
 
           {/* Alternativas Reais do LemmaS */}
           <div className="space-y-2 pt-1">
-            <div className="text-[10px] font-mono font-semibold tracking-wider uppercase text-slate-500 dark:text-zinc-400">
+            <div className="text-[10px] font-mono font-semibold tracking-wider uppercase text-[var(--ink-muted)]">
               Alternativas (clique para responder):
             </div>
 
@@ -215,16 +215,16 @@ export function HeroProductPreview() {
                 const isSelected = selectedLetter === opt.letter;
                 const isOptionCorrect = opt.letter === q.correctLetter;
 
-                let btnClass = "border border-zinc-200/80 dark:border-zinc-800/80 bg-slate-50/70 dark:bg-[#101316]/80 text-slate-800 dark:text-[#eceff4] hover:border-amber-600/50 dark:hover:border-amber-400/50 hover:bg-amber-500/5";
+                let btnClass = "border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] hover:border-[var(--marker-amber-border)]";
 
                 if (isSelected) {
                   if (isOptionCorrect) {
-                    btnClass = "border border-emerald-600/70 dark:border-emerald-400/70 ring-1 ring-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold";
+                    btnClass = "border border-[var(--marker-green-border)] bg-[var(--marker-green-dim)] text-[var(--marker-green)] font-semibold";
                   } else {
-                    btnClass = "border border-amber-600/70 dark:border-amber-400/70 ring-1 ring-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-[#d9b452] font-semibold";
+                    btnClass = "border border-[var(--marker-amber-border)] bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] font-semibold";
                   }
                 } else if (shouldShowExplain && isOptionCorrect) {
-                  btnClass = "border border-emerald-600/60 dark:border-emerald-400/60 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold";
+                  btnClass = "border border-[var(--marker-green-border)] bg-[var(--marker-green-dim)] text-[var(--marker-green)] font-semibold";
                 }
 
                 return (
@@ -234,7 +234,7 @@ export function HeroProductPreview() {
                     onClick={() => handleSelect(opt.letter)}
                     className={`py-2.5 px-3 rounded-lg text-left text-xs transition-colors cursor-pointer flex items-center gap-2 ${btnClass}`}
                   >
-                    <span className="font-mono font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-[#d9b452] shrink-0">
+                    <span className="font-mono font-semibold px-1.5 py-0.5 rounded-md bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] shrink-0">
                       ({opt.letter})
                     </span>
                     <span className="overflow-x-auto scrollbar-none font-medium">
@@ -248,15 +248,15 @@ export function HeroProductPreview() {
 
           {/* FEEDBACK REAL: STATUS + REPETIÇÃO ESPAÇADA SM-2 + LEMA ASSOCIADO */}
           {shouldShowExplain && (
-            <div className={`p-4 rounded-xl text-xs leading-relaxed animate-fadeIn border space-y-3 ${
+            <div className={`p-4 rounded-xl text-xs leading-relaxed animate-fadeIn border space-y-3 text-[var(--ink-primary)] ${
               isAnswered && !isCorrect
-                ? "bg-amber-500/8 border-amber-500/30 text-slate-800 dark:text-[#eceff4]"
-                : "bg-emerald-500/8 border-emerald-500/30 text-slate-800 dark:text-[#eceff4]"
+                ? "bg-[var(--marker-amber-dim)] border-[var(--marker-amber-border)]"
+                : "bg-[var(--marker-green-dim)] border-[var(--marker-green-border)]"
             }`}>
               {/* Status do acerto */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-200/70 dark:border-zinc-800/80">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
                 <span className={`font-semibold flex items-center gap-1.5 ${
-                  isAnswered && !isCorrect ? "text-amber-700 dark:text-[#d9b452]" : "text-emerald-700 dark:text-emerald-400"
+                  isAnswered && !isCorrect ? "text-[var(--marker-amber)]" : "text-[var(--marker-green)]"
                 }`}>
                   <CheckCircle2 size={14} />
                   <span>
@@ -267,53 +267,53 @@ export function HeroProductPreview() {
                       : `Gabarito Oficial: Alternativa (${q.correctLetter})`}
                   </span>
                 </span>
-                <span className="font-mono text-[10px] font-semibold text-amber-700 dark:text-[#d9b452] bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-md">
+                <span className="font-mono text-[10px] font-semibold text-[var(--marker-amber)] bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] px-2 py-0.5 rounded-md">
                   Gabarito: ({q.correctLetter})
                 </span>
               </div>
 
               {/* CARD DE LEMA MATEMÁTICO DO LEMMAS */}
-              <div className="p-3 rounded-lg bg-white dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
+              <div className="p-3 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold font-mono tabular-nums text-amber-700 dark:text-[#d9b452]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold font-mono tabular-nums text-[var(--marker-amber)]">
                     <BookOpen size={12} />
                     <span>Lema #{q.lemma.number} · {q.lemma.name}</span>
                   </span>
-                  <span className="text-[9px] font-mono text-slate-500 dark:text-zinc-500 uppercase">
+                  <span className="text-[9px] font-mono text-[var(--ink-muted)] uppercase">
                     Catálogo de Lemas
                   </span>
                 </div>
 
                 {/* Fórmula em destaque com KaTeX */}
-                <div className="py-1.5 px-3 rounded-md bg-amber-500/8 border border-amber-500/20 text-center font-serif text-slate-900 dark:text-[#eceff4] overflow-x-auto">
+                <div className="py-1.5 px-3 rounded-md bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-center font-serif text-[var(--ink-primary)] overflow-x-auto">
                   <MathText text={`$${q.lemma.formula}$`} />
                 </div>
 
-                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
-                  <strong className="text-amber-700 dark:text-[#d9b452]">Gatilho Cognitivo: </strong>
+                <p className="text-[11px] text-[var(--ink-secondary)] leading-relaxed">
+                  <strong className="text-[var(--marker-amber)]">Gatilho Cognitivo: </strong>
                   {q.lemma.trigger}
                 </p>
 
-                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
-                  <strong className="text-amber-700 dark:text-[#d9b452]">Ação / Teorema: </strong>
+                <p className="text-[11px] text-[var(--ink-secondary)] leading-relaxed">
+                  <strong className="text-[var(--marker-amber)]">Ação / Teorema: </strong>
                   {q.lemma.action}
                 </p>
               </div>
 
               {/* Agendamento da repetição espaçada SM-2 */}
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#101316] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono tabular-nums text-slate-700 dark:text-zinc-300">
+              <div className="p-2.5 rounded-lg bg-[var(--bg-board)] border border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono tabular-nums text-[var(--ink-secondary)]">
                 <span className="flex items-center gap-1.5">
-                  <Calendar size={13} className="text-amber-600 dark:text-[#d9b452]" />
+                  <Calendar size={13} className="text-[var(--marker-amber)]" />
                   <span>Repetição Espaçada SM-2:</span>
                 </span>
-                <span className="font-semibold text-amber-700 dark:text-[#d9b452]">
+                <span className="font-semibold text-[var(--marker-amber)]">
                   {isCorrect ? "Próxima revisão em 3 dias (EF: 2.50)" : "Revisão prioritária hoje (EF: 2.36)"}
                 </span>
               </div>
 
               {/* Explicação Passo a Passo */}
-              <div className="space-y-1 text-slate-700 dark:text-zinc-200">
-                <strong className="text-[11px] font-semibold text-slate-900 dark:text-[#eceff4] block">
+              <div className="space-y-1 text-[var(--ink-secondary)]">
+                <strong className="text-[11px] font-semibold text-[var(--ink-primary)] block">
                   Resolução passo a passo guiada pelo Lema:
                 </strong>
                 <div className="text-xs leading-relaxed whitespace-pre-line overflow-x-auto">
@@ -325,13 +325,13 @@ export function HeroProductPreview() {
 
           {/* TUTOR SOCRÁTICO ADAPTATIVO (MÉTODO PÓLYA) */}
           {socraticLevel !== null && !shouldShowExplain && (
-            <div className="p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/25 text-xs text-slate-800 dark:text-[#eceff4] leading-relaxed animate-fadeIn space-y-2">
-              <div className="flex items-center justify-between pb-1.5 border-b border-amber-500/20">
-                <strong className="text-amber-700 dark:text-[#d9b452] flex items-center gap-1.5 font-mono text-[10px] uppercase tabular-nums">
+            <div className="p-3.5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs text-[var(--ink-primary)] leading-relaxed animate-fadeIn space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--marker-blue-border)]">
+                <strong className="text-[var(--marker-blue)] flex items-center gap-1.5 font-mono text-[10px] uppercase tabular-nums">
                   <Lightbulb size={12} />
                   <span>Tutor Socrático · Método Pólya (Nível {socraticLevel})</span>
                 </strong>
-                <span className="text-[9px] font-mono text-slate-500 dark:text-zinc-400">sem spoiler</span>
+                <span className="text-[9px] font-mono text-[var(--ink-muted)]">sem spoiler</span>
               </div>
               <div className="text-xs overflow-x-auto">
                 {socraticLevel === 1 && <MathText text={q.socraticHint.level1} />}
@@ -342,13 +342,13 @@ export function HeroProductPreview() {
           )}
 
           {/* CONTROLES DO RODAPÉ */}
-          <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div className="pt-3 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-[11px]">
             <div className="flex items-center gap-3">
               {!shouldShowExplain && (
                 <button
                   type="button"
                   onClick={() => setSocraticLevel((prev) => (prev === null ? 1 : prev < 3 ? prev + 1 : null))}
-                  className="text-amber-700 dark:text-[#d9b452] font-semibold hover:underline flex items-center gap-1 cursor-pointer tabular-nums"
+                  className="text-[var(--marker-blue)] font-semibold hover:underline flex items-center gap-1 cursor-pointer tabular-nums"
                 >
                   <Lightbulb size={12} />
                   <span>
@@ -364,7 +364,7 @@ export function HeroProductPreview() {
               <button
                 type="button"
                 onClick={() => setForceShowExplain(!shouldShowExplain)}
-                className="text-slate-600 dark:text-zinc-400 hover:text-amber-700 dark:hover:text-[#d9b452] font-semibold flex items-center gap-1 cursor-pointer transition"
+                className="text-[var(--ink-secondary)] hover:text-[var(--marker-amber)] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
               >
                 {shouldShowExplain ? (
                   <>
@@ -383,7 +383,7 @@ export function HeroProductPreview() {
             <div className="flex items-center gap-2">
               <Link
                 href={`/resolver?id=${q.id}`}
-                className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-[#d9b452] font-semibold hover:bg-amber-500/15 transition flex items-center gap-1"
+                className="px-2.5 py-1 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] font-semibold hover:opacity-90 transition-opacity flex items-center gap-1"
                 title="Praticar esta questão com S-Pen e Régua/Compasso na Bancada"
               >
                 <Compass size={11} />
@@ -393,7 +393,7 @@ export function HeroProductPreview() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-2.5 py-1 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 font-semibold hover:border-amber-500/40 hover:text-amber-700 dark:hover:text-[#d9b452] flex items-center gap-1 transition cursor-pointer"
+                className="px-2.5 py-1 rounded-lg border border-[var(--border-default)] text-[var(--ink-primary)] font-semibold hover:border-[var(--border-strong)] flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <span>Outra questão</span>
                 <ArrowRight size={12} />
@@ -401,9 +401,9 @@ export function HeroProductPreview() {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-zinc-400">
+          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px] font-mono text-[var(--ink-muted)]">
             <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck size={12} className="text-emerald-600 dark:text-emerald-400" />
+              <ShieldCheck size={12} className="text-[var(--marker-green)]" />
               <span>Aprender com os erros.</span>
             </span>
             <span className="tabular-nums">Exemplo {currentIdx + 1} de {QUESTIONS.length}</span>
