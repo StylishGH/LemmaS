@@ -180,7 +180,7 @@ export default function AuditoriaFigurasPage() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setFiltroFormato("todos")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filtroFormato === "todos"
                   ? "bg-slate-900 text-white dark:bg-stone-100 dark:text-stone-900"
                   : "bg-white dark:bg-stone-800 text-slate-600 dark:text-stone-300 border border-slate-200 dark:border-stone-700"
@@ -190,23 +190,23 @@ export default function AuditoriaFigurasPage() {
             </button>
             <button
               onClick={() => setFiltroFormato("svg")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filtroFormato === "svg"
                   ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-stone-900"
                   : "bg-white dark:bg-stone-800 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
               }`}
             >
-              ⚡ Apenas SVG ({totalSvg})
+              Apenas SVG ({totalSvg})
             </button>
             <button
               onClick={() => setFiltroFormato("raster")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filtroFormato === "raster"
                   ? "bg-amber-600 text-white dark:bg-amber-500 dark:text-stone-900"
                   : "bg-white dark:bg-stone-800 text-amber-600 dark:text-amber-400 border border-amber-500/30"
               }`}
             >
-              🖼️ Apenas Raster ({totalRaster})
+              Apenas Raster ({totalRaster})
             </button>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function AuditoriaFigurasPage() {
             return (
               <div
                 key={q.id}
-                className="rounded-2xl border border-slate-200 dark:border-stone-800 bg-white dark:bg-stone-900/90 shadow-sm flex flex-col overflow-hidden transition-all hover:border-amber-500/40"
+                className="rounded-2xl border border-slate-200 dark:border-stone-800 bg-white dark:bg-stone-900/90 shadow-sm flex flex-col overflow-hidden transition-colors hover:border-amber-500/40"
               >
                 {/* CABEÇALHO DO CARD */}
                 <div className="p-4 border-b border-slate-100 dark:border-stone-800/80 flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-stone-900/50">

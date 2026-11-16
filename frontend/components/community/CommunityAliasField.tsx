@@ -21,11 +21,11 @@ function AliasEditor({ guest, loadingProfile }: { guest: boolean; loadingProfile
     }).catch(() => { if (!controller.signal.aborted) { setNotice('Não foi possível carregar seu apelido.'); setLoading(false); } });
     return () => controller.abort();
   }, [guest, loadingProfile, retry]);
-  if (guest && !loadingProfile) return <p className="text-sm">Entre na sua conta para escolher seu apelido.</p>;
-  return <div className="space-y-2 rounded-xl border border-slate-200 p-4 dark:border-zinc-700" id="apelido-comunidade">
-    <label htmlFor="community-alias" className="block text-sm font-semibold text-slate-900 dark:text-zinc-100">Apelido público na comunidade</label>
-    <p className="text-xs text-slate-600 dark:text-zinc-400">É assim que você aparece nos comentários. Use de 3 a 30 caracteres e evite dados pessoais. Alterações também aparecem nos comentários anteriores.</p>
-    <div className="flex flex-wrap gap-2"><input id="community-alias" value={alias} onChange={(event) => setAlias(event.target.value)} minLength={3} maxLength={30} autoComplete="nickname" disabled={loading || pending || loadingProfile} placeholder="Ex.: Aspirante_2027" className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm text-slate-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100" />
+  if (guest && !loadingProfile) return <p className="text-sm text-[var(--ink-secondary)]">Entre na sua conta para escolher seu apelido.</p>;
+  return <div className="space-y-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4" id="apelido-comunidade">
+    <label htmlFor="community-alias" className="block text-sm font-semibold text-[var(--ink-primary)]">Apelido público na comunidade</label>
+    <p className="text-xs text-[var(--ink-secondary)]">É assim que você aparece nos comentários. Use de 3 a 30 caracteres e evite dados pessoais. Alterações também aparecem nos comentários anteriores.</p>
+    <div className="flex flex-wrap gap-2"><input id="community-alias" value={alias} onChange={(event) => setAlias(event.target.value)} minLength={3} maxLength={30} autoComplete="nickname" disabled={loading || pending || loadingProfile} placeholder="Ex.: Aspirante_2027" className="min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)]" />
       <button type="button" disabled={loading || pending || loadingProfile || alias.trim().length < 3} className="lemmas-gold-cta rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50" onClick={async () => {
         setPending(true); setNotice('');
         try {
@@ -34,7 +34,7 @@ function AliasEditor({ guest, loadingProfile }: { guest: boolean; loadingProfile
         } catch (err) { setNotice(err instanceof Error ? err.message : 'Não foi possível salvar.'); }
         finally { setPending(false); }
       }}>{pending ? 'Salvando…' : 'Salvar apelido'}</button></div>
-    {loading && <p role="status" className="text-xs">Carregando apelido…</p>}
-    {notice && <p role="status" className="text-xs text-slate-700 dark:text-zinc-300">{notice} {notice.includes('carregar') && <button type="button" onClick={() => setRetry(retry + 1)} className="underline">Tentar novamente</button>}</p>}
+    {loading && <p role="status" className="text-xs text-[var(--ink-muted)]">Carregando apelido…</p>}
+    {notice && <p role="status" className="text-xs text-[var(--ink-secondary)]">{notice} {notice.includes('carregar') && <button type="button" onClick={() => setRetry(retry + 1)} className="underline text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">Tentar novamente</button>}</p>}
   </div>;
 }

@@ -3,9 +3,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-chalk: var(--font-caveat), cursive;
+}
+
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Escala padrão da plataforma LEMMAS (equivalente a zoom 120%-128%) para legibilidade editorial e matemática */
@@ -34,79 +42,213 @@ html {
      ========================================================================== */
   :root,
   html[data-theme="lemmas-light"] {
-    --background: #f8fafc;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+    --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: var(--font-newsreader), Georgia, Cambria, "Times New Roman", serif;
+    --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-chalk: var(--font-caveat), cursive;
+
+    --background: #eef2f6;
     --foreground: #0f172a;
-    --bg-board: #f8fafc;          /* Superfície geral (Porcelana fria) */
-    --bg-card: #ffffff;           /* Superfície do quadro branco puro */
-    --bg-elevated: #f1f5f9;       /* Inputs, filtros e hover */
-    
-    --border-board: #cbd5e1;      /* Divisórias sutis de alumínio/moldura */
-    --border-badge: #cbd5e1;      /* Traço fino de contorno */
-    --border-wood-edge: #94a3b8;  /* Reflexo chanfrado da moldura de quadro branco */
+    --bg-board: #eef2f6;          /* Lousa branca de porcelana acetinada */
+    --bg-card: #ffffff;           /* Enunciados, cartões, cabeçalhos */
+    --bg-elevated: #e3e9f0;       /* Alternativas em repouso, inputs, blocos KaTeX */
+    --bg-subtle: #d6dfe9;         /* Trilhos, badges neutros, divisórias preenchidas */
+
+    --border-subtle: #cbd5e1;
+    --border-default: #94a3b8;
+    --border-strong: #64748b;
+    --border-board: #cbd5e1;      /* Alumínio anodizado claro */
+    --border-badge: #cbd5e1;
+    --border-wood-edge: #94a3b8;
+    --frame-trim: #cbd5e1;
 
     --ink-primary: #0f172a;       /* Piloto Preto (Enunciados e KaTeX) */
-    --ink-secondary: #475569;     /* Cinza grafite (Subtítulos e metadados) */
-    --ink-muted: #64748b;         /* Rascunho / placeholders */
+    --ink-secondary: #334155;     /* Grafite técnico */
+    --ink-muted: #475569;         /* Metadados e placeholders */
 
-    /* Tintas de Piloto (Alta densidade, baixa luminosidade para leitura no branco) */
-    --marker-blue: #1d4ed8;       /* Azul Royal (Banca / Tópicos) */
-    --marker-red: #dc2626;        /* Vermelho (Difícil / Alertas) */
-    --marker-green: #15803d;      /* Verde (Fácil / Gabarito / Sucesso) */
-    --marker-amber: #b45309;      /* Laranja/Ocre (Média / Destaque) */
+    /* Tintas de Piloto Técnico */
+    --marker-blue: #1d4ed8;       /* Rigor / MathAI / Tópicos */
+    --marker-blue-dim: rgba(29, 78, 216, 0.08);
+    --marker-blue-border: rgba(29, 78, 216, 0.25);
 
-    /* Fundo das Badges (Água de limpeza / translúcido) */
-    --badge-bg: rgba(241, 245, 249, 0.8);
-    --border-badge: #cbd5e1;
+    --marker-green: #15803d;      /* Validação / Gabarito / SM-2 em dia / Fácil */
+    --marker-green-dim: rgba(21, 128, 61, 0.08);
+    --marker-green-border: rgba(21, 128, 61, 0.25);
 
+    --marker-red: #dc2626;        /* Desvio Conceitual / Nível 5 Rendição / Difícil */
+    --marker-red-dim: rgba(220, 38, 38, 0.08);
+    --marker-red-border: rgba(220, 38, 38, 0.25);
+
+    --marker-amber: #b45309;      /* Lema / Gatilho Cognitivo / CTA Principal */
+    --marker-amber-dim: rgba(180, 83, 9, 0.08);
+    --marker-amber-border: rgba(180, 83, 9, 0.28);
+
+    --badge-bg: rgba(238, 242, 246, 0.9);
     --card-bg: #ffffff;
-    --card-border: #e2e8f0;
+    --card-border: #cbd5e1;
     --card-hover: rgba(29, 78, 216, 0.12);
-    --accent-purple: #1d4ed8;
+    --accent-purple: #1d4ed8;     /* Aliased para Rigor Azul — zero roxo AI slop */
     --accent-gold: #b45309;
     --gold-border: rgba(180, 83, 9, 0.35);
     --text-muted: #64748b;
-    --scrollbar-track: #f1f5f9;
+    --scrollbar-track: #eef2f6;
     --scrollbar-thumb: #cbd5e1;
   }
 
   /* ==========================================================================
-     MODO DARK: QUADRO NEGRO & GIZ (Slate & Mineral Chalk)
-     Ardósia mineral fosca, giz branco marfim, zero efeito neon.
+     MODO DARK: QUADRO NEGRO & GIZ (Mineral Slate & Ivory Chalk)
+     Ardósia mineral fosca, giz branco marfim, zero ruído roxo.
      ========================================================================== */
   .dark,
   html[data-theme="lemmas-dark"] {
     --background: #101316;
     --foreground: #eceff4;
-    --bg-board: #101316;          /* Moldura escura profunda */
-    --bg-card: #14171c;           /* Fundo da lousa mineral fosca (Ardósia) */
-    --bg-elevated: #1e2329;       /* Apagador / rastro de giz suave */
+    --bg-board: #101316;          /* Ardósia mineral profunda */
+    --bg-card: #15191f;           /* Superfície de enunciados e painéis */
+    --bg-elevated: #1c222a;       /* Alternativas, inputs, hover */
+    --bg-subtle: #252c37;         /* Badges neutros, trilhos */
 
-    --border-board: #63391f;      /* Moldura de madeira nobre estrutural visível (carvalho escuro / teca) */
-    --border-wood-edge: #c68a53;  /* Chanfro chanfrado dourado da madeira */
-    --border-badge: rgba(255, 255, 255, 0.12);
+    --border-subtle: rgba(236, 239, 244, 0.08);
+    --border-default: rgba(236, 239, 244, 0.14);
+    --border-strong: rgba(236, 239, 244, 0.24);
+    --border-board: #5c3a21;      /* Madeira nogueira discreta */
+    --border-wood-edge: #b88149;
+    --border-badge: rgba(236, 239, 244, 0.14);
+    --frame-trim: #5c3a21;
 
-    --ink-primary: #eceff4;       /* Giz Branco Marfim (Não queima a retina) */
-    --ink-secondary: #94a3b8;     /* Pó de giz secundário */
-    --ink-muted: #6c757d;         /* Giz apagado */
+    --ink-primary: #eceff4;       /* Giz Branco Marfim */
+    --ink-secondary: #9aa5b4;     /* Pó de giz secundário */
+    --ink-muted: #6e7a8a;         /* Giz apagado / metadados */
 
-    /* Pigmentos de Giz Pastel (Baixa saturação, alta luminosidade fosca) */
-    --marker-blue: #93c5fd;       /* Giz Azul Bebê */
-    --marker-red: #fda4af;        /* Giz Rosa/Salmão (Difícil) */
-    --marker-green: #86efac;      /* Giz Verde Menta */
-    --marker-amber: #fde047;      /* Giz Amarelo Clássico (EFOMM / Simulado) */
+    /* Pigmentos de Giz Mineral */
+    --marker-blue: #93c5fd;       /* Rigor / MathAI / Geometria */
+    --marker-blue-dim: rgba(147, 197, 253, 0.10);
+    --marker-blue-border: rgba(147, 197, 253, 0.28);
 
-    /* Fundo das Badges (Apenas um contorno de giz na lousa, sem fundo colorido!) */
+    --marker-green: #86efac;      /* Validação / Gabarito / Fácil */
+    --marker-green-dim: rgba(134, 239, 172, 0.10);
+    --marker-green-border: rgba(134, 239, 172, 0.28);
+
+    --marker-red: #fda4af;        /* Desvio / Difícil */
+    --marker-red-dim: rgba(253, 164, 175, 0.10);
+    --marker-red-border: rgba(253, 164, 175, 0.28);
+
+    --marker-amber: #fde047;      /* Lema / CTA / Simulado */
+    --marker-amber-dim: rgba(253, 224, 71, 0.10);
+    --marker-amber-border: rgba(253, 224, 71, 0.30);
+
     --badge-bg: rgba(255, 255, 255, 0.03);
-
-    --card-bg: rgba(22, 26, 30, 0.95);
-    --card-border: rgba(255, 255, 255, 0.08);
+    --card-bg: #15191f;
+    --card-border: rgba(236, 239, 244, 0.08);
     --card-hover: rgba(253, 224, 71, 0.2);
-    --accent-purple: #93c5fd;
+    --accent-purple: #93c5fd;     /* Aliased para Rigor Giz Azul Celeste */
     --accent-gold: #fde047;
     --gold-border: rgba(253, 224, 71, 0.35);
-    --text-muted: #adb5bd;
+    --text-muted: #9aa5b4;
     --scrollbar-track: #101316;
-    --scrollbar-thumb: #1e2329;
+    --scrollbar-thumb: #252c37;
+  }
+
+  /* ==========================================================================
+     PROPOSTA B (?proposal=b): ATELIER EUCLIDIANO & CADERNO DE DEMONSTRAÇÃO
+     ========================================================================== */
+  html[data-proposal="b"],
+  html[data-proposal="b"][data-theme="lemmas-light"] {
+    --background: #faf7f2;
+    --foreground: #141413;
+    --bg-board: #faf7f2;
+    --bg-card: #ffffff;
+    --bg-elevated: #f3eee6;
+    --bg-subtle: #e7dfd2;
+    --border-subtle: #e5ded2;
+    --border-default: #d6cdbf;
+    --border-strong: #b4a895;
+    --border-board: #d6cdbf;
+    --border-badge: #d6cdbf;
+    --border-wood-edge: #9c8f7a;
+    --frame-trim: #c7b8a1;
+    --ink-primary: #141413;
+    --ink-secondary: #4a4843;
+    --ink-muted: #73706a;
+    --marker-blue: #1e40af;
+    --marker-blue-dim: rgba(30, 64, 175, 0.08);
+    --marker-blue-border: rgba(30, 64, 175, 0.26);
+    --marker-green: #15803d;
+    --marker-green-dim: rgba(21, 128, 61, 0.08);
+    --marker-green-border: rgba(21, 128, 61, 0.26);
+    --marker-red: #b91c1c;
+    --marker-red-dim: rgba(185, 28, 28, 0.08);
+    --marker-red-border: rgba(185, 28, 28, 0.26);
+    --marker-amber: #a16207;
+    --marker-amber-dim: rgba(161, 98, 7, 0.09);
+    --marker-amber-border: rgba(161, 98, 7, 0.30);
+    --card-bg: #ffffff;
+    --card-border: #e5ded2;
+    --accent-purple: #1e40af;
+    --accent-gold: #a16207;
+    --gold-border: rgba(161, 98, 7, 0.35);
+    --text-muted: #73706a;
+    --scrollbar-track: #f3eee6;
+    --scrollbar-thumb: #d6cdbf;
+  }
+
+  html[data-proposal="b"].dark,
+  html[data-proposal="b"][data-theme="lemmas-dark"] {
+    --background: #0d1412;
+    --foreground: #f2efe9;
+    --bg-board: #0d1412;
+    --bg-card: #121b18;
+    --bg-elevated: #192521;
+    --bg-subtle: #21302b;
+    --border-subtle: rgba(242, 239, 233, 0.09);
+    --border-default: rgba(242, 239, 233, 0.16);
+    --border-strong: rgba(242, 239, 233, 0.26);
+    --border-board: #6b4829;
+    --border-badge: rgba(242, 239, 233, 0.16);
+    --border-wood-edge: #c9975b;
+    --frame-trim: #6b4829;
+    --ink-primary: #f2efe9;
+    --ink-secondary: #9fb3aa;
+    --ink-muted: #6c8077;
+    --marker-blue: #7dd3fc;
+    --marker-blue-dim: rgba(125, 211, 252, 0.10);
+    --marker-blue-border: rgba(125, 211, 252, 0.28);
+    --marker-green: #86efac;
+    --marker-green-dim: rgba(134, 239, 172, 0.10);
+    --marker-green-border: rgba(134, 239, 172, 0.28);
+    --marker-red: #fda4af;
+    --marker-red-dim: rgba(253, 164, 175, 0.10);
+    --marker-red-border: rgba(253, 164, 175, 0.28);
+    --marker-amber: #facc15;
+    --marker-amber-dim: rgba(250, 204, 21, 0.10);
+    --marker-amber-border: rgba(250, 204, 21, 0.32);
+    --card-bg: #121b18;
+    --card-border: rgba(242, 239, 233, 0.09);
+    --accent-purple: #7dd3fc;
+    --accent-gold: #facc15;
+    --gold-border: rgba(250, 204, 21, 0.35);
+    --text-muted: #9fb3aa;
+    --scrollbar-track: #0d1412;
+    --scrollbar-thumb: #21302b;
+  }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  button, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 150ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(0.97);
   }
 }
 
@@ -122,11 +264,12 @@ html {
   padding: 0.1875rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
   border-radius: 0.375rem;
   background-color: var(--badge-bg);
   border: 1px solid var(--border-badge);
   color: var(--ink-secondary);
-  transition: all 0.15s ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms var(--ease-out);
 }
 
 /* Indicador pontual (Bolinha de giz/piloto em vez de pintar o fundo inteiro) */
@@ -153,11 +296,11 @@ html[data-theme="lemmas-dark"] .question-diagram-invertible {
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-board);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
   overflow-x: hidden;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 /* Scrollbar estilizada */
@@ -177,14 +320,18 @@ body {
 }
 
 .font-serif-math {
-  font-family: Georgia, 'Times New Roman', Cambria, serif;
+  font-family: var(--font-serif);
+}
+
+.font-chalk {
+  font-family: var(--font-chalk);
 }
 
 .lemmas-gold-cta {
   background-color: var(--marker-blue, #1d4ed8);
   color: #ffffff;
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: transform 150ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms var(--ease-out);
 }
 .lemmas-gold-cta:hover {
   background-color: #1e40af;
@@ -216,45 +363,441 @@ html:not(.dark) .gold-glow {
 }
 
 .glass-panel {
-  background: var(--card-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--card-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
 }
 
-/* Textura e granulação de lousa/quadro no App Interno */
+/* Superfície Mineral (Quadro Negro) & Porcelana Acetinada (Lousa) no App Interno */
 .lemmas-app-frame {
   position: relative;
   min-height: 100vh;
-  background-color: #0e0d16;
-  background-image: 
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.025), transparent 32%),
-    radial-gradient(circle at 18% 75%, rgba(255, 255, 255, 0.015), transparent 28%),
-    repeating-radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 5px);
-  background-size: auto, auto, 17px 17px;
-  transition: background-color 0.3s ease, background-image 0.3s ease;
+  background-color: var(--bg-board);
+  background-image: radial-gradient(ellipse 80% 45% at 50% 0%, rgba(147, 197, 253, 0.045), transparent 70%);
+  transition: background-color 200ms ease;
 }
 
 html[data-theme="lemmas-light"] .lemmas-app-frame,
 html:not(.dark) .lemmas-app-frame {
-  background-color: #e9eef2;
-  background-image: 
-    linear-gradient(145deg, #f0f4f8 0%, #e9eef2 42%, #d8e1e8 72%, #cad5de 100%),
-    radial-gradient(circle at 52% 14%, rgba(255, 255, 255, 0.5), transparent 34%),
-    repeating-radial-gradient(circle at 18% 22%, rgba(54, 91, 125, 0.016) 0 1px, transparent 1px 5px);
-  background-size: auto, auto, 17px 17px;
+  background-color: var(--bg-board);
+  background-image: radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 255, 255, 0.72), transparent 70%);
+}
+
+html[data-proposal="b"].dark .lemmas-app-frame,
+html[data-proposal="b"][data-theme="lemmas-dark"] .lemmas-app-frame {
+  background-image: radial-gradient(ellipse 80% 45% at 50% 0%, rgba(125, 211, 252, 0.04), transparent 70%);
 }
 
 .lemmas-grain-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  display: none;
 }
 
-html[data-theme="lemmas-light"] .lemmas-grain-overlay,
-html:not(.dark) .lemmas-grain-overlay {
-  opacity: 0.035;
+@keyframes lemmasFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lemmasPopoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: lemmasFadeIn 180ms var(--ease-out) both;
+}
+
+.lemmas-popover-enter {
+  animation: lemmasPopoverIn 160ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .lemmas-popover-enter {
+    animation-duration: 120ms;
+    transform: none !important;
+  }
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: none;
+  }
+}
+
+
+/* ==========================================================================
+   PROTOTYPE VARIANT PICKER (verbatim from prototype/PICKER.md)
+   ========================================================================== */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative; /* sits above the highlight */
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 150ms ease-out,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .proto-picker-item:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+
+html[data-proto-replay="1"] .animate-fadeIn,
+html[data-proto-replay="1"] .lemmas-mode-view-enter,
+html[data-proto-replay="1"] .lemmas-popover-enter,
+html[data-proto-replay="1"] .lemmas-stagger-group > *,
+html[data-proto-replay="1"] .lemmas-kpi-grid > *,
+html[data-proto-replay="1"] .lemmas-hero-copy > * {
+  animation: none !important;
+}
+
+/* ==========================================================================
+   COREOGRAFIA STAGGER (Dashboard & KPIs — exceto variante Original)
+   ========================================================================== */
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *,
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > * {
+  animation: lemmasFadeIn 260ms var(--ease-out) both;
+}
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(1),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(1) { animation-delay: 0ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(2),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(2) { animation-delay: 45ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(3),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(3) { animation-delay: 85ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(4),
+html:not([data-design-variant="original"]) .lemmas-kpi-grid > *:nth-child(4) { animation-delay: 120ms; }
+html:not([data-design-variant="original"]) .lemmas-stagger-group > *:nth-child(n+5) { animation-delay: 155ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-design-variant="original"]) .lemmas-stagger-group > *,
+  html:not([data-design-variant="original"]) .lemmas-kpi-grid > * {
+    animation-duration: 120ms;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 2 · EDITORIAL (Tratado Matemático, Dupla Moldura & Ouro/Ardósia)
+   ========================================================================== */
+html[data-design-variant="editorial"].dark .lemmas-app-frame,
+html[data-design-variant="editorial"][data-theme="lemmas-dark"] .lemmas-app-frame,
+html[data-design-variant="editorial"][data-theme="lemmas-dark"] .lemmas-page {
+  background-color: #111015;
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(217, 180, 82, 0.09), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(217, 180, 82, 0.025) 39px 40px);
+}
+
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-app-frame,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-app-frame {
+  background-color: #f6f2e8;
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(180, 83, 9, 0.06), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(148, 120, 72, 0.04) 39px 40px);
+}
+
+html[data-design-variant="editorial"] .lemmas-hero-banner,
+html[data-design-variant="editorial"] .lemmas-kpi-card,
+html[data-design-variant="editorial"] .lemmas-surface-card,
+html[data-design-variant="editorial"] .lemmas-roadmap-card,
+html[data-design-variant="editorial"] .lemmas-magic-step {
+  border-color: rgba(217, 180, 82, 0.34) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 180, 82, 0.22),
+    inset 0 1px 0 0 rgba(255, 240, 198, 0.14),
+    0 12px 32px -8px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 200ms var(--ease-out),
+    border-color 180ms ease,
+    box-shadow 220ms var(--ease-out);
+}
+
+html[data-design-variant="editorial"]:not(.dark) .lemmas-hero-banner,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="editorial"]:not(.dark) .lemmas-surface-card,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-hero-banner,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="editorial"][data-theme="lemmas-light"] .lemmas-surface-card {
+  background: #fdfaf2 !important;
+  border-color: rgba(180, 83, 9, 0.26) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(180, 83, 9, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 12px 28px -10px rgba(92, 64, 24, 0.14);
+}
+
+html[data-design-variant="editorial"] .lemmas-hero-banner h1,
+html[data-design-variant="editorial"] .lemmas-hero h1 {
+  letter-spacing: -0.025em;
+  text-shadow: 0 1px 16px rgba(217, 180, 82, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="editorial"] .lemmas-kpi-card:hover,
+  html[data-design-variant="editorial"] .lemmas-question-item:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 0 0 1px rgba(217, 180, 82, 0.38),
+      0 18px 36px -10px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 3 · LINEAR GLASS (Apple/Linear Translucent Glass & Specular Highlights)
+   ========================================================================== */
+html[data-design-variant="glass"].dark .lemmas-app-frame,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-app-frame,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-page {
+  background-color: #080910;
+  background-image:
+    radial-gradient(ellipse 75% 50% at 15% 0%, rgba(56, 189, 248, 0.12), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 88% 8%, rgba(217, 180, 82, 0.12), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(99, 102, 241, 0.08), transparent 65%);
+}
+
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-app-frame,
+html[data-design-variant="glass"]:not(.dark) .lemmas-app-frame {
+  background-color: #eef3fb;
+  background-image:
+    radial-gradient(ellipse 75% 50% at 15% 0%, rgba(37, 99, 235, 0.11), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 88% 10%, rgba(14, 165, 233, 0.1), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(99, 102, 241, 0.07), transparent 65%);
+}
+
+html[data-design-variant="glass"] .lemmas-hero-banner,
+html[data-design-variant="glass"] .lemmas-kpi-card,
+html[data-design-variant="glass"] .lemmas-surface-card,
+html[data-design-variant="glass"] .lemmas-question-item,
+html[data-design-variant="glass"] .lemmas-roadmap-card,
+html[data-design-variant="glass"] .lemmas-magic-step {
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  transition:
+    transform 220ms var(--ease-out),
+    border-color 180ms ease,
+    box-shadow 220ms var(--ease-out),
+    background-color 180ms ease;
+}
+
+html[data-design-variant="glass"].dark .lemmas-hero-banner,
+html[data-design-variant="glass"].dark .lemmas-kpi-card,
+html[data-design-variant="glass"].dark .lemmas-surface-card,
+html[data-design-variant="glass"].dark .lemmas-question-item,
+html[data-design-variant="glass"].dark .lemmas-roadmap-card,
+html[data-design-variant="glass"].dark .lemmas-magic-step,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-hero-banner,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-kpi-card,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-surface-card,
+html[data-design-variant="glass"][data-theme="lemmas-dark"] .lemmas-question-item {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(18, 20, 30, 0.68) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 16px 36px -10px rgba(0, 0, 0, 0.45);
+}
+
+html[data-design-variant="glass"]:not(.dark) .lemmas-hero-banner,
+html[data-design-variant="glass"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="glass"]:not(.dark) .lemmas-surface-card,
+html[data-design-variant="glass"]:not(.dark) .lemmas-question-item,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-hero-banner,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-surface-card,
+html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-question-item {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85) 0%, rgba(248, 250, 255, 0.65) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    0 14px 30px -10px rgba(29, 78, 216, 0.12);
+}
+
+html[data-design-variant="glass"] header.sticky {
+  margin: 10px auto 0;
+  width: min(1240px, calc(100% - 24px));
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+}
+
+html[data-design-variant="glass"]:not(.dark) header.sticky,
+html[data-design-variant="glass"][data-theme="lemmas-light"] header.sticky {
+  border-color: rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 28px -12px rgba(15, 23, 42, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="glass"] .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"] .lemmas-question-item:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(253, 224, 71, 0.45) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+      0 24px 44px -12px rgba(0, 0, 0, 0.55),
+      0 0 24px -6px rgba(217, 180, 82, 0.2);
+  }
+
+  html[data-design-variant="glass"]:not(.dark) .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"]:not(.dark) .lemmas-question-item:hover,
+  html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-kpi-card:hover,
+  html[data-design-variant="glass"][data-theme="lemmas-light"] .lemmas-question-item:hover {
+    border-color: rgba(37, 99, 235, 0.4) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      0 20px 38px -12px rgba(37, 99, 235, 0.2);
+  }
+}
+
+/* ==========================================================================
+   VARIANTE 4 · FOCUS STUDIO (Geometria Precisa, Faixa Lateral & Snap 120ms)
+   ========================================================================== */
+html[data-design-variant="studio"] .lemmas-hero-banner,
+html[data-design-variant="studio"] .lemmas-kpi-card,
+html[data-design-variant="studio"] .lemmas-surface-card,
+html[data-design-variant="studio"] .lemmas-question-item,
+html[data-design-variant="studio"] .lemmas-roadmap-card,
+html[data-design-variant="studio"] .lemmas-magic-step {
+  border-radius: 10px !important;
+  transition:
+    transform 120ms var(--ease-out),
+    border-color 120ms ease,
+    box-shadow 120ms var(--ease-out);
+}
+
+html[data-design-variant="studio"] .lemmas-kpi-card,
+html[data-design-variant="studio"] .lemmas-question-item,
+html[data-design-variant="studio"] .lemmas-roadmap-card {
+  border-color: var(--border-default) !important;
+}
+
+html[data-design-variant="studio"]:not(.dark) .lemmas-kpi-card,
+html[data-design-variant="studio"]:not(.dark) .lemmas-question-item,
+html[data-design-variant="studio"]:not(.dark) .lemmas-roadmap-card,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-kpi-card,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-question-item,
+html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-roadmap-card {
+  border-color: rgba(29, 78, 216, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+html[data-design-variant="studio"].dark .lemmas-hero-banner,
+html[data-design-variant="studio"].dark .lemmas-kpi-card,
+html[data-design-variant="studio"].dark .lemmas-surface-card,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-hero-banner,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-kpi-card,
+html[data-design-variant="studio"][data-theme="lemmas-dark"] .lemmas-surface-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border-default) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-design-variant="studio"] .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"] .lemmas-question-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(253, 224, 71, 0.35) !important;
+  }
+
+  html[data-design-variant="studio"]:not(.dark) .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"]:not(.dark) .lemmas-question-item:hover,
+  html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-kpi-card:hover,
+  html[data-design-variant="studio"][data-theme="lemmas-light"] .lemmas-question-item:hover {
+    border-color: rgba(29, 78, 216, 0.45) !important;
+  }
 }

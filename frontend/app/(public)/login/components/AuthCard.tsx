@@ -435,22 +435,22 @@ export function AuthCard() {
 
   return (
     <div className="lemmas-signup-container max-w-md mx-auto">
-      <div className="lemmas-signup-card border border-blue-500/25 dark:border-amber-500/25 bg-white dark:bg-[#141222] shadow-xl rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="lemmas-signup-card border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-xl rounded-2xl p-6 sm:p-8 space-y-6">
         {/* Badge do LEMMAS */}
-        <div className="lemmas-founder-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 dark:bg-amber-500/10 text-blue-600 dark:text-[#d9b452] border border-blue-500/20 dark:border-amber-500/20">
+        <div className="lemmas-founder-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]">
           <Sparkles size={14} /> Plataforma Cognitiva · LEMMAS
         </div>
 
         {/* Mensagens de Erro ou Sucesso */}
         {erro && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{erro}</span>
           </div>
         )}
 
         {mensagemSucesso && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-[var(--marker-green)] text-xs flex items-center gap-2">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{mensagemSucesso}</span>
           </div>
@@ -459,31 +459,31 @@ export function AuthCard() {
         {aguardandoCodigo ? (
           /* TELA DE CONFIRMAÇÃO POR LINK DE E-MAIL */
           <div className="space-y-6 animate-fadeIn text-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/15 dark:bg-amber-500/15 border border-blue-500/30 dark:border-amber-500/30 text-blue-600 dark:text-[#d9b452] flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center justify-center mx-auto shadow-sm">
               <Mail size={32} className="animate-pulse" />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-2xl font-serif-math font-bold text-slate-900 dark:text-[#f5f0df]">
+              <h3 className="text-2xl font-serif-math font-bold text-[var(--ink-primary)]">
                 Confirme seu E-mail
               </h3>
-              <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Enviamos um link de ativação para:
               </p>
-              <div className="inline-block px-3 py-1.5 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/20 dark:border-amber-500/20 text-xs font-mono font-bold text-blue-700 dark:text-[#d9b452] break-all">
+              <div className="inline-block px-3 py-1.5 rounded-lg bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs font-mono font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] break-all">
                 {email}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-xs space-y-2 text-slate-700 dark:text-zinc-300 text-left">
-              <p className="font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+            <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs space-y-2 text-[var(--ink-secondary)] text-left">
+              <p className="font-semibold text-[var(--ink-primary)] flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-[var(--marker-green)] shrink-0" />
                 Basta 1 clique para ativar sua conta:
               </p>
-              <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-[11px] text-[var(--ink-secondary)] leading-relaxed">
                 Abra seu e-mail e clique no botão <strong>Confirm your email</strong>. Sua conta será confirmada na hora e liberará o acesso à plataforma.
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-500 italic pt-1 border-t border-slate-200/60 dark:border-zinc-800">
+              <p className="text-[10px] text-[var(--ink-muted)] italic pt-1 border-t border-[var(--border-subtle)]">
                 Não encontrou? Dê uma olhada na pasta de Spam ou Lixo Eletrônico.
               </p>
             </div>
@@ -493,7 +493,7 @@ export function AuthCard() {
                 type="button"
                 onClick={handleChecarStatusConfirmacao}
                 disabled={checandoLink}
-                className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-50"
+                className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-colors hover:scale-[1.01] cursor-pointer disabled:opacity-50"
               >
                 {checandoLink ? (
                   <>
@@ -506,12 +506,12 @@ export function AuthCard() {
                 )}
               </button>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-[var(--border-subtle)] text-xs">
                 <button
                   type="button"
                   onClick={handleReenviarCodigo}
                   disabled={reenviando}
-                  className="text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="text-[var(--ink-secondary)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   <RotateCcw size={13} className={reenviando ? "animate-spin" : ""} />
                   <span>{reenviando ? "Reenviando..." : "Não recebeu? Reenviar e-mail"}</span>
@@ -524,7 +524,7 @@ export function AuthCard() {
                     setErro(null);
                     setMensagemSucesso(null);
                   }}
-                  className="text-blue-600 dark:text-[#d9b452] font-semibold hover:underline cursor-pointer"
+                  className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold hover:underline cursor-pointer"
                 >
                   Corrigir e-mail / Voltar
                 </button>
@@ -536,16 +536,16 @@ export function AuthCard() {
           <>
             {/* Título e Subtítulo */}
             <div className="space-y-1">
-              <h2 className="text-2xl font-serif-math font-normal text-slate-900 dark:text-[#f5f0df]">
+              <h2 className="text-2xl font-serif-math font-normal text-[var(--ink-primary)]">
                 {tab === "signup" ? (
-                  <>Criar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
+                  <>Criar sua conta no <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">LEMMAS</em></>
                 ) : tab === "forgot" ? (
                   <>Redefinir sua senha</>
                 ) : (
-                  <>Acessar sua conta no <em className="italic text-blue-600 dark:text-[#d9b452]">LEMMAS</em></>
+                  <>Acessar sua conta no <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">LEMMAS</em></>
                 )}
               </h2>
-              <p className="text-xs text-slate-600 dark:text-[#a9aaa1]">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 {tab === "signup"
                   ? "Entre rapidamente e calibre seu plano de estudo socrático."
                   : tab === "forgot"
@@ -558,8 +558,8 @@ export function AuthCard() {
             {tab === "forgot" ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label htmlFor="forgot-email" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                    <Mail size={14} className="text-blue-500 dark:text-amber-500" /> Endereço de E-mail
+                  <label htmlFor="forgot-email" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                    <Mail size={14} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Endereço de E-mail
                   </label>
                   <input
                     type="email"
@@ -567,7 +567,7 @@ export function AuthCard() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="seu.email@exemplo.com"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                     required
                   />
                 </div>
@@ -575,7 +575,7 @@ export function AuthCard() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-60"
+                  className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-colors hover:scale-[1.01] cursor-pointer disabled:opacity-60"
                 >
                   {loading ? (
                     <><Loader2 size={16} className="animate-spin" /> Enviando...</>
@@ -584,11 +584,11 @@ export function AuthCard() {
                   )}
                 </button>
 
-                <div className="text-center text-xs text-slate-500 dark:text-zinc-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                <div className="text-center text-xs text-[var(--ink-muted)] pt-1 border-t border-[var(--border-subtle)]">
                   <button
                     type="button"
                     onClick={() => alternarTab("signin")}
-                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                    className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold hover:underline cursor-pointer"
                   >
                     ← Voltar para o login
                   </button>
@@ -597,14 +597,14 @@ export function AuthCard() {
             ) : (
             <>
             {/* Alternância de Abas (Tabs) */}
-            <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-bold">
+            <div className="flex p-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-bold">
               <button
                 type="button"
                 onClick={() => alternarTab("signup")}
-                className={`flex-1 py-2 rounded-lg transition-all ${
+                className={`flex-1 py-2 rounded-lg transition-colors ${
                   tab === "signup"
-                    ? "bg-blue-600 text-white dark:bg-[#d9b452] dark:text-slate-900 shadow-sm"
-                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                    ? "bg-[var(--marker-blue)] text-white dark:bg-[var(--marker-amber)] dark:text-[#101316] shadow-sm"
+                    : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Cadastrar-se
@@ -612,10 +612,10 @@ export function AuthCard() {
               <button
                 type="button"
                 onClick={() => alternarTab("signin")}
-                className={`flex-1 py-2 rounded-lg transition-all ${
+                className={`flex-1 py-2 rounded-lg transition-colors ${
                   tab === "signin"
-                    ? "bg-blue-600 text-white dark:bg-[#d9b452] dark:text-slate-900 shadow-sm"
-                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                    ? "bg-[var(--marker-blue)] text-white dark:bg-[var(--marker-amber)] dark:text-[#101316] shadow-sm"
+                    : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Já tenho conta
@@ -628,7 +628,7 @@ export function AuthCard() {
                 type="button"
                 onClick={handleOAuthGoogle}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm transition-all shadow-xs cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] text-[var(--ink-primary)] font-semibold text-xs sm:text-sm transition-colors shadow-xs cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -642,9 +642,9 @@ export function AuthCard() {
 
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
+                <div className="w-full border-t border-[var(--border-subtle)]" />
               </div>
-              <span className="relative px-3 bg-white dark:bg-[#141222] text-[11px] text-slate-400 font-mono">
+              <span className="relative px-3 bg-[var(--bg-card)] text-[11px] text-[var(--ink-muted)] font-mono">
                 ou credenciais com email
               </span>
             </div>
@@ -653,8 +653,8 @@ export function AuthCard() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {tab === "signup" && (
                 <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                    <User size={14} className="text-blue-500 dark:text-amber-500" /> Nome Completo
+                  <label htmlFor="name" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                    <User size={14} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Nome Completo
                   </label>
                   <input
                     type="text"
@@ -662,15 +662,15 @@ export function AuthCard() {
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Carlos Eduardo de Oliveira"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                     required
                   />
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label htmlFor="email" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                  <Mail size={14} className="text-blue-500 dark:text-amber-500" /> Endereço de E-mail
+                <label htmlFor="email" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                  <Mail size={14} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Endereço de E-mail
                 </label>
                 <input
                   type="email"
@@ -678,22 +678,22 @@ export function AuthCard() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu.email@exemplo.com"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-xs font-bold text-slate-700 dark:text-[#d9b452] flex items-center gap-1.5">
-                    <Lock size={14} className="text-blue-500 dark:text-amber-500" /> Senha de Acesso
+                  <label htmlFor="password" className="text-xs font-bold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                    <Lock size={14} className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" /> Senha de Acesso
                   </label>
                   <div className="flex items-center gap-3">
                     {tab === "signin" && (
                       <button
                         type="button"
                         onClick={() => alternarTab("forgot")}
-                        className="text-[11px] text-blue-600 dark:text-amber-400 hover:underline cursor-pointer"
+                        className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline cursor-pointer"
                       >
                         Esqueci minha senha
                       </button>
@@ -701,7 +701,7 @@ export function AuthCard() {
                     <button
                       type="button"
                       onClick={() => setMostrarSenha(!mostrarSenha)}
-                      className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-amber-500 flex items-center gap-1"
+                      className="text-[11px] text-[var(--ink-muted)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] flex items-center gap-1 transition-colors"
                     >
                       {mostrarSenha ? <EyeOff size={13} /> : <Eye size={13} />}
                       {mostrarSenha ? "Ocultar" : "Mostrar"}
@@ -714,42 +714,42 @@ export function AuthCard() {
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder={tab === "signup" ? "Crie uma senha forte" : "Sua senha"}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue)] dark:focus:ring-[var(--marker-amber)]"
                   required
                 />
 
                 {/* Checklist de Requisitos Mínimos (Aba de Cadastro) */}
                 {tab === "signup" && senha.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 space-y-1 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-1 text-[11px]">
                     <div className="flex items-center gap-1.5">
                       {requisitosSenha.minimoCaracteres ? (
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <CheckCircle2 size={13} className="text-[var(--marker-green)] shrink-0" />
                       ) : (
-                        <XCircle size={13} className="text-slate-400 shrink-0" />
+                        <XCircle size={13} className="text-[var(--ink-muted)] shrink-0" />
                       )}
-                      <span className={requisitosSenha.minimoCaracteres ? "text-emerald-600 dark:text-emerald-400 font-semibold" : "text-slate-500"}>
+                      <span className={requisitosSenha.minimoCaracteres ? "text-[var(--marker-green)] font-semibold" : "text-[var(--ink-muted)]"}>
                         Mínimo de 8 caracteres
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       {requisitosSenha.temNumero ? (
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <CheckCircle2 size={13} className="text-[var(--marker-green)] shrink-0" />
                       ) : (
-                        <XCircle size={13} className="text-slate-400 shrink-0" />
+                        <XCircle size={13} className="text-[var(--ink-muted)] shrink-0" />
                       )}
-                      <span className={requisitosSenha.temNumero ? "text-emerald-600 dark:text-emerald-400 font-semibold" : "text-slate-500"}>
+                      <span className={requisitosSenha.temNumero ? "text-[var(--marker-green)] font-semibold" : "text-[var(--ink-muted)]"}>
                         Pelo menos 1 número (0-9)
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       {requisitosSenha.temSimbolo ? (
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <CheckCircle2 size={13} className="text-[var(--marker-green)] shrink-0" />
                       ) : (
-                        <XCircle size={13} className="text-slate-400 shrink-0" />
+                        <XCircle size={13} className="text-[var(--ink-muted)] shrink-0" />
                       )}
-                      <span className={requisitosSenha.temSimbolo ? "text-emerald-600 dark:text-emerald-400 font-semibold" : "text-slate-500"}>
+                      <span className={requisitosSenha.temSimbolo ? "text-[var(--marker-green)] font-semibold" : "text-[var(--ink-muted)]"}>
                         Pelo menos 1 símbolo especial (!@#$%)
                       </span>
                     </div>
@@ -769,7 +769,7 @@ export function AuthCard() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer"
+                className="w-full lemmas-gold-cta py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-colors hover:scale-[1.01] cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -788,14 +788,14 @@ export function AuthCard() {
             </form>
 
             {/* Rodapé Alternador de Estado */}
-            <div className="pt-2 text-center text-xs text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800">
+            <div className="pt-2 text-center text-xs text-[var(--ink-muted)] border-t border-[var(--border-subtle)]">
               {tab === "signup" ? (
                 <p>
                   Já tem uma conta?{" "}
                   <button
                     type="button"
                     onClick={() => alternarTab("signin")}
-                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                    className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold hover:underline cursor-pointer"
                   >
                     Entrar
                   </button>
@@ -806,7 +806,7 @@ export function AuthCard() {
                   <button
                     type="button"
                     onClick={() => alternarTab("signup")}
-                    className="text-blue-600 dark:text-[#d9b452] font-bold hover:underline cursor-pointer"
+                    className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold hover:underline cursor-pointer"
                   >
                     Cadastre-se gratuitamente
                   </button>
