@@ -1,0 +1,106 @@
+{
+  "name": "LEMMAS Design System 2.0",
+  "version": "2.0.0",
+  "concept": "A Matemática Clássica encontra a Inteligência Contemporânea",
+  "invariant": "O quadro permanece. O instrumento evolui.",
+  "proposals": {
+    "default": "a",
+    "a": {
+      "name": "Ardósia Mineral & Porcelana Editorial",
+      "dark": {
+        "surface": {
+          "board": "#101316",
+          "card": "#15191f",
+          "elevated": "#1c222a",
+          "subtle": "#252c37"
+        },
+        "ink": {
+          "primary": "#eceff4",
+          "secondary": "#9aa5b4",
+          "muted": "#6e7a8a"
+        },
+        "markers": {
+          "blue": "#93c5fd",
+          "green": "#86efac",
+          "red": "#fda4af",
+          "amber": "#fde047"
+        },
+        "frame": "#5c3a21"
+      },
+      "light": {
+        "surface": {
+          "board": "#f6f8fa",
+          "card": "#ffffff",
+          "elevated": "#eef2f6",
+          "subtle": "#e2e8f0"
+        },
+        "ink": {
+          "primary": "#0f172a",
+          "secondary": "#475569",
+          "muted": "#64748b"
+        },
+        "markers": {
+          "blue": "#1d4ed8",
+          "green": "#15803d",
+          "red": "#dc2626",
+          "amber": "#b45309"
+        },
+        "frame": "#cbd5e1"
+      }
+    },
+    "b": {
+      "name": "Atelier Euclidiano & Caderno de Demonstração",
+      "queryParam": "?proposal=b",
+      "dark": {
+        "surface": {
+          "board": "#0d1412",
+          "card": "#121b18",
+          "elevated": "#192521"
+        },
+        "ink": {
+          "primary": "#f2efe9",
+          "secondary": "#9fb3aa",
+          "muted": "#6c8077"
+        },
+        "markers": {
+          "blue": "#7dd3fc",
+          "green": "#86efac",
+          "red": "#fda4af",
+          "amber": "#facc15"
+        }
+      },
+      "light": {
+        "surface": {
+          "board": "#faf7f2",
+          "card": "#ffffff",
+          "elevated": "#f3eee6"
+        },
+        "ink": {
+          "primary": "#141413",
+          "secondary": "#4a4843",
+          "muted": "#73706a"
+        },
+        "markers": {
+          "blue": "#1e40af",
+          "green": "#15803d",
+          "red": "#b91c1c",
+          "amber": "#a16207"
+        }
+      }
+    }
+  },
+  "typography": {
+    "sans": "Plus Jakarta Sans",
+    "serif": "Newsreader",
+    "mono": "JetBrains Mono",
+    "chalk": "Caveat"
+  },
+  "guardrails": [
+    "No AI purple gradients or #9333ea in MathAI diagnostics",
+    "No generic backdrop-filter glassmorphism on cards",
+    "No emoji icons in controls",
+    "No transition-all",
+    "No 3px side-tab accent borders",
+    "Zero compositing/blur overhead over S-Pen canvas"
+  ]
+}
