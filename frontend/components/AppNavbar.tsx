@@ -58,9 +58,9 @@ export default function AppNavbar() {
   const focoLoopItems: LogoItem[] = useMemo(() => {
     return focoParts.map((part) => ({
       node: (
-        <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 dark:text-[#f5f0df] text-[11px] whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--ink-primary)] text-[11px] whitespace-nowrap">
           {part}
-          <span className="text-slate-400 dark:text-zinc-600 text-[9px] select-none opacity-60">
+          <span className="text-[var(--ink-muted)] text-[9px] select-none opacity-60">
             •
           </span>
         </span>
@@ -72,10 +72,10 @@ export default function AppNavbar() {
     focoParts.length > 1 || (profile.focoConcurso ? profile.focoConcurso.length > 15 : false);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-[#0e0d16]/85 border-b border-slate-200/80 dark:border-amber-500/20 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 w-full bg-[var(--bg-card)] border-b border-[var(--border-subtle)] transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
         
-        {/* LADO ESQUERDO: LOGO LEMMAS PRO */}
+        {/* LADO ESQUERDO: LOGO LEMMAS */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2.5 group">
             <Logo compact />
@@ -89,13 +89,19 @@ export default function AppNavbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-[background-color,border-color,color,transform] duration-150 flex items-center gap-2 border ${
                     active
-                      ? "bg-blue-500/10 text-blue-900 border border-blue-500/30 dark:bg-amber-500/15 dark:text-[#f5f0df] dark:border-[#d9b452]/40 shadow-sm"
-                      : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df] hover:bg-slate-100 dark:hover:bg-zinc-800/40"
+                      ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]"
+                      : "border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)]"
                   }`}
                 >
-                  <item.icon className={`w-3.5 h-3.5 ${active ? "text-blue-600 dark:text-[#d9b452]" : "opacity-60"}`} />
+                  <item.icon
+                    className={`w-3.5 h-3.5 ${
+                      active
+                        ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                        : "opacity-65"
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -104,15 +110,15 @@ export default function AppNavbar() {
         </div>
 
         {/* LADO DIREITO: CONTROLES, TEMA, STREAK E AVATAR */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           
           {/* STREAK (DIAS CONSECUTIVOS DE ESTUDO) */}
           {mounted && isAuthenticated && (
             <div 
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold whitespace-nowrap shrink-0 transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold tabular-nums whitespace-nowrap shrink-0 transition-colors ${
                 profile.streakDias > 0
-                  ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-[#d9b452]"
-                  : "bg-slate-100 dark:bg-zinc-800/40 border-slate-200 dark:border-zinc-700/50 text-slate-500 dark:text-zinc-400"
+                  ? "bg-[var(--marker-amber-dim)] border-[var(--marker-amber-border)] text-[var(--marker-amber)]"
+                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-muted)]"
               }`}
               title={
                 profile.streakDias > 0
@@ -121,10 +127,10 @@ export default function AppNavbar() {
               }
             >
               <Flame 
-                className={`w-3.5 h-3.5 transition-transform ${
+                className={`w-3.5 h-3.5 ${
                   profile.streakDias > 0 
-                    ? "fill-amber-500 text-amber-500 animate-pulse" 
-                    : "text-slate-400 dark:text-zinc-500 opacity-60"
+                    ? "fill-current text-[var(--marker-amber)]" 
+                    : "text-[var(--ink-muted)] opacity-60"
                 }`} 
               />
               <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
@@ -134,11 +140,11 @@ export default function AppNavbar() {
           {/* FOCO DE ESTUDO / OBJETIVO */}
           {mounted && isAuthenticated && profile.focoConcurso && (
             <div 
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#1a172c] border border-slate-200/90 dark:border-amber-500/20 text-xs font-medium text-slate-700 dark:text-[#dedbd0] whitespace-nowrap shrink-0 w-[210px] xl:w-[240px] overflow-hidden"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-medium text-[var(--ink-secondary)] whitespace-nowrap shrink-0 w-[210px] xl:w-[240px] overflow-hidden"
               title={`Foco de estudo atual: ${profile.focoConcurso}`}
             >
-              <Target className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 shrink-0">Foco:</span>
+              <Target className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
+              <span className="text-[11px] font-semibold text-[var(--ink-muted)] shrink-0">Foco:</span>
               <div className="flex-1 overflow-hidden min-w-0 h-[18px] flex items-center">
                 {isFocoLongOrMulti ? (
                   <LogoLoop
@@ -155,7 +161,7 @@ export default function AppNavbar() {
                     ariaLabel={`Foco: ${profile.focoConcurso}`}
                   />
                 ) : (
-                  <span className="font-semibold text-slate-800 dark:text-[#f5f0df] text-[11px] truncate">
+                  <span className="font-semibold text-[var(--ink-primary)] text-[11px] truncate">
                     {profile.focoConcurso}
                   </span>
                 )}
@@ -168,11 +174,11 @@ export default function AppNavbar() {
 
           {/* AUTENTICAÇÃO: AVATAR SE LOGADO OU BOTÃO ENTRAR SE VISITANTE */}
           {!mounted ? (
-            <div className="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse shrink-0" />
+            <div className="w-9 h-9 rounded-full bg-[var(--bg-elevated)] animate-pulse shrink-0" />
           ) : isAuthenticated ? (
             <Link
               href="/perfil"
-              className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:scale-105 border border-blue-400/40 dark:border-amber-400/40 transition-transform overflow-hidden shrink-0 relative group"
+              className="w-9 h-9 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316] font-bold text-xs flex items-center justify-center hover:scale-105 border border-[var(--border-default)] transition-transform overflow-hidden shrink-0 relative group"
               title={`Meu Perfil (${profile.nome || "Aluno"})`}
             >
               {profile.fotoUrl ? (
@@ -188,7 +194,7 @@ export default function AppNavbar() {
           ) : (
             <Link
               href="/login"
-              className="lemmas-gold-cta px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+              className="lemmas-gold-cta px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:scale-[1.02] transition-transform"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Entrar</span>
@@ -199,7 +205,7 @@ export default function AppNavbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="xl:hidden p-2 rounded-xl text-slate-700 dark:text-[#f5f0df] hover:bg-slate-100 dark:hover:bg-zinc-800/60 border border-slate-200 dark:border-amber-500/20 transition"
+            className="xl:hidden p-2 rounded-xl text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border-default)] transition-[background-color,border-color,transform] duration-150"
             aria-label={mobileMenuOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
             aria-expanded={mobileMenuOpen}
           >
@@ -210,7 +216,7 @@ export default function AppNavbar() {
 
       {/* MENU MOBILE EXPANDIDO */}
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-slate-200 dark:border-amber-500/20 bg-white/95 dark:bg-[#110f1e]/95 backdrop-blur-xl px-4 py-4 space-y-2 animate-fadeIn">
+        <div className="xl:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-4 space-y-2 animate-fadeIn">
           {navLinks.map((item) => {
             const active = isLinkActive(item.href);
             return (
@@ -218,27 +224,33 @@ export default function AppNavbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-[background-color,border-color,color] duration-150 border ${
                   active
-                    ? "bg-blue-500/10 text-blue-900 border border-blue-500/30 dark:bg-amber-500/15 dark:text-[#f5f0df] dark:border-amber-500/35"
-                    : "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/40"
+                    ? "bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)]"
+                    : "border-transparent text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)]"
                 }`}
               >
-                <item.icon className={`w-4 h-4 ${active ? "text-blue-600 dark:text-[#d9b452]" : "opacity-60"}`} />
+                <item.icon
+                  className={`w-4 h-4 ${
+                    active
+                      ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                      : "opacity-65"
+                  }`}
+                />
                 <span>{item.label}</span>
               </Link>
             );
           })}
-          <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/60 flex items-center justify-between text-xs px-2">
+          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs px-2">
             {!mounted ? (
-              <div className="h-8 w-full rounded-xl bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse" />
+              <div className="h-8 w-full rounded-xl bg-[var(--bg-elevated)] animate-pulse" />
             ) : isAuthenticated ? (
               <Link
                 href="/perfil"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-blue-600 dark:text-[#d9b452] font-semibold flex items-center gap-2.5 py-1"
+                className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-semibold flex items-center gap-2.5 py-1"
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-tr from-blue-600 to-indigo-700 dark:from-amber-500 dark:to-amber-700 text-white font-bold text-[11px] flex items-center justify-center border border-blue-400/40 dark:border-amber-400/40 shrink-0">
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316] font-bold text-[11px] flex items-center justify-center border border-[var(--border-default)] shrink-0">
                   {profile.fotoUrl ? (
                     <img src={profile.fotoUrl} alt={profile.nome} className="w-full h-full object-cover" />
                   ) : (

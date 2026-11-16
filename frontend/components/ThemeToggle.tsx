@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { BookOpen, Moon, PenTool, Sun } from "lucide-react";
 import { useTheme } from "./theme-provider";
 
 interface ThemeToggleProps {
@@ -20,7 +20,7 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
   if (!mounted) {
     return (
       <div
-        className={`w-9 h-9 rounded-xl border border-zinc-700/40 bg-zinc-800/40 animate-pulse ${className}`}
+        className={`w-9 h-9 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] animate-pulse ${className}`}
         aria-hidden="true"
       />
     );
@@ -31,15 +31,15 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
       <button
         type="button"
         onClick={toggleTheme}
-        className={`p-2 rounded-xl transition-all border ${
+        className={`p-2 rounded-xl transition-[background-color,border-color,color,transform] duration-150 border cursor-pointer ${
           isLight
-            ? "bg-slate-100 hover:bg-blue-50/50 border-slate-300 hover:border-blue-500/40 text-slate-800 shadow-sm"
-            : "bg-[#181528] hover:bg-[#201c35] border-amber-500/30 text-amber-400 hover:text-amber-300 shadow-sm"
+            ? "bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] border-[var(--border-default)] text-[var(--marker-blue)]"
+            : "bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] border-[var(--marker-amber-border)] text-[var(--marker-amber)]"
         } ${className}`}
-        aria-label={isLight ? "Ativar Lousa de Giz (Escuro)" : "Ativar Quadro Branco (Claro)"}
-        title={isLight ? "Mudar para Lousa de Giz Clássica (Dark)" : "Mudar para Quadro Branco Moderno (Light)"}
+        aria-label={isLight ? "Ativar Quadro & Giz (Escuro)" : "Ativar Lousa & Piloto (Claro)"}
+        title={isLight ? "Mudar para Quadro & Giz (Dark)" : "Mudar para Lousa & Piloto (Light)"}
       >
-        {isLight ? <Moon className="w-4 h-4 text-blue-600" /> : <Sun className="w-4 h-4 text-amber-400" />}
+        {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
       </button>
     );
   }
@@ -48,32 +48,42 @@ export function ThemeToggle({ compact = false, className = "" }: ThemeToggleProp
     <button
       type="button"
       onClick={toggleTheme}
-      className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+      className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border text-xs font-medium transition-[background-color,border-color,color,transform] duration-150 cursor-pointer ${
         isLight
-          ? "bg-slate-100 hover:bg-blue-50/50 border-slate-300 hover:border-blue-500/40 text-slate-800 shadow-sm"
-          : "bg-[#181528] hover:bg-[#201c35] border-amber-500/25 text-zinc-300 shadow-sm"
+          ? "bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] border-[var(--border-default)] text-[var(--ink-primary)]"
+          : "bg-[var(--bg-elevated)] hover:bg-[var(--bg-subtle)] border-[var(--marker-amber-border)] text-[var(--ink-primary)]"
       } ${className}`}
-      aria-label="Alternar tema cenográfico"
+      aria-label="Alternar tema de superfície"
     >
-      <div className="flex items-center gap-2">
-        <span className="text-base">{isLight ? "🖊️" : "🪵"}</span>
+      <div className="flex items-center gap-2.5">
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center border"
+          style={{
+            backgroundColor: isLight ? "var(--marker-blue-dim)" : "var(--marker-amber-dim)",
+            borderColor: isLight ? "var(--marker-blue-border)" : "var(--marker-amber-border)",
+            color: isLight ? "var(--marker-blue)" : "var(--marker-amber)",
+          }}
+        >
+          {isLight ? <PenTool className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+        </div>
         <div className="text-left">
           <div className="font-semibold text-[11px] leading-tight">
-            {isLight ? "Quadro Branco" : "Lousa de Giz"}
+            {isLight ? "Lousa & Piloto" : "Quadro & Giz"}
           </div>
-          <div className="text-[10px] text-zinc-400 dark:text-zinc-500">
-            {isLight ? "Modo Canetão" : "Modo Madeira & Giz"}
+          <div className="text-[10px] text-[var(--ink-muted)]">
+            {isLight ? "Porcelana acetinada" : "Ardósia mineral"}
           </div>
         </div>
       </div>
       <div
-        className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-colors ${
-          isLight
-            ? "bg-blue-500/10 border-blue-500/25 text-blue-600"
-            : "bg-amber-500/10 border-amber-500/30 text-amber-400"
-        }`}
+        className="w-7 h-7 rounded-lg flex items-center justify-center border transition-[background-color,border-color,color] duration-150"
+        style={{
+          backgroundColor: isLight ? "var(--marker-blue-dim)" : "var(--marker-amber-dim)",
+          borderColor: isLight ? "var(--marker-blue-border)" : "var(--marker-amber-border)",
+          color: isLight ? "var(--marker-blue)" : "var(--marker-amber)",
+        }}
       >
-        {isLight ? <Moon className="w-3.5 h-3.5 text-blue-600" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+        {isLight ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
       </div>
     </button>
   );

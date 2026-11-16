@@ -21,24 +21,24 @@ export default function AppHeader() {
   const currentTitle = routeNames[pathname] || "Workspace";
 
   return (
-    <header className="h-16 border-b border-slate-200/80 dark:border-amber-500/15 bg-white/85 dark:bg-[#0e0d16]/85 backdrop-blur-md sticky top-0 z-30 px-6 md:px-10 flex items-center justify-between transition-colors">
+    <header className="h-16 border-b border-[var(--border-subtle)] bg-[var(--bg-card)] sticky top-0 z-30 px-6 md:px-10 flex items-center justify-between transition-colors">
       <div className="flex items-center gap-4">
         {/* BREADCRUMB DINÂMICO EDITORIAL */}
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-zinc-400">
-          <Link href="/" className="font-serif-math text-amber-600 dark:text-[#d9b452] hover:underline font-bold tracking-wide transition-colors">
+        <div className="flex items-center gap-2 text-xs font-medium text-[var(--ink-muted)]">
+          <Link href="/" className="font-serif-math text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-bold tracking-wide transition-colors">
             LEMMAS
           </Link>
-          <span className="text-slate-400 dark:text-zinc-600">/</span>
-          <span className="text-slate-900 dark:text-[#f5f0df] font-semibold">{currentTitle}</span>
+          <span className="text-[var(--ink-muted)]">/</span>
+          <span className="text-[var(--ink-primary)] font-semibold">{currentTitle}</span>
         </div>
 
         {/* BARRA DE BUSCA RÁPIDA ESTILO ACADÊMICO */}
-        <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#141222] border border-slate-200 dark:border-amber-500/15 text-xs text-slate-400 dark:text-zinc-400 w-64 hover:border-slate-300 dark:hover:border-amber-500/35 transition-colors">
-          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-[#d9b452]/70" />
-          <Link href="/questoes" className="flex-1 text-slate-400 dark:text-zinc-400 hover:text-slate-600 dark:hover:text-[#f5f0df]">
+        <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs text-[var(--ink-muted)] w-64 hover:border-[var(--border-default)] transition-colors">
+          <Search className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] opacity-75" />
+          <Link href="/questoes" className="flex-1 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]">
             Buscar teoremas, questões...
           </Link>
-          <kbd className="ml-auto text-[10px] bg-slate-200 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded text-slate-500 dark:text-zinc-400 font-mono">
+          <kbd className="ml-auto text-[10px] bg-[var(--bg-subtle)] px-1.5 py-0.5 rounded text-[var(--ink-secondary)] font-mono">
             ⌘K
           </kbd>
         </div>
@@ -49,7 +49,7 @@ export default function AppHeader() {
         <Link
           href="/landing"
           target="_blank"
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f0df] hover:bg-slate-100 dark:hover:bg-zinc-800/60 transition"
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
           title="Sobre o LEMMAS · Manifesto e Roadmap"
         >
           <span>Sobre o LEMMAS</span>
@@ -57,14 +57,14 @@ export default function AppHeader() {
         </Link>
 
         {/* STREAK DIÁRIO */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-bold text-amber-700 dark:text-[#d9b452]" title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}>
-          <Flame className={`w-3.5 h-3.5 ${profile.streakDias > 0 ? "fill-amber-500 text-amber-500 animate-pulse" : "text-amber-500/50"}`} />
-          <span>{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-xs font-bold text-[var(--marker-amber)]" title={`Streak de Estudo Diário: ${profile.streakDias} ${profile.streakDias === 1 ? "dia" : "dias"}`}>
+          <Flame className={`w-3.5 h-3.5 ${profile.streakDias > 0 ? "text-[var(--marker-amber)]" : "opacity-50 text-[var(--marker-amber)]"}`} />
+          <span className="font-mono tabular-nums">{profile.streakDias} {profile.streakDias === 1 ? "dia" : "dias"}</span>
         </div>
 
         {/* FOCO CONCURSO */}
-        <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-[#1f1b2c] border border-amber-500/20 dark:border-amber-500/25 text-xs font-semibold text-amber-700 dark:text-[#e1bb55] max-w-[220px] truncate shrink-0">
-          <Target className="w-3.5 h-3.5 text-amber-600 dark:text-[#d9b452] shrink-0" />
+        <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-xs font-semibold text-[var(--marker-amber)] max-w-[220px] truncate shrink-0">
+          <Target className="w-3.5 h-3.5 text-[var(--marker-amber)] shrink-0" />
           <span className="truncate">Foco: {profile.focoConcurso || "Matemática Geral"}</span>
         </div>
 

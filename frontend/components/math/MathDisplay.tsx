@@ -124,7 +124,7 @@ function FormattedInlineLine({ content }: { content: string }) {
           return (
             <code
               key={`c-${i}`}
-              className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-100 dark:bg-[#1a172c] text-amber-800 dark:text-amber-300 font-mono text-[11px] border border-slate-200 dark:border-amber-500/20"
+              className="px-1.5 py-0.5 mx-0.5 rounded bg-[var(--bg-elevated)] text-[var(--marker-amber)] font-mono text-[11px] border border-[var(--border-subtle)]"
             >
               {part.slice(1, -1)}
             </code>
