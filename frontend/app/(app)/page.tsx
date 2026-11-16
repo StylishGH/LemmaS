@@ -238,19 +238,19 @@ export default function DashboardPage() {
         .join(" ");
 
   return (
-    <div className="space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+    <div className="space-y-8 animate-fadeIn lemmas-dashboard-root lemmas-stagger-group text-[var(--ink-primary)]">
       {/* BANNER INFORMATIVO PARA VISITANTES (DESLOGADOS) */}
       {!isAuthenticated && !userLoading && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div className="rounded-2xl border border-[var(--marker-amber-border)] bg-[var(--marker-amber-dim)] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-[#d9b452] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-[#f5f0df]">
+              <h4 className="text-xs sm:text-sm font-bold text-[var(--ink-primary)]">
                 Modo de Exploração Livre (Visitante)
               </h4>
-              <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5">
+              <p className="text-xs text-[var(--ink-secondary)] mt-0.5">
                 Faça login ou crie sua conta para registrar suas resoluções, calcular métricas e ativar a repetição espaçada personalizada.
               </p>
             </div>
@@ -264,7 +264,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               href="/login?tab=signup"
-              className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#1e2329] border border-slate-300 dark:border-amber-500/25 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-xs font-semibold transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] text-xs font-semibold transition-colors"
             >
               Criar Conta
             </Link>
@@ -273,20 +273,18 @@ export default function DashboardPage() {
       )}
 
       {/* 1. HERO BANNER EDITORIAL LEMMAS */}
-      <div className="relative rounded-3xl overflow-hidden border border-[var(--border-board)] dark:border-amber-500/20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 dark:from-[#161a1e] dark:via-[#13171b] dark:to-[#101316] p-8 md:p-10 shadow-sm dark:shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-        
+      <div className="lemmas-hero-banner relative rounded-3xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] p-8 md:p-10 shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs font-semibold text-blue-700 dark:text-[#d9b452]">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
               <span>Workspace Cognitivo · LEMMAS Core & MathAI</span>
             </div>
-            <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
+            <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-[var(--ink-primary)] tracking-tight">
               Painel de Desempenho & Metacognição.
             </h1>
-            <p className="text-sm md:text-base text-slate-600 dark:text-zinc-400 leading-relaxed font-sans">
-              <span className="font-semibold text-slate-800 dark:text-zinc-200">Domínio progressivo de lemas e padrões de prova por repetição espaçada.</span>{" "}
+            <p className="text-sm md:text-base text-[var(--ink-secondary)] leading-relaxed font-sans">
+              <span className="font-semibold text-[var(--ink-primary)]">Domínio progressivo de lemas e padrões de prova por repetição espaçada.</span>{" "}
               {revisoes.length > 0
                 ? `O algoritmo SuperMemo-2 do LEMMAS Core mapeou ${revisoes.length} revisão(ões) prioritária(s) hoje para calibrar seu repertório axiomático e analítico.`
                 : "Seu repertório está calibrado e em dia. Resolva novas questões no Iniciar Treino para alimentar seus ciclos de revisão espaçada SM-2."}
@@ -303,7 +301,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               href="/questoes"
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-[#1e2329] border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#201c38] text-sm font-semibold transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] text-sm font-semibold transition-colors shadow-sm"
             >
               <span>Explorar Questões ({totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "—"})</span>
             </Link>
@@ -312,21 +310,21 @@ export default function DashboardPage() {
       </div>
 
       {/* 2. KPIS COM DESIGN EDITORIAL E DADOS REAIS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="lemmas-kpi-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Aproveitamento */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Aproveitamento</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+        <div className="lemmas-kpi-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between text-[var(--ink-secondary)] mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">Aproveitamento</span>
+            <div className="w-8 h-8 rounded-lg bg-[var(--marker-green-dim)] text-[var(--marker-green)] flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="font-serif-math text-3xl font-bold text-slate-900 dark:text-[#f5f0df]">
+          <div className="font-mono tabular-nums text-3xl font-bold text-[var(--ink-primary)]">
             {metricas.total_resolvidas > 0 ? `${metricas.taxa_acerto}%` : "—"}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-2 font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-[var(--ink-muted)] mt-2 font-medium">
             {metricas.total_resolvidas > 0 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="text-[var(--marker-green)] font-semibold">
                 {metricas.total_acertos} acerto(s) em {metricas.total_resolvidas} tentativa(s)
               </span>
             ) : (
@@ -336,17 +334,17 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 2: Total Resolvidas */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Resolvidas</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
+        <div className="lemmas-kpi-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between text-[var(--ink-secondary)] mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">Total Resolvidas</span>
+            <div className="w-8 h-8 rounded-lg bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center">
               <BookOpenCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="font-serif-math text-3xl font-bold text-slate-900 dark:text-[#f5f0df]">
+          <div className="font-mono tabular-nums text-3xl font-bold text-[var(--ink-primary)]">
             {metricas.total_resolvidas}
           </div>
-          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
+          <div className="text-xs text-[var(--ink-muted)] mt-2">
             {metricas.total_resolvidas > 0 
               ? `${metricas.total_acertos} acertos confirmados` 
               : "Nenhuma questão resolvida ainda"}
@@ -354,47 +352,47 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI 3: Tempo Médio */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Tempo Médio</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
+        <div className="lemmas-kpi-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between text-[var(--ink-secondary)] mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">Tempo Médio</span>
+            <div className="w-8 h-8 rounded-lg bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="font-serif-math text-3xl font-bold text-blue-600 dark:text-[#d9b452]">
+          <div className="font-mono tabular-nums text-3xl font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
             {metricas.total_resolvidas > 0 ? metricas.tempo_medio : "—"}
           </div>
-          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
+          <div className="text-xs text-[var(--ink-muted)] mt-2">
             {metricas.total_resolvidas > 0 ? "Média por resolução" : "Calculado após o primeiro treino"}
           </div>
         </div>
 
         {/* KPI 4: Acervo de Questões */}
-        <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Acervo de Questões</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center">
+        <div className="lemmas-kpi-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm relative z-10 hover:border-[var(--border-default)] transition-colors">
+          <div className="flex items-center justify-between text-[var(--ink-secondary)] mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-secondary)]">Acervo de Questões</span>
+            <div className="w-8 h-8 rounded-lg bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] flex items-center justify-center">
               <Target className="w-4 h-4" />
             </div>
           </div>
-          <div className="font-serif-math text-3xl font-bold text-slate-900 dark:text-[#f5f0df]">
+          <div className="font-mono tabular-nums text-3xl font-bold text-[var(--ink-primary)]">
             {totalQuestions > 0 ? totalQuestions.toLocaleString("pt-BR") : "—"}
           </div>
-          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
+          <div className="text-xs text-[var(--ink-muted)] mt-2">
             Questões indexadas no LEMMAS Core
           </div>
         </div>
       </div>
 
       {/* 2.5. QUESTÕES RECOMENDADAS PARA O SEU PERFIL */}
-      <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+      <div className="lemmas-surface-card bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
+            <h2 className="font-serif-math text-base md:text-lg font-semibold text-[var(--ink-primary)] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
               Questões Recomendadas para o seu Perfil
             </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-[var(--ink-secondary)]">
               {origemDescricaoPerfil
                 ? `Selecionadas a partir do seu foco em ${origemDescricaoPerfil}`
                 : "Sugestões de treino calibradas para o seu objetivo matemático"}
@@ -402,7 +400,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/questoes"
-            className="text-xs text-blue-600 dark:text-[#d9b452] hover:underline font-semibold flex items-center gap-1 self-start sm:self-auto"
+            className="text-xs text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold flex items-center gap-1 self-start sm:self-auto"
           >
             Explorar todo o acervo →
           </Link>
@@ -413,14 +411,14 @@ export default function DashboardPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] animate-pulse h-36 flex flex-col justify-between"
+                className="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] animate-pulse h-36 flex flex-col justify-between"
               >
-                <div className="h-4 bg-slate-200 dark:bg-zinc-800 rounded w-1/3" />
+                <div className="h-4 bg-[var(--bg-subtle)] rounded w-1/3" />
                 <div className="space-y-2">
-                  <div className="h-3 bg-slate-200 dark:bg-zinc-800 rounded w-full" />
-                  <div className="h-3 bg-slate-200 dark:bg-zinc-800 rounded w-2/3" />
+                  <div className="h-3 bg-[var(--bg-subtle)] rounded w-full" />
+                  <div className="h-3 bg-[var(--bg-subtle)] rounded w-2/3" />
                 </div>
-                <div className="h-6 bg-slate-200 dark:bg-zinc-800 rounded w-1/4" />
+                <div className="h-6 bg-[var(--bg-subtle)] rounded w-1/4" />
               </div>
             ))}
           </div>
@@ -430,36 +428,36 @@ export default function DashboardPage() {
               return (
                 <div
                   key={q.id}
-                  className="p-4 rounded-xl border border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all group"
+                  className="lemmas-question-item p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex flex-col justify-between hover:border-[var(--border-default)] transition-colors group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-blue-700 dark:text-[#d9b452] truncate">
+                      <span className="text-[11px] font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] truncate">
                         {q.banca ? `${q.banca}${q.ano ? ` ${q.ano}` : ""}` : (q.materia || "Matemática")}
                       </span>
                       {q.dificuldade ? (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 shrink-0">
+                        <span className="text-[10px] font-mono tabular-nums font-medium px-1.5 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] shrink-0">
                           Nível {q.dificuldade}/5
                         </span>
                       ) : null}
                     </div>
 
-                    <div className="text-[11px] font-semibold text-slate-800 dark:text-[#f5f0df]">
+                    <div className="text-[11px] font-semibold text-[var(--ink-primary)]">
                       {q.topico || q.materia}
                     </div>
 
-                    <div className="text-xs text-slate-600 dark:text-zinc-400 max-h-28 overflow-hidden leading-relaxed">
+                    <div className="text-xs text-[var(--ink-secondary)] max-h-28 overflow-hidden leading-relaxed">
                       <MathPreview text={q.enunciado || ""} />
                     </div>
                   </div>
 
-                  <div className="pt-3 mt-3 border-t border-slate-200/60 dark:border-zinc-800 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                  <div className="pt-3 mt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                    <span className="text-[10px] text-[var(--ink-muted)] font-mono tabular-nums">
                       #{q.id}
                     </span>
                     <Link
                       href={`/resolver?id=${q.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-[#d9b452] hover:underline group-hover:translate-x-0.5 transition-transform"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline group-hover:translate-x-0.5 transition-transform"
                     >
                       <span>Resolver agora</span>
                       <ArrowRight className="w-3 h-3" />
@@ -470,16 +468,16 @@ export default function DashboardPage() {
             })}
           </div>
         ) : (
-          <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
-            <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+          <div className="p-6 rounded-xl border border-dashed border-[var(--border-default)] text-center space-y-2">
+            <p className="text-xs font-semibold text-[var(--ink-primary)]">
               Personalize seu perfil para receber recomendações exclusivas
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+            <p className="text-[11px] text-[var(--ink-secondary)]">
               Defina seu objetivo e matérias prioritárias no seu perfil pedagógico.
             </p>
             <Link
               href="/perfil"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs transition-colors"
+              className="lemmas-gold-cta inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
             >
               Configurar Perfil
             </Link>
@@ -490,18 +488,18 @@ export default function DashboardPage() {
       {/* 3. RADAR COGNITIVO VETORIAL DOURADO + DIAGNÓSTICO METACONCEITUAL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* RADAR COGNITIVO SVG COM VIEWBOX AMPLO (460x300) - ZERO OVERFLOW */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+        <div className="lg:col-span-7 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-serif-math text-base md:text-lg font-semibold text-slate-900 dark:text-[#f5f0df] flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
+              <h2 className="font-serif-math text-base md:text-lg font-semibold text-[var(--ink-primary)] flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                 Radar de Domínio Matemático
               </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Taxa de domínio calculada pelo LEMMAS Core por matéria
               </p>
             </div>
-            <span className="text-xs font-semibold text-blue-700 dark:text-[#d9b452] bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] px-2.5 py-1 rounded-full">
               Tempo Real
             </span>
           </div>
@@ -543,7 +541,7 @@ export default function DashboardPage() {
               {/* Polígono de Desempenho do Aluno em Azul no Light e Dourado no Dark */}
               <polygon 
                 points={radarPointsString} 
-                className={`${hasAnyData ? "fill-blue-500/20 stroke-blue-600 dark:fill-amber-500/20 dark:stroke-[#e1bb55]" : "fill-blue-500/5 stroke-blue-500/30 dark:fill-amber-500/5 dark:stroke-amber-500/30 stroke-dash-2"}`}
+                className={`${hasAnyData ? "fill-[var(--marker-blue-dim)] stroke-[var(--marker-blue)] dark:fill-[var(--marker-amber-dim)] dark:stroke-[var(--marker-amber)]" : "fill-[var(--marker-blue)]/5 stroke-[var(--marker-blue)]/30 dark:fill-[var(--marker-amber)]/5 dark:stroke-[var(--marker-amber)]/30 stroke-dash-2"}`}
                 strokeWidth="2.5" 
                 strokeDasharray={hasAnyData ? undefined : "4 4"}
               />
@@ -551,39 +549,39 @@ export default function DashboardPage() {
               {/* Vértices em Ouro (se houver dados reais) */}
               {hasAnyData && (
                 <>
-                  <circle cx={getRadarPoint(pAlgebra, 0).x} cy={getRadarPoint(pAlgebra, 0).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pGeometria, 1).x} cy={getRadarPoint(pGeometria, 1).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pTrigonometria, 2).x} cy={getRadarPoint(pTrigonometria, 2).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pCalculo, 3).x} cy={getRadarPoint(pCalculo, 3).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pCombinatoria, 4).x} cy={getRadarPoint(pCombinatoria, 4).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
-                  <circle cx={getRadarPoint(pAritmetica, 5).x} cy={getRadarPoint(pAritmetica, 5).y} r="4" className="fill-blue-600 dark:fill-[#d9b452]" />
+                  <circle cx={getRadarPoint(pAlgebra, 0).x} cy={getRadarPoint(pAlgebra, 0).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
+                  <circle cx={getRadarPoint(pGeometria, 1).x} cy={getRadarPoint(pGeometria, 1).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
+                  <circle cx={getRadarPoint(pTrigonometria, 2).x} cy={getRadarPoint(pTrigonometria, 2).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
+                  <circle cx={getRadarPoint(pCalculo, 3).x} cy={getRadarPoint(pCalculo, 3).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
+                  <circle cx={getRadarPoint(pCombinatoria, 4).x} cy={getRadarPoint(pCombinatoria, 4).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
+                  <circle cx={getRadarPoint(pAritmetica, 5).x} cy={getRadarPoint(pAritmetica, 5).y} r="4" className="fill-[var(--marker-blue)] dark:fill-[var(--marker-amber)]" />
                 </>
               )}
 
               {/* Rótulos dos vértices posicionados com folga total (sem corte nas bordas) */}
-              <text x="230" y="38" textAnchor="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="230" y="38" textAnchor="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Álgebra ({pAlgebra}%)
               </text>
-              <text x="322" y="105" textAnchor="start" dominantBaseline="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="322" y="105" textAnchor="start" dominantBaseline="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Geometria ({pGeometria}%)
               </text>
-              <text x="322" y="195" textAnchor="start" dominantBaseline="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="322" y="195" textAnchor="start" dominantBaseline="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Trigonometria ({pTrigonometria}%)
               </text>
-              <text x="230" y="265" textAnchor="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="230" y="265" textAnchor="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Cálculo ({pCalculo}%)
               </text>
-              <text x="138" y="195" textAnchor="end" dominantBaseline="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="138" y="195" textAnchor="end" dominantBaseline="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Combinatória ({pCombinatoria}%)
               </text>
-              <text x="138" y="105" textAnchor="end" dominantBaseline="middle" className="text-[11px] font-semibold fill-slate-700 dark:fill-zinc-300">
+              <text x="138" y="105" textAnchor="end" dominantBaseline="middle" className="text-[11px] font-semibold fill-[var(--ink-secondary)]">
                 Aritmética ({pAritmetica}%)
               </text>
             </svg>
           </div>
 
           {!hasAnyData && (
-            <p className="text-center text-[11px] text-slate-500 dark:text-zinc-500 italic">
+            <p className="text-center text-[11px] text-[var(--ink-muted)] italic">
               Resolva questões para calibrar seu mapa de competências por matéria.
             </p>
           )}
@@ -591,15 +589,15 @@ export default function DashboardPage() {
 
         {/* DIAGNÓSTICO METACONCEITUAL & ERROS */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
+              <AlertTriangle className="w-5 h-5 text-[var(--marker-amber)]" />
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base">
                 Diagnóstico de Padrões de Erro
               </h3>
             </div>
             
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs text-[var(--ink-secondary)]">
               Classificação automatizada dos desvios nas resoluções passadas:
             </p>
 
@@ -607,58 +605,58 @@ export default function DashboardPage() {
               <div className="space-y-3 pt-1">
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-700 dark:text-zinc-300">Conta, Álgebra & Sinal</span>
-                    <span className="text-rose-500 font-bold">{diagnosticoErros.conta}%</span>
+                    <span className="text-[var(--ink-secondary)]">Conta, Álgebra & Sinal</span>
+                    <span className="text-[var(--marker-red)] font-mono tabular-nums font-bold">{diagnosticoErros.conta}%</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-rose-500 rounded-full" style={{ width: `${diagnosticoErros.conta}%` }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-700 dark:text-zinc-300">Interpretação do Enunciado</span>
-                    <span className="text-amber-500 font-bold">{diagnosticoErros.interpretacao}%</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${diagnosticoErros.interpretacao}%` }} />
+                  <div className="w-full h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                    <div className="h-full bg-[var(--marker-red)] rounded-full" style={{ width: `${diagnosticoErros.conta}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-700 dark:text-zinc-300">Lacuna Conceitual / Teorema</span>
-                    <span className="text-blue-600 dark:text-[#d9b452] font-bold">{diagnosticoErros.lacuna}%</span>
+                    <span className="text-[var(--ink-secondary)]">Interpretação do Enunciado</span>
+                    <span className="text-[var(--marker-amber)] font-mono tabular-nums font-bold">{diagnosticoErros.interpretacao}%</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-blue-600 dark:bg-[#d9b452] rounded-full" style={{ width: `${diagnosticoErros.lacuna}%` }} />
+                  <div className="w-full h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                    <div className="h-full bg-[var(--marker-amber)] rounded-full" style={{ width: `${diagnosticoErros.interpretacao}%` }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-[var(--ink-secondary)]">Lacuna Conceitual / Teorema</span>
+                    <span className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-mono tabular-nums font-bold">{diagnosticoErros.lacuna}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                    <div className="h-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] rounded-full" style={{ width: `${diagnosticoErros.lacuna}%` }} />
                   </div>
                 </div>
               </div>
             ) : hasAnyData ? (
-              <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-center space-y-1.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
-                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">100% de Precisão!</p>
-                <p className="text-[11px] text-slate-600 dark:text-zinc-400">
+              <div className="p-4 rounded-xl border border-[var(--marker-green-border)] bg-[var(--marker-green-dim)] text-center space-y-1.5">
+                <CheckCircle2 className="w-5 h-5 text-[var(--marker-green)] mx-auto" />
+                <p className="text-xs font-bold text-[var(--marker-green)]">100% de Precisão!</p>
+                <p className="text-[11px] text-[var(--ink-secondary)]">
                   Nenhum desvio ou erro foi registrado nas suas resoluções até agora. A MathAI monitorará passagens mais complexas nos treinos avançados.
                 </p>
               </div>
             ) : (
-              <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-1.5">
-                <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Sem erros registrados</p>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+              <div className="p-4 rounded-xl border border-dashed border-[var(--border-default)] text-center space-y-1.5">
+                <p className="text-xs font-semibold text-[var(--ink-primary)]">Sem erros registrados</p>
+                <p className="text-[11px] text-[var(--ink-muted)]">
                   A MathAI Engine analisará automaticamente seus padrões de resposta assim que você submeter suas primeiras soluções.
                 </p>
               </div>
             )}
 
             {/* INSIGHT SOCRÁTICO DA MATHAI */}
-            <div className="p-3.5 rounded-xl bg-blue-500/5 dark:bg-[#1e2329] border border-blue-500/20 dark:border-amber-500/20 text-xs space-y-1.5 mt-4">
-              <div className="font-semibold text-blue-900 dark:text-[#e1bb55] flex items-center gap-1.5">
-                <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
+            <div className="p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs space-y-1.5 mt-4">
+              <div className="font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center gap-1.5">
+                <Lightbulb className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                 Conselho da MathAI Engine:
               </div>
-              <p className="text-slate-600 dark:text-zinc-400 leading-relaxed text-[11px]">
+              <p className="text-[var(--ink-secondary)] leading-relaxed text-[11px]">
                 {metricas.conselho_ia || (hasAnyData
                   ? (metricas.taxa_acerto <= 60
                       ? `Aproveitamento em fase de calibração (${metricas.taxa_acerto}%). Recomendamos revisar com calma o passo a passo na Lousa de Rascunho antes de assinalar as alternativas.`
@@ -673,20 +671,20 @@ export default function DashboardPage() {
       {/* 4. REPETIÇÃO ESPAÇADA (SM-2) & HISTÓRICO RECENTE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* REPETIÇÃO ESPAÇADA */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+        <div className="lg:col-span-5 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CalendarClock className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
+              <CalendarClock className="w-5 h-5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base">
                 Fila de Revisão Espaçada (SM-2)
               </h3>
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452]">
+            <span className="text-xs font-mono tabular-nums font-semibold px-2 py-0.5 rounded bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)]">
               {revisoes.length} Pendente{revisoes.length === 1 ? "" : "s"}
             </span>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
+          <p className="text-xs text-[var(--ink-secondary)]">
             Lemas e problemas reintroduzidos pelo algoritmo no limiar ideal da curva de retenção:
           </p>
 
@@ -695,13 +693,13 @@ export default function DashboardPage() {
               revisoes.map((r, i) => (
                 <div 
                   key={i}
-                  className="p-3.5 rounded-xl border border-[var(--border-board)] border-[var(--border-board)] bg-slate-50/50 dark:bg-[#1e2329] flex items-center justify-between gap-3 hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-colors"
+                  className="p-3.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex items-center justify-between gap-3 hover:border-[var(--border-default)] transition-colors"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <LemaBadge lemaCodigo={r.lema_codigo} lemaId={r.lema_id || r.questao_id} variant="pill" />
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 pl-1">
+                    <div className="text-[11px] text-[var(--ink-secondary)] pl-1">
                       {r.materia === "Matemática" || r.materia === "Geral" ? "Matemática Básica" : r.materia} • {r.topico === "Geral" || !r.topico ? "Conceitos Fundamentais" : r.topico} (Ciclo #{r.repeticoes})
                     </div>
                   </div>
@@ -711,7 +709,7 @@ export default function DashboardPage() {
                     </span>
                     <Link
                       href={`/resolver?id=${r.questao_id}`}
-                      className="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold hover:scale-105 transition-transform"
+                      className="lemmas-gold-cta p-1.5 rounded-lg font-bold hover:scale-105 transition-transform"
                       title="Resolver agora"
                     >
                       <Play className="w-3 h-3 fill-current" />
@@ -720,15 +718,15 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
-                <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto" />
-                <p className="text-xs font-semibold text-slate-800 dark:text-[#dedbd0]">Repertório em Dia</p>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+              <div className="p-6 rounded-xl border border-dashed border-[var(--border-default)] text-center space-y-2">
+                <CheckCircle2 className="w-6 h-6 text-[var(--marker-green)] mx-auto" />
+                <p className="text-xs font-semibold text-[var(--ink-primary)]">Repertório em Dia</p>
+                <p className="text-[11px] text-[var(--ink-secondary)]">
                   Nenhuma revisão prioritária pendente no momento. As questões resolvidas serão agendadas pelo algoritmo SM-2 na curva ideal de retenção.
                 </p>
                 <Link
                   href="/resolver"
-                  className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs dark:hover:bg-amber-600 transition-colors"
+                  className="lemmas-gold-cta inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
                 >
                   <Play className="w-3 h-3 fill-current" />
                   Resolver Novas Questões
@@ -739,15 +737,15 @@ export default function DashboardPage() {
         </div>
 
         {/* HISTÓRICO DE RESOLUÇÕES */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#161a1e] border border-[var(--border-board)] border-[var(--border-board)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
+        <div className="lg:col-span-7 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RotateCcw className="w-5 h-5 text-blue-600 dark:text-[#d9b452]" />
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">
+              <RotateCcw className="w-5 h-5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base">
                 Histórico Recente de Resoluções
               </h3>
             </div>
-            <Link href="/resolver" className="text-xs text-blue-600 dark:text-[#d9b452] hover:underline font-semibold">
+            <Link href="/resolver" className="text-xs text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold">
               Ver todas →
             </Link>
           </div>
@@ -756,7 +754,7 @@ export default function DashboardPage() {
             {historico.length > 0 ? (
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-[var(--border-subtle)] text-[var(--ink-muted)] uppercase tracking-wider text-[10px]">
                     <th className="pb-2.5 pr-4 font-semibold whitespace-nowrap">Momento</th>
                     <th className="pb-2.5 pr-4 font-semibold">Questão & Assunto</th>
                     <th className="pb-2.5 pr-4 font-semibold whitespace-nowrap">Resultado</th>
@@ -764,30 +762,30 @@ export default function DashboardPage() {
                     <th className="pb-2.5 font-semibold whitespace-nowrap">Estratégia</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {historico.map((h, i) => {
                     const letra = formatGabarito(h.gabarito);
                     const estrategia = formatEstrategia(h.estrategia);
                     return (
-                      <tr key={h.id ?? i} className="hover:bg-slate-50/50 dark:hover:bg-[#1a172c] transition-colors">
-                        <td className="py-3 pr-4 align-middle whitespace-nowrap text-slate-400 dark:text-zinc-500 font-mono text-[11px]">{h.data}</td>
-                        <td className="py-3 pr-4 align-middle font-medium text-slate-800 dark:text-[#f5f0df]">{h.questao}</td>
+                      <tr key={h.id ?? i} className="hover:bg-[var(--bg-elevated)] transition-colors">
+                        <td className="py-3 pr-4 align-middle whitespace-nowrap text-[var(--ink-muted)] font-mono tabular-nums text-[11px]">{h.data}</td>
+                        <td className="py-3 pr-4 align-middle font-medium text-[var(--ink-primary)]">{h.questao}</td>
                         <td className="py-3 pr-4 align-middle whitespace-nowrap">
                           {h.resultado ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-[var(--marker-green)] font-semibold text-[11px]">
                               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Acertou{letra ? ` (${letra})` : ""}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-[var(--marker-red)] font-semibold text-[11px]">
                               <XCircle className="w-3.5 h-3.5 shrink-0" /> Errou
                             </span>
                           )}
                         </td>
-                        <td className="py-3 pr-4 align-middle whitespace-nowrap font-mono text-slate-600 dark:text-zinc-400">{h.tempo}</td>
+                        <td className="py-3 pr-4 align-middle whitespace-nowrap font-mono tabular-nums text-[var(--ink-secondary)]">{h.tempo}</td>
                         <td className="py-3 align-middle">
                           <span
                             title={estrategia.full}
-                            className="inline-block whitespace-nowrap px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-[10px] font-medium border border-transparent dark:border-zinc-700"
+                            className="inline-block whitespace-nowrap px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--ink-secondary)] text-[10px] font-medium border border-[var(--border-subtle)]"
                           >
                             {estrategia.label}
                           </span>
@@ -798,17 +796,17 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="p-8 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
-                <BookOpenCheck className="w-6 h-6 text-blue-600 dark:text-amber-500 mx-auto" />
-                <p className="text-xs font-semibold text-slate-800 dark:text-[#dedbd0]">
+              <div className="p-8 rounded-xl border border-dashed border-[var(--border-default)] text-center space-y-2">
+                <BookOpenCheck className="w-6 h-6 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] mx-auto" />
+                <p className="text-xs font-semibold text-[var(--ink-primary)]">
                   Nenhuma resolução recente registrada
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                <p className="text-[11px] text-[var(--ink-muted)]">
                   Suas tentativas cronometradas e diagnósticos cognitivos da MathAI aparecerão aqui assim que você iniciar os treinos.
                 </p>
                 <Link
                   href="/resolver"
-                  className="inline-flex items-center gap-1.5 mt-2 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:text-slate-950 font-bold text-xs dark:hover:bg-amber-600 transition-colors"
+                  className="lemmas-gold-cta inline-flex items-center gap-1.5 mt-2 px-3.5 py-1.5 rounded-lg font-bold text-xs transition-colors"
                 >
                   <Play className="w-3 h-3 fill-current" />
                   Iniciar Treino Agora

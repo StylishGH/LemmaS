@@ -742,9 +742,9 @@ export default function BancoQuestoesPage() {
     <div className="space-y-6 max-w-6xl mx-auto py-2 relative z-10">
       {/* 1. HEADER EDITORIAL NO ESTILO LEMMAS */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452] text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--ink-secondary)] text-xs font-mono tabular-nums font-medium">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span>
               {total === 1
                 ? "1 Questão Auditada"
@@ -752,8 +752,8 @@ export default function BancoQuestoesPage() {
               · MathAI Engine
             </span>
           </div>
-          <h1 className="font-serif-math text-2xl sm:text-3xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
-            Banco de <em className="italic text-blue-600 dark:text-[#d9b452] font-serif-math">Questões & Teoremas.</em>
+          <h1 className="font-serif-math text-2xl sm:text-3xl font-semibold text-[var(--ink-primary)] tracking-tight">
+            Banco de <em className="italic text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-serif-math">Questões & Teoremas.</em>
           </h1>
         </div>
       </div>
@@ -767,10 +767,10 @@ export default function BancoQuestoesPage() {
         <button
           type="button"
           onClick={() => aplicarTrilhaRapida("todas")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border ${
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border ${
             filtrosAtivosCount === 0 && categoriaBancaFiltro === "Todas"
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
           }`}
         >
           Todas as Questões
@@ -779,91 +779,86 @@ export default function BancoQuestoesPage() {
         <button
           type="button"
           onClick={() => aplicarTrilhaRapida("militares")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Concurso Militar"
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
           }`}
         >
-          <span>🎖️</span>
           <span>Militares de Elite (ITA · IME · AFA · EFOMM · EN)</span>
         </button>
 
         <button
           type="button"
           onClick={() => aplicarTrilhaRapida("geometria")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             materiaFiltro.includes("Geometria Plana")
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
           }`}
         >
-          <span>📐</span>
           <span>Geometria & Construções</span>
         </button>
 
         <button
-                  type="button"
-                  onClick={() => aplicarTrilhaRapida("calculo")}
-                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
-                    materiaFiltro.includes("Cálculo")
-                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
-                  }`}
-                >
-                  <span>∫</span>
-                  <span>Cálculo</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => aplicarTrilhaRapida("calculo-3")}
-                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
-                    materiaFiltro.includes("Cálculo 3")
-                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
-                  }`}
-                >
-                  <span>∂</span>
-                  <span>Cálculo 3</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => aplicarTrilhaRapida("algebra-linear-1")}
-                  className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
-                    materiaFiltro.includes("Álgebra Linear I")
-                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-                      : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
-                  }`}
-                >
-                  <span>📐</span>
-                  <span>Álgebra Linear I</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => aplicarTrilhaRapida("olimpiadas")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
-            categoriaBancaFiltro === "Olimpíadas"
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+          type="button"
+          onClick={() => aplicarTrilhaRapida("calculo")}
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            materiaFiltro.includes("Cálculo")
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
           }`}
         >
-          <span>🏆</span>
+          <span className="font-mono">∫</span>
+          <span>Cálculo</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("calculo-3")}
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            materiaFiltro.includes("Cálculo 3")
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
+          }`}
+        >
+          <span className="font-mono">∂</span>
+          <span>Cálculo 3</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("algebra-linear-1")}
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            materiaFiltro.includes("Álgebra Linear I")
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
+          }`}
+        >
+          <span>Álgebra Linear I</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => aplicarTrilhaRapida("olimpiadas")}
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+            categoriaBancaFiltro === "Olimpíadas"
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
+          }`}
+        >
           <span>Olimpíadas (OBM · IMO · HMMT)</span>
         </button>
 
         <button
           type="button"
           onClick={() => aplicarTrilhaRapida("vestibulares")}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 border flex items-center gap-1.5 ${
             categoriaBancaFiltro === "Vestibular & Superior"
-              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold shadow-2xs"
-              : "bg-slate-100 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-semibold"
+              : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
           }`}
         >
-          <span>🎓</span>
           <span>Vestibulares & CEDERJ</span>
         </button>
       </div>
@@ -871,11 +866,11 @@ export default function BancoQuestoesPage() {
       {/* LINHA 2: BARRA DE COMANDO HORIZONTAL ÚNICA (ESTILO LEETCODE / LINEAR) */}
       <div
         ref={commandBarRef}
-        className="flex flex-wrap items-center gap-2 p-2 rounded-2xl border border-[var(--border-board)] bg-white dark:bg-[#161a1e] shadow-xs relative z-30"
+        className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xs relative z-30"
       >
         {/* INPUT DE BUSCA COMPACTO */}
         <div className="relative flex-1 min-w-[160px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[var(--ink-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={busca}
@@ -884,7 +879,7 @@ export default function BancoQuestoesPage() {
               setPage(1);
             }}
             placeholder="Buscar teorema, lema, matrizes, Stokes..."
-            className="w-full pl-9 pr-8 py-2 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-board)] text-xs sm:text-sm text-[var(--ink-primary)] placeholder-[var(--ink-muted)] outline-none focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
+            className="w-full pl-9 pr-8 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs sm:text-sm text-[var(--ink-primary)] placeholder-[var(--ink-muted)] outline-none focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
           />
           {busca && (
             <button
@@ -892,7 +887,7 @@ export default function BancoQuestoesPage() {
                 setBusca("");
                 setPage(1);
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -904,13 +899,13 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "banca" ? null : "banca")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold tabular-nums transition-colors flex items-center gap-1.5 border ${
               numBancas > 0
-                ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
-                : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
+                ? "bg-[var(--bg-subtle)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
             }`}
           >
-            <Filter className={`w-3.5 h-3.5 shrink-0 ${numBancas > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
+            <Filter className={`w-3.5 h-3.5 shrink-0 ${numBancas > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
             <span className="truncate max-w-[160px] sm:max-w-[200px]">
               {numBancas === 0 ? "Banca" : numBancas === 1 ? bancaFiltro.filter((v) => v !== VAL_TODAS)[0] : `${numBancas} Bancas`}
             </span>
@@ -921,17 +916,17 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "banca" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-96 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-lg p-3 flex flex-col space-y-2.5 lemmas-popover-enter origin-top-left">
               {/* Header do Popover */}
-              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-semibold text-[var(--ink-primary)] tracking-tight">
                   Filtrar por Banca
                 </span>
                 {numBancas > 0 && (
                   <button
                     type="button"
                     onClick={() => handleSelectBanca(VAL_TODAS)}
-                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold tabular-nums"
                   >
                     Limpar ({numBancas})
                   </button>
@@ -940,19 +935,19 @@ export default function BancoQuestoesPage() {
 
               {/* Mini-input de busca interna */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[var(--ink-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={buscaBancaInterna}
                   onChange={(e) => setBuscaBancaInterna(e.target.value)}
                   placeholder="Filtrar banca (ex: ITA, OBM, Harvard)..."
-                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:focus:ring-amber-500/50"
+                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] placeholder-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue-border)] dark:focus:ring-[var(--marker-amber-border)]"
                 />
                 {buscaBancaInterna && (
                   <button
                     type="button"
                     onClick={() => setBuscaBancaInterna("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] text-xs"
                   >
                     ×
                   </button>
@@ -960,16 +955,16 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* Abas Rápidas */}
-              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-[11px]">
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[11px]">
                 {(["Todas", "Militares", "Vestibulares", "Olimpíadas"] as const).map((aba) => (
                   <button
                     key={aba}
                     type="button"
                     onClick={() => setAbaBancaPopover(aba)}
-                    className={`flex-1 py-1 rounded-md font-semibold transition-all ${
+                    className={`flex-1 py-1 rounded-md font-semibold transition-colors ${
                       abaBancaPopover === aba
-                        ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-[#f5f0df] shadow-2xs font-bold"
-                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
+                        ? "bg-[var(--bg-card)] text-[var(--ink-primary)] shadow-2xs font-bold"
+                        : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                     }`}
                   >
                     {aba}
@@ -982,14 +977,14 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => handleSelectBanca(VAL_TODAS)}
-                  className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
+                  className={`w-full p-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between border ${
                     numBancas === 0
-                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                      : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                      ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                      : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                   }`}
                 >
                   <span>Todas as Bancas</span>
-                  <span className="text-[10px] font-mono text-slate-400">({total.toLocaleString("pt-BR")})</span>
+                  <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)]">({total.toLocaleString("pt-BR")})</span>
                 </button>
 
                 {bancasOrdenadas.map((b) => {
@@ -1000,26 +995,26 @@ export default function BancoQuestoesPage() {
                       key={b.name}
                       type="button"
                       onClick={() => handleSelectBanca(b.name)}
-                      className={`w-full p-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
+                      className={`w-full p-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between border ${
                         isSelected
-                          ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                          : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                          ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                          : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate">
                         <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[10px] shrink-0 ${
-                          isSelected ? "bg-blue-600 border-blue-600 text-white font-bold dark:bg-amber-500 dark:border-amber-500 dark:text-slate-950" : "border-slate-300 dark:border-zinc-600"
+                          isSelected ? "bg-[var(--marker-blue)] border-[var(--marker-blue)] text-white font-bold dark:bg-[var(--marker-amber)] dark:border-[var(--marker-amber)] dark:text-slate-950" : "border-[var(--border-default)]"
                         }`}>
                           {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </span>
                         <span className="truncate">{b.name}</span>
                         {isPrioritaria && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452] font-semibold">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] font-semibold">
                             BR
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                      <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)] shrink-0">
                         ({b.count})
                       </span>
                     </button>
@@ -1028,14 +1023,14 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* Rodapé */}
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400 font-mono">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px]">
+                <span className="text-[var(--ink-muted)] font-mono tabular-nums">
                   {numBancas === 0 ? "Todas ativas" : `${numBancas} marcada(s)`}
                 </span>
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
+                  className="lemmas-gold-cta px-3 py-1 rounded-lg font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1049,13 +1044,13 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "materia" ? null : "materia")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold tabular-nums transition-colors flex items-center gap-1.5 border ${
               numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0
-                ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
-                : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
+                ? "bg-[var(--bg-subtle)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
             }`}
           >
-            <Layers className={`w-3.5 h-3.5 shrink-0 ${numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
+            <Layers className={`w-3.5 h-3.5 shrink-0 ${numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
             <span className="truncate max-w-[160px] sm:max-w-[210px]">
               {numMaterias === 0 && numTopicos === 0 && numSubtopicos === 0
                 ? "Matéria, Tópico & Subtópico"
@@ -1076,9 +1071,9 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "materia" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 flex flex-col space-y-2.5 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:left-0 mt-2 z-50 w-auto xl:w-[480px] max-h-[75vh] xl:max-h-[32rem] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-lg p-3 flex flex-col space-y-2.5 lemmas-popover-enter origin-top-left">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-semibold text-[var(--ink-primary)] tracking-tight">
                   Grandes Áreas, Tópicos & Subtópicos
                 </span>
                 {(numMaterias > 0 || numTopicos > 0 || numSubtopicos > 0) && (
@@ -1090,7 +1085,7 @@ export default function BancoQuestoesPage() {
                       setSubtopicoFiltro([VAL_TODOS]);
                       setPage(1);
                     }}
-                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold"
                   >
                     Limpar tudo
                   </button>
@@ -1099,7 +1094,7 @@ export default function BancoQuestoesPage() {
 
               {/* Seletor de Matérias Canônicas */}
               <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                   Grandes Áreas:
                 </span>
                 <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto pr-1">
@@ -1110,14 +1105,14 @@ export default function BancoQuestoesPage() {
                         key={m.name}
                         type="button"
                         onClick={() => handleSelectMateria(m.name)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 border ${
                           isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                            ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                         }`}
                       >
                         <span>{m.name}</span>
-                        <span className="text-[10px] font-mono text-slate-400">({m.count})</span>
+                        <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)]">({m.count})</span>
                       </button>
                     );
                   })}
@@ -1125,16 +1120,16 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* Tópicos e Subtópicos com mini-busca */}
-              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
+              <div className="space-y-2 pt-1 border-t border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                     Tópicos Específicos:
                   </span>
                   {numTopicos > 0 && (
                     <button
                       type="button"
                       onClick={() => handleSelectTopico(VAL_TODOS)}
-                      className="text-[10px] text-blue-600 dark:text-[#d9b452] hover:underline"
+                      className="text-[10px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline"
                     >
                       Limpar tópicos
                     </button>
@@ -1142,19 +1137,19 @@ export default function BancoQuestoesPage() {
                 </div>
 
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-3.5 h-3.5 text-[var(--ink-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={buscaTopicoInterna}
                     onChange={(e) => setBuscaTopicoInterna(e.target.value)}
                     placeholder="Buscar tópico ou subtópico (ex: derivadas, Stokes, poliedros)..."
-                    className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-[#dedbd0] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:focus:ring-amber-500/50"
+                    className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] placeholder-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--marker-blue-border)] dark:focus:ring-[var(--marker-amber-border)]"
                   />
                   {buscaTopicoInterna && (
                     <button
                       type="button"
                       onClick={() => setBuscaTopicoInterna("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] text-xs"
                     >
                       ×
                     </button>
@@ -1162,7 +1157,7 @@ export default function BancoQuestoesPage() {
                 </div>
 
                 {topicosFiltradosDropdown.length === 0 ? (
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 italic py-1">
+                  <p className="text-[11px] text-[var(--ink-muted)] italic py-1">
                     Nenhum tópico disponível para os filtros atuais.
                   </p>
                 ) : (
@@ -1175,29 +1170,29 @@ export default function BancoQuestoesPage() {
                           type="button"
                           onClick={() => handleSelectTopico(topico.name)}
                           title={topico.name}
-                          className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between border ${
+                          className={`p-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between border ${
                             isSelected
-                              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+                              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                              : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                           }`}
                         >
                           <span className="truncate">{topico.name}</span>
-                          <span className="text-[10px] font-mono text-slate-400 shrink-0">({topico.count})</span>
+                          <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)] shrink-0">({topico.count})</span>
                         </button>
                       );
                     })}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-zinc-800">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                <div className="flex items-center justify-between pt-1.5 border-t border-[var(--border-subtle)]">
+                  <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                     Subtópicos:
                   </span>
                   {numSubtopicos > 0 && (
                     <button
                       type="button"
                       onClick={() => handleSelectSubtopico(VAL_TODOS)}
-                      className="text-[10px] text-blue-600 dark:text-[#d9b452] hover:underline"
+                      className="text-[10px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline"
                     >
                       Limpar subtópicos
                     </button>
@@ -1205,7 +1200,7 @@ export default function BancoQuestoesPage() {
                 </div>
 
                 {subtopicosFiltradosDropdown.length === 0 ? (
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 italic py-1">
+                  <p className="text-[11px] text-[var(--ink-muted)] italic py-1">
                     Nenhum subtópico disponível para os filtros atuais.
                   </p>
                 ) : (
@@ -1218,14 +1213,14 @@ export default function BancoQuestoesPage() {
                           type="button"
                           onClick={() => handleSelectSubtopico(subtopico.name)}
                           title={subtopico.name}
-                          className={`p-1.5 rounded-lg text-left text-xs transition-all flex items-center justify-between gap-1 border ${
+                          className={`p-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between gap-1 border ${
                             isSelected
-                              ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                              : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700"
+                              ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                              : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                           }`}
                         >
                           <span className="truncate">{subtopico.name}</span>
-                          <span className="text-[10px] font-mono text-slate-400 shrink-0">({subtopico.count})</span>
+                          <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)] shrink-0">({subtopico.count})</span>
                         </button>
                       );
                     })}
@@ -1234,11 +1229,11 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* Rodapé */}
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-end">
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
+                  className="lemmas-gold-cta px-3 py-1 rounded-lg font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1252,13 +1247,13 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "dificuldade" ? null : "dificuldade")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold tabular-nums transition-colors flex items-center gap-1.5 border ${
               numDificuldades > 0
-                ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
-                : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
+                ? "bg-[var(--bg-subtle)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
             }`}
           >
-            <HelpCircle className={`w-3.5 h-3.5 shrink-0 ${numDificuldades > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
+            <HelpCircle className={`w-3.5 h-3.5 shrink-0 ${numDificuldades > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
             <span>{numDificuldades === 0 ? "Dificuldade" : `${numDificuldades} Níveis`}</span>
             {numDificuldades > 0 && (
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] shrink-0" />
@@ -1267,16 +1262,16 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "dificuldade" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-64 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-1.5 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-64 max-h-[70vh] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-lg p-3 space-y-1.5 lemmas-popover-enter origin-top-right">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-semibold text-[var(--ink-primary)] tracking-tight">
                   Nível de Dificuldade
                 </span>
                 {numDificuldades > 0 && (
                   <button
                     type="button"
                     onClick={() => handleSelectDificuldade(VAL_TODAS)}
-                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold"
                   >
                     Todas
                   </button>
@@ -1289,33 +1284,33 @@ export default function BancoQuestoesPage() {
                   d.id === "facil" ? "bg-emerald-500" :
                   d.id === "media" ? "bg-amber-500" :
                   d.id === "dificil" ? "bg-rose-500" :
-                  d.id === "nao_classificada" ? "bg-slate-400" : "bg-blue-500";
+                  d.id === "nao_classificada" ? "bg-[var(--ink-muted)]" : "bg-[var(--marker-blue)]";
 
                 return (
                   <button
                     key={d.id}
                     type="button"
                     onClick={() => handleSelectDificuldade(d.id)}
-                    className={`w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between border ${
+                    className={`w-full p-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between border ${
                       isSelected
-                        ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                        : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                        ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                        : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
                       <span>{d.label}</span>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400">({d.count})</span>
+                    <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)]">({d.count})</span>
                   </button>
                 );
               })}
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-end">
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
+                  className="lemmas-gold-cta px-3 py-1 rounded-lg font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1329,14 +1324,14 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "ano" ? null : "ano")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold tabular-nums transition-colors flex items-center gap-1.5 border ${
               numAnos > 0
-                ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
-                : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
+                ? "bg-[var(--bg-subtle)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
             }`}
           >
-            <Calendar className={`w-3.5 h-3.5 shrink-0 ${numAnos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
-            <span>{numAnos === 0 ? "Ano" : numAnos === 1 ? anoFiltro.filter((v) => v !== VAL_TODOS)[0] : `${numAnos} Anos`}</span>
+            <Calendar className={`w-3.5 h-3.5 shrink-0 ${numAnos > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
+            <span className="tabular-nums">{numAnos === 0 ? "Ano" : numAnos === 1 ? anoFiltro.filter((v) => v !== VAL_TODOS)[0] : `${numAnos} Anos`}</span>
             {numAnos > 0 && (
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] shrink-0" />
             )}
@@ -1344,16 +1339,16 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "ano" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-84 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3 space-y-2 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-84 max-h-[70vh] xl:max-h-96 overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-lg p-3 space-y-2 lemmas-popover-enter origin-top-right">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-semibold text-[var(--ink-primary)] tracking-tight tabular-nums">
                   Anos da Prova ({anoMin}–{anoMax})
                 </span>
                 {numAnos > 0 && (
                   <button
                     type="button"
                     onClick={() => handleSelectAno(VAL_TODOS)}
-                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold"
                   >
                     Todos
                   </button>
@@ -1365,10 +1360,10 @@ export default function BancoQuestoesPage() {
                 <button
                   type="button"
                   onClick={() => handleSelectAno(VAL_TODOS)}
-                  className={`flex-1 py-1 rounded-md font-semibold transition-colors border ${
+                  className={`flex-1 py-1 rounded-lg font-semibold transition-colors border ${
                     numAnos === 0
-                      ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                      : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                      ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                      : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                   }`}
                 >
                   Todos
@@ -1379,7 +1374,7 @@ export default function BancoQuestoesPage() {
                     setAnoFiltro(["2026", "2025", "2024"]);
                     setPage(1);
                   }}
-                  className="flex-1 py-1 rounded-md bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 font-semibold hover:border-slate-300"
+                  className="flex-1 py-1 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] font-semibold tabular-nums hover:border-[var(--border-default)] transition-colors"
                 >
                   2024–2026
                 </button>
@@ -1397,24 +1392,24 @@ export default function BancoQuestoesPage() {
                         key={a.ano}
                         type="button"
                         onClick={() => handleSelectAno(anoStr)}
-                        className={`p-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-between border ${
+                        className={`p-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between border ${
                           isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/70 dark:border-zinc-800/80 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                            ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                         }`}
                       >
-                        <span>{a.ano}</span>
-                        <span className="text-[9px] font-mono text-slate-400">({a.count})</span>
+                        <span className="tabular-nums">{a.ano}</span>
+                        <span className="text-[9px] font-mono tabular-nums text-[var(--ink-muted)]">({a.count})</span>
                       </button>
                     );
                   })}
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-end">
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
+                  className="lemmas-gold-cta px-3 py-1 rounded-lg font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1428,13 +1423,13 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === "formato" ? null : "formato")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold tabular-nums transition-colors flex items-center gap-1.5 border ${
               numTipos > 0 || numTiposProva > 0 || numFases > 0
-                ? "bg-[var(--bg-elevated)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold shadow-2xs"
-                : "bg-[var(--bg-card)] border-[var(--border-board)] text-[var(--ink-secondary)] hover:border-[var(--border-badge)]"
+                ? "bg-[var(--bg-subtle)] border-[var(--border-badge)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)]"
+                : "bg-[var(--bg-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
             }`}
           >
-            <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${numTipos > 0 || numTiposProva > 0 || numFases > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-slate-400"}`} />
+            <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${numTipos > 0 || numTiposProva > 0 || numFases > 0 ? "text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" : "text-[var(--ink-muted)]"}`} />
             <span>Formato & Fase</span>
             {(numTipos > 0 || numTiposProva > 0 || numFases > 0) && (
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] shrink-0" />
@@ -1443,9 +1438,9 @@ export default function BancoQuestoesPage() {
           </button>
 
           {activePopover === "formato" && (
-            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-88 max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#18152b] border border-slate-200 dark:border-amber-500/30 shadow-2xl backdrop-blur-md p-3.5 space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-zinc-800">
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f0df]">
+            <div className="absolute top-full inset-x-0 xl:inset-x-auto xl:right-0 mt-2 z-50 w-auto xl:w-88 max-h-[70vh] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-lg p-3.5 space-y-3 lemmas-popover-enter origin-top-right">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                <span className="text-xs font-semibold text-[var(--ink-primary)] tracking-tight">
                   Formato, Prova & Fase
                 </span>
                 {(numTipos > 0 || numTiposProva > 0 || numFases > 0) && (
@@ -1457,7 +1452,7 @@ export default function BancoQuestoesPage() {
                       setFaseNivelFiltro([VAL_TODAS]);
                       setPage(1);
                     }}
-                    className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold"
+                    className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold"
                   >
                     Resetar
                   </button>
@@ -1466,7 +1461,7 @@ export default function BancoQuestoesPage() {
 
               {/* 1. Tipo de Resolução (Objetiva / Discursiva) */}
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                   Tipo de Resolução:
                 </span>
                 <div className="grid grid-cols-3 gap-1">
@@ -1477,14 +1472,14 @@ export default function BancoQuestoesPage() {
                         key={t.id}
                         type="button"
                         onClick={() => handleSelectTipo(t.id)}
-                        className={`p-1.5 rounded-lg text-xs font-medium text-center border ${
+                        className={`p-1.5 rounded-lg text-xs font-medium text-center border transition-colors ${
                           isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                            ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)] hover:text-[var(--ink-primary)]"
                         }`}
                       >
                         <span className="block truncate">{t.label}</span>
-                        <span className="text-[9px] font-mono text-slate-400">({t.count})</span>
+                        <span className="text-[9px] font-mono tabular-nums text-[var(--ink-muted)]">({t.count})</span>
                       </button>
                     );
                   })}
@@ -1492,8 +1487,8 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* 2. Tipo de Prova (Oficial / Treinamento) */}
-              <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-zinc-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+              <div className="space-y-1 pt-1 border-t border-[var(--border-subtle)]">
+                <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                   Tipo de Prova:
                 </span>
                 <div className="flex flex-wrap gap-1">
@@ -1504,14 +1499,14 @@ export default function BancoQuestoesPage() {
                         key={tp.id}
                         type="button"
                         onClick={() => handleSelectTipoProva(tp.id)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
                           isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                            ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)] hover:text-[var(--ink-primary)]"
                         }`}
                       >
                         <span>{tp.label}</span>
-                        <span className="text-[10px] font-mono text-slate-400 ml-1">({tp.count})</span>
+                        <span className="text-[10px] font-mono tabular-nums text-[var(--ink-muted)] ml-1">({tp.count})</span>
                       </button>
                     );
                   })}
@@ -1519,8 +1514,8 @@ export default function BancoQuestoesPage() {
               </div>
 
               {/* 3. Fase / Nível Olímpico */}
-              <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-zinc-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+              <div className="space-y-1 pt-1 border-t border-[var(--border-subtle)]">
+                <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)] tracking-wider">
                   Fase / Nível Olímpico:
                 </span>
                 <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto pr-1">
@@ -1531,25 +1526,25 @@ export default function BancoQuestoesPage() {
                         key={f.id}
                         type="button"
                         onClick={() => handleSelectFaseNivel(f.id)}
-                        className={`px-2 py-1 rounded-lg text-xs font-medium border ${
+                        className={`px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
                           isSelected
-                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:bg-amber-500/15 dark:border-amber-500/50 dark:text-[#d9b452] font-bold"
-                            : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
+                            ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] font-bold"
+                            : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)] hover:text-[var(--ink-primary)]"
                         }`}
                       >
                         <span>{f.label}</span>
-                        <span className="text-[9px] font-mono text-slate-400 ml-1">({f.count})</span>
+                        <span className="text-[9px] font-mono tabular-nums text-[var(--ink-muted)] ml-1">({f.count})</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-end">
                 <button
                   type="button"
                   onClick={() => setActivePopover(null)}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs"
+                  className="lemmas-gold-cta px-3 py-1 rounded-lg font-bold text-xs"
                 >
                   Concluir
                 </button>
@@ -1563,8 +1558,8 @@ export default function BancoQuestoesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 py-1.5 px-0.5 text-xs">
         {/* LADO ESQUERDO: CONTADOR & CHIPS DE FILTROS ATIVOS */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-slate-600 dark:text-[#a9aaa1]">
-            Mostrando <strong className="text-slate-900 dark:text-[#f5f0df] font-mono">{questoes.length}</strong> de <strong className="text-slate-900 dark:text-[#f5f0df] font-mono">{total.toLocaleString("pt-BR")}</strong> questões
+          <span className="font-medium text-[var(--ink-secondary)] tabular-nums">
+            Mostrando <strong className="text-[var(--ink-primary)] font-mono tabular-nums">{questoes.length}</strong> de <strong className="text-[var(--ink-primary)] font-mono tabular-nums">{total.toLocaleString("pt-BR")}</strong> questões
           </span>
 
           {/* Chips de Filtros Ativos */}
@@ -1574,7 +1569,7 @@ export default function BancoQuestoesPage() {
                 setBusca("");
                 setPage(1);
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Busca: &ldquo;{busca.trim()}&rdquo;</span>
               <X className="w-3 h-3" />
@@ -1584,7 +1579,7 @@ export default function BancoQuestoesPage() {
           {numBancas > 0 && (
             <button
               onClick={() => handleSelectBanca(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Banca: {joinSelecionados(bancaFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1597,7 +1592,7 @@ export default function BancoQuestoesPage() {
                 setCategoriaBancaFiltro("Todas");
                 setPage(1);
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Trilha: {categoriaBancaFiltro}</span>
               <X className="w-3 h-3" />
@@ -1607,7 +1602,7 @@ export default function BancoQuestoesPage() {
           {numMaterias > 0 && (
             <button
               onClick={() => handleSelectMateria(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Matéria: {joinSelecionados(materiaFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1617,7 +1612,7 @@ export default function BancoQuestoesPage() {
           {numTopicos > 0 && (
             <button
               onClick={() => handleSelectTopico(VAL_TODOS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Tópico: {joinSelecionados(topicoFiltro, VAL_TODOS)}</span>
               <X className="w-3 h-3" />
@@ -1628,7 +1623,7 @@ export default function BancoQuestoesPage() {
             <button
               type="button"
               onClick={() => handleSelectSubtopico(VAL_TODOS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Subtópico: {joinSelecionados(subtopicoFiltro, VAL_TODOS)}</span>
               <X className="w-3 h-3" />
@@ -1638,7 +1633,7 @@ export default function BancoQuestoesPage() {
           {numAnos > 0 && (
             <button
               onClick={() => handleSelectAno(VAL_TODOS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold tabular-nums bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Ano: {joinSelecionados(anoFiltro, VAL_TODOS)}</span>
               <X className="w-3 h-3" />
@@ -1648,7 +1643,7 @@ export default function BancoQuestoesPage() {
           {numDificuldades > 0 && (
             <button
               onClick={() => handleSelectDificuldade(VAL_TODAS)}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452] dark:hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
             >
               <span>Dificuldade: {joinSelecionados(dificuldadeFiltro, VAL_TODAS)}</span>
               <X className="w-3 h-3" />
@@ -1658,7 +1653,7 @@ export default function BancoQuestoesPage() {
           {lemaFiltro && (
             <button
               onClick={() => setLemaFiltro(null)}
-              className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 border border-blue-500/40 text-blue-800 hover:bg-blue-500/25 dark:bg-amber-500/15 dark:border-amber-500/40 dark:text-[#d9b452] dark:hover:bg-amber-500/25 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold tabular-nums bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] hover:opacity-85 transition-opacity"
               title="Remover filtro de lema"
             >
               <span>Lema: {lemaFiltro}</span>
@@ -1669,7 +1664,7 @@ export default function BancoQuestoesPage() {
           {filtrosAtivosCount > 0 && (
             <button
               onClick={limparFiltros}
-              className="text-blue-600 hover:text-blue-700 dark:text-[#d9b452] dark:hover:text-[#d9b452] hover:underline flex items-center gap-1 font-semibold text-[11px] ml-1"
+              className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline flex items-center gap-1 font-semibold text-[11px] ml-1"
             >
               <RotateCcw className="w-3 h-3" /> Limpar filtros
             </button>
@@ -1682,12 +1677,12 @@ export default function BancoQuestoesPage() {
             <button
               type="button"
               onClick={handleSelectAllPage}
-              className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-[#d9b452] transition-colors text-xs whitespace-nowrap"
+              className="flex items-center gap-1.5 font-medium text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors text-xs whitespace-nowrap"
             >
               {questoes.length > 0 && questoes.every((q) => selectedIds.has(q.id)) ? (
-                <CheckSquare className="w-4 h-4 shrink-0 text-blue-600 dark:text-amber-500" />
+                <CheckSquare className="w-4 h-4 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
               ) : (
-                <Square className="w-4 h-4 shrink-0 text-slate-400" />
+                <Square className="w-4 h-4 shrink-0 text-[var(--ink-muted)]" />
               )}
               <span className="sm:hidden">Selecionar pág.</span>
               <span className="hidden sm:inline">Selecionar página</span>
@@ -1696,7 +1691,7 @@ export default function BancoQuestoesPage() {
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="text-[11px] text-blue-600 dark:text-[#d9b452] hover:underline font-semibold ml-1 whitespace-nowrap"
+                className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] hover:underline font-semibold tabular-nums ml-1 whitespace-nowrap"
                 title="Limpar seleção"
               >
                 ({selectedIds.size}) Limpar
@@ -1707,7 +1702,7 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={handleTreinarListaEstudo}
-            className="px-3.5 py-1.5 rounded-xl border border-[var(--border-badge)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] font-semibold text-xs transition-all flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
+            className="px-3.5 py-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] font-semibold text-xs tabular-nums transition-colors flex items-center gap-1.5 whitespace-nowrap"
           >
             <BookOpen className="w-3.5 h-3.5 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span>Treinar Lista ({selectedIds.size > 0 ? selectedIds.size : total})</span>
@@ -1716,7 +1711,7 @@ export default function BancoQuestoesPage() {
           <button
             type="button"
             onClick={() => setModalSimuladoAberto(true)}
-            className="lemmas-gold-cta inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02] whitespace-nowrap"
+            className="lemmas-gold-cta inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold text-xs tabular-nums shadow-xs transition-colors whitespace-nowrap"
           >
             <Timer className="w-3.5 h-3.5 shrink-0" />
             <span>Criar Simulado</span>
@@ -1729,11 +1724,11 @@ export default function BancoQuestoesPage() {
       <div className="space-y-4">
         {/* BANNER DE PERSONALIZAÇÃO PEDAGÓGICA */}
         {perfilAtivoDescricao && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs text-slate-800 dark:text-[#f5f0df] shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs text-[var(--ink-primary)]">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
+              <Sparkles className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
               <span>
-                Todo o acervo, com prioridade para o seu plano: <strong className="font-semibold text-blue-700 dark:text-[#d9b452]">{perfilAtivoDescricao}</strong>
+                Todo o acervo, com prioridade para o seu plano: <strong className="font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">{perfilAtivoDescricao}</strong>
               </span>
             </div>
             <button
@@ -1742,7 +1737,7 @@ export default function BancoQuestoesPage() {
                 setPersonalizationEnabled(false);
                 setPage(1);
               }}
-              className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white underline font-semibold shrink-0 transition-colors self-end sm:self-auto"
+              className="text-xs text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] underline font-semibold shrink-0 transition-colors self-end sm:self-auto"
             >
               Usar ordem padrão
             </button>
@@ -1750,16 +1745,16 @@ export default function BancoQuestoesPage() {
         )}
         {/* PAGINAÇÃO SUPERIOR COMPACTA */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-[#a9aaa1] font-medium px-1">
+          <div className="flex items-center justify-between text-xs text-[var(--ink-muted)] font-medium px-1 tabular-nums">
             <span>
-              Página <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{page}</strong> de <strong className="text-slate-800 dark:text-[#f5f0df] font-mono">{totalPages}</strong>
+              Página <strong className="text-[var(--ink-primary)] font-mono tabular-nums">{page}</strong> de <strong className="text-[var(--ink-primary)] font-mono tabular-nums">{totalPages}</strong>
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 rounded-xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-[#dedbd0] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-slate-50 dark:hover:bg-zinc-900 shadow-2xs"
+                className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)]"
                 title="Página Anterior"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -1769,7 +1764,7 @@ export default function BancoQuestoesPage() {
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 rounded-xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-[#dedbd0] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-slate-50 dark:hover:bg-zinc-900 shadow-2xs"
+                className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)]"
                 title="Próxima Página"
               >
                 <span>Próxima</span>
@@ -1780,33 +1775,33 @@ export default function BancoQuestoesPage() {
         )}
 
         {loading ? (
-          <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#141222] rounded-2xl border border-slate-200/80 dark:border-zinc-800">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-amber-500" />
+          <div className="p-16 flex flex-col items-center justify-center gap-3 text-[var(--ink-muted)] bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)]">
+            <Loader2 className="w-7 h-7 animate-spin text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span className="text-sm font-medium">Filtrando questões no Supabase...</span>
           </div>
         ) : loadError ? (
-          <div role="alert" className="py-12 px-6 text-center rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
+          <div role="alert" className="py-12 px-6 text-center rounded-xl border border-[var(--marker-amber-border)] bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] space-y-4">
             <p className="font-semibold">{loadError}</p>
-            <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 rounded-lg border border-amber-500/40 font-semibold">
+            <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 rounded-lg border border-[var(--marker-amber-border)] font-semibold text-xs hover:bg-[var(--bg-elevated)] transition-colors">
               Tentar novamente
             </button>
           </div>
         ) : questoes.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-slate-500 space-y-4">
-            <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-700 dark:bg-amber-500/10 dark:text-[#d9b452] flex items-center justify-center mx-auto">
-              <BookOpen className="w-6 h-6" />
+          <div className="p-12 text-center rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] space-y-4">
+            <div className="w-11 h-11 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center justify-center mx-auto">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-900 dark:text-[#f5f0df]">
+              <p className="text-sm font-semibold text-[var(--ink-primary)] tracking-tight">
                 Nenhuma questão encontrada para a combinação de filtros.
               </p>
-              <p className="text-xs text-slate-500 dark:text-[#a9aaa1] max-w-md mx-auto">
+              <p className="text-xs text-[var(--ink-secondary)] max-w-md mx-auto">
                 Tente relaxar alguns filtros como a dificuldade, tipo ou ano para visualizar mais questões desta banca.
               </p>
             </div>
             <button
               onClick={limparFiltros}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:bg-amber-500/10 dark:text-[#d9b452] dark:hover:bg-amber-500/20 text-xs font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] hover:opacity-90 text-xs font-semibold tabular-nums transition-opacity"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>
@@ -1845,19 +1840,19 @@ export default function BancoQuestoesPage() {
             return (
               <article
                 key={q.id}
-                className="p-6 rounded-2xl bg-white dark:bg-[#161a1e] border border-[var(--border-board)] hover:border-[var(--border-badge)] shadow-xs transition-all space-y-4 relative z-10"
+                className="lemmas-question-item p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] transition-colors space-y-4 relative z-10"
               >
                 {/* CABEÇALHO DO CARD COM METADADOS LIMPOS (ESTÉTICA DE QUADRO) */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-[var(--border-board)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
                   <div className="flex flex-wrap items-center gap-2">
                     {/* CHECKBOX DE SELEÇÃO RÁPIDA */}
                     <button
                       type="button"
                       onClick={() => toggleSelectQuestion(q.id)}
-                      className={`p-1.5 rounded-lg border transition-all ${
+                      className={`p-1.5 rounded-lg border transition-colors ${
                         selectedIds.has(q.id)
-                          ? "bg-[var(--bg-elevated)] border-[var(--marker-blue)] text-[var(--marker-blue)] dark:border-[var(--marker-amber)] dark:text-[var(--marker-amber)] shadow-xs"
-                          : "border-[var(--border-badge)] bg-transparent hover:border-slate-400 dark:hover:border-white/30 text-[var(--ink-muted)]"
+                          ? "bg-[var(--bg-elevated)] border-[var(--marker-blue)] text-[var(--marker-blue)] dark:border-[var(--marker-amber)] dark:text-[var(--marker-amber)]"
+                          : "border-[var(--border-subtle)] bg-transparent hover:border-[var(--border-default)] text-[var(--ink-muted)]"
                       }`}
                       title={selectedIds.has(q.id) ? "Desmarcar questão" : "Adicionar questão à seleção de Treino/Simulado"}
                     >
@@ -1868,22 +1863,22 @@ export default function BancoQuestoesPage() {
                       )}
                     </button>
 
-                    {/* BANCA + ANO (Destaque em Giz Amarelo / Piloto Ocre) */}
+                    {/* BANCA + ANO (Tag sóbria e tabular) */}
                     {q.banca && (
-                      <span className="lemma-badge font-semibold !text-[var(--marker-amber)] dark:!text-[var(--marker-amber)] dark:!border-yellow-200/20">
+                      <span className="lemma-badge font-semibold text-[var(--ink-primary)] dark:text-[var(--marker-amber)] tabular-nums">
                         {q.banca} {q.ano ? `· ${q.ano}` : ""}
                       </span>
                     )}
 
                     {/* CATEGORIA DA BANCA (Sem duplicata CONCURSO_MILITAR) */}
                     {q.categoria_banca && (
-                      <span className="lemma-badge text-slate-600 dark:text-slate-400">
+                      <span className="lemma-badge text-[var(--ink-secondary)]">
                         {q.categoria_banca}
                       </span>
                     )}
 
                     {/* TIPO: OBJETIVA OU DISCURSIVA */}
-                    <span className="lemma-badge text-slate-600 dark:text-slate-400">
+                    <span className="lemma-badge text-[var(--ink-secondary)]">
                       {q.tipo === "discursiva" ? "Discursiva" : "Objetiva"}
                     </span>
 
@@ -1912,7 +1907,7 @@ export default function BancoQuestoesPage() {
                     )}
 
                     {/* BREADCRUMB TIPOGRÁFICO LIMPO PARA MATÉRIA E TÓPICO */}
-                    <span className="text-xs text-[var(--ink-secondary)] ml-1">
+                    <span className="text-xs text-[var(--ink-secondary)] ml-0.5">
                       {q.materia || "Matemática"}
                       {q.topico && (
                         <>
@@ -1926,30 +1921,35 @@ export default function BancoQuestoesPage() {
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setReportQuestaoId(q.id)}
-                    className="text-xs text-[var(--ink-muted)] hover:text-[var(--ink-primary)] flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)]"
-                    title="Reportar inconsistência (digitação, gabarito, imagem)"
-                  >
-                    <Flag className="w-3.5 h-3.5" />
-                    <span>Reportar</span>
-                  </button>
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <span className="font-mono text-[11px] tabular-nums text-[var(--ink-muted)]">
+                      #{q.id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReportQuestaoId(q.id)}
+                      className="text-xs text-[var(--ink-muted)] hover:text-[var(--ink-primary)] flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)]"
+                      title="Reportar inconsistência (digitação, gabarito, imagem)"
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                      <span>Reportar</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* ENUNCIADO MATEMÁTICO COM KATEX */}
-                <div className="text-sm md:text-base font-medium text-[var(--ink-primary)] leading-relaxed whitespace-pre-line">
+                <div className="font-serif-math w-full text-[16px] md:text-[17px] font-normal text-[var(--ink-primary)] leading-relaxed whitespace-pre-line overflow-x-auto">
                   <MathText text={corpo} />
                 </div>
 
                 {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER (TRATAMENTO DE INVERSÃO NO DARK MODE) */}
                 {q.figura_path && !corpo.includes("![") && !hasImageAlternatives(alternativas) && (
-                  <div className="my-3 flex flex-col items-center justify-center p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-board)]">
+                  <div className="my-3 flex flex-col items-center justify-center p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={resolveFigureUrl(q.figura_path)}
                       alt={`Figura da Questão ${q.id}`}
-                      className="question-diagram-invertible max-h-64 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-transparent p-2 border border-slate-200 dark:border-white/10"
+                      className="question-diagram-invertible max-h-64 max-w-full rounded-lg object-contain bg-white dark:bg-transparent p-2 border border-[var(--border-subtle)]"
                       loading="lazy"
                       onError={(e) => {
                         const target = e.currentTarget;
@@ -1969,14 +1969,14 @@ export default function BancoQuestoesPage() {
                       {Object.entries(alternativas).map(([letra, valor]) => (
                         <div
                           key={letra}
-                          className="p-3 rounded-2xl bg-white dark:bg-[#18152a] border border-slate-200/90 dark:border-amber-500/20 shadow-xs flex flex-col items-center gap-2 group hover:border-blue-500/50 dark:hover:border-amber-500/50 transition-all"
+                          className="p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col items-center gap-2 group hover:border-[var(--border-default)] transition-colors"
                         >
-                          <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-stone-800/80">
-                            <span className="font-bold text-xs px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-[#d9b452] border border-blue-500/20 dark:bg-amber-500/10 dark:border-amber-500/20">
+                          <div className="w-full flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)]">
+                            <span className="font-semibold text-xs px-2 py-0.5 rounded-md bg-[var(--bg-subtle)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] tabular-nums">
                               Opção ({letra})
                             </span>
                           </div>
-                          <div className="w-full flex items-center justify-center min-h-[110px] max-h-48 overflow-hidden rounded-lg bg-slate-50 dark:bg-stone-900/70 p-2 border border-slate-100 dark:border-stone-800">
+                          <div className="w-full flex items-center justify-center min-h-[110px] max-h-48 overflow-x-auto rounded-lg bg-[var(--bg-card)] p-2 border border-[var(--border-subtle)]">
                             <MathText text={valor} />
                           </div>
                         </div>
@@ -1997,14 +1997,14 @@ export default function BancoQuestoesPage() {
                       {Object.entries(alternativas).map(([letra, valor]) => (
                         <div
                           key={letra}
-                          className={`px-3.5 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-board)] text-xs md:text-sm text-[var(--ink-primary)] flex items-center gap-2.5 transition-all hover:border-[var(--border-badge)] ${
+                          className={`px-3.5 py-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs md:text-sm text-[var(--ink-primary)] flex items-center gap-2.5 transition-colors hover:border-[var(--border-default)] ${
                             isComplexOrLongAlternative ? "min-h-[52px]" : "min-h-[40px]"
                           }`}
                         >
-                          <span className="font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 text-xs md:text-sm">
+                          <span className="font-semibold font-mono text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 text-xs md:text-sm">
                             ({letra})
                           </span>
-                          <div className="overflow-x-auto overflow-y-hidden w-full py-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          <div className="overflow-x-auto w-full py-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             <MathText text={valor} className="font-mono" />
                           </div>
                         </div>
@@ -2012,14 +2012,14 @@ export default function BancoQuestoesPage() {
                     </div>
                   )
                 ) : isDiscursiva ? (
-                  <div className="px-3.5 py-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-board)] text-xs text-[var(--ink-secondary)] flex items-center gap-2">
+                  <div className="px-3.5 py-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] flex items-center gap-2">
                     <FileText className="w-4 h-4 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                     <span>Problema discursivo analítico. Escreva sua demonstração ou raciocínio no simulador para avaliação passo a passo com IA.</span>
                   </div>
                 ) : null}
 
                 {/* RODAPÉ DO CARD */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--border-board)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--border-subtle)]">
                   <div className="flex items-center gap-3">
                     {isDiscursiva ? (
                       <span className="text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center gap-1.5">
@@ -2048,10 +2048,10 @@ export default function BancoQuestoesPage() {
                     <button
                       type="button"
                       onClick={() => toggleSelectQuestion(q.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                         selectedIds.has(q.id)
                           ? "bg-[var(--bg-elevated)] border-[var(--marker-blue)] text-[var(--marker-blue)] dark:border-[var(--marker-amber)] dark:text-[var(--marker-amber)]"
-                          : "border-[var(--border-badge)] bg-transparent text-[var(--ink-secondary)] hover:border-slate-400 dark:hover:border-white/30"
+                          : "border-[var(--border-subtle)] bg-transparent text-[var(--ink-secondary)] hover:border-[var(--border-default)] hover:text-[var(--ink-primary)]"
                       }`}
                     >
                       {selectedIds.has(q.id) ? "✓ Na Seleção" : "+ Selecionar"}
@@ -2059,7 +2059,7 @@ export default function BancoQuestoesPage() {
 
                     <Link
                       href={`/resolver?id=${q.id}`}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 transition-colors inline-flex items-center gap-1"
+                      className="lemmas-gold-cta px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1"
                     >
                       <span>Resolver na Lousa</span>
                       <span aria-hidden="true">→</span>
@@ -2077,17 +2077,17 @@ export default function BancoQuestoesPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-[#dedbd0] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-slate-50 dark:hover:bg-zinc-900"
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)]"
             >
               <ChevronLeft className="w-3.5 h-3.5" /> Anterior
             </button>
-            <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
+            <span className="text-xs text-[var(--ink-muted)] font-mono tabular-nums">
               Página {page} de {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#141222] border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-[#dedbd0] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-slate-50 dark:hover:bg-zinc-900"
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs text-[var(--ink-secondary)] disabled:opacity-40 flex items-center gap-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)]"
             >
               Próxima <ChevronRight className="w-3.5 h-3.5" />
             </button>

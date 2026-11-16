@@ -1,10 +1,48 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Newsreader, JetBrains_Mono, Caveat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-caveat",
+  display: "swap",
+});
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/lib/use-user";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { StudentPresenceHeartbeat } from "@/components/StudentPresenceHeartbeat";
+import { ProtoDesignPicker } from "@/components/ProtoDesignPicker";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#101316" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "LEMMAS — Plataforma Cognitiva de Aprendizagem | Powered by MathAI Engine",
@@ -21,7 +59,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={`${jakarta.variable} ${newsreader.variable} ${jetbrains.variable} ${caveat.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head />
       <body className="min-h-full">
         <Analytics />
@@ -30,6 +72,7 @@ export default function RootLayout({
           <UserProvider>
             <StudentPresenceHeartbeat />
             {children}
+            <ProtoDesignPicker />
           </UserProvider>
         </ThemeProvider>
       </body>

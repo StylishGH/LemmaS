@@ -155,25 +155,25 @@ function isSpuriousGabarito(gabarito?: string | null, isDiscursiva: boolean = fa
 function AuthPromptModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
+    <div className="fixed inset-0 z-[300] bg-black/75 flex items-center justify-center p-4 animate-fadeIn">
+      <div className="max-w-md w-full rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 shadow-xl relative text-[var(--ink-primary)] space-y-5">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
           aria-label="Fechar"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center">
-          <Lock className="w-6 h-6" />
+        <div className="w-11 h-11 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] flex items-center justify-center">
+          <Lock className="w-5 h-5" />
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-serif-math text-xl font-bold tracking-tight">
+          <h3 className="font-serif-math text-xl font-semibold tracking-tight text-[var(--ink-primary)]">
             Logar para responder
           </h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
+          <p className="text-xs text-[var(--ink-secondary)] leading-relaxed font-sans">
             Para assinalar alternativas, registrar suas deduções e receber os diagnósticos metacognitivos da <strong>MathAI Engine</strong>, você precisa entrar na sua conta ou se cadastrar gratuitamente.
           </p>
         </div>
@@ -181,21 +181,21 @@ function AuthPromptModal({ open, onClose }: { open: boolean; onClose: () => void
         <div className="space-y-2 pt-2">
           <Link
             href={`/login?redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-            className="w-full py-2.5 rounded-xl font-bold text-xs lemmas-gold-cta flex items-center justify-center gap-2 shadow-sm"
+            className="w-full py-2.5 rounded-lg font-bold text-xs lemmas-gold-cta flex items-center justify-center gap-2 shadow-xs"
           >
             <LogIn className="w-4 h-4" />
             <span>Fazer Login</span>
           </Link>
           <Link
             href={`/login?tab=signup&redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-            className="w-full py-2.5 rounded-xl font-semibold text-xs border border-amber-500/40 hover:bg-amber-500/10 text-slate-800 dark:text-[#f5f0df] flex items-center justify-center gap-2 transition"
+            className="w-full py-2.5 rounded-lg font-semibold text-xs border border-[var(--border-subtle)] hover:bg-[var(--bg-elevated)] text-[var(--ink-primary)] flex items-center justify-center gap-2 transition-colors"
           >
             <span>Criar Conta Gratuita</span>
           </Link>
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2 text-xs text-slate-500 dark:text-zinc-400 hover:underline"
+            className="w-full py-2 text-xs text-[var(--ink-muted)] hover:underline"
           >
             Continuar apenas explorando
           </button>
@@ -225,29 +225,29 @@ function ConfirmarEntregaModal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="max-w-md w-full rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-amber-500/40 p-6 shadow-2xl relative text-slate-900 dark:text-[#f5f0df] space-y-5">
+    <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 animate-fadeIn">
+      <div className="max-w-md w-full rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 shadow-xl relative text-[var(--ink-primary)] space-y-5">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
           aria-label="Fechar"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-[#d9b452] flex items-center justify-center">
-          <AlertTriangle className="w-6 h-6" />
+        <div className="w-11 h-11 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] flex items-center justify-center">
+          <AlertTriangle className="w-5 h-5" />
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-serif-math text-xl font-bold tracking-tight">
+          <h3 className="font-serif-math text-xl font-semibold tracking-tight text-[var(--ink-primary)]">
             Finalizar e Entregar Simulado?
           </h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
+          <p className="text-xs text-[var(--ink-secondary)] leading-relaxed font-sans tabular-nums">
             Você respondeu <strong>{respondidasCount}</strong> de <strong>{totalQuestoes}</strong> questões.
           </p>
           {emBrancoCount > 0 && (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-[#d9b452] text-xs">
+            <div className="p-3 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] text-xs tabular-nums">
               Atenção: <strong>{emBrancoCount} questão{emBrancoCount > 1 ? "ões" : ""}</strong> continuam em branco. Em concursos reais, questões não respondidas conferem 0 pontos.
             </div>
           )}
@@ -258,7 +258,7 @@ function ConfirmarEntregaModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-50"
           >
             Continuar Resolvendo
           </button>
@@ -266,7 +266,7 @@ function ConfirmarEntregaModal({
             type="button"
             onClick={onConfirm}
             disabled={submitting}
-            className="lemmas-gold-cta px-5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 disabled:opacity-50"
+            className="lemmas-gold-cta px-5 py-2 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
           >
             {submitting ? (
               <>
@@ -1547,45 +1547,43 @@ function ResolverContent() {
   // ==========================================
   if (sessionMode === "standby") {
     return (
-      <div className="space-y-8 max-w-4xl mx-auto py-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+      <div className="space-y-8 max-w-4xl mx-auto py-6 animate-fadeIn text-[var(--ink-primary)]">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/25 dark:border-amber-500/25 text-xs font-semibold text-blue-700 dark:text-[#d9b452]">
-            <Zap className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">
+            <Zap className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
             <span>Simulador & Treino Interativo · LEMMAS Core & MathAI Engine</span>
           </div>
-          <h1 className="font-serif-math text-3xl md:text-4xl font-normal text-slate-900 dark:text-[#f5f0df] tracking-tight">
+          <h1 className="font-serif-math text-3xl md:text-4xl font-semibold text-[var(--ink-primary)] tracking-tight">
             Ambiente de Resolução & Diagnóstico.
           </h1>
-          <p className="text-slate-600 dark:text-zinc-400 text-sm leading-relaxed max-w-2xl font-sans">
+          <p className="text-[var(--ink-secondary)] text-sm leading-relaxed max-w-2xl font-sans">
             Escolha como prefere praticar: crie um simulado cronometrado com regras oficiais de concurso ou estude sem pressão com o auxílio em tempo real da MathAI Engine.
           </p>
           {profileStandbyDescricao && (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-500/10 dark:bg-amber-500/10 border border-blue-500/20 dark:border-amber-500/20 text-xs text-blue-900 dark:text-[#f5f0df]">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-[#d9b452] shrink-0" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-xs text-[var(--ink-primary)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
               <span>
-                Foco ativo do seu perfil: <strong className="font-semibold text-blue-700 dark:text-[#d9b452]">{profileStandbyDescricao}</strong> (questões e simulado calibrados)
+                Foco ativo do seu perfil: <strong className="font-semibold text-[var(--marker-blue)] dark:text-[var(--marker-amber)]">{profileStandbyDescricao}</strong> (questões e simulado calibrados)
               </span>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* CARD 1: MODO ESTUDO LIVRE */}
-          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
-            {/* Chanfro interno sutil da moldura de madeira */}
-            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-            <div className="space-y-3 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg">
-                💡
+          <div className="rounded-xl bg-[var(--bg-card)] p-6 border border-[var(--border-subtle)] flex flex-col justify-between hover:border-[var(--border-default)] transition-colors">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Lightbulb className="w-5 h-5" />
               </div>
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">Modo Estudo Livre</h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-sans">
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base tracking-tight">Modo Estudo Livre</h3>
+              <p className="text-xs text-[var(--ink-muted)] leading-relaxed font-sans">
                 Sem pressão de tempo. Tutor Socrático ativado, envio de foto do caderno, dicas progressivas e atualização SM-2 imediata.
               </p>
             </div>
             <button
               onClick={startWorkoutTreino}
-              className="mt-6 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1e2329] dark:hover:bg-[#252b33] text-slate-800 dark:text-[#f5f0df] border border-slate-200 dark:border-amber-500/20 font-semibold text-xs transition-colors flex items-center justify-center gap-2 relative z-10"
+              className="mt-6 w-full py-2.5 rounded-lg bg-[var(--bg-board)] hover:bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-subtle)] font-semibold text-xs transition-colors flex items-center justify-center gap-2"
             >
               <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
               <span>Treinar Livremente</span>
@@ -1593,21 +1591,19 @@ function ResolverContent() {
           </div>
 
           {/* CARD 2: SIMULADO CRONOMETRADO */}
-          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
-            {/* Chanfro interno sutil da moldura de madeira */}
-            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-            <div className="space-y-3 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center font-bold text-lg">
-                ⏱️
+          <div className="rounded-xl bg-[var(--bg-card)] p-6 border border-[var(--border-subtle)] flex flex-col justify-between hover:border-[var(--border-default)] transition-colors">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] flex items-center justify-center">
+                <Clock className="w-5 h-5" />
               </div>
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">Simulado com Tempo</h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-sans">
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base tracking-tight">Simulado com Tempo</h3>
+              <p className="text-xs text-[var(--ink-muted)] leading-relaxed font-sans">
                 Cronômetro oficial, gabarito oculto e sem auxílio de IA durante a prova. Relatório completo de acertos e erros ao entregar.
               </p>
             </div>
             <button
               onClick={startWorkoutSimulado}
-              className="lemmas-gold-cta mt-6 w-full py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-sm relative z-10"
+              className="lemmas-gold-cta mt-6 w-full py-2.5 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Iniciar Simulado Rápido</span>
@@ -1615,21 +1611,19 @@ function ResolverContent() {
           </div>
 
           {/* CARD 3: NAVEGAR NO BANCO */}
-          <div className="relative rounded-2xl bg-[var(--bg-card)] p-6 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] flex flex-col justify-between hover:border-blue-500/35 dark:hover:border-amber-500/35 transition-all">
-            {/* Chanfro interno sutil da moldura de madeira */}
-            <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-            <div className="space-y-3 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-[#d9b452] flex items-center justify-center font-bold text-lg">
-                📚
+          <div className="rounded-xl bg-[var(--bg-card)] p-6 border border-[var(--border-subtle)] flex flex-col justify-between hover:border-[var(--border-default)] transition-colors">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center justify-center">
+                <BookOpen className="w-5 h-5" />
               </div>
-              <h3 className="font-serif-math font-semibold text-slate-900 dark:text-[#f5f0df] text-base">Montar Simulado no Banco</h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-sans">
+              <h3 className="font-serif-math font-semibold text-[var(--ink-primary)] text-base tracking-tight">Montar Simulado no Banco</h3>
+              <p className="text-xs text-[var(--ink-muted)] leading-relaxed font-sans">
                 Filtre por EFOMM, CEDERJ, ESA, tópicos ou anos e escolha exatamente quais questões você quer no simulado.
               </p>
             </div>
             <Link
               href="/questoes"
-              className="mt-6 w-full py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] hover:bg-slate-50 dark:hover:bg-[#1e2329] font-semibold text-xs transition-colors flex items-center justify-center gap-2 relative z-10"
+              className="mt-6 w-full py-2.5 rounded-lg border border-[var(--border-subtle)] text-[var(--ink-secondary)] bg-[var(--bg-board)] hover:bg-[var(--bg-subtle)] font-semibold text-xs transition-colors flex items-center justify-center gap-2"
             >
               <span>Ir ao Banco de Questões</span>
             </Link>
@@ -1694,16 +1688,16 @@ function ResolverContent() {
     });
 
     return (
-      <div className="max-w-4xl mx-auto py-8 space-y-8 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+      <div className="max-w-4xl mx-auto py-8 space-y-8 animate-fadeIn text-[var(--ink-primary)]">
         {/* CABEÇALHO DE RESULTADOS */}
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-[#d9b452] flex items-center justify-center text-3xl mx-auto shadow-sm">
-            🏆
+          <div className="w-14 h-14 rounded-xl bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-[var(--marker-amber)] flex items-center justify-center mx-auto">
+            <Award className="w-6 h-6" />
           </div>
-          <h2 className="font-serif-math text-3xl font-semibold text-slate-900 dark:text-[#f5f0df]">
+          <h2 className="font-serif-math text-3xl font-semibold text-[var(--ink-primary)] tracking-tight">
             {sessionType === "treino" ? "Treino Finalizado!" : "Simulado Finalizado!"}
           </h2>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 max-w-xl mx-auto">
+          <p className="text-xs md:text-sm text-[var(--ink-secondary)] max-w-xl mx-auto leading-relaxed">
             Confira o seu aproveitamento, a distribuição de acertos e analise agora cada questão com a <strong>MathAI Engine</strong> para entender as pegadinhas e os lemas teóricos.
           </p>
         </div>
@@ -1711,60 +1705,60 @@ function ResolverContent() {
         {/* MÉTRICAS PRINCIPAIS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* ACERTOS */}
-          <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center space-y-1">
-            <div className="text-2xl md:text-3xl font-bold font-serif-math text-emerald-700 dark:text-emerald-400">
+          <div className="p-5 rounded-xl bg-[var(--marker-green-dim)] border border-[var(--marker-green-border)] text-center space-y-1">
+            <div className="text-2xl md:text-3xl font-bold font-serif-math tabular-nums text-[var(--marker-green)]">
               {acertos}
             </div>
-            <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            <div className="text-xs font-semibold tabular-nums text-[var(--ink-primary)]">
               Acertos ({taxa}%)
             </div>
-            <div className="text-[10px] text-emerald-600/80">Respostas Corretas</div>
+            <div className="text-[10px] text-[var(--ink-muted)]">Respostas Corretas</div>
           </div>
 
           {/* ERROS */}
-          <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-center space-y-1">
-            <div className="text-2xl md:text-3xl font-bold font-serif-math text-rose-700 dark:text-rose-400">
+          <div className="p-5 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-center space-y-1">
+            <div className="text-2xl md:text-3xl font-bold font-serif-math tabular-nums text-[var(--marker-red)]">
               {erros}
             </div>
-            <div className="text-xs font-semibold text-rose-800 dark:text-rose-300">
+            <div className="text-xs font-semibold tabular-nums text-[var(--ink-primary)]">
               Erros ({Math.round((erros / totalQuestoesResultado) * 100)}%)
             </div>
-            <div className="text-[10px] text-rose-600/80">Divergências do Gabarito</div>
+            <div className="text-[10px] text-[var(--ink-muted)]">Divergências do Gabarito</div>
           </div>
 
           {/* EM BRANCO */}
-          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-center space-y-1">
-            <div className="text-2xl md:text-3xl font-bold font-serif-math text-amber-700 dark:text-[#d9b452]">
+          <div className="p-5 rounded-xl bg-[var(--marker-amber-dim)] border border-[var(--marker-amber-border)] text-center space-y-1">
+            <div className="text-2xl md:text-3xl font-bold font-serif-math tabular-nums text-[var(--marker-amber)]">
               {emBranco}
             </div>
-            <div className="text-xs font-semibold text-amber-800 dark:text-[#d9b452]">
+            <div className="text-xs font-semibold tabular-nums text-[var(--ink-primary)]">
               Em Branco ({Math.round((emBranco / totalQuestoesResultado) * 100)}%)
             </div>
-            <div className="text-[10px] text-amber-600/80">Não respondidas</div>
+            <div className="text-[10px] text-[var(--ink-muted)]">Não respondidas</div>
           </div>
 
           {/* TEMPO TOTAL */}
-          <div className="p-5 rounded-2xl bg-slate-100 dark:bg-[var(--bg-card)] border border-slate-200 dark:border-zinc-800 text-center space-y-1">
-            <div className="text-2xl md:text-3xl font-bold font-serif-math text-slate-900 dark:text-[#f5f0df]">
+          <div className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-center space-y-1">
+            <div className="text-2xl md:text-3xl font-bold font-serif-math tabular-nums text-[var(--ink-primary)]">
               {tempoMin}m {tempoSeg}s
             </div>
-            <div className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+            <div className="text-xs font-semibold text-[var(--ink-secondary)]">
               Tempo Gasto
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[10px] text-[var(--ink-muted)]">
               {sessionType === "treino" ? "Duração do treino" : "Duração da prova"}
             </div>
           </div>
         </div>
 
         {/* NOTA PEDAGÓGICA SOBRE QUESTÕES EM BRANCO */}
-        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/25 dark:bg-amber-500/10 dark:border-amber-500/25 flex items-start gap-3 text-xs leading-relaxed">
-          <HelpCircle className="w-5 h-5 text-blue-600 dark:text-[#d9b452] shrink-0 mt-0.5" />
+        <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] flex items-start gap-3 text-xs leading-relaxed">
+          <HelpCircle className="w-5 h-5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <strong className="text-blue-950 dark:text-[#f5f0df] block">
+            <strong className="text-[var(--ink-primary)] block">
               Como questões em branco são contabilizadas?
             </strong>
-            <p className="text-slate-700 dark:text-zinc-300">
+            <p className="text-[var(--ink-secondary)]">
               Em concursos militares (EFOMM, ESA) e vestibulares convencionais, questões deixadas em branco conferem <strong>0 pontos</strong> (não somam no aproveitamento final). Mostramos as questões em branco separadas dos erros propositais para que você possa avaliar sua estratégia de gestão de tempo e saber quando vale a pena pular ou arriscar.
             </p>
           </div>
@@ -1772,23 +1766,23 @@ function ResolverContent() {
 
         {/* REVISÃO QUESTÃO A QUESTÃO COM A MATHAI ENGINE */}
         <div className="space-y-4 pt-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-zinc-800 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-3">
             <div>
-              <h3 className="font-serif-math text-xl font-bold text-slate-900 dark:text-[#f5f0df]">
+              <h3 className="font-serif-math text-xl font-semibold text-[var(--ink-primary)] tracking-tight">
                 Revisão e Diagnóstico Pedagógico
               </h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <p className="text-xs text-[var(--ink-muted)]">
                 Clique nas questões para ver a resolução e acionar o diagnóstico da MathAI Engine.
               </p>
             </div>
 
             {/* ABAS DE FILTRO */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#1e2329] text-xs font-semibold">
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-semibold tabular-nums">
               <button
                 type="button"
                 onClick={() => setReviewFilter("todas")}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  reviewFilter === "todas" ? "bg-white dark:bg-[#231f38] text-blue-700 dark:text-[#d9b452] shadow-xs" : "text-slate-500"
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  reviewFilter === "todas" ? "bg-[var(--bg-card)] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] border border-[var(--border-subtle)]" : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Todas {(() => { const t = parseInt(searchParams.get("total") || "0", 10); return t || questions.length; })()}
@@ -1796,8 +1790,8 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setReviewFilter("erros")}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  reviewFilter === "erros" ? "bg-rose-500/20 text-rose-700 dark:text-rose-400 shadow-xs" : "text-slate-500"
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  reviewFilter === "erros" ? "bg-[var(--marker-red-dim)] text-[var(--marker-red)]" : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Erros ({erros})
@@ -1805,8 +1799,8 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setReviewFilter("em_branco")}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  reviewFilter === "em_branco" ? "bg-amber-500/20 text-amber-700 dark:text-[#d9b452] shadow-xs" : "text-slate-500"
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  reviewFilter === "em_branco" ? "bg-[var(--marker-amber-dim)] text-[var(--marker-amber)]" : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Em Branco ({emBranco})
@@ -1814,8 +1808,8 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setReviewFilter("acertos")}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  reviewFilter === "acertos" ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-xs" : "text-slate-500"
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  reviewFilter === "acertos" ? "bg-[var(--marker-green-dim)] text-[var(--marker-green)]" : "text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 }`}
               >
                 Acertos ({acertos})
@@ -1845,20 +1839,20 @@ function ResolverContent() {
               return (
                 <div
                   key={q.id}
-                  className={`p-5 rounded-2xl bg-white dark:bg-[var(--bg-card)] border transition-all space-y-4 ${
+                  className={`p-5 rounded-xl bg-[var(--bg-card)] border transition-colors space-y-4 ${
                     acertou
-                      ? "border-emerald-500/30"
+                      ? "border-[var(--marker-green-border)]"
                       : isEmBranco
-                      ? "border-amber-500/30"
-                      : "border-rose-500/30"
+                      ? "border-[var(--marker-amber-border)]"
+                      : "border-[var(--marker-red-border)]"
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 font-bold">
+                      <span className="font-mono tabular-nums text-xs px-2.5 py-1 rounded-md bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--ink-primary)] font-semibold">
                         Questão #{idx + 1}
                       </span>
-                      <span className="text-xs text-slate-500 font-semibold">
+                      <span className="text-xs text-[var(--ink-muted)] font-semibold tabular-nums">
                         {q.banca} {q.ano} · {q.materia} ({q.topico})
                       </span>
                       {(q.lema_codigo || q.lema_id) && (
@@ -1868,12 +1862,12 @@ function ResolverContent() {
 
                     <div className="flex items-center gap-2">
                       {acertou ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--marker-green-dim)] text-[var(--marker-green)] border border-[var(--marker-green-border)] text-xs font-semibold tabular-nums">
                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                           <span>{alunoResp ? `Acertou (${alunoResp})` : "Acertou (Discursiva Validada)"}</span>
                         </span>
                       ) : isEmBranco ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-[#d9b452] border border-amber-500/30 text-xs font-bold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--marker-amber-dim)] text-[var(--marker-amber)] border border-[var(--marker-amber-border)] text-xs font-semibold tabular-nums">
                           <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>
                             {isSingleLetterGab
@@ -1884,7 +1878,7 @@ function ResolverContent() {
                           </span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-bold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--marker-red-dim)] text-[var(--marker-red)] border border-[var(--marker-red-border)] text-xs font-semibold tabular-nums">
                           <XCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>
                             {isSingleLetterGab && alunoResp
@@ -1901,7 +1895,7 @@ function ResolverContent() {
                       <button
                         type="button"
                         onClick={() => setExpandedReviewId(isExpanded ? null : q.id)}
-                        className="p-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-500"
+                        className="p-1.5 rounded-lg border border-[var(--border-subtle)] hover:bg-[var(--bg-elevated)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
                         title={isExpanded ? "Recolher detalhes" : "Expandir questão"}
                       >
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -1910,7 +1904,7 @@ function ResolverContent() {
                   </div>
 
                   {/* ENUNCIADO RESUMIDO OU EXPANDIDO */}
-                  <div className="text-sm font-medium text-slate-800 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
+                  <div className="font-serif-math text-[15px] font-normal text-[var(--ink-primary)] leading-relaxed whitespace-pre-line overflow-x-auto">
                     <MathText text={q.enunciado_limpo || q.enunciado} />
                   </div>
 
@@ -1919,24 +1913,24 @@ function ResolverContent() {
                     <div
                       className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
                         isEmBranco
-                          ? "bg-amber-500/10 text-amber-800 dark:text-[#d9b452] border-amber-500/30"
+                          ? "bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] border-[var(--marker-amber-border)]"
                           : acertou
-                          ? "bg-emerald-500/10 text-slate-800 dark:text-[#f5f0df] border-emerald-500/30"
-                          : "bg-rose-500/10 text-slate-800 dark:text-[#f5f0df] border-rose-500/30"
+                          ? "bg-[var(--marker-green-dim)] text-[var(--ink-primary)] border-[var(--marker-green-border)]"
+                          : "bg-[var(--marker-red-dim)] text-[var(--ink-primary)] border-[var(--marker-red-border)]"
                       }`}
                     >
                       <span
-                        className={`font-bold block text-[11px] uppercase tracking-wider ${
+                        className={`font-semibold block text-[11px] uppercase tracking-wider ${
                           isEmBranco
-                            ? "text-amber-700 dark:text-[#d9b452]"
+                            ? "text-[var(--marker-amber)]"
                             : acertou
-                            ? "text-emerald-700 dark:text-emerald-400"
-                            : "text-rose-700 dark:text-rose-400"
+                            ? "text-[var(--marker-green)]"
+                            : "text-[var(--marker-red)]"
                         }`}
                       >
                         {isEmBranco ? "Correta / Gabarito Oficial:" : "Gabarito / Resolução de Referência Oficial:"}
                       </span>
-                      <div className="text-slate-800 dark:text-[#dedbd0] leading-relaxed whitespace-pre-line">
+                      <div className="text-[var(--ink-secondary)] leading-relaxed whitespace-pre-line overflow-x-auto">
                         <MathText text={rawGabarito} />
                       </div>
                     </div>
@@ -1944,7 +1938,7 @@ function ResolverContent() {
 
                   {/* ÁREA EXPANDIDA COM IA */}
                   {isExpanded && (
-                    <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/80 space-y-4 animate-fadeIn">
+                    <div className="pt-3 border-t border-[var(--border-subtle)] space-y-4 animate-fadeIn">
                       {/* ALTERNATIVAS */}
                       {q.alternativas && (() => {
                         const isComplex = Object.values(q.alternativas).some((v) => 
@@ -1960,16 +1954,16 @@ function ResolverContent() {
                               return (
                                 <div
                                   key={letra}
-                                  className={`px-3 py-2.5 rounded-xl border flex items-center gap-2.5 min-h-[48px] ${
+                                  className={`px-3 py-2.5 rounded-lg border flex items-center gap-2.5 min-h-[48px] ${
                                     isGabarito
-                                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold"
+                                      ? "bg-[var(--marker-green-dim)] border-[var(--marker-green)] text-[var(--ink-primary)] font-semibold"
                                       : isAluno
-                                      ? "bg-rose-500/15 border-rose-500 text-rose-900 dark:text-rose-200 font-semibold"
-                                      : "bg-slate-50/50 dark:bg-zinc-900/40 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                                      ? "bg-[var(--marker-red-dim)] border-[var(--marker-red)] text-[var(--ink-primary)] font-semibold"
+                                      : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--ink-secondary)]"
                                   }`}
                                 >
-                                  <span className="font-bold shrink-0">({letra})</span>
-                                  <div className="overflow-x-auto overflow-y-hidden w-full py-0.5 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                  <span className="font-semibold font-mono shrink-0">({letra})</span>
+                                  <div className="overflow-x-auto w-full py-0.5 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                     <MathText text={valor} />
                                   </div>
                                 </div>
@@ -1986,7 +1980,7 @@ function ResolverContent() {
                             type="button"
                             onClick={() => pedirExplicacaoPosSimulado(q)}
                             disabled={isCarregandoIa}
-                            className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition hover:scale-[1.02]"
+                            className="lemmas-gold-cta px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
                           >
                             {isCarregandoIa ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1999,7 +1993,7 @@ function ResolverContent() {
                           </button>
 
                           {isCarregandoIa && (
-                            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+                            <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs animate-fadeIn">
                               <ThoughtLine
                                 working={true}
                                 label="MathAI Engine estruturando demonstração…"
@@ -2008,8 +2002,8 @@ function ResolverContent() {
                                   "Construindo encadeamento dedutivo passo a passo",
                                   "Formatando fórmulas matemáticas e equações em KaTeX",
                                 ]}
-                                color="#9333ea"
-                                glyphColor="#9333ea"
+                                color="var(--marker-blue)"
+                                glyphColor="var(--marker-blue)"
                                 fontSize={12}
                               />
                             </div>
@@ -2019,22 +2013,22 @@ function ResolverContent() {
 
                       {/* RESULTADO DA IA */}
                       {iaResult && (
-                        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25 space-y-3 text-xs leading-relaxed animate-fadeIn">
-                          <div className="flex items-center justify-between pb-2 border-b border-purple-500/20">
-                            <span className="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                        <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] space-y-3 text-xs leading-relaxed animate-fadeIn">
+                          <div className="flex items-center justify-between pb-2 border-b border-[var(--marker-blue-border)]">
+                            <span className="font-semibold text-[var(--marker-blue)] flex items-center gap-1.5">
                               <Sparkles className="w-3.5 h-3.5" />
                               Parecer da MathAI Engine:
                             </span>
-                            <span className="text-[11px] font-mono text-purple-600 dark:text-purple-300">
+                            <span className="text-[11px] font-mono text-[var(--marker-blue)]">
                               Status: {iaResult.status_resolucao}
                             </span>
                           </div>
-                          <div className="text-slate-800 dark:text-zinc-200">
+                          <div className="text-[var(--ink-primary)] overflow-x-auto">
                             <MathText text={iaResult.diagnostico} />
                           </div>
                           {iaResult.dica_proximo_passo && (
-                            <div className="p-2.5 rounded-lg bg-white/70 dark:bg-[#1e2329] border border-purple-500/20 text-slate-700 dark:text-zinc-300">
-                              <span className="font-bold text-purple-700 dark:text-purple-300 block mb-1">Lema / Passo-chave:</span>
+                            <div className="p-2.5 rounded-lg bg-[var(--bg-board)] border border-[var(--marker-blue-border)] text-[var(--ink-secondary)] overflow-x-auto">
+                              <span className="font-semibold text-[var(--marker-blue)] block mb-1">Lema / Passo-chave:</span>
                               <MathText text={iaResult.dica_proximo_passo} />
                             </div>
                           )}
@@ -2050,16 +2044,16 @@ function ResolverContent() {
         </div>
 
         {/* BOTÕES DE VOLTAR */}
-        <div className="flex items-center justify-center gap-4 pt-4">
+        <div className="flex items-center justify-center gap-3 pt-4">
           <button
             onClick={() => setSessionMode("standby")}
-            className="lemmas-gold-cta px-6 py-2.5 rounded-xl font-bold text-xs shadow-md"
+            className="lemmas-gold-cta px-5 py-2.5 rounded-lg font-bold text-xs shadow-xs"
           >
             Voltar ao Hub de Treino
           </button>
           <Link
             href="/questoes"
-            className="px-6 py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0] text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors"
+            className="px-5 py-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-secondary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors"
           >
             Navegar no Banco de Questões
           </Link>
@@ -2131,22 +2125,20 @@ function ResolverContent() {
     <div
       ref={bancadaRef}
       id="bancada-resolucao"
-      className="relative z-10 rounded-2xl bg-[var(--bg-card)] p-4 sm:p-5 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-4 scroll-mt-6 animate-fadeIn"
+      className="relative z-10 rounded-xl bg-[var(--bg-card)] p-4 sm:p-6 border border-[var(--border-subtle)] space-y-4 scroll-mt-6 animate-fadeIn"
     >
-      {/* Chanfro interno sutil da moldura de madeira */}
-      <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-      <div className="space-y-4 relative z-10">
+      <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 max-w-full">
           {isDiscursiva ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316] shrink-0">
               <Sparkles className="w-3 h-3" />
               DISCURSIVA
             </span>
           ) : (
-            <PenTool className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
+            <PenTool className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
           )}
-          <h4 className="font-serif-math text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0] break-words">
+          <h4 className="font-serif-math text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--ink-primary)] break-words">
             {isDiscursiva ? (
               <>Bancada de Resolução<span className="hidden xl:inline"> do Estudante</span></>
             ) : (
@@ -2156,7 +2148,7 @@ function ResolverContent() {
         </div>
 
         {/* ABAS RÁPIDAS DA BANCADA */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 w-full min-w-0 select-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 w-full min-w-0 select-none">
           <button
             type="button"
             onClick={() => {
@@ -2166,10 +2158,10 @@ function ResolverContent() {
                 ativarEIrParaBancada("lousa");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 border ${
               bancadaModo === "lousa"
-                ? "lemmas-gold-cta font-bold shadow-xs scale-102"
-                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-blue-500/35 dark:hover:border-amber-500/35"
+                ? "lemmas-gold-cta font-bold border-transparent"
+                : "bg-[var(--bg-board)] text-[var(--ink-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
             }`}
             title="Lousa com Pointer Events e rejeição de palma para rascunhos"
           >
@@ -2186,10 +2178,10 @@ function ResolverContent() {
                 ativarEIrParaBancada("geometria");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 border ${
               bancadaModo === "geometria"
-                ? "bg-sky-500 text-white font-bold shadow-xs scale-102"
-                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-sky-500/35"
+                ? "bg-sky-600 text-white border-sky-600 font-bold"
+                : "bg-[var(--bg-board)] text-[var(--ink-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
             }`}
             title="Quadro Euclidiano com régua, compasso e script de lemas"
           >
@@ -2206,10 +2198,10 @@ function ResolverContent() {
                 ativarEIrParaBancada("texto");
               }
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 border ${
               bancadaModo === "texto"
-                ? "bg-purple-600 text-white font-bold shadow-xs scale-102"
-                : "bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 border-[var(--border-board)] hover:border-purple-500/35"
+                ? "bg-[var(--marker-blue)] text-white dark:text-[#101316] border-[var(--marker-blue)] font-bold"
+                : "bg-[var(--bg-board)] text-[var(--ink-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
             }`}
             title="Dedução digitada em texto ou envio de foto para OCR"
           >
@@ -2226,18 +2218,18 @@ function ResolverContent() {
               }
               setModoFocoAtivo(true);
             }}
-            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-700 dark:text-[#f5f0df] border border-amber-500/40 shadow-xs hover:scale-102 whitespace-nowrap shrink-0"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-[var(--marker-amber-dim)] hover:opacity-90 text-[var(--marker-amber)] border border-[var(--marker-amber-border)] whitespace-nowrap shrink-0"
             title="Abrir a Lousa ou GeoGebra em tela cheia com card flutuante da questão"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span className="font-bold">Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
+            <Sparkles className="w-3.5 h-3.5 text-[var(--marker-amber)]" />
+            <span className="font-semibold">Modo Foco <span className="hidden lg:inline">Imersivo</span></span>
           </button>
         </div>
       </div>
 
       {/* DICA QUANDO NENHUM MODO DA BANCADA ESTÁ ATIVO */}
       {!bancadaModo && isDiscursiva && (
-        <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 dark:border-amber-500/25 dark:bg-amber-500/5 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
+        <div className="p-3.5 rounded-xl border border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] text-xs text-[var(--ink-secondary)] leading-relaxed font-sans">
           Esta questão exige desenvolvimento. Escolha acima uma ferramenta: use a <strong>Lousa</strong> para desenhar ou calcular à mão com a caneta/S-Pen, a <strong>Geometria</strong> para traçados com régua e compasso, ou <strong>Dedução & OCR</strong> para digitar ou fotografar seu caderno.
         </div>
       )}
@@ -2273,7 +2265,7 @@ function ResolverContent() {
             onCommandsChange={handleGeometricCommandsChange}
             onClose={() => setBancadaModo(null)}
           />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-sky-500/30 bg-sky-500/5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-sky-500/25 bg-sky-500/[0.06]">
             <div className="text-xs text-slate-700 dark:text-zinc-300">
               <strong className="text-sky-600 dark:text-sky-400 block">Validação da Construção Euclidiana:</strong>
               <span>Envie os passos e propriedades da sua construção com régua, compasso e lemas para avaliação da MathAI Engine.</span>
@@ -2288,7 +2280,7 @@ function ResolverContent() {
                 submeterResolucaoDiscursiva("geometria", { texto: desc });
               }}
               disabled={loadingDiscursive}
-              className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-2 transition disabled:opacity-40 shrink-0 cursor-pointer shadow-xs"
+              className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold flex items-center gap-2 transition-colors disabled:opacity-40 shrink-0 cursor-pointer"
             >
               {loadingDiscursive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Compass className="w-3.5 h-3.5" />}
               <span>Avaliar Geometria com MathAI Engine</span>
@@ -2299,10 +2291,10 @@ function ResolverContent() {
 
       {bancadaModo === "texto" && (
         <div className="space-y-4 animate-fadeIn">
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-slate-50/50 dark:bg-[#1e2329] space-y-2">
+          <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/70 dark:bg-[#101316] space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
                   <Eye className="w-3 h-3" />
                   [DADO OBSERVADO]
                 </span>
@@ -2315,12 +2307,12 @@ function ResolverContent() {
               value={justificativas[currentIndex] || ""}
               onChange={(e) => setJustificativas({ ...justificativas, [currentIndex]: e.target.value })}
               placeholder="Descreva seu desenvolvimento matemático passo a passo..."
-              className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-amber-500/20 bg-white dark:bg-[var(--bg-card)] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500 font-mono leading-relaxed resize-y"
+              className="w-full text-xs p-3 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#14171c] text-slate-800 dark:text-[#f5f0df] focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-500/20 font-mono leading-relaxed resize-y"
               rows={3}
             />
           </div>
 
-          <div className="p-4 rounded-xl border-2 border-dashed border-blue-500/35 dark:border-amber-500/35 bg-blue-500/5 dark:bg-amber-500/5 text-center space-y-3">
+          <div className="p-4 rounded-xl border border-dashed border-blue-500/35 dark:border-amber-500/35 bg-blue-500/[0.04] dark:bg-amber-500/[0.04] text-center space-y-3">
             <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
               <Upload className="w-4 h-4 text-blue-600 dark:text-amber-500" />
               <span>Upload de Foto do Caderno / Rascunho da Lousa</span>
@@ -2329,7 +2321,7 @@ function ResolverContent() {
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 dark:file:bg-amber-500 dark:file:text-slate-900 dark:hover:file:bg-amber-600 cursor-pointer"
+              className="text-xs mx-auto block text-slate-600 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 dark:file:bg-amber-500 dark:file:text-slate-900 dark:hover:file:bg-amber-600 cursor-pointer"
             />
             {currentImage && (
               <p className="text-xs text-emerald-600 font-semibold">Imagem do rascunho anexada e pronta para OCR!</p>
@@ -2338,7 +2330,7 @@ function ResolverContent() {
             <button
               onClick={() => submeterResolucaoDiscursiva("texto")}
               disabled={loadingDiscursive || loadingIa || (!currentImage && !justificativas[currentIndex]?.trim())}
-              className="lemmas-gold-cta px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 mx-auto disabled:opacity-40 cursor-pointer shadow-xs"
+              className="lemmas-gold-cta px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 mx-auto disabled:opacity-40 cursor-pointer shadow-xs"
             >
               {loadingDiscursive || loadingIa ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
               <span>Avaliar Raciocínio com MathAI Engine</span>
@@ -2348,7 +2340,7 @@ function ResolverContent() {
       )}
 
       {(loadingDiscursive || loadingIa) && (
-        <div className="p-5 rounded-xl bg-purple-500/5 border border-purple-500/25 text-xs shadow-xs animate-fadeIn">
+        <div className="p-5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs animate-fadeIn">
           <ThoughtLine
             working={true}
             label="MathAI Engine avaliando desenvolvimento…"
@@ -2358,63 +2350,63 @@ function ResolverContent() {
               "Confrontando hipóteses e cálculos com o gabarito oficial",
               "Elaborando diagnóstico pedagógico e lemas recomendados",
             ]}
-            color="#9333ea"
-            glyphColor="#9333ea"
+            color="var(--marker-blue)"
+            glyphColor="var(--marker-blue)"
             fontSize={13}
           />
         </div>
       )}
 
       {currentDiagnostico && !isDiscursiva && (
-        <div className="text-left p-5 rounded-xl bg-white dark:bg-[var(--bg-card)] border-2 border-purple-500/30 text-xs space-y-4 shadow-sm animate-fadeIn">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-purple-500/20">
+        <div className="text-left p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--marker-blue-border)] text-xs space-y-4 animate-fadeIn">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-[var(--marker-blue)] text-white dark:text-[#101316]">
                 <BrainCircuit className="w-3 h-3" />
                 [INFERÊNCIA DA IA]
               </span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-purple-500/20">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-board)] text-[var(--ink-secondary)] border border-[var(--border-subtle)]">
                 Modelo: <strong>{currentDiagnostico.modelo || "MathAI Engine"}</strong>
               </span>
             </div>
             {currentDiagnostico.confianca !== undefined && (
-              <div className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
-                Confiança: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{typeof currentDiagnostico.confianca === "number" ? `${Math.round(currentDiagnostico.confianca * 100)}%` : currentDiagnostico.confianca}</span>
+              <div className="text-[11px] font-semibold text-[var(--ink-muted)] tabular-nums">
+                Confiança: <span className="text-emerald-600 dark:text-emerald-400 font-bold tabular-nums">{typeof currentDiagnostico.confianca === "number" ? `${Math.round(currentDiagnostico.confianca * 100)}%` : currentDiagnostico.confianca}</span>
               </div>
             )}
           </div>
 
           <div className="space-y-2">
-            <div className="font-bold text-amber-600 dark:text-[#d9b452] flex items-center gap-2 text-sm">
+            <div className="font-semibold text-[var(--marker-amber)] flex items-center gap-2 text-sm">
               <span>Diagnóstico: {currentDiagnostico.status_resolucao}</span>
             </div>
-            <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+            <div className="text-[var(--ink-secondary)] leading-relaxed text-[13px] md:text-sm overflow-x-auto">
               <MathText text={currentDiagnostico.diagnostico} />
             </div>
           </div>
 
           {currentDiagnostico.transcricao_latex && (
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1e2329] border border-slate-200 dark:border-purple-500/20 space-y-1">
-              <span className="font-bold text-[11px] text-slate-600 dark:text-zinc-400 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
-              <div className="text-slate-800 dark:text-zinc-200">
+            <div className="p-3 rounded-lg bg-[var(--bg-board)] border border-[var(--border-subtle)] space-y-1">
+              <span className="font-bold text-[11px] text-[var(--ink-muted)] uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
+              <div className="text-[var(--ink-primary)] overflow-x-auto">
                 <MathText text={currentDiagnostico.transcricao_latex.replace(/^\\+\s*/gm, "")} />
               </div>
             </div>
           )}
 
           {currentDiagnostico.linha_do_erro && (
-            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 space-y-1">
+            <div className="p-2.5 rounded-lg bg-rose-500/[0.08] border border-rose-500/25 text-rose-700 dark:text-rose-300 space-y-1">
               <span className="font-bold text-[11px] uppercase tracking-wider block">Ponto de Desvio / Erro:</span>
-              <div>
+              <div className="overflow-x-auto">
                 <MathText text={currentDiagnostico.linha_do_erro} />
               </div>
             </div>
           )}
 
           {currentDiagnostico.dica_proximo_passo && (
-            <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-[#1e2329] border border-purple-500/20 space-y-1">
-              <span className="font-bold text-[11px] text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Lema / Próximo Passo:</span>
-              <div className="text-slate-800 dark:text-zinc-200">
+            <div className="p-3 rounded-lg bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] space-y-1">
+              <span className="font-bold text-[11px] text-[var(--marker-blue)] uppercase tracking-wider block">Lema / Próximo Passo:</span>
+              <div className="text-[var(--ink-primary)] overflow-x-auto">
                 <MathText text={currentDiagnostico.dica_proximo_passo} />
               </div>
             </div>
@@ -2427,8 +2419,8 @@ function ResolverContent() {
 
   const renderSocraticTutor = () => (
     isSimuladoAtivo ? (
-        <div className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-slate-200/80 dark:border-zinc-800 text-xs flex items-center gap-3 text-slate-600 dark:text-zinc-400">
-          <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+        <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs flex items-center gap-3 text-[var(--ink-secondary)]">
+          <ShieldAlert className="w-5 h-5 text-[var(--marker-amber)] shrink-0" />
           <p className="leading-relaxed">
             <strong>Ambiente Oficial de Simulado:</strong> Auxílios da MathAI Engine (dicas e diagnósticos) ficam desabilitados durante a realização da prova. Ao entregar o simulado, você poderá acionar a IA para cada questão individualmente.
           </p>
@@ -2436,15 +2428,15 @@ function ResolverContent() {
       ) : (
         <>
           {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO COM ESCADA PÓLYA DE 5 NÍVEIS) */}
-          <div className="bg-white dark:bg-[var(--bg-card)] border border border-[var(--border-board)] rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border-subtle)]">
               <div className="flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-blue-600 dark:text-amber-500" />
-                <h4 className="font-serif-math text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-[#dedbd0]">
+                <Lightbulb className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+                <h4 className="font-serif-math text-xs font-semibold uppercase tracking-wider text-[var(--ink-primary)]">
                   Tutor Socrático Adaptativo (Método Pólya · MathAI Engine)
                 </h4>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 border border-blue-500/25 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+              <span className="text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] dark:border-[var(--marker-amber-border)]">
                 5 Níveis Maiêuticos
               </span>
             </div>
@@ -2452,11 +2444,11 @@ function ResolverContent() {
             {/* ESCADA MAIÊUTICA DE 5 NÍVEIS (PÓLYA) */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {[
-                { nivel: 1, label: "Nível 1", sublabel: "Intuição", fullTitle: "Intuição & Hipóteses", icon: "🧠" },
-                { nivel: 2, label: "Nível 2", sublabel: "Lema", fullTitle: "Lema & Teorema Chave", icon: "📐" },
-                { nivel: 3, label: "Nível 3", sublabel: "Partida", fullTitle: "O Primeiro Passo", icon: "✏️" },
-                { nivel: 4, label: "Nível 4", sublabel: "Destravamento", fullTitle: "Quase lá (Gargalo)", icon: "⚡" },
-                { nivel: 5, label: "Nível 5", sublabel: "Resolução", fullTitle: "Resolução Completa", icon: "🔓" },
+                { nivel: 1, label: "Nível 1", sublabel: "Intuição", fullTitle: "Intuição & Hipóteses" },
+                { nivel: 2, label: "Nível 2", sublabel: "Lema", fullTitle: "Lema & Teorema Chave" },
+                { nivel: 3, label: "Nível 3", sublabel: "Partida", fullTitle: "O Primeiro Passo" },
+                { nivel: 4, label: "Nível 4", sublabel: "Destravamento", fullTitle: "Quase lá (Gargalo)" },
+                { nivel: 5, label: "Nível 5", sublabel: "Resolução", fullTitle: "Resolução Completa" },
               ].map((step) => {
                 const isUnlocked = hintsHistory[currentIndex]?.some((h) => h.nivel === step.nivel);
                 const isCurrent = !hint5Used[currentIndex] && currentHintLevel === step.nivel;
@@ -2465,29 +2457,37 @@ function ResolverContent() {
                 return (
                   <div
                     key={step.nivel}
-                    className={`relative p-2.5 rounded-xl border text-center transition-all ${
+                    className={`relative p-2.5 rounded-lg border text-left transition-colors ${
                       isSurrendered
-                        ? "bg-rose-500/15 border-rose-500/50 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500/40"
+                        ? "bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-300"
                         : isUnlocked
-                        ? "bg-purple-500/15 border-purple-500/35 text-purple-700 dark:text-purple-300 font-medium"
+                        ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] font-medium"
                         : isCurrent
-                        ? "bg-blue-500/15 border-blue-500 text-blue-800 ring-2 ring-blue-500/30 dark:bg-amber-500/15 dark:border-amber-500 dark:text-amber-200 dark:ring-amber-500/30 font-bold"
-                        : "bg-slate-50/50 dark:bg-[#1e2329]/60 border-slate-200/60 dark:border-zinc-800/60 text-slate-400 dark:text-zinc-500"
+                        ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber)] dark:text-[var(--marker-amber)] font-semibold"
+                        : "bg-[var(--bg-board)] border-[var(--border-subtle)] text-[var(--ink-muted)]"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-[10px] font-bold uppercase tracking-wider tabular-nums">
                         {step.label}
                       </span>
-                      <span className="text-xs">
-                        {isSurrendered ? "❌" : isUnlocked ? "✅" : isCurrent ? "👉" : "🔒"}
+                      <span className="shrink-0">
+                        {isSurrendered ? (
+                          <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                        ) : isUnlocked ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : isCurrent ? (
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <Lock className="w-3 h-3 opacity-60" />
+                        )}
                       </span>
                     </div>
                     <div className="text-[11px] font-semibold truncate" title={step.fullTitle}>
                       {step.sublabel}
                     </div>
                     {step.nivel === 5 && (
-                      <div className="mt-1 text-[9px] font-extrabold text-rose-500 dark:text-rose-400 leading-none">
+                      <div className="mt-1 text-[9px] font-bold tabular-nums text-rose-500 dark:text-rose-400 leading-none">
                         Penaliza SM-2
                       </div>
                     )}
@@ -2499,28 +2499,28 @@ function ResolverContent() {
             {/* BOTÕES DE AÇÃO E DISPARO DE DICA */}
             <div className="pt-1">
               {hint5Used[currentIndex] ? (
-                <div className="w-full p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs">
+                <div className="w-full p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <XCircle className="w-4 h-4 shrink-0 text-rose-500" />
                     <span>Resolução Oficial Revelada (Nível 5 — Questão computada como incorreta no SM-2)</span>
                   </div>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-600 text-white shrink-0">
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md bg-rose-600 text-white shrink-0">
                     Bloqueada
                   </span>
                 </div>
               ) : currentHintLevel === 5 ? (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border-2 border-rose-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="p-3.5 rounded-lg bg-rose-500/[0.06] border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="text-xs text-rose-800 dark:text-rose-200 leading-tight">
-                    <strong className="block text-rose-600 dark:text-rose-400 font-bold mb-0.5">Aviso Pedagógico:</strong>
+                    <strong className="block text-rose-600 dark:text-rose-400 font-semibold mb-0.5">Aviso Pedagógico:</strong>
                     Você concluiu as 4 dicas investigativas. O Nível 5 revelará a resolução oficial completa passo a passo e computará erro na questão.
                   </div>
                   <button
                     onClick={pedirDicaSocratica}
                     disabled={loadingHint}
-                    className="w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+                    className="w-full sm:w-auto shrink-0 px-4 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loadingHint ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-                    <span>⚠️ Ver Resolução Completa (Nível 5 — Contabiliza Questão como Errada)</span>
+                    <span>Ver Resolução Completa (Nível 5 — Contabiliza Questão como Errada)</span>
                   </button>
                 </div>
               ) : (
@@ -2528,15 +2528,15 @@ function ResolverContent() {
                   <button
                     onClick={pedirDicaSocratica}
                     disabled={loadingHint}
-                    className="flex items-center gap-2 text-xs font-bold rounded-xl px-4 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500 text-blue-700 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:border-amber-500 dark:text-[#d9b452] shadow-xs transition cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-bold rounded-lg px-4 py-2 bg-[var(--marker-blue-dim)] hover:opacity-90 border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] transition-colors cursor-pointer tabular-nums"
                   >
                     {loadingHint ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <Lightbulb className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500" />
+                      <Lightbulb className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                     )}
                     <span>
-                      💡 Solicitar Dica Socrática (Nível {currentHintLevel}: {
+                      Solicitar Dica Socrática (Nível {currentHintLevel}: {
                         currentHintLevel === 1 ? "Intuição" : currentHintLevel === 2 ? "Lema Chave" : currentHintLevel === 3 ? "Primeiro Passo" : "Destravamento"
                       })
                     </span>
@@ -2546,7 +2546,7 @@ function ResolverContent() {
                     type="button"
                     onClick={() => setShowHint5ConfirmModal(true)}
                     disabled={loadingHint}
-                    className="text-xs text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition cursor-pointer py-1"
+                    className="text-xs text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition-colors cursor-pointer py-1"
                   >
                     <AlertTriangle className="w-3.5 h-3.5 text-rose-500/80" />
                     <span>Pular para Nível 5 (Desistir & Ver Resolução)</span>
@@ -2556,13 +2556,14 @@ function ResolverContent() {
             </div>
 
             {hintError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300">
-                ⚠️ {hintError}
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{hintError}</span>
               </div>
             )}
 
             {loadingHint && (
-              <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+              <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs animate-fadeIn">
                 <ThoughtLine
                   working={true}
                   label="Tutor Socrático pensando…"
@@ -2571,8 +2572,8 @@ function ResolverContent() {
                     "Mapeando invariantes matemáticos e lemas",
                     `Modulando intervenção pedagógica (Nível ${currentHintLevel})`,
                   ]}
-                  color="#9333ea"
-                  glyphColor="#9333ea"
+                  color="var(--marker-blue)"
+                  glyphColor="var(--marker-blue)"
                   fontSize={13}
                 />
               </div>
@@ -2580,10 +2581,10 @@ function ResolverContent() {
 
             {/* AVISO DE PENALIDADE DA 5ª DICA QUANDO ACIONADA */}
             {hint5Used[currentIndex] && (
-              <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2.5 shadow-xs">
+              <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
                 <div>
-                  <strong className="block font-bold mb-0.5">Tentativa computada como incorreta (Nota 0 / SM-2):</strong>
+                  <strong className="block font-semibold mb-0.5">Tentativa computada como incorreta (Nota 0 / SM-2):</strong>
                   <span>
                     A resolução oficial completa e o gabarito foram revelados pela 5ª Dica Socrática. A questão foi agendada para repetição espaçada amanhã para fixação pedagógica do conteúdo.
                   </span>
@@ -2607,30 +2608,32 @@ function ResolverContent() {
                       key={idx}
                       className={`p-4 rounded-xl border text-xs leading-relaxed space-y-2.5 animate-fadeIn ${
                         item.nivel === 5
-                          ? "bg-rose-500/10 border-rose-500/30 text-slate-900 dark:text-[#f5f0df]"
-                          : "bg-purple-500/10 border-purple-500/25 text-slate-800 dark:text-[#f5f0df]"
+                          ? "bg-rose-500/[0.06] border-rose-500/25 text-[var(--ink-primary)]"
+                          : "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--ink-primary)]"
                       }`}
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-purple-500/20 dark:border-purple-500/20">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase text-white shadow-xs ${
-                              item.nivel === 5 ? "bg-rose-600 font-bold" : "bg-purple-600"
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase ${
+                              item.nivel === 5
+                                ? "bg-rose-600 text-white"
+                                : "bg-[var(--marker-blue)] text-white dark:text-[#101316]"
                             }`}
                           >
                             <Sparkles className="w-3 h-3" />
                             {item.nivel === 5 ? "[RESOLUÇÃO OFICIAL]" : "[INFERÊNCIA DA IA]"}
                           </span>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white/70 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                          <span className="text-[11px] font-medium tabular-nums px-2 py-0.5 rounded-md bg-[var(--bg-board)] text-[var(--ink-secondary)] border border-[var(--border-subtle)]">
                             {nivelTitulos[item.nivel] || `Nível ${item.nivel}`}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                        <div className="flex items-center gap-2 text-[11px] font-medium text-[var(--ink-muted)]">
                           <span>Modelo: <strong>{item.modelo || "MathAI Engine"}</strong></span>
                         </div>
                       </div>
 
-                      <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
+                      <div className="text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto">
                         <MathText text={item.dica} />
                       </div>
                     </div>
@@ -2638,8 +2641,8 @@ function ResolverContent() {
                 })}
               </div>
             ) : hints[currentIndex] ? (
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25 text-xs text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-3 animate-fadeIn">
-                <div className="leading-relaxed text-slate-800 dark:text-[#dedbd0]">
+              <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs text-[var(--ink-primary)] leading-relaxed space-y-3 animate-fadeIn">
+                <div className="text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto">
                   <MathText text={hints[currentIndex]} />
                 </div>
               </div>
@@ -2650,27 +2653,25 @@ function ResolverContent() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto py-6 space-y-6 animate-fadeIn text-slate-800 dark:text-[#f5f0df]">
+    <div className="max-w-5xl mx-auto py-6 space-y-6 animate-fadeIn text-[var(--ink-primary)]">
       {/* BARRA SUPERIOR DO SIMULADOR / TREINO */}
-      <div className="relative z-20 rounded-2xl bg-[var(--bg-card)] p-4 sm:p-5 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-4">
-        {/* Chanfro interno sutil da moldura de madeira */}
-        <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-        <div className="space-y-4 relative z-10">
+      <div className="relative z-20 rounded-xl bg-[var(--bg-card)] p-4 sm:p-5 border border-[var(--border-subtle)] space-y-4">
+        <div className="space-y-4">
         {/* LINHA 1: STATUS DA SESSÃO, CRONÔMETRO E AÇÃO PRINCIPAL */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-amber-500/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-[var(--border-subtle)]">
           {/* Lado Esquerdo: Modo e Progresso */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-md border ${
               isSimuladoAtivo
-                ? "bg-blue-500/10 border-blue-500/25 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-[#d9b452]"
-                : "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
+                ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)]"
+                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
             }`}>
               {sessionBannerText}
             </span>
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
-              <span>Questão <strong className="text-slate-900 dark:text-amber-300 font-bold">{currentIndex + 1}</strong> de {effectiveTotal.toLocaleString("pt-BR")}</span>
-              <span className="text-slate-300 dark:text-zinc-600">•</span>
-              <span className="text-slate-500 dark:text-zinc-400 font-medium">
+            <div className="flex items-center gap-2 text-xs text-[var(--ink-secondary)] tabular-nums">
+              <span>Questão <strong className="text-[var(--ink-primary)] dark:text-[var(--marker-amber)] font-bold tabular-nums">{currentIndex + 1}</strong> de {effectiveTotal.toLocaleString("pt-BR")}</span>
+              <span className="text-[var(--ink-muted)] opacity-50">•</span>
+              <span className="text-[var(--ink-muted)] font-medium tabular-nums">
                 {respondidasCount} respondida{respondidasCount === 1 ? "" : "s"}
               </span>
             </div>
@@ -2678,12 +2679,12 @@ function ResolverContent() {
 
           {/* Lado Direito: Cronômetro & Botão de Entrega */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border font-mono text-xs font-bold shadow-xs ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono tabular-nums text-xs font-bold ${
               isSimuladoAtivo && timeLeft < 300
-                ? "bg-rose-500/10 border-rose-500/40 text-rose-600 animate-pulse"
-                : "bg-slate-50 dark:bg-[#1e2329] border-slate-200 dark:border-amber-500/20 text-slate-700 dark:text-[#dedbd0]"
+                ? "bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400"
+                : "bg-[var(--bg-board)] border-[var(--border-subtle)] text-[var(--ink-secondary)]"
             }`}>
-              <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-amber-500 shrink-0" />
+              <Clock className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
               <span>{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</span>
             </div>
 
@@ -2691,7 +2692,7 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-amber-500 dark:to-amber-600 text-white dark:text-slate-950 font-bold text-xs shadow-sm hover:opacity-95 active:scale-95 transition-all"
+                className="px-4 py-2 rounded-lg bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316] hover:opacity-90 font-bold text-xs transition-colors"
               >
                 Entregar Simulado
               </button>
@@ -2699,7 +2700,7 @@ function ResolverContent() {
               <button
                 type="button"
                 onClick={() => setSessionMode("result")}
-                className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold text-xs hover:bg-emerald-500/20 active:scale-95 transition-all"
+                className="px-4 py-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold text-xs hover:bg-emerald-500/15 transition-colors"
               >
                 Concluir Treino
               </button>
@@ -2715,8 +2716,8 @@ function ResolverContent() {
             <button
               onClick={() => setCurrentIndex(Math.max(0, windowStart - windowSize))}
               disabled={windowStart === 0}
-              className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                windowStart === 0 ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+              className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] text-xs font-semibold tabular-nums text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] transition-colors shrink-0 ${
+                windowStart === 0 ? "opacity-40 cursor-not-allowed" : ""
               }`}
               title="20 questões anteriores"
             >
@@ -2736,33 +2737,33 @@ function ResolverContent() {
               const isAnswered = isHint5 || hasDiscursiveValida || isObjAnswered || answeredIndices.has(qIndex);
               const isBookmarked = qObj && bookmarks.has(qObj.id);
 
-              let buttonColorClass = "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
+              let buttonColorClass = "bg-[var(--bg-board)] border border-[var(--border-subtle)] text-[var(--ink-muted)] hover:bg-[var(--bg-subtle)]";
               let dotColorClass = "bg-emerald-500";
 
               if (isHint5) {
                 // Rendição pedagógica no Nível 5: pinta o número da questão na barra de Vermelho
                 buttonColorClass = isCurrent
-                  ? "bg-rose-600 border-2 border-rose-400 text-white font-extrabold shadow-md scale-105 z-10"
-                  : "bg-rose-500/20 border border-rose-500/60 text-rose-800 dark:text-rose-300 hover:bg-rose-500/30 font-extrabold";
+                  ? "bg-rose-600 border border-rose-500 text-white font-bold z-10"
+                  : "bg-rose-500/15 border border-rose-500/45 text-rose-800 dark:text-rose-300 hover:bg-rose-500/25 font-semibold";
                 dotColorClass = "bg-rose-500";
               } else if (isCurrent) {
-                buttonColorClass = "lemmas-gold-cta shadow-md scale-105 z-10";
+                buttonColorClass = "lemmas-gold-cta z-10 font-bold";
               } else if (discursiveEval && !discursiveEval.precisa_revisao_humana) {
                 if (discursiveEval.veredito === "aprovado") {
-                  buttonColorClass = "bg-emerald-500/20 border border-emerald-500/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/30 font-extrabold";
+                  buttonColorClass = "bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/25 font-semibold";
                   dotColorClass = "bg-emerald-500";
                 } else if (discursiveEval.veredito === "parcial") {
-                  buttonColorClass = "bg-amber-500/20 border border-amber-500/50 text-amber-800 dark:text-amber-300 hover:bg-amber-500/30 font-extrabold";
+                  buttonColorClass = "bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 font-semibold";
                   dotColorClass = "bg-amber-500";
                 } else if (discursiveEval.veredito === "incorreto") {
-                  buttonColorClass = "bg-rose-500/20 border border-rose-500/50 text-rose-800 dark:text-rose-300 hover:bg-rose-500/30 font-extrabold";
+                  buttonColorClass = "bg-rose-500/15 border border-rose-500/40 text-rose-800 dark:text-rose-300 hover:bg-rose-500/25 font-semibold";
                   dotColorClass = "bg-rose-500";
                 } else {
                   // sem_desenvolvimento: Regra de Ouro (não pinta como tentativa avaliada)
-                  buttonColorClass = "bg-slate-100 dark:bg-[#1e2329] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#25203d]";
+                  buttonColorClass = "bg-[var(--bg-board)] border border-[var(--border-subtle)] text-[var(--ink-muted)] hover:bg-[var(--bg-subtle)]";
                 }
               } else if (isAnswered) {
-                buttonColorClass = "bg-emerald-500/20 border border-emerald-500/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/30 font-extrabold";
+                buttonColorClass = "bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/25 font-semibold";
               }
 
               const statusTitle = isHint5
@@ -2777,21 +2778,21 @@ function ResolverContent() {
                 <button
                   key={qIndex}
                   onClick={() => setCurrentIndex(qIndex)}
-                  className={`min-w-0 w-full h-8 rounded-lg text-[10px] font-bold transition-all relative flex items-center justify-center ${buttonColorClass}`}
+                  className={`min-w-0 w-full h-8 rounded-lg text-[10px] font-mono tabular-nums font-bold transition-colors relative flex items-center justify-center ${buttonColorClass}`}
                   title={`Questão ${qIndex + 1}${statusTitle}${isBookmarked ? " [Marcada]" : ""}`}
                 >
                   {qIndex + 1}
                   {isHint5 && (
-                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-rose-500 shadow-xs" />
+                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-rose-500" />
                   )}
                   {!isHint5 && isAnswered && !isCurrent && hasDiscursiveValida && (
-                    <span className={`absolute -bottom-0.5 w-1.5 h-1.5 rounded-full ${dotColorClass} shadow-xs`} />
+                    <span className={`absolute -bottom-0.5 w-1.5 h-1.5 rounded-full ${dotColorClass}`} />
                   )}
                   {!isHint5 && isAnswered && !isCurrent && !discursiveEval && (
-                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
+                    <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   )}
                   {isBookmarked && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600 dark:bg-amber-500 ring-2 ring-white dark:ring-[#141222]" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] ring-2 ring-[var(--bg-card)]" />
                   )}
                 </button>
               );
@@ -2803,8 +2804,8 @@ function ResolverContent() {
             <button
               onClick={() => setCurrentIndex(windowStart + windowSize)}
               disabled={windowStart + windowSize >= effectiveTotal}
-              className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-amber-500/20 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1b172e] transition-colors shrink-0 ${
-                windowStart + windowSize >= effectiveTotal ? "opacity-40 cursor-not-allowed" : "active:scale-95"
+              className={`h-7 sm:h-8 px-2 sm:px-2.5 flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] text-xs font-semibold tabular-nums text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] transition-colors shrink-0 ${
+                windowStart + windowSize >= effectiveTotal ? "opacity-40 cursor-not-allowed" : ""
               }`}
               title="Próximas 20 questões"
             >
@@ -2814,8 +2815,8 @@ function ResolverContent() {
           </div>
 
           {/* Jump input com divisor vertical */}
-          <div className="flex items-center justify-end gap-2 xl:border-l border-slate-200 dark:border-stone-700 xl:pl-3">
-            <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap" htmlFor="jump-input">
+          <div className="flex items-center justify-end gap-2 xl:border-l border-[var(--border-subtle)] xl:pl-3">
+            <label className="text-xs font-medium text-[var(--ink-muted)] whitespace-nowrap" htmlFor="jump-input">
               Ir para:
             </label>
             <input
@@ -2832,12 +2833,12 @@ function ResolverContent() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleJumpToQuestion();
               }}
-              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-amber-500/25 bg-slate-50/50 dark:bg-[#1e2329] text-xs font-semibold text-center focus:outline-none focus:border-blue-500 dark:focus:border-amber-500 text-slate-800 dark:text-[#f5f0df]"
+              className="w-12 sm:w-14 h-7 sm:h-8 px-1.5 py-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-board)] text-xs font-mono tabular-nums font-semibold text-center focus:outline-none focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] text-[var(--ink-primary)]"
             />
             <button
               type="button"
               onClick={() => handleJumpToQuestion()}
-              className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold lemmas-gold-cta active:scale-95 transition-transform flex items-center justify-center"
+              className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold lemmas-gold-cta transition-colors flex items-center justify-center"
             >
               Ir
             </button>
@@ -2847,32 +2848,30 @@ function ResolverContent() {
       </div>
 
       {/* CARD DO ENUNCIADO */}
-      <div className="relative z-10 rounded-2xl bg-[var(--bg-card)] p-6 md:p-8 border-2 border-[var(--border-board)] shadow-[0_16px_36px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,220,163,0.18)] space-y-6">
-        {/* Chanfro interno sutil da moldura de madeira */}
-        <div className="absolute inset-0 rounded-2xl border border-[var(--border-wood-edge)] pointer-events-none opacity-80" />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/5 relative z-10">
+      <div className="relative z-10 rounded-xl bg-[var(--bg-card)] p-6 md:p-8 border border-[var(--border-subtle)] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-[var(--border-subtle)]">
           <div className="flex flex-wrap items-center gap-2">
             {/* BREADCRUMB EDITORIAL */}
-            <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1.5 mr-1">
+            <div className="text-xs font-semibold text-[var(--ink-muted)] flex items-center gap-1.5 mr-1">
               <span>Matemática</span>
               <span className="opacity-40">›</span>
               <span>{currentQ?.materia}</span>
               {currentQ?.topico && (
                 <>
                   <span className="opacity-40">›</span>
-                  <span className="text-slate-700 dark:text-[#dedbd0]">{currentQ?.topico}</span>
+                  <span className="text-[var(--ink-secondary)]">{currentQ?.topico}</span>
                 </>
               )}
             </div>
 
             {/* BADGES METADADOS UNIFICADOS (QUADRO DE GIZ / BRANCO) */}
             {currentQ?.banca && (
-              <span className="lemma-badge font-semibold !text-[var(--marker-amber)] dark:!text-[var(--marker-amber)]">
+              <span className="lemma-badge font-semibold text-[var(--ink-primary)] dark:text-[var(--marker-amber)] tabular-nums">
                 {currentQ.banca} {currentQ.ano ? `· ${currentQ.ano}` : ""}
               </span>
             )}
             {currentQ?.categoria_banca && (
-              <span className="lemma-badge text-slate-600 dark:text-slate-400">
+              <span className="lemma-badge text-[var(--ink-secondary)]">
                 {currentQ.categoria_banca}
               </span>
             )}
@@ -2887,6 +2886,9 @@ function ResolverContent() {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <span className="font-mono text-[11px] tabular-nums text-[var(--ink-muted)] mr-1">
+              #{currentQ?.id}
+            </span>
             {!isSimuladoAtivo && currentQ && (
               <QuestionDiscussion
                 key={`q-disc-${currentQ.id}`}
@@ -2898,7 +2900,7 @@ function ResolverContent() {
             <button
               type="button"
               onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-[#d9b452] hover:bg-blue-500/10 dark:hover:bg-amber-500/10 hover:border-blue-500/25 dark:hover:border-amber-500/25 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-[var(--border-subtle)] text-[var(--ink-muted)] hover:text-[var(--marker-blue)] dark:hover:text-[var(--marker-amber)] hover:bg-[var(--marker-blue-dim)] dark:hover:bg-[var(--marker-amber-dim)] hover:border-[var(--marker-blue-border)] dark:hover:border-[var(--marker-amber-border)] transition-colors"
               title="Reportar inconsistência (digitação, LaTeX, imagem ou gabarito)"
             >
               <Flag className="w-3.5 h-3.5" />
@@ -2908,8 +2910,8 @@ function ResolverContent() {
               onClick={() => toggleBookmark(currentIndex)}
               className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
                 bookmarks.has(currentIndex)
-                  ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-[#d9b452]"
-                  : "border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                  ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)]"
+                  : "border-[var(--border-subtle)] text-[var(--ink-muted)] hover:border-[var(--marker-blue-border)] dark:hover:border-[var(--marker-amber-border)]"
               }`}
               title={bookmarks.has(currentIndex) ? "Remover dos marcados" : "Marcar questão para revisar depois"}
             >
@@ -2919,18 +2921,18 @@ function ResolverContent() {
           </div>
         </div>
 
-        <div className="font-serif-math text-base md:text-lg font-normal text-slate-900 dark:text-[#f5f0df] leading-relaxed whitespace-pre-line">
+        <div className="font-serif-math text-[16px] md:text-[17px] font-normal text-[var(--ink-primary)] leading-relaxed whitespace-pre-line overflow-x-auto">
           <MathText text={corpo} />
         </div>
 
         {/* FIGURA / GRÁFICO DA QUESTÃO SE HOUVER (OCULTA SE AS ALTERNATIVAS JÁ FOREM AS IMAGENS OU SE JÁ ESTIVER NO CORPO) */}
         {currentQ?.figura_path && !corpo.includes("![") && !hasImageAlternatives(alternativas) && (
-          <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-[#1e2329] border border-[var(--border-board)] relative z-10">
+          <div className="my-4 flex flex-col items-center justify-center p-3 rounded-xl bg-[var(--bg-board)] border border-[var(--border-subtle)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={resolveFigureUrl(currentQ.figura_path)}
               alt={`Figura da Questão ${currentQ.id}`}
-              className="question-diagram-invertible max-h-96 max-w-full rounded-lg object-contain shadow-xs bg-white dark:bg-[#161a1e] p-2 border border-[var(--border-board)]"
+              className="question-diagram-invertible max-h-96 max-w-full rounded-lg object-contain bg-[var(--bg-card)] p-2 border border-[var(--border-subtle)]"
               loading="lazy"
               onError={(e) => {
                 const target = e.currentTarget;
@@ -2940,7 +2942,7 @@ function ResolverContent() {
                 }
               }}
             />
-            <span className="text-[11px] text-slate-400 dark:text-stone-500 mt-2 font-mono">
+            <span className="text-[11px] text-[var(--ink-muted)] mt-2 font-mono">
               Figura de referência da questão
             </span>
           </div>
@@ -2958,12 +2960,12 @@ function ResolverContent() {
           <div className="space-y-3 animate-fadeIn">
             {/* CASO INCONCLUSIVO: PRECISA REVISÃO OU SERVIÇO INDISPONÍVEL */}
             {discursiveEval.precisa_revisao_humana && (
-              <div className="p-4 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 text-slate-800 dark:text-zinc-200 text-xs space-y-2.5 shadow-sm">
-                <div className="flex items-center gap-2 font-bold text-sm text-indigo-700 dark:text-indigo-400">
+              <div className="p-4 rounded-xl border border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] text-[var(--ink-primary)] text-xs space-y-2.5">
+                <div className="flex items-center gap-2 font-semibold text-sm text-[var(--marker-blue)]">
                   <HelpCircle className="w-4 h-4 shrink-0" />
                   <span>Avaliação Inconclusiva — Rascunho Preservado</span>
                 </div>
-                <div className="leading-relaxed font-sans text-xs whitespace-pre-line">
+                <div className="leading-relaxed font-sans text-xs whitespace-pre-line overflow-x-auto">
                   <MathText text={discursiveEval.feedback_latex} />
                 </div>
                 <div className="pt-1 flex items-center gap-2">
@@ -2981,8 +2983,8 @@ function ResolverContent() {
 
             {/* CASO 1: REGRA DE OURO PARA sem_desenvolvimento */}
             {!discursiveEval.precisa_revisao_humana && discursiveEval.veredito === "sem_desenvolvimento" && (
-              <div className="p-4 rounded-xl border-2 border-amber-500/50 bg-amber-500/15 text-amber-950 dark:text-amber-200 text-xs space-y-2.5 shadow-sm">
-                <div className="flex items-center gap-2 font-bold text-sm text-amber-800 dark:text-[#d9b452]">
+              <div className="p-4 rounded-xl border border-amber-500/35 bg-amber-500/[0.08] text-amber-950 dark:text-amber-200 text-xs space-y-2.5">
+                <div className="flex items-center gap-2 font-semibold text-sm text-amber-800 dark:text-[#d9b452]">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>Demonstração de Raciocínio Obrigatória</span>
                 </div>
@@ -3004,22 +3006,22 @@ function ResolverContent() {
 
             {/* CASO 2: APROVADO */}
             {!discursiveEval.precisa_revisao_humana && discursiveEval.veredito === "aprovado" && (
-              <div className="p-5 rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/10 text-slate-800 dark:text-[#f5f0df] text-xs space-y-3.5 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-emerald-500/20">
+              <div className="p-5 rounded-xl border border-[var(--marker-green-border)] bg-[var(--marker-green-dim)] text-[var(--ink-primary)] text-xs space-y-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--marker-green-border)]">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Demonstração Validada
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {discursiveEval.modelo && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-emerald-500/20 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] font-mono">
                         {discursiveEval.modelo}
                       </span>
                     )}
                     {discursiveEval.confianca !== undefined && (
-                      <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                      <span className="text-[10px] font-semibold font-mono tabular-nums text-[var(--marker-green)]">
                         Confiança: {typeof discursiveEval.confianca === "number" ? `${Math.round(discursiveEval.confianca * 100)}%` : discursiveEval.confianca}
                       </span>
                     )}
@@ -3027,25 +3029,25 @@ function ResolverContent() {
                 </div>
 
                 <div className="leading-relaxed space-y-1">
-                  <strong className="text-emerald-700 dark:text-emerald-400 block text-xs">Veredito da Banca:</strong>
-                  <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
+                  <strong className="text-[var(--marker-green)] block text-xs">Veredito da Banca:</strong>
+                  <div className="text-[var(--ink-secondary)] whitespace-pre-line overflow-x-auto">
                     <MathText text={resumirVereditoAprovado(discursiveEval.feedback_latex, discursiveEval.etapas_corretas.length > 0)} />
                   </div>
                 </div>
 
                 {discursiveEval.transcricao_latex && (
-                  <div className="p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-emerald-500/20 space-y-1">
-                    <span className="font-bold text-[10px] text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
-                    <div className="text-slate-800 dark:text-zinc-200">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-1">
+                    <span className="font-bold text-[10px] text-[var(--marker-green)] uppercase tracking-wider block">Transcrição Matemática (OCR):</span>
+                    <div className="text-[var(--ink-primary)] overflow-x-auto">
                       <MathText text={discursiveEval.transcricao_latex.replace(/^\\+\s*/gm, "")} />
                     </div>
                   </div>
                 )}
 
                 {discursiveEval.etapas_corretas.length > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-emerald-500/20">
-                    <strong className="text-emerald-700 dark:text-emerald-400 block font-semibold text-[11px]">Passos Verificados:</strong>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
+                  <div className="space-y-1 pt-1.5 border-t border-[var(--marker-green-border)]">
+                    <strong className="text-[var(--marker-green)] block font-semibold text-[11px]">Passos Verificados:</strong>
+                    <ul className="list-disc list-inside space-y-1 text-[var(--ink-secondary)] text-[11px]">
                       {discursiveEval.etapas_corretas.map((etapa, idx) => (
                         <li key={idx}><MathText text={etapa} /></li>
                       ))}
@@ -3057,32 +3059,32 @@ function ResolverContent() {
 
             {/* CASO 3: PARCIAL */}
             {!discursiveEval.precisa_revisao_humana && discursiveEval.veredito === "parcial" && (
-              <div className="p-5 rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 text-slate-800 dark:text-[#f5f0df] text-xs space-y-3.5 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-amber-500/20">
+              <div className="p-5 rounded-xl border border-[var(--marker-amber-border)] bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] text-xs space-y-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--marker-amber-border)]">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white shadow-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       Validação Parcial
                     </span>
                   </div>
                   {discursiveEval.modelo && (
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-amber-500/20 font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] font-mono">
                       {discursiveEval.modelo}
                     </span>
                   )}
                 </div>
 
                 <div className="leading-relaxed space-y-1">
-                  <strong className="text-amber-700 dark:text-[#d9b452] block text-xs">Parecer da Banca:</strong>
-                  <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
+                  <strong className="text-[var(--marker-amber)] block text-xs">Parecer da Banca:</strong>
+                  <div className="text-[var(--ink-secondary)] whitespace-pre-line overflow-x-auto">
                     <MathText text={discursiveEval.feedback_latex} />
                   </div>
                 </div>
 
                 {discursiveEval.etapas_corretas.length > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-amber-500/20">
-                    <strong className="text-emerald-700 dark:text-emerald-400 block font-semibold text-[11px]">Etapas Corretas Demonstradas:</strong>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
+                  <div className="space-y-1 pt-1.5 border-t border-[var(--marker-amber-border)]">
+                    <strong className="text-[var(--marker-green)] block font-semibold text-[11px]">Etapas Corretas Demonstradas:</strong>
+                    <ul className="list-disc list-inside space-y-1 text-[var(--ink-secondary)] text-[11px]">
                       {discursiveEval.etapas_corretas.map((etapa, idx) => (
                         <li key={idx}><MathText text={etapa} /></li>
                       ))}
@@ -3091,9 +3093,9 @@ function ResolverContent() {
                 )}
 
                 {discursiveEval.erros_identificados.length > 0 && (
-                  <div className="space-y-1 pt-1.5 border-t border-amber-500/20">
-                    <strong className="text-amber-700 dark:text-amber-400 block font-semibold text-[11px]">Pontos de Atenção / Ajustes Necessários:</strong>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
+                  <div className="space-y-1 pt-1.5 border-t border-[var(--marker-amber-border)]">
+                    <strong className="text-[var(--marker-amber)] block font-semibold text-[11px]">Pontos de Atenção / Ajustes Necessários:</strong>
+                    <ul className="list-disc list-inside space-y-1 text-[var(--ink-secondary)] text-[11px]">
                       {discursiveEval.erros_identificados.map((erro, idx) => (
                         <li key={idx}><MathText text={erro} /></li>
                       ))}
@@ -3106,44 +3108,44 @@ function ResolverContent() {
             {/* CASO 4: INCORRETO */}
             {!discursiveEval.precisa_revisao_humana && discursiveEval.veredito === "incorreto" && (
               hint5Used[currentIndex] ? (
-                <div className="p-3.5 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                <div className="p-3.5 rounded-xl border border-[var(--marker-red-border)] bg-[var(--marker-red-dim)] text-[var(--marker-red)] text-xs flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span className="font-bold">
-                      ❌ Questão encerrada por consulta à Resolução Completa (Nível 5)
+                    <XCircle className="w-4 h-4 shrink-0 text-[var(--marker-red)]" />
+                    <span className="font-semibold">
+                      Questão encerrada por consulta à Resolução Completa (Nível 5)
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-rose-600 text-white shrink-0">
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-rose-600 text-white shrink-0 font-mono tabular-nums">
                     Nota 0 · Repetição Diária (SM-2)
                   </span>
                 </div>
               ) : (
-                <div className="p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/10 text-slate-800 dark:text-[#f5f0df] text-xs space-y-3.5 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-500/20">
+                <div className="p-5 rounded-xl border border-[var(--marker-red-border)] bg-[var(--marker-red-dim)] text-[var(--ink-primary)] text-xs space-y-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--marker-red-border)]">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white shadow-xs">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white">
                         <XCircle className="w-3.5 h-3.5" />
                         Demonstração Não Validada
                       </span>
                     </div>
                     {discursiveEval.modelo && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-rose-500/20 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] font-mono">
                         {discursiveEval.modelo}
                       </span>
                     )}
                   </div>
 
                   <div className="leading-relaxed space-y-1">
-                    <strong className="text-rose-700 dark:text-rose-400 block text-xs">Parecer da Banca:</strong>
-                    <div className="text-slate-800 dark:text-[#dedbd0] whitespace-pre-line">
+                    <strong className="text-[var(--marker-red)] block text-xs">Parecer da Banca:</strong>
+                    <div className="text-[var(--ink-secondary)] whitespace-pre-line overflow-x-auto">
                       <MathText text={discursiveEval.feedback_latex} />
                     </div>
                   </div>
 
                   {discursiveEval.erros_identificados.length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-rose-500/20">
-                      <strong className="text-rose-700 dark:text-rose-400 block font-semibold text-[11px]">Erros Identificados no Raciocínio:</strong>
-                      <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
+                    <div className="space-y-1 pt-1.5 border-t border-[var(--marker-red-border)]">
+                      <strong className="text-[var(--marker-red)] block font-semibold text-[11px]">Erros Identificados no Raciocínio:</strong>
+                      <ul className="list-disc list-inside space-y-1 text-[var(--ink-secondary)] text-[11px]">
                         {discursiveEval.erros_identificados.map((erro, idx) => (
                           <li key={idx}><MathText text={erro} /></li>
                         ))}
@@ -3156,19 +3158,19 @@ function ResolverContent() {
 
             {/* GABARITO DE REFERÊNCIA & CRONOGRAMA SM-2 (EXIBIDO 1X SÓ) */}
             {((currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex]) || currentResult?.sm2) && (
-              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2 text-xs">
+              <div className="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-2 text-xs">
                 {currentQ.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva) && !hint5Used[currentIndex] && (
                   <div className="space-y-1">
-                    <span className="font-bold text-slate-700 dark:text-zinc-200 text-xs block">
+                    <span className="font-semibold text-[var(--ink-primary)] text-xs block">
                       Gabarito / Resolução de Referência Oficial:
                     </span>
-                    <div className="text-slate-800 dark:text-zinc-300 leading-relaxed text-xs p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
+                    <div className="text-[var(--ink-secondary)] leading-relaxed text-xs p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] overflow-x-auto">
                       <MathText text={currentQ.gabarito} />
                     </div>
                   </div>
                 )}
                 {currentResult?.sm2 && (
-                  <div className="text-xs text-slate-600 dark:text-zinc-400 pt-1.5 border-t border-slate-200/50 dark:border-white/10">
+                  <div className="text-xs text-[var(--ink-secondary)] pt-1.5 border-t border-[var(--border-subtle)] font-mono tabular-nums">
                     SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
                   </div>
                 )}
@@ -3177,12 +3179,12 @@ function ResolverContent() {
 
             {/* LEMA / PRÓXIMO PASSO EM BOX SEPARADO */}
             {discursiveEval.dica_proximo_passo && !hint5Used[currentIndex] && (
-              <div className="p-4 rounded-xl border border-indigo-500/25 dark:border-amber-500/25 bg-indigo-500/5 dark:bg-amber-500/5 space-y-1.5 text-xs">
-                <span className="font-bold text-indigo-700 dark:text-[#d9b452] uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+              <div className="p-4 rounded-xl border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] bg-[var(--marker-blue-dim)] dark:bg-[var(--marker-amber-dim)] space-y-1.5 text-xs">
+                <span className="font-bold text-[var(--marker-blue)] dark:text-[var(--marker-amber)] uppercase tracking-wider text-[10px] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
                   Lema / Próximo Passo:
                 </span>
-                <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+                <div className="text-[var(--ink-secondary)] leading-relaxed text-xs overflow-x-auto">
                   <MathText text={discursiveEval.dica_proximo_passo} />
                 </div>
               </div>
@@ -3192,18 +3194,18 @@ function ResolverContent() {
 
         {/* CAMADA 1: DADO OBSERVADO — RESPOSTA DO ESTUDANTE */}
         {currentQ && answers[currentQ.id] && (isSimuladoAtivo || !currentResult) && (
-          <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 dark:bg-amber-500/10 dark:border-amber-500/30 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+          <div className="p-3.5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-blue-600 dark:bg-amber-600 text-white shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316]">
                 <Eye className="w-3.5 h-3.5" />
                 [DADO OBSERVADO]
               </span>
-              <span className="text-xs font-medium text-slate-800 dark:text-[#f5f0df]">
-                Alternativa Assinalada: <strong className="font-mono text-blue-700 dark:text-[#d9b452] font-bold">({answers[currentQ.id]})</strong>
+              <span className="text-xs font-medium text-[var(--ink-primary)]">
+                Alternativa Assinalada: <strong className="font-mono text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-bold">({answers[currentQ.id]})</strong>
               </span>
             </div>
             {isSimuladoAtivo && (
-              <span className="text-[11px] text-blue-700 dark:text-amber-300/80 font-medium">
+              <span className="text-[11px] text-[var(--marker-blue)] dark:text-[var(--marker-amber)] font-medium">
                 Gabarito oficial oculto até a entrega do simulado
               </span>
             )}
@@ -3212,9 +3214,9 @@ function ResolverContent() {
 
         {/* AVISO DE AUTENTICAÇÃO PARA RESPONDER */}
         {!isAuthenticated && !userLoading && (
-          <div className="p-3.5 rounded-xl border border-blue-500/35 bg-blue-500/10 text-blue-950 dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-[#f5f0df] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="p-3.5 rounded-xl border border-[var(--marker-blue-border)] bg-[var(--marker-blue-dim)] dark:border-[var(--marker-amber-border)] dark:bg-[var(--marker-amber-dim)] text-[var(--ink-primary)] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <Lock className="w-4 h-4 text-blue-600 dark:text-[#d9b452] shrink-0" />
+              <Lock className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)] shrink-0" />
               <span>
                 <strong>Logar para responder:</strong> Crie sua conta ou faça login para assinalar alternativas e calibrar suas revisões SM-2 no LEMMAS.
               </span>
@@ -3222,13 +3224,13 @@ function ResolverContent() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href={`/login?redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-zinc-950 font-bold text-xs transition shadow-sm"
+                className="px-3.5 py-1.5 rounded-lg bg-[var(--marker-blue)] dark:bg-[var(--marker-amber)] text-white dark:text-[#101316] hover:opacity-90 font-bold text-xs transition-colors"
               >
                 Entrar
               </Link>
               <Link
                 href={`/login?tab=signup&redirectTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/resolver")}`}
-                className="px-3.5 py-1.5 rounded-lg border border-blue-500/40 hover:bg-blue-500/20 text-blue-900 dark:border-amber-500/40 dark:hover:bg-amber-500/20 dark:text-[#f5f0df] font-semibold text-xs transition"
+                className="px-3.5 py-1.5 rounded-lg border border-[var(--marker-blue-border)] hover:bg-[var(--marker-blue-dim)] text-[var(--ink-primary)] dark:border-[var(--marker-amber-border)] dark:hover:bg-[var(--marker-amber-dim)] font-semibold text-xs transition-colors"
               >
                 Criar Conta
               </Link>
@@ -3248,27 +3250,27 @@ function ResolverContent() {
                     key={key}
                     disabled={(!isSimuladoAtivo && currentResult !== undefined) || !!hint5Used[currentIndex]}
                     onClick={() => handleSelectOption(key)}
-                    className={`w-full text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all ${
+                    className={`w-full text-left p-4 rounded-xl border flex flex-col gap-3 transition-colors ${
                       isSelected
-                        ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/40 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-amber-500/40"
-                        : "bg-slate-50/50 dark:bg-[#1e2329] border border-[var(--border-board)] text-slate-700 dark:text-zinc-300 hover:border-blue-500/40 dark:hover:border-amber-500/40"
+                        ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue)] text-[var(--ink-primary)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber)]"
+                        : "bg-[var(--bg-board)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                        className={`w-7 h-7 rounded-md flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                           isSelected
-                            ? "lemmas-gold-cta font-bold shadow-sm"
-                            : "bg-slate-200 dark:bg-[#231f38] text-slate-600 dark:text-zinc-400"
+                            ? "lemmas-gold-cta font-bold"
+                            : "bg-[var(--bg-subtle)] text-[var(--ink-muted)]"
                         }`}
                       >
                         {key}
                       </div>
-                      <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+                      <span className="text-xs font-semibold text-[var(--ink-muted)]">
                         {hint5Used[currentIndex] ? "Bloqueada (Rendição Nível 5)" : isSelected ? "Selecionada" : "Clique para assinalar"}
                       </span>
                     </div>
-                    <div className="w-full flex items-center justify-center p-2 rounded-xl bg-white dark:bg-stone-900 border border-slate-200/80 dark:border-stone-800">
+                    <div className="w-full flex items-center justify-center p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] overflow-x-auto">
                       <MathText text={val} />
                     </div>
                   </button>
@@ -3276,7 +3278,7 @@ function ResolverContent() {
               })}
             </div>
           ) : (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 pt-2">
               {Object.entries(alternativas).map(([key, val]) => {
                 const isSelected = currentQ && answers[currentQ.id] === key;
 
@@ -3285,22 +3287,24 @@ function ResolverContent() {
                     key={key}
                     disabled={(!isSimuladoAtivo && currentResult !== undefined) || !!hint5Used[currentIndex]}
                     onClick={() => handleSelectOption(key)}
-                    className={`w-full text-left p-4 rounded-xl border flex items-center gap-4 transition-all ${
+                    className={`w-full text-left p-3.5 rounded-lg border flex items-center gap-3.5 transition-colors ${
                       isSelected
-                        ? "bg-blue-500/15 border-blue-500 shadow-sm text-slate-900 ring-2 ring-blue-500/30 dark:bg-amber-500/20 dark:border-[#d9b452] dark:text-[#f5f0df] dark:ring-0"
-                        : "bg-slate-50/50 dark:bg-[#1e2329] border-slate-200/80 dark:border-amber-500/10 text-slate-700 dark:text-zinc-300 hover:border-blue-500/30 dark:hover:border-amber-500/30"
+                        ? "bg-[var(--marker-blue-dim)] border-[var(--marker-blue)] text-[var(--ink-primary)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber)]"
+                        : "bg-[var(--bg-board)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-default)]"
                     } ${hint5Used[currentIndex] ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                      className={`w-7 h-7 rounded-md flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                         isSelected
-                          ? "lemmas-gold-cta font-bold shadow-sm"
-                          : "bg-slate-200 dark:bg-[#231f38] text-slate-600 dark:text-zinc-400"
+                          ? "lemmas-gold-cta font-bold"
+                          : "bg-[var(--bg-subtle)] text-[var(--ink-muted)]"
                       }`}
                     >
                       {key}
                     </div>
-                    <span className="text-sm font-medium"><MathText text={val} /></span>
+                    <div className="text-sm font-normal overflow-x-auto w-full">
+                      <MathText text={val} />
+                    </div>
                   </button>
                 );
               })}
@@ -3314,20 +3318,20 @@ function ResolverContent() {
             {!isDiscursiva && (
               <div className={`p-4 rounded-xl border space-y-2 ${
                 currentResult.acertou 
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
-                  : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
+                  ? "bg-emerald-500/[0.06] border-emerald-500/25 text-emerald-800 dark:text-emerald-300"
+                  : "bg-rose-500/[0.06] border-rose-500/25 text-rose-800 dark:text-rose-300"
               }`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white">
                       <Eye className="w-3 h-3" />
                       [DADO OBSERVADO]
                     </span>
-                    <span className="font-bold text-xs">
+                    <span className="font-semibold text-xs">
                       Sua resposta: ({currentResult.resposta_enviada})
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <div className="flex items-center gap-1.5 font-semibold text-xs">
                     {currentResult.acertou ? (
                       <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 className="w-4 h-4" /> Dedução Correta!
@@ -3339,7 +3343,7 @@ function ResolverContent() {
                     )}
                   </div>
                 </div>
-                <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1 border-t border-slate-200/50 dark:border-white/10">
+                <div className="text-xs text-slate-600 dark:text-zinc-300 pt-1.5 border-t border-zinc-200/80 dark:border-zinc-800/80 tabular-nums">
                   SM-2 Atualizado: Próxima revisão agendada para <strong>{currentResult.sm2.proxima_revisao_data}</strong> (Intervalo: {currentResult.sm2.intervalo_dias} dia{currentResult.sm2.intervalo_dias > 1 ? "s" : ""}, EF: {currentResult.sm2.fator_facilidade}).
                 </div>
               </div>
@@ -3352,7 +3356,7 @@ function ResolverContent() {
                   type="button"
                   onClick={() => pedirExplicacaoTreino(currentQ, currentResult.resposta_enviada)}
                   disabled={loadingResolucaoIa[currentQ.id]}
-                  className="lemmas-gold-cta px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition hover:scale-[1.01] disabled:opacity-50"
+                  className="lemmas-gold-cta px-4 py-2 rounded-lg text-xs font-bold shadow-xs flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {loadingResolucaoIa[currentQ.id] ? (
                     <>
@@ -3371,7 +3375,7 @@ function ResolverContent() {
                 </span>
 
                 {loadingResolucaoIa[currentQ.id] && (
-                  <div className="w-full p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs shadow-xs animate-fadeIn">
+                  <div className="w-full p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs animate-fadeIn">
                     <ThoughtLine
                       working={true}
                       label="MathAI Engine estruturando demonstração…"
@@ -3380,64 +3384,64 @@ function ResolverContent() {
                         "Construindo encadeamento dedutivo passo a passo",
                         "Formatando fórmulas matemáticas e equações em KaTeX",
                       ]}
-                      color="#9333ea"
-                      glyphColor="#9333ea"
+                      color="var(--marker-blue)"
+                      glyphColor="var(--marker-blue)"
                       fontSize={12}
                     />
                   </div>
                 )}
               </div>
             ) : (
-              <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-4 text-xs leading-relaxed animate-fadeIn">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-purple-500/20">
+              <div className="p-5 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] space-y-4 text-xs leading-relaxed animate-fadeIn">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--marker-blue-border)]">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-[var(--marker-blue)] text-white dark:text-[#101316]">
                       <Sparkles className="w-3 h-3" />
                       [MATHAI ENGINE]
                     </span>
-                    <span className="font-bold text-xs text-purple-800 dark:text-purple-200">
+                    <span className="font-semibold text-xs text-[var(--marker-blue)]">
                       Resolução Axiomática & Diagnóstico
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {resolucoesIa[currentQ.id].modelo && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/80 dark:bg-[#1e2329] text-slate-700 dark:text-zinc-300 border border-purple-500/20">
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--bg-board)] text-[var(--ink-secondary)] border border-[var(--marker-blue-border)] font-mono">
                         {resolucoesIa[currentQ.id].modelo}
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
                       Confiança Alta
                     </span>
                   </div>
                 </div>
 
                 {/* DIAGNÓSTICO / PASSO A PASSO COM KATEX */}
-                <div className="text-slate-800 dark:text-[#f5f0df] leading-relaxed space-y-2">
-                  <strong className="text-purple-700 dark:text-purple-300 block text-xs">
+                <div className="text-[var(--ink-primary)] leading-relaxed space-y-2">
+                  <strong className="text-[var(--marker-blue)] block text-xs">
                     Demonstração Passo a Passo:
                   </strong>
-                  <div className="text-xs leading-relaxed whitespace-pre-line">
+                  <div className="text-[13px] md:text-sm leading-relaxed whitespace-pre-line overflow-x-auto">
                     <MathText text={resolucoesIa[currentQ.id].diagnostico || ""} />
                   </div>
                 </div>
 
                 {/* LEMA FUNDAMENTAL OU CONCEITO-CHAVE */}
                 {resolucoesIa[currentQ.id].dica_proximo_passo && (
-                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-[#1e2329] border border-blue-500/25 dark:border-amber-500/25 space-y-1">
-                    <strong className="text-blue-700 dark:text-[#d9b452] flex items-center gap-1.5 text-xs">
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-board)] border border-[var(--marker-blue-border)] dark:border-[var(--marker-amber-border)] space-y-1">
+                    <strong className="text-[var(--marker-blue)] dark:text-[var(--marker-amber)] flex items-center gap-1.5 text-xs">
                       <Zap className="w-3.5 h-3.5" />
                       Lema Fundamental & Princípio Determinante:
                     </strong>
-                    <div className="text-slate-700 dark:text-zinc-300 leading-relaxed text-xs">
+                    <div className="text-[var(--ink-secondary)] leading-relaxed text-xs overflow-x-auto">
                       <MathText text={resolucoesIa[currentQ.id].dica_proximo_passo || ""} />
                     </div>
                   </div>
                 )}
 
                 {/* SÍNTESE DO APRENDIZADO (FIXAÇÃO NO SM-2 / ACTIVE RECALL) */}
-                <div className="pt-2 border-t border-purple-500/20 space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-                    <span>✍️</span>
+                <div className="pt-2 border-t border-[var(--marker-blue-border)] space-y-1.5">
+                  <label className="text-[11px] font-semibold text-[var(--ink-secondary)] flex items-center gap-1.5">
+                    <PenTool className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
                     <span>Síntese do Aprendizado (Opcional - anote a lição aprendida para fixação na memória):</span>
                   </label>
                   <input
@@ -3445,7 +3449,7 @@ function ResolverContent() {
                     value={justificativas[currentIndex] || ""}
                     onChange={(e) => setJustificativas((prev) => ({ ...prev, [currentIndex]: e.target.value }))}
                     placeholder="Ex: Pegadinha na restrição do denominador; aplicar lema da média harmônica..."
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#1e2329] border border-slate-200 dark:border-purple-500/20 text-slate-800 dark:text-[#f5f0df] placeholder-slate-400 focus:outline-hidden focus:border-blue-500 dark:focus:border-amber-500 transition-colors"
+                    className="w-full px-3 py-2 text-xs rounded-lg bg-[var(--bg-board)] border border-[var(--border-subtle)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-hidden focus:border-[var(--marker-blue)] dark:focus:border-[var(--marker-amber)] transition-colors"
                   />
                 </div>
               </div>
@@ -3459,7 +3463,7 @@ function ResolverContent() {
             <button
               onClick={() => handleSubmitCurrent()}
               disabled={submitting}
-              className="lemmas-gold-cta px-6 py-2.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
+              className="lemmas-gold-cta px-5 py-2.5 rounded-lg font-bold text-xs shadow-xs flex items-center gap-2 cursor-pointer"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               <span>Confirmar Dedução & Atualizar SM-2</span>
@@ -3478,7 +3482,7 @@ function ResolverContent() {
         <button
           onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
-          className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-amber-500/20 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#18152a] disabled:opacity-40 text-xs font-semibold flex items-center gap-2 transition-colors"
+          className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] disabled:opacity-40 text-xs font-semibold flex items-center gap-2 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Anterior</span>
@@ -3487,7 +3491,7 @@ function ResolverContent() {
         {currentIndex < effectiveTotal - 1 ? (
           <button
             onClick={() => setCurrentIndex((prev) => Math.min(effectiveTotal - 1, prev + 1))}
-            className="lemmas-gold-cta px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-transform shadow-sm hover:scale-[1.02]"
+            className="lemmas-gold-cta px-5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors shadow-xs"
           >
             <span>Próxima Questão</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -3498,7 +3502,7 @@ function ResolverContent() {
               if (isSimuladoAtivo) setShowConfirmModal(true);
               else setSessionMode("result");
             }}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold flex items-center gap-2 shadow-md hover:opacity-95 transition-opacity"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 transition-colors"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>{isSimuladoAtivo ? "Entregar Simulado" : "Finalizar Treino"}</span>
@@ -3508,27 +3512,27 @@ function ResolverContent() {
 
       {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (REVELA GABARITO & MARCA INCORRETO) */}
       {showHint5ConfirmModal && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[var(--bg-card)] border-2 border-rose-500/50 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 ring-1 ring-rose-500/30">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 animate-fadeIn">
+          <div className="bg-[var(--bg-card)] border border-[var(--marker-red-border)] rounded-xl p-6 max-w-lg w-full shadow-xl space-y-4">
             <div className="flex items-start gap-3">
-              <div className="p-3 rounded-xl bg-rose-500/15 text-rose-500 shrink-0">
-                <AlertTriangle className="w-6 h-6" />
+              <div className="p-2.5 rounded-lg bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 font-serif-math">
+                <h3 className="text-base font-semibold text-[var(--ink-primary)] font-serif-math tracking-tight">
                   Rendição Pedagógica · Revelar Nível 5?
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                <p className="text-xs text-[var(--ink-secondary)] leading-relaxed">
                   A <strong>Dica de Nível 5</strong> fornecerá a resolução oficial completa passo a passo, o lema determinante e o gabarito definitivo da questão.
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2 text-xs text-rose-800 dark:text-rose-200 leading-relaxed">
-              <strong className="block font-bold text-rose-600 dark:text-rose-400">
-                ⚠️ Consequências Pedagógicas Imediatas da Rendição:
+            <div className="p-4 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] space-y-2 text-xs text-[var(--ink-primary)] leading-relaxed">
+              <strong className="block font-semibold text-[var(--marker-red)]">
+                Consequências Pedagógicas Imediatas da Rendição:
               </strong>
-              <ul className="list-disc pl-4 space-y-1 text-[11px]">
+              <ul className="list-disc pl-4 space-y-1 text-[11px] text-[var(--ink-secondary)]">
                 <li>A questão será computada imediatamente como <strong>ERRADA</strong> (marcada em vermelho no topo).</li>
                 <li>O contador de questões respondidas será incrementado automaticamente.</li>
                 <li>O envio de alternativas ou nova dedução será <strong>permanentemente bloqueado</strong> nesta questão.</li>
@@ -3536,20 +3540,21 @@ function ResolverContent() {
               </ul>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
               <button
                 type="button"
                 onClick={() => setShowHint5ConfirmModal(false)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer text-center"
+                className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer text-center"
               >
                 Cancelar (Continuar Tentando)
               </button>
               <button
                 type="button"
                 onClick={confirmarEDesbloquearDica5}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>⚠️ Confirmar Rendição & Ver Resolução</span>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Confirmar Rendição & Ver Resolução</span>
               </button>
             </div>
           </div>
@@ -3713,8 +3718,8 @@ function ResolverContent() {
 export default function ResolverPage() {
   return (
     <Suspense fallback={
-      <div className="py-24 flex items-center justify-center text-slate-500">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-[#d9b452]" />
+      <div className="py-24 flex items-center justify-center text-[var(--ink-muted)]">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
       </div>
     }>
       <ResolverContent />
