@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed, Shapes } from "lucide-react";
+import { Undo2, Redo2, Trash2, ZoomIn, ZoomOut, LocateFixed, Shapes, ChevronUp, ChevronDown, Plus } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 import {
@@ -23,7 +23,11 @@ export interface SpenSmartCanvasProps {
   hideFooterEvaluate?: boolean;
   exportCanvasRef?: React.MutableRefObject<(() => string | null) | null>;
   showZoomControls?: boolean;
+  initialPages?: number;
 }
+
+const MAX_CANVAS_LOGICAL_HEIGHT = 7200;
+const AUTO_EXPAND_EDGE_MARGIN = 140;
 
 const COLORS_DARK = [
   { name: "Amarelo Ouro", hex: "#EAB308" },
@@ -66,6 +70,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   hideFooterEvaluate = false,
   exportCanvasRef,
   showZoomControls = false,
+  initialPages = 1,
 }) => {
   const { isLight } = useTheme();
   const COLORS = isLight ? COLORS_LIGHT : COLORS_DARK;
@@ -98,6 +103,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   useEffect(() => { onStrokesChangeRef.current = onStrokesChange; }, [onStrokesChange]);
 
   // Estados leves apenas para a barra de ferramentas
+  const resolvedInitialPages = Math.max(1, initialPages, documentState?.settings.pageCount ?? 1);
   const [activeTool, setActiveTool] = useState<ToolType>(documentState?.settings.tool ?? "pen");
   const [colorIndex, setColorIndex] = useState(documentState?.settings.colorIndex ?? 0);
   const activeColor = COLORS[colorIndex].hex;
@@ -106,16 +112,30 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
   const [autoShape, setAutoShape] = useState<boolean>(true);
   const [shapeBadge, setShapeBadge] = useState<string | null>(null);
   const [zoom, setZoom] = useState(documentState?.settings.zoom ?? 1);
+  const [pageCount, setPageCount] = useState<number>(resolvedInitialPages);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageHeight, setPageHeight] = useState<number>(0);
   const [baseSize, setBaseSize] = useState({ width: 0, height: 0 });
   const [strokeCount, setStrokeCount] = useState(documentState?.strokes.length ?? initialStrokes?.length ?? 0);
+
+  const pageCountRef = useRef<number>(resolvedInitialPages);
+  const pageHeightRef = useRef<number>(0);
 
   const [historyState, setHistoryState] = useState({
     undo: (documentState?.past.length ?? 0) > 0, redo: (documentState?.future.length ?? 0) > 0,
   });
 
   useEffect(() => {
-    documentRef.current.settings = { ...documentRef.current.settings, tool: activeTool, colorIndex, width: activeWidth, stylusMode, zoom };
-  }, [activeTool, colorIndex, activeWidth, stylusMode, zoom]);
+    documentRef.current.settings = {
+      ...documentRef.current.settings,
+      tool: activeTool,
+      colorIndex,
+      width: activeWidth,
+      stylusMode,
+      zoom,
+      pageCount,
+    };
+  }, [activeTool, colorIndex, activeWidth, stylusMode, zoom, pageCount]);
 
   // Refs sincronizadas para leitura instantânea nos listeners nativos
   const toolRef = useRef<ToolType>(activeTool);
@@ -282,8 +302,25 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     const setupDimensions = () => {
       if (viewport.clientWidth <= 0 || viewport.clientHeight <= 0) return;
       const content = canvasContentSize(strokesRef.current);
+      if (pageHeightRef.current === 0 || viewport.clientHeight > pageHeightRef.current) {
+        pageHeightRef.current = Math.max(420, Math.round(viewport.clientHeight));
+        setPageHeight(pageHeightRef.current);
+      }
+      const effectivePageHeight = pageHeightRef.current || Math.round(viewport.clientHeight / zoom);
+      const neededContentPages = Math.max(1, Math.ceil(content.height / effectivePageHeight));
+      if (neededContentPages > pageCountRef.current) {
+        const cappedPages = Math.min(neededContentPages, Math.max(1, Math.floor(MAX_CANVAS_LOGICAL_HEIGHT / effectivePageHeight)));
+        if (cappedPages > pageCountRef.current) {
+          pageCountRef.current = cappedPages;
+          setPageCount(cappedPages);
+        }
+      }
+      const pagedHeight = effectivePageHeight * pageCountRef.current;
       const width = Math.max(maxLogicalSizeRef.current.width, viewport.clientWidth / zoom, content.width);
-      const height = Math.max(maxLogicalSizeRef.current.height, viewport.clientHeight / zoom, content.height);
+      const height = Math.min(
+        MAX_CANVAS_LOGICAL_HEIGHT,
+        Math.max(maxLogicalSizeRef.current.height, viewport.clientHeight / zoom, pagedHeight, content.height)
+      );
       maxLogicalSizeRef.current = { width, height, zoom };
       container.style.width = `${width}px`;
       container.style.height = `${height}px`;
@@ -655,6 +692,26 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         commitCanvas(documentRef.current, [...strokesRef.current, finishedStroke]);
         strokesRef.current = documentRef.current.strokes;
         publishStrokes(strokesRef.current);
+
+        // Expande automaticamente +1 página ao escrever perto da borda inferior
+        const effectivePageH = pageHeightRef.current;
+        if (effectivePageH > 0) {
+          let maxStrokeY = 0;
+          for (const pt of finishedStroke.points) {
+            if (pt.y > maxStrokeY) maxStrokeY = pt.y;
+          }
+          const currentMaxH = maxLogicalSizeRef.current.height || effectivePageH * pageCountRef.current;
+          const maxAllowedPages = Math.max(1, Math.floor(MAX_CANVAS_LOGICAL_HEIGHT / effectivePageH));
+          if (
+            maxStrokeY >= currentMaxH - AUTO_EXPAND_EDGE_MARGIN &&
+            pageCountRef.current < maxAllowedPages
+          ) {
+            const nextPages = pageCountRef.current + 1;
+            pageCountRef.current = nextPages;
+            setPageCount(nextPages);
+            resizeCanvasRef.current?.();
+          }
+        }
       }
     };
 
@@ -701,6 +758,50 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     };
   }, [drawFullStroke, eraseStrokeAtPoints, publishStrokes, zoom]);
 
+  const maxAllowedPages = pageHeight > 0 ? Math.max(1, Math.floor(MAX_CANVAS_LOGICAL_HEIGHT / pageHeight)) : 10;
+
+  useEffect(() => {
+    pageCountRef.current = pageCount;
+    resizeCanvasRef.current?.();
+  }, [pageCount]);
+
+  const handleViewportScroll = useCallback(() => {
+    const viewport = viewportRef.current;
+    const h = pageHeightRef.current;
+    if (!viewport || h <= 0) return;
+    const pageSpan = h * zoom;
+    const nextPage = Math.min(
+      pageCountRef.current,
+      Math.max(1, Math.floor((viewport.scrollTop + pageSpan * 0.35) / pageSpan) + 1)
+    );
+    setCurrentPage((prev) => (prev === nextPage ? prev : nextPage));
+  }, [zoom]);
+
+  const scrollByPage = useCallback((direction: -1 | 1) => {
+    const viewport = viewportRef.current;
+    const h = pageHeightRef.current || viewport?.clientHeight || 420;
+    if (!viewport) return;
+    const step = h * zoom;
+    const targetTop = Math.max(0, Math.min(viewport.scrollHeight - viewport.clientHeight, viewport.scrollTop + direction * step));
+    viewport.scrollTo({ top: targetTop, behavior: "smooth" });
+  }, [zoom]);
+
+  const handleAddPage = useCallback(() => {
+    const h = pageHeightRef.current || viewportRef.current?.clientHeight || 420;
+    const maxPages = Math.max(1, Math.floor(MAX_CANVAS_LOGICAL_HEIGHT / h));
+    if (pageCountRef.current >= maxPages) return;
+    const nextPages = pageCountRef.current + 1;
+    pageCountRef.current = nextPages;
+    setPageCount(nextPages);
+    resizeCanvasRef.current?.();
+    requestAnimationFrame(() => {
+      const viewport = viewportRef.current;
+      if (viewport) {
+        viewport.scrollTo({ top: (nextPages - 1) * h * zoom, behavior: "smooth" });
+      }
+    });
+  }, [zoom]);
+
   const handleUndo = useCallback(() => {
     if (isDrawingRef.current || !undoCanvas(documentRef.current)) return;
     strokesRef.current = documentRef.current.strokes;
@@ -721,9 +822,17 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     if (isDrawingRef.current || strokesRef.current.length === 0) return;
     commitCanvas(documentRef.current, []);
     strokesRef.current = documentRef.current.strokes;
+    const basePages = Math.max(1, initialPages);
+    pageCountRef.current = basePages;
+    setPageCount(basePages);
+    setCurrentPage(1);
+    maxLogicalSizeRef.current = { width: 0, height: 0, zoom };
     resizeCanvasRef.current?.();
     redrawBaseCanvas();
     publishStrokes(strokesRef.current);
+    if (viewportRef.current) {
+      viewportRef.current.scrollTop = 0;
+    }
   };
 
   const getCanvasBase64 = useCallback((): string | null => {
@@ -731,9 +840,16 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     if (!baseCanvas) return null;
     const exportCanvas = document.createElement("canvas");
     const content = canvasContentSize(strokesRef.current);
-    const width = Math.max(baseCanvas.width / dprRef.current, content.width);
-    const height = Math.max(baseCanvas.height / dprRef.current, content.height);
-    // Mantém todo o desenho, limitando o bitmap enviado ao OCR a 4096px por lado.
+    const viewport = viewportRef.current;
+    const minVisibleW = viewport && viewport.clientWidth > 0 ? Math.ceil(viewport.clientWidth / zoom) : baseCanvas.width / dprRef.current;
+    const minVisibleH = viewport && viewport.clientHeight > 0 ? Math.ceil(viewport.clientHeight / zoom) : baseCanvas.height / dprRef.current;
+    const width = strokesRef.current.length > 0
+      ? Math.max(minVisibleW, content.width)
+      : baseCanvas.width / dprRef.current;
+    const height = strokesRef.current.length > 0
+      ? Math.max(minVisibleH, content.height)
+      : baseCanvas.height / dprRef.current;
+    // Mantém todo o desenho sem perder nitidez com páginas vazias abaixo, limitando a 4096px por lado.
     const scale = Math.min(dprRef.current, 4096 / Math.max(width, height));
     exportCanvas.width = Math.ceil(width * scale);
     exportCanvas.height = Math.ceil(height * scale);
@@ -744,7 +860,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     ctx.scale(scale, scale);
     for (const stroke of strokesRef.current) drawFullStroke(ctx, stroke);
     return exportCanvas.toDataURL("image/png");
-  }, [isLight, drawFullStroke]);
+  }, [isLight, drawFullStroke, zoom]);
 
   useEffect(() => {
     if (exportCanvasRef) {
@@ -776,7 +892,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           handleRedo();
         }
       }}
-      className={`rounded-xl border p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
+      className={`rounded-xl border p-2 sm:p-4 shadow-xl flex flex-col h-full min-h-0 transition-colors ${
         isLight
           ? "border-slate-300 bg-white"
           : "border-amber-500/20 bg-[#0D0B18]"
@@ -784,11 +900,11 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
     >
       {/* Barra de Ferramentas */}
       <div
-        className={`mb-3 flex flex-wrap items-center justify-between gap-3 border-b pb-3 select-none ${
+        className={`mb-2 sm:mb-3 flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 border-b pb-2 sm:pb-3 select-none ${
           isLight ? "border-slate-200" : "border-white/10"
         }`}
       >
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto py-1 sm:w-auto sm:flex-wrap sm:overflow-visible [&>*]:shrink-0">
           <button
             type="button"
             onClick={() => setActiveTool("pen")}
@@ -870,7 +986,56 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto py-1 sm:w-auto sm:flex-wrap sm:overflow-visible [&>*]:shrink-0">
+          <div
+            className={`flex items-center gap-1 rounded-lg border px-1 py-0.5 ${
+              isLight ? "border-slate-200 bg-slate-50 text-slate-700" : "border-white/10 bg-white/5 text-zinc-200"
+            }`}
+            aria-label="Páginas e rolagem da lousa"
+          >
+            <button
+              type="button"
+              onClick={() => scrollByPage(-1)}
+              disabled={currentPage <= 1}
+              className="rounded p-1 hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer"
+              title="Subir uma página"
+              aria-label="Subir uma página"
+            >
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            <span className="px-1 text-[11px] font-mono tabular-nums" title="Página atual da lousa">
+              Pág. {currentPage}/{pageCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => scrollByPage(1)}
+              disabled={currentPage >= pageCount}
+              className="rounded p-1 hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer"
+              title="Descer uma página"
+              aria-label="Descer uma página"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleAddPage}
+              disabled={pageCount >= maxAllowedPages}
+              className={`ml-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold transition cursor-pointer disabled:opacity-30 ${
+                isLight
+                  ? "bg-amber-500/15 text-amber-800 hover:bg-amber-500/25"
+                  : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+              }`}
+              title={
+                pageCount >= maxAllowedPages
+                  ? "Limite máximo de páginas atingido"
+                  : "Adicionar nova página embaixo (+ espaço)"
+              }
+            >
+              <Plus className="h-3 w-3" />
+              <span>Página</span>
+            </button>
+          </div>
+
           {showZoomControls && (
             <div className={`flex items-center gap-1 rounded-lg border px-1 ${isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`} aria-label="Controles de zoom da lousa">
               <button type="button" onClick={() => setZoom(value => Math.max(0.5, Math.round((value - 0.1) * 10) / 10))} disabled={zoom <= 0.5} className="rounded p-1.5 disabled:opacity-30" title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></button>
@@ -967,6 +1132,7 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
       {/* Container Dual-Canvas com touch-action: none estrito e isolamento de camada GPU */}
       <div
         ref={viewportRef}
+        onScroll={handleViewportScroll}
         style={{
           touchAction: "none",
           contain: "paint layout",
@@ -974,8 +1140,8 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
         }}
         className={`relative w-full overflow-auto rounded-lg border transition-colors select-none ${
           isLight
-            ? "border-slate-200 bg-white bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
-            : "border-white/10 bg-[#08070F] bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
+            ? "border-slate-200 bg-white"
+            : "border-white/10 bg-[#08070F]"
         } ${canvasHeightClass}`}
       >
         <div
@@ -1001,8 +1167,39 @@ export const SpenSmartCanvas: React.FC<SpenSmartCanvasProps> = ({
             width: baseSize.width || "100%",
             height: baseSize.height || "100%",
           }}
-          className="absolute left-0 top-0 z-10 min-h-full min-w-full"
+          className={`absolute left-0 top-0 z-10 min-h-full min-w-full ${
+            isLight
+              ? "bg-[radial-gradient(#00000018_1px,transparent_1px)] [background-size:20px_20px]"
+              : "bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:20px_20px]"
+          }`}
         >
+        {pageHeight > 0 && pageCount > 1 && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            {Array.from({ length: pageCount - 1 }, (_, i) => {
+              const dividerTop = (i + 1) * pageHeight;
+              if (dividerTop >= (baseSize.height || Infinity)) return null;
+              return (
+                <div
+                  key={dividerTop}
+                  style={{ top: dividerTop }}
+                  className={`absolute inset-x-0 border-t border-dashed ${
+                    isLight ? "border-slate-300/80" : "border-white/15"
+                  }`}
+                >
+                  <span
+                    className={`absolute right-3 -top-2.5 rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                      isLight
+                        ? "bg-slate-100/90 text-slate-500 border border-slate-200"
+                        : "bg-[#12101f]/90 text-zinc-400 border border-white/10"
+                    }`}
+                  >
+                    Página {i + 2}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <canvas
           ref={baseCanvasRef}
           style={{
