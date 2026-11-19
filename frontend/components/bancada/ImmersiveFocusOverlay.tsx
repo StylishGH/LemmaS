@@ -167,13 +167,13 @@ export default function ImmersiveFocusOverlay({
       }`}
     >
       {/* BARRA SUPERIOR DO MODO FOCO IMERSIVO */}
-      <header className={`flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b shrink-0 z-40 shadow-lg transition-colors ${
+      <header className={`flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2 border-b shrink-0 z-40 shadow-lg transition-colors ${
         isLight
           ? "bg-white border-slate-200"
           : "bg-[#0e0c1b] border-amber-500/25"
       }`}>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-serif-math font-bold tracking-wider ${
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-serif-math font-bold tracking-wider ${
             isLight
               ? "bg-amber-500/10 border-amber-500/25 text-amber-700"
               : "bg-amber-500/15 border-amber-500/30 text-[#d9b452]"
@@ -223,7 +223,7 @@ export default function ImmersiveFocusOverlay({
             className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-500/10 text-xs font-semibold flex items-center gap-2"
           >
             <Lightbulb className="w-4 h-4" />
-            Dicas socráticas
+            <span className="sm:hidden">Dicas</span><span className="hidden sm:inline">Dicas socráticas</span>
           </button>
           {/* Toggle de Tema dentro do modo foco */}
           <ThemeToggle compact />
@@ -249,7 +249,7 @@ export default function ImmersiveFocusOverlay({
             title="Sair do Modo Foco (Esc)"
           >
             <X className="w-3.5 h-3.5" />
-            <span>Sair do Modo Foco</span>
+            <span className="sm:hidden">Sair</span><span className="hidden sm:inline">Sair do Modo Foco</span>
           </button>
         </div>
       </header>
@@ -273,6 +273,7 @@ export default function ImmersiveFocusOverlay({
                 canvasHeightClass="flex-1 min-h-0"
                 hideFooterEvaluate={true}
                 showZoomControls={true}
+                initialPages={2}
                 exportCanvasRef={spenExportRef}
               />
             </div>
