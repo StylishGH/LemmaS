@@ -13,7 +13,14 @@ export interface CanvasDocument {
   strokes: Stroke[];
   past: Stroke[][];
   future: Stroke[][];
-  settings: { tool: ToolType; colorIndex: number; width: number; stylusMode: boolean; zoom: number };
+  settings: {
+    tool: ToolType;
+    colorIndex: number;
+    width: number;
+    stylusMode: boolean;
+    zoom: number;
+    pageCount?: number;
+  };
 }
 
 export function createCanvasDocument(strokes: Stroke[] = []): CanvasDocument {

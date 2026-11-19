@@ -39,7 +39,7 @@ try {
   }));
   const css = await postcss([tailwind({ base: root })]).process(fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8'), { from: path.join(root, 'app/globals.css') });
   fs.writeFileSync(path.join(dir, 'style.css'), css.css + fs.readFileSync(require.resolve('katex/dist/katex.min.css'), 'utf8'));
-  fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="style.css"><div id="root"></div><script src="bundle.js"></script>');
+  fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="style.css"><div id="root"></div><script src="bundle.js"></script>');
  const server=http.createServer((req,res)=>{const p=req.url.startsWith('/fonts/') ? path.join(path.dirname(require.resolve('katex/dist/katex.min.css')),req.url) : req.url.startsWith('/images/') ? path.join(root,'public',req.url) : path.join(dir,req.url==='/'?'index.html':req.url); if(!fs.existsSync(p)){res.writeHead(404).end();return;}res.setHeader('Content-Type',p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':p.endsWith('.png')?'image/png':'text/html');res.end(fs.readFileSync(p));});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH || '/usr/bin/google-chrome',headless:true,userDataDir:path.join(dir,'chrome-profile'),args:['--no-sandbox','--disable-dev-shm-usage']}).catch(error=>{server.close();throw error;});
@@ -139,6 +139,43 @@ try {
  const snapped=await page.evaluate(()=>window.testDocs[0].strokes.at(-1));
  assert.ok(snapped&&Math.abs(snapped.points[0].y-snapped.points.at(-1).y)<1,'draw-and-hold snaps wobbly horizontal stroke to horizontal line');
  console.log('PASS draw-and-hold shape snap');
+ await clickTitle('Limpar Lousa');
+ await page.click('#open');await page.waitForSelector('button[aria-label="Descer uma página"]');
+ const focusInitial=await page.evaluate(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return {scrollHeight:vp.scrollHeight,clientHeight:vp.clientHeight,label:document.querySelector('[title="Página atual da lousa"]')?.textContent?.trim()};});
+ assert.ok(focusInitial.scrollHeight>=focusInitial.clientHeight*1.8,'focus mode opens with multi-page vertical space');
+ assert.equal(focusInitial.label,'Pág. 1/2');
+ await page.click('button[aria-label="Descer uma página"]');
+ await page.waitForFunction(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return vp.scrollTop>=vp.clientHeight-50;});
+ await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],vp=c.parentElement.parentElement,vr=vp.getBoundingClientRect();for(const [type,x] of [['pointerdown',40],['pointermove',240],['pointerup',240]])c.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:11,pointerType:'pen',button:0,buttons:type==='pointerup'?0:1,clientX:vr.left+x,clientY:vr.top+160,pressure:.7}));});
+ const page2Stroke=await page.evaluate(()=>window.testDocs[0].strokes.at(-1));
+ assert.ok(page2Stroke&&page2Stroke.points[0].y>500,'stroke drawn after scrolling down lands on page 2');
+ await clickTitle('Adicionar nova página embaixo (+ espaço)');
+ await page.waitForFunction(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return document.querySelector('[title="Página atual da lousa"]')?.textContent?.includes('/3')&&vp.scrollTop>vp.clientHeight;});
+ const focusAdded=await page.evaluate(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return {scrollHeight:vp.scrollHeight,clientHeight:vp.clientHeight,scrollTop:vp.scrollTop};});
+ assert.ok(focusAdded.scrollHeight>=focusAdded.clientHeight*2.7,'adding a page expands canvas height to 3 pages');
+ assert.ok(focusAdded.scrollTop>focusAdded.clientHeight,'adding a page scrolls to the newly created page');
+ console.log('PASS multi-page vertical scroll and page expansion in focus mode');
+ for (const width of [390, 360]) {
+   await page.setViewport({width,height:844,deviceScaleFactor:2,isMobile:true,hasTouch:true});
+   if (await page.$('#open')) await page.click('#open');
+   await page.waitForSelector('button[aria-label="Descer uma página"]');
+   await page.evaluate(()=>new Promise(requestAnimationFrame));
+   const layout=await page.evaluate(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return {rect:vp.getBoundingClientRect().toJSON(),overflow:document.documentElement.scrollWidth};});
+   assert.ok(layout.rect.width>250&&layout.rect.height>=844*0.65,'mobile leaves at least 65% of screen for writing');
+   assert.ok(await page.$('button[aria-label="Expandir questão"]'),'mobile question starts minimized');
+   await page.click('button[aria-label="Expandir questão"]');
+   await page.waitForSelector('button[title="Minimizar"]');
+   await page.click('button[title="Minimizar"]');
+   assert.ok(layout.rect.right<=width+1&&layout.overflow<=width,'mobile has no horizontal overflow');
+   await clickTitle('Adicionar nova página embaixo (+ espaço)');
+   await page.waitForFunction(()=>{const vp=document.querySelector('canvas').parentElement.parentElement;return vp.scrollTop>vp.clientHeight;});
+   const beforeTouch=await count();
+   await page.evaluate(()=>{const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Palma ATIVA'));if(b)b.click();});
+   await page.evaluate(()=>{const c=document.querySelectorAll('canvas')[1],vp=c.parentElement.parentElement,r=vp.getBoundingClientRect();for(const [type,x] of [['pointerdown',30],['pointermove',100],['pointerup',100]])c.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:22,pointerType:'touch',button:0,buttons:type==='pointerup'?0:1,clientX:r.left+x,clientY:r.top+80,pressure:.7}));});
+   assert.equal(await count(),beforeTouch+1,'mobile touch draws after scrolling');
+   await page.screenshot({path:path.join(screenshotDir,`focus-mobile-scroll-${width}.png`)});
+ }
+ console.log('PASS mobile 360/390px layout, page navigation and touch writing after scroll');
  assert.deepEqual(errors,[]);console.log('ALL BROWSER CHECKS PASSED');
  }finally{await browser.close();server.close();}
 
