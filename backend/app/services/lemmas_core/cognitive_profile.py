@@ -59,7 +59,7 @@ def calcular_taxa_dominio(
         # Penalização suave para resoluções excessivamente lentas
         fator_tempo = max(0.6, 1.0 - ((tempo_medio_segundos - tempo_esperado_segundos) / (tempo_esperado_segundos * 2)))
 
-    dominio = (acuracia * 0.8) + (fator_tempo * 20.0)
+    dominio = acuracia * (0.8 + 0.2 * fator_tempo)
     return round(min(100.0, max(0.0, dominio)), 1)
 
 

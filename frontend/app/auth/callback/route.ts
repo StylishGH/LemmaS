@@ -11,12 +11,28 @@ import { DEFAULT_SUPABASE_URL, getSafeAnonKey } from "@/lib/supabase";
  * 2. Confirmação de e-mail / Magic Link via 'token_hash' e 'type' (verifyOtp).
  * Atualiza o status 'verificado = 1' na tabela 'usuarios' e grava cookies SSR.
  */
+function safeRedirectPath(rawNext: string | null): string {
+  if (!rawNext) return "/onboarding";
+  const trimmed = rawNext.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) {
+    return "/onboarding";
+  }
+  return trimmed;
+}
+
+const ALLOWED_FORWARDED_HOSTS = new Set([
+  "lemmas.com.br",
+  "www.lemmas.com.br",
+  "localhost:3000",
+  "127.0.0.1:3000",
+]);
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/onboarding";
+  const next = safeRedirectPath(searchParams.get("next"));
 
   if (code || (token_hash && type)) {
     try {
@@ -107,12 +123,13 @@ export async function GET(request: Request) {
         }
 
         // Redireciona com segurança respeitando proxies/load balancers se houver
-        const forwardedHost = request.headers.get("x-forwarded-host");
+        const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
         const isLocalEnv = process.env.NODE_ENV === "development";
+        const isAllowedForwarded = Boolean(forwardedHost && ALLOWED_FORWARDED_HOSTS.has(forwardedHost));
 
         const finalUrl = isLocalEnv
           ? `${origin}${redirectPath}`
-          : forwardedHost
+          : isAllowedForwarded
           ? `https://${forwardedHost}${redirectPath}`
           : `${origin}${redirectPath}`;
 

@@ -111,6 +111,9 @@ def test_calcular_taxa_dominio():
     # 0 tentativas deve retornar 0.0
     assert calcular_taxa_dominio(0, 0, 0) == 0.0
 
+    # 0% de acurácia mesmo com tempo rápido nunca pode gerar domínio > 0
+    assert calcular_taxa_dominio(total_tentativas=10, total_acertos=0, tempo_medio_segundos=2.0) == 0.0
+
 
 def test_classificar_distribuicao_erros():
     tentativas = [

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { configuredBackendUrl } from "./lib/backend-url";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -21,9 +22,13 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    const backendUrl =
-      process.env.BACKEND_API_URL ||
-      (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8000" : null);
+    // Keep the generic proxy opt-in in production. Tutor configuration alone
+    // should only enable the explicit tutor routes.
+    const backendUrl = process.env.NODE_ENV === "development"
+      ? configuredBackendUrl() || "http://127.0.0.1:8000"
+      : process.env.BACKEND_API_URL?.trim()
+        ? configuredBackendUrl()
+        : undefined;
 
     if (!backendUrl) {
       return [];

@@ -102,12 +102,45 @@ export async function POST(req: NextRequest) {
       ? Math.max(1, Math.floor(tempoGastoSegundos / totalRespondidas)) 
       : 0;
 
+    // Pré-carrega todo o estado SM-2 do lote em uma única consulta (elimina N+1)
+    const sm2Map = new Map<number, any>();
+    try {
+      const { data: sm2Batch } = await supabase
+        .from("revisao_espacada")
+        .select("item_id, repeticoes, fator_facilidade, intervalo_dias")
+        .eq("aluno_id", validAlunoId)
+        .eq("item_tipo", "questao")
+        .in("item_id", targetQuestionIds);
+
+      if (Array.isArray(sm2Batch)) {
+        for (const row of sm2Batch) {
+          sm2Map.set(row.item_id, row);
+        }
+      }
+    } catch (sm2PrefetchErr) {
+      console.warn("Aviso ao pré-carregar SM-2 no simulado:", sm2PrefetchErr);
+    }
+
+    const sm2Upserts: any[] = [];
+    const nowIso = new Date().toISOString();
+
     for (const question of questions) {
       const respostaAluno = respostasDoUsuario[question.id];
       const gabaritoOficial = (question.gabarito || "").trim().toUpperCase();
 
       if (!respostaAluno) {
         emBranco++;
+        tentativasParaInserir.push({
+          questao_id: question.id,
+          aluno_id: validAlunoId,
+          tempo_segundos: 0,
+          acertou: 0,
+          tipo_erro: "simulado_em_branco",
+          estrategia_usada: "Modo Simulado",
+          confianca_aluno: 1,
+          resposta_aluno: null,
+          anotacoes: `${simuladoId ? `Simulado ${simuladoId}` : "Simulado Cronometrado"} [EM_BRANCO]`,
+        });
         resultados.push({
           questao_id: question.id,
           acertou: false,
@@ -137,7 +170,6 @@ export async function POST(req: NextRequest) {
       if (acertou) acertos++;
       else erros++;
 
-      // Prepara tentativa para a tabela tentativas (aluno_id numérico BIGINT) com preservação da resposta marcada
       tentativasParaInserir.push({
         questao_id: question.id,
         aluno_id: validAlunoId,
@@ -145,64 +177,52 @@ export async function POST(req: NextRequest) {
         acertou: acertou ? 1 : 0,
         tipo_erro: acertou ? "nenhum" : "simulado_incorreto",
         estrategia_usada: "Modo Simulado",
-        confianca_aluno: 4,
+        confianca_aluno: acertou ? 4 : 2,
         resposta_aluno: respostaUpper,
         anotacoes: `${simuladoId ? `Simulado ${simuladoId}` : "Simulado Cronometrado"} [RESPOSTA:${respostaUpper}]`,
       });
 
-      // Atualiza repetição espaçada SM-2 para a questão resolvida
+      const sm2Atual = sm2Map.get(question.id);
+      const repeticoesAnt = sm2Atual ? sm2Atual.repeticoes : 0;
+      const efAnt = sm2Atual ? sm2Atual.fator_facilidade : 2.5;
+      const intervaloAnt = sm2Atual ? sm2Atual.intervalo_dias : 1;
+
+      const novoSm2 = calcularProximoIntervaloSM2(
+        repeticoesAnt,
+        efAnt,
+        intervaloAnt,
+        acertou,
+        acertou ? 4 : 1
+      );
+
+      sm2Upserts.push({
+        aluno_id: validAlunoId,
+        item_tipo: "questao",
+        item_id: question.id,
+        repeticoes: novoSm2.repeticoes,
+        fator_facilidade: novoSm2.fator_facilidade,
+        intervalo_dias: novoSm2.intervalo_dias,
+        proxima_revisao: novoSm2.proxima_revisao_data,
+        ultima_revisao: nowIso,
+      });
+
+      resultados.push({
+        questao_id: question.id,
+        acertou,
+        em_branco: false,
+        resposta_enviada: respostaUpper,
+        gabarito: gabaritoOficial,
+        sm2: novoSm2,
+      });
+    }
+
+    if (sm2Upserts.length > 0) {
       try {
-        const { data: sm2Atual } = await supabase
+        await supabase
           .from("revisao_espacada")
-          .select("*")
-          .eq("aluno_id", validAlunoId)
-          .eq("item_tipo", "questao")
-          .eq("item_id", question.id)
-          .maybeSingle();
-
-        const repeticoesAnt = sm2Atual ? sm2Atual.repeticoes : 0;
-        const efAnt = sm2Atual ? sm2Atual.fator_facilidade : 2.5;
-        const intervaloAnt = sm2Atual ? sm2Atual.intervalo_dias : 1;
-
-        const novoSm2 = calcularProximoIntervaloSM2(
-          repeticoesAnt,
-          efAnt,
-          intervaloAnt,
-          acertou,
-          4
-        );
-
-        await supabase.from("revisao_espacada").upsert(
-          {
-            aluno_id: validAlunoId,
-            item_tipo: "questao",
-            item_id: question.id,
-            repeticoes: novoSm2.repeticoes,
-            fator_facilidade: novoSm2.fator_facilidade,
-            intervalo_dias: novoSm2.intervalo_dias,
-            proxima_revisao: novoSm2.proxima_revisao_data,
-            ultima_revisao: new Date().toISOString(),
-          },
-          { onConflict: "aluno_id,item_tipo,item_id" }
-        );
-
-        resultados.push({
-          questao_id: question.id,
-          acertou,
-          em_branco: false,
-          resposta_enviada: respostaUpper,
-          gabarito: gabaritoOficial,
-          sm2: novoSm2,
-        });
-      } catch (sm2Err) {
-        console.warn("Aviso ao atualizar SM-2 no simulado:", sm2Err);
-        resultados.push({
-          questao_id: question.id,
-          acertou,
-          em_branco: false,
-          resposta_enviada: respostaUpper,
-          gabarito: gabaritoOficial,
-        });
+          .upsert(sm2Upserts, { onConflict: "aluno_id,item_tipo,item_id" });
+      } catch (sm2BatchErr) {
+        console.warn("Aviso ao gravar lote SM-2 no simulado:", sm2BatchErr);
       }
     }
 
@@ -214,12 +234,16 @@ export async function POST(req: NextRequest) {
 
       if (attemptError) {
         console.warn("Aviso ao gravar tentativas no simulado, acionando fallback de compatibilidade:", attemptError.message);
-        const fallbackTentativas = tentativasParaInserir.map(({ resposta_aluno, ...rest }) => rest);
-        const { error: fallbackError } = await supabase
-          .from("tentativas")
-          .insert(fallbackTentativas);
-        if (fallbackError) {
-          console.error("Erro crítico ao gravar tentativas do simulado no fallback:", fallbackError);
+        const fallbackTentativas = tentativasParaInserir
+          .filter((item) => item.tipo_erro !== "simulado_em_branco")
+          .map(({ resposta_aluno, ...rest }) => rest);
+        if (fallbackTentativas.length > 0) {
+          const { error: fallbackError } = await supabase
+            .from("tentativas")
+            .insert(fallbackTentativas);
+          if (fallbackError) {
+            console.error("Erro crítico ao gravar tentativas do simulado no fallback:", fallbackError);
+          }
         }
       }
     }

@@ -152,10 +152,10 @@ function isSpuriousGabarito(gabarito?: string | null, isDiscursiva: boolean = fa
 }
 
 // Modal de Login
-function AuthPromptModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AuthPromptModal({ open, onClose, inline = false }: { open: boolean; onClose: () => void; inline?: boolean }) {
   if (!open) return null;
-  return createPortal(
-    <div className="fixed inset-0 z-[300] bg-black/75 flex items-center justify-center p-4 animate-fadeIn">
+  const content = (
+    <div className={`${inline ? "absolute inset-0 z-[90]" : "fixed inset-0 z-[300]"} bg-black/75 flex items-center justify-center p-4 animate-fadeIn`}>
       <div className="max-w-md w-full rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 shadow-xl relative text-[var(--ink-primary)] space-y-5">
         <button
           onClick={onClose}
@@ -201,8 +201,9 @@ function AuthPromptModal({ open, onClose }: { open: boolean; onClose: () => void
           </button>
         </div>
       </div>
-    </div>, document.body
+    </div>
   );
+  return inline ? content : createPortal(content, document.body);
 }
 
 // Modal de Confirmação para Entregar Simulado
@@ -1050,6 +1051,8 @@ function ResolverContent() {
             }),
           }).catch((e) => console.warn("Erro ao registrar submissão de Dica 5:", e));
         }
+      } else {
+        throw new Error("A MathAI Engine não retornou o conteúdo da dica. Tente novamente.");
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar dica";
@@ -2417,8 +2420,12 @@ function ResolverContent() {
     </div>
   );
 
-  const renderSocraticTutor = () => (
-    isSimuladoAtivo ? (
+  const renderSocraticTutor = (compact: boolean = false) => {
+    const hasOfficialGabarito = Boolean(
+      currentQ?.gabarito && !isSpuriousGabarito(currentQ.gabarito, isDiscursiva)
+    );
+
+    return isSimuladoAtivo ? (
         <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs flex items-center gap-3 text-[var(--ink-secondary)]">
           <ShieldAlert className="w-5 h-5 text-[var(--marker-amber)] shrink-0" />
           <p className="leading-relaxed">
@@ -2428,21 +2435,21 @@ function ResolverContent() {
       ) : (
         <>
           {/* TUTOR SOCRÁTICO E DICAS PROGRESSIVAS (MODO TREINO COM ESCADA PÓLYA DE 5 NÍVEIS) */}
-          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-5 space-y-4">
+          <div className={`min-w-0 max-w-full overflow-x-hidden bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl ${compact ? "p-3.5 space-y-3" : "p-5 space-y-4"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border-subtle)]">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
-                <h4 className="font-serif-math text-xs font-semibold uppercase tracking-wider text-[var(--ink-primary)]">
+              <div className="flex items-center gap-2 min-w-0">
+                <Lightbulb className="w-4 h-4 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+                <h4 className="font-serif-math text-xs font-semibold uppercase tracking-wider text-[var(--ink-primary)] break-words">
                   Tutor Socrático Adaptativo (Método Pólya · MathAI Engine)
                 </h4>
               </div>
-              <span className="text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] dark:border-[var(--marker-amber-border)]">
+              <span className="text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded-md bg-[var(--marker-blue-dim)] text-[var(--marker-blue)] border border-[var(--marker-blue-border)] dark:bg-[var(--marker-amber-dim)] dark:text-[var(--marker-amber)] dark:border-[var(--marker-amber-border)] shrink-0">
                 5 Níveis Maiêuticos
               </span>
             </div>
 
             {/* ESCADA MAIÊUTICA DE 5 NÍVEIS (PÓLYA) */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className={`grid gap-2 ${compact ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-5"}`}>
               {[
                 { nivel: 1, label: "Nível 1", sublabel: "Intuição", fullTitle: "Intuição & Hipóteses" },
                 { nivel: 2, label: "Nível 2", sublabel: "Lema", fullTitle: "Lema & Teorema Chave" },
@@ -2457,7 +2464,9 @@ function ResolverContent() {
                 return (
                   <div
                     key={step.nivel}
-                    className={`relative p-2.5 rounded-lg border text-left transition-colors ${
+                    className={`relative min-w-0 p-2.5 rounded-lg border text-left transition-colors ${
+                      step.nivel === 5 ? (compact ? "col-span-2" : "col-span-2 sm:col-span-1") : ""
+                    } ${
                       isSurrendered
                         ? "bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-300"
                         : isUnlocked
@@ -2468,7 +2477,7 @@ function ResolverContent() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider tabular-nums">
+                      <span className="text-[10px] font-bold uppercase tracking-wider tabular-nums whitespace-nowrap">
                         {step.label}
                       </span>
                       <span className="shrink-0">
@@ -2487,7 +2496,7 @@ function ResolverContent() {
                       {step.sublabel}
                     </div>
                     {step.nivel === 5 && (
-                      <div className="mt-1 text-[9px] font-bold tabular-nums text-rose-500 dark:text-rose-400 leading-none">
+                      <div className="mt-1 text-[9px] font-bold tabular-nums text-rose-500 dark:text-rose-400 leading-tight whitespace-nowrap">
                         Penaliza SM-2
                       </div>
                     )}
@@ -2497,45 +2506,49 @@ function ResolverContent() {
             </div>
 
             {/* BOTÕES DE AÇÃO E DISPARO DE DICA */}
-            <div className="pt-1">
+            <div className="pt-1 min-w-0 max-w-full">
               {hint5Used[currentIndex] ? (
-                <div className="w-full p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span>Resolução Oficial Revelada (Nível 5 — Questão computada como incorreta no SM-2)</span>
+                <div className="w-full min-w-0 p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-800 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <XCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+                    <span className="font-semibold leading-snug break-words">
+                      Resolução Oficial Revelada (Nível 5 · Nota 0 / <span className="whitespace-nowrap">SM-2</span> — revisão amanhã)
+                    </span>
                   </div>
                   <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md bg-rose-600 text-white shrink-0">
                     Bloqueada
                   </span>
                 </div>
               ) : currentHintLevel === 5 ? (
-                <div className="p-3.5 rounded-lg bg-rose-500/[0.06] border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="text-xs text-rose-800 dark:text-rose-200 leading-tight">
+                <div className={`min-w-0 max-w-full p-3.5 rounded-lg bg-rose-500/[0.06] border border-rose-500/30 flex flex-col ${compact ? "items-stretch gap-2.5" : "lg:flex-row lg:items-center justify-between gap-3"}`}>
+                  <div className="min-w-0 text-xs text-rose-800 dark:text-rose-200 leading-relaxed break-words">
                     <strong className="block text-rose-600 dark:text-rose-400 font-semibold mb-0.5">Aviso Pedagógico:</strong>
                     Você concluiu as 4 dicas investigativas. O Nível 5 revelará a resolução oficial completa passo a passo e computará erro na questão.
                   </div>
                   <button
+                    type="button"
                     onClick={pedirDicaSocratica}
                     disabled={loadingHint}
-                    className="w-full sm:w-auto shrink-0 px-4 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className={`w-full ${compact ? "" : "lg:w-auto lg:max-w-md"} min-w-0 px-3.5 py-2.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center justify-center gap-2 text-center whitespace-normal leading-snug cursor-pointer`}
                   >
-                    {loadingHint ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-                    <span>Ver Resolução Completa (Nível 5 — Contabiliza Questão como Errada)</span>
+                    {loadingHint ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                    <span className="min-w-0 break-words">Ver Resolução Completa (Nível 5 — Contabiliza Questão como Errada)</span>
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                <div className={`flex flex-wrap items-center justify-between gap-2.5 min-w-0 max-w-full ${compact ? "flex-col items-stretch" : ""}`}>
                   <button
+                    type="button"
                     onClick={pedirDicaSocratica}
                     disabled={loadingHint}
-                    className="flex items-center gap-2 text-xs font-bold rounded-lg px-4 py-2 bg-[var(--marker-blue-dim)] hover:opacity-90 border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] transition-colors cursor-pointer tabular-nums"
+                    className={`${compact ? "w-full justify-center" : "max-w-full"} min-w-0 flex items-center gap-2 text-xs font-bold rounded-lg px-4 py-2 bg-[var(--marker-blue-dim)] hover:opacity-90 border border-[var(--marker-blue-border)] text-[var(--marker-blue)] dark:bg-[var(--marker-amber-dim)] dark:border-[var(--marker-amber-border)] dark:text-[var(--marker-amber)] transition-colors cursor-pointer tabular-nums whitespace-normal text-left`}
                   >
                     {loadingHint ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
                     ) : (
-                      <Lightbulb className="w-3.5 h-3.5 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
+                      <Lightbulb className="w-3.5 h-3.5 shrink-0 text-[var(--marker-blue)] dark:text-[var(--marker-amber)]" />
                     )}
-                    <span>
+                    <span className="min-w-0 break-words">
                       Solicitar Dica Socrática (Nível {currentHintLevel}: {
                         currentHintLevel === 1 ? "Intuição" : currentHintLevel === 2 ? "Lema Chave" : currentHintLevel === 3 ? "Primeiro Passo" : "Destravamento"
                       })
@@ -2546,19 +2559,19 @@ function ResolverContent() {
                     type="button"
                     onClick={() => setShowHint5ConfirmModal(true)}
                     disabled={loadingHint}
-                    className="text-xs text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition-colors cursor-pointer py-1"
+                    className={`${compact ? "self-start" : ""} max-w-full text-xs text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition-colors cursor-pointer py-1 whitespace-normal text-left`}
                   >
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500/80" />
-                    <span>Pular para Nível 5 (Desistir & Ver Resolução)</span>
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500/80" />
+                    <span className="min-w-0 break-words">Pular para Nível 5 (Desistir & Ver Resolução)</span>
                   </button>
                 </div>
               )}
             </div>
 
             {hintError && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                <span>{hintError}</span>
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2 min-w-0">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span className="min-w-0 break-words">{hintError}</span>
               </div>
             )}
 
@@ -2579,12 +2592,12 @@ function ResolverContent() {
               </div>
             )}
 
-            {/* AVISO DE PENALIDADE DA 5ª DICA QUANDO ACIONADA */}
-            {hint5Used[currentIndex] && (
+            {/* AVISO DE PENALIDADE DETALHADO (APENAS FORA DO MODO COMPACTO PARA NÃO EMPURRAR A RESOLUÇÃO) */}
+            {hint5Used[currentIndex] && !compact && (
               <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
                 <div>
-                  <strong className="block font-semibold mb-0.5">Tentativa computada como incorreta (Nota 0 / SM-2):</strong>
+                  <strong className="block font-semibold mb-0.5">Tentativa computada como incorreta (Nota 0 / <span className="whitespace-nowrap">SM-2</span>):</strong>
                   <span>
                     A resolução oficial completa e o gabarito foram revelados pela 5ª Dica Socrática. A questão foi agendada para repetição espaçada amanhã para fixação pedagógica do conteúdo.
                   </span>
@@ -2594,7 +2607,7 @@ function ResolverContent() {
 
             {/* HISTÓRICO DE DICAS ACUMULADAS DA QUESTÃO (PROGRESSÃO MAIÊUTICA - DICA NOVA NO TOPO) */}
             {hintsHistory[currentIndex] && hintsHistory[currentIndex].length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-3 min-w-0 max-w-full">
                 {hintsHistory[currentIndex].slice().sort((a, b) => b.nivel - a.nivel).map((item, idx) => {
                   const nivelTitulos: Record<number, string> = {
                     1: "Nível 1: Intuição · Leitura de Hipóteses",
@@ -2606,16 +2619,17 @@ function ResolverContent() {
                   return (
                     <div
                       key={idx}
-                      className={`p-4 rounded-xl border text-xs leading-relaxed space-y-2.5 animate-fadeIn ${
+                      data-hint-level={item.nivel}
+                      className={`min-w-0 max-w-full p-3.5 sm:p-4 rounded-xl border text-xs leading-relaxed space-y-2.5 animate-fadeIn ${
                         item.nivel === 5
                           ? "bg-rose-500/[0.06] border-rose-500/25 text-[var(--ink-primary)]"
                           : "bg-[var(--marker-blue-dim)] border-[var(--marker-blue-border)] text-[var(--ink-primary)]"
                       }`}
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)] min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 min-w-0">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase ${
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase shrink-0 ${
                               item.nivel === 5
                                 ? "bg-rose-600 text-white"
                                 : "bg-[var(--marker-blue)] text-white dark:text-[#101316]"
@@ -2624,16 +2638,27 @@ function ResolverContent() {
                             <Sparkles className="w-3 h-3" />
                             {item.nivel === 5 ? "[RESOLUÇÃO OFICIAL]" : "[INFERÊNCIA DA IA]"}
                           </span>
-                          <span className="text-[11px] font-medium tabular-nums px-2 py-0.5 rounded-md bg-[var(--bg-board)] text-[var(--ink-secondary)] border border-[var(--border-subtle)]">
+                          <span className="text-[11px] font-medium tabular-nums px-2 py-0.5 rounded-md bg-[var(--bg-board)] text-[var(--ink-secondary)] border border-[var(--border-subtle)] break-words">
                             {nivelTitulos[item.nivel] || `Nível ${item.nivel}`}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-medium text-[var(--ink-muted)]">
-                          <span>Modelo: <strong>{item.modelo || "MathAI Engine"}</strong></span>
+                        <div className="flex items-center gap-2 text-[11px] font-medium text-[var(--ink-muted)] min-w-0">
+                          <span className="truncate">Modelo: <strong>{item.modelo || "MathAI Engine"}</strong></span>
                         </div>
                       </div>
 
-                      <div className="text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto">
+                      {item.nivel === 5 && hasOfficialGabarito && currentQ?.gabarito && (
+                        <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 space-y-1 min-w-0 max-w-full">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                            Gabarito Oficial
+                          </span>
+                          <div className="text-xs font-semibold min-w-0 max-w-full overflow-x-auto break-words">
+                            <MathText text={currentQ.gabarito} />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words">
                         <MathText text={item.dica} />
                       </div>
                     </div>
@@ -2641,15 +2666,70 @@ function ResolverContent() {
                 })}
               </div>
             ) : hints[currentIndex] ? (
-              <div className="p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs text-[var(--ink-primary)] leading-relaxed space-y-3 animate-fadeIn">
-                <div className="text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto">
+              <div className="min-w-0 max-w-full p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs text-[var(--ink-primary)] leading-relaxed space-y-3 animate-fadeIn">
+                <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words">
                   <MathText text={hints[currentIndex]} />
                 </div>
               </div>
             ) : null}
           </div>
         </>
-      )
+      );
+  };
+
+  const renderHint5ConfirmModal = (inFocusMode: boolean) => (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirmação da Rendição Pedagógica Nível 5"
+      className={`${inFocusMode ? "absolute inset-0 z-[90]" : "fixed inset-0 z-[300]"} flex items-center justify-center overflow-y-auto p-3 sm:p-4 bg-black/80 animate-fadeIn`}
+    >
+      <div className="my-auto bg-[var(--bg-card)] border border-[var(--marker-red-border)] rounded-xl p-4 sm:p-6 max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-xl space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 rounded-lg bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="space-y-1 min-w-0">
+            <h3 className="text-base font-semibold text-[var(--ink-primary)] font-serif-math tracking-tight">
+              Rendição Pedagógica · Revelar Nível 5?
+            </h3>
+            <p className="text-xs text-[var(--ink-secondary)] leading-relaxed">
+              A <strong>Dica de Nível 5</strong> fornecerá a resolução oficial completa passo a passo, o lema determinante e o gabarito definitivo da questão.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] space-y-2 text-xs text-[var(--ink-primary)] leading-relaxed">
+          <strong className="block font-semibold text-[var(--marker-red)]">
+            Consequências Pedagógicas Imediatas da Rendição:
+          </strong>
+          <ul className="list-disc pl-4 space-y-1 text-[11px] text-[var(--ink-secondary)]">
+            <li>A questão será computada imediatamente como <strong>ERRADA</strong> (marcada em vermelho no topo).</li>
+            <li>O contador de questões respondidas será incrementado automaticamente.</li>
+            <li>O envio de alternativas ou nova dedução será <strong>permanentemente bloqueado</strong> nesta questão.</li>
+            <li>O algoritmo <span className="whitespace-nowrap">SM-2</span> registrará penalidade máxima (repetições zeradas, intervalo diário de revisão).</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
+          <button
+            type="button"
+            onClick={() => setShowHint5ConfirmModal(false)}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer text-center"
+          >
+            Cancelar (Continuar Tentando)
+          </button>
+          <button
+            type="button"
+            onClick={confirmarEDesbloquearDica5}
+            className="w-full sm:w-auto px-5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-normal text-center"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span>Confirmar Rendição & Ver Resolução</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   return (
@@ -3510,56 +3590,8 @@ function ResolverContent() {
         )}
       </div>
 
-      {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (REVELA GABARITO & MARCA INCORRETO) */}
-      {showHint5ConfirmModal && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 animate-fadeIn">
-          <div className="bg-[var(--bg-card)] border border-[var(--marker-red-border)] rounded-xl p-6 max-w-lg w-full shadow-xl space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-[var(--ink-primary)] font-serif-math tracking-tight">
-                  Rendição Pedagógica · Revelar Nível 5?
-                </h3>
-                <p className="text-xs text-[var(--ink-secondary)] leading-relaxed">
-                  A <strong>Dica de Nível 5</strong> fornecerá a resolução oficial completa passo a passo, o lema determinante e o gabarito definitivo da questão.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] space-y-2 text-xs text-[var(--ink-primary)] leading-relaxed">
-              <strong className="block font-semibold text-[var(--marker-red)]">
-                Consequências Pedagógicas Imediatas da Rendição:
-              </strong>
-              <ul className="list-disc pl-4 space-y-1 text-[11px] text-[var(--ink-secondary)]">
-                <li>A questão será computada imediatamente como <strong>ERRADA</strong> (marcada em vermelho no topo).</li>
-                <li>O contador de questões respondidas será incrementado automaticamente.</li>
-                <li>O envio de alternativas ou nova dedução será <strong>permanentemente bloqueado</strong> nesta questão.</li>
-                <li>O algoritmo SM-2 registrará penalidade máxima (repetições zeradas, intervalo diário de revisão).</li>
-              </ul>
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
-              <button
-                type="button"
-                onClick={() => setShowHint5ConfirmModal(false)}
-                className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer text-center"
-              >
-                Cancelar (Continuar Tentando)
-              </button>
-              <button
-                type="button"
-                onClick={confirmarEDesbloquearDica5}
-                className="w-full sm:w-auto px-5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Confirmar Rendição & Ver Resolução</span>
-              </button>
-            </div>
-          </div>
-        </div>, document.body
-      )}
+      {/* MODAL DE CONFIRMAÇÃO DA 5ª DICA SOCRÁTICA (FORA DO MODO FOCO; NO FOCO RENDERIZA DENTRO DO OVERLAY) */}
+      {showHint5ConfirmModal && !modoFocoAtivo && createPortal(renderHint5ConfirmModal(false), document.body)}
 
       {/* MODAL DE CONFIRMAÇÃO DE ENTREGA */}
             <ConfirmarEntregaModal
@@ -3662,8 +3694,8 @@ function ResolverContent() {
               emBrancoCount={emBrancoCount}
             />
 
-      {/* MODAL DE AVISO: LOGAR PARA RESPONDER */}
-      <AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      {/* MODAL DE AVISO: LOGAR PARA RESPONDER (FORA DO MODO FOCO; NO FOCO RENDERIZA DENTRO DO OVERLAY) */}
+      {!modoFocoAtivo && <AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />}
 
       {/* MODAL DE REPORTAR INCONSISTÊNCIA NA QUESTÃO */}
       <ReportarQuestaoModal
@@ -3707,7 +3739,15 @@ function ResolverContent() {
           isEvaluating={loadingDiscursive}
           evaluationResult={discursiveEvaluations[currentQ.id]}
           onConfirmOcr={confirmarLeituraOcr}
-          socraticTutor={renderSocraticTutor()}
+          socraticTutor={renderSocraticTutor(true)}
+          hint5Confirmation={showHint5ConfirmModal ? renderHint5ConfirmModal(true) : null}
+          authPrompt={<AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} inline />}
+          hasBlockingModal={showHint5ConfirmModal || showAuthModal}
+          onDismissModal={() => {
+            if (showHint5ConfirmModal) setShowHint5ConfirmModal(false);
+            if (showAuthModal) setShowAuthModal(false);
+          }}
+          isQuestionLocked={Boolean(hint5Used[currentIndex])}
           onClose={() => setModoFocoAtivo(false)}
         />
       )}

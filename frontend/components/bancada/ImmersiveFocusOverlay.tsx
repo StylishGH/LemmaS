@@ -55,6 +55,11 @@ export interface ImmersiveFocusOverlayProps {
   evaluationResult?: DiscursiveEvaluationData;
   onConfirmOcr?: (text: string) => Promise<void>;
   socraticTutor: React.ReactNode;
+  hint5Confirmation?: React.ReactNode;
+  authPrompt?: React.ReactNode;
+  hasBlockingModal?: boolean;
+  onDismissModal?: () => void;
+  isQuestionLocked?: boolean;
   // Ação de Sair
   onClose: () => void;
 }
@@ -78,11 +83,17 @@ export default function ImmersiveFocusOverlay({
   evaluationResult,
   onConfirmOcr,
   socraticTutor,
+  hint5Confirmation,
+  authPrompt,
+  hasBlockingModal = false,
+  onDismissModal,
+  isQuestionLocked = false,
   onClose,
 }: ImmersiveFocusOverlayProps) {
   const { isLight } = useTheme();
   const [showTutor, setShowTutor] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
+  const [isMobileWidth, setIsMobileWidth] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const [hudTop, setHudTop] = useState(12);
@@ -91,25 +102,39 @@ export default function ImmersiveFocusOverlay({
   // Bug fix: bloqueia scroll da página por baixo do overlay
   useLockBodyScroll();
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobileWidth(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   // Fecha o modo imersivo via tecla Escape; navega com ← →
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey ||
           target?.closest("input, textarea, select, [contenteditable='true'], [role='textbox']")) return;
-      if (e.key === "Escape" && !document.fullscreenElement) {
-        onClose();
-      } else if (e.key === "ArrowRight" && onNext) {
+      if (e.key === "Escape") {
+        if (hasBlockingModal) {
+          e.preventDefault();
+          onDismissModal?.();
+        } else if (!document.fullscreenElement) {
+          onClose();
+        }
+      } else if (e.key === "ArrowRight" && onNext && !hasBlockingModal) {
         e.preventDefault();
         onNext();
-      } else if (e.key === "ArrowLeft" && onPrev) {
+      } else if (e.key === "ArrowLeft" && onPrev && !hasBlockingModal) {
         e.preventDefault();
         onPrev();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, onNext, onPrev]);
+  }, [onClose, onNext, onPrev, hasBlockingModal, onDismissModal]);
 
   useEffect(() => {
     const updateFullscreen = () => setIsNativeFullscreen(Boolean(document.fullscreenElement));
@@ -123,13 +148,18 @@ export default function ImmersiveFocusOverlay({
     const main = mainRef.current;
     if (!main) return;
     const viewport = main.querySelector("canvas")?.parentElement?.parentElement;
-    const observer = new ResizeObserver(() => {
+    const toolbar = viewport?.previousElementSibling as HTMLElement | null;
+    const updateTop = () => {
       const top = activeEngine === "spen-dual" && viewport
-        ? viewport.getBoundingClientRect().top - main.getBoundingClientRect().top + 8 : 12;
+        ? Math.max(12, Math.round(viewport.getBoundingClientRect().top - main.getBoundingClientRect().top + 8))
+        : 12;
       setHudTop(top);
-    });
+    };
+    updateTop();
+    const observer = new ResizeObserver(updateTop);
     observer.observe(main);
     if (viewport) observer.observe(viewport);
+    if (toolbar) observer.observe(toolbar);
     return () => observer.disconnect();
   }, [activeEngine, currentIndex]);
 
@@ -173,7 +203,7 @@ export default function ImmersiveFocusOverlay({
           : "bg-[#0e0c1b] border-amber-500/25"
       }`}>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-serif-math font-bold tracking-wider ${
+          <div className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-serif-math font-bold tracking-wider ${
             isLight
               ? "bg-amber-500/10 border-amber-500/25 text-amber-700"
               : "bg-amber-500/15 border-amber-500/30 text-[#d9b452]"
@@ -296,15 +326,16 @@ export default function ImmersiveFocusOverlay({
           <aside
             id="focus-socratic-tutor"
             aria-label="Dicas socráticas no Modo Foco"
-            className="absolute inset-y-3 right-3 z-[60] w-[min(560px,calc(100%-24px))] overflow-y-auto rounded-2xl border border-amber-500/30 bg-white dark:bg-[#141222] shadow-2xl select-text"
+            style={{ top: isMobileWidth ? hudTop + 48 : hudTop }}
+            className="absolute inset-x-2 md:left-auto md:right-3 bottom-2 sm:bottom-3 z-[60] w-auto md:w-[400px] lg:w-[440px] xl:w-[500px] max-w-[calc(100%-16px)] overflow-x-hidden overflow-y-auto rounded-2xl border border-amber-500/30 bg-white dark:bg-[#141222] shadow-2xl select-text"
           >
             <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-amber-500/20 bg-white dark:bg-[#141222] px-4 py-3">
-              <strong className="text-sm">Dicas socráticas · Questão {currentIndex + 1}</strong>
-              <button type="button" onClick={() => setShowTutor(false)} aria-label="Fechar dicas socráticas" className="p-2 rounded-lg hover:bg-amber-500/10">
+              <strong className="text-sm truncate">Dicas socráticas · Questão {currentIndex + 1}</strong>
+              <button type="button" onClick={() => setShowTutor(false)} aria-label="Fechar dicas socráticas" className="p-2 rounded-lg hover:bg-amber-500/10 shrink-0">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-3">{socraticTutor}</div>
+            <div className="min-w-0 max-w-full overflow-x-hidden p-2.5 sm:p-3">{socraticTutor}</div>
           </aside>
         )}
 
@@ -323,9 +354,16 @@ export default function ImmersiveFocusOverlay({
             evaluationResult={evaluationResult}
             onConfirmOcr={onConfirmOcr}
             onCloseFocusMode={onClose}
+            dockSide={showTutor ? "left" : "right"}
+            compact={showTutor}
+            isLocked={isQuestionLocked}
           />
         </div>
       </main>
+
+      {/* MODAIS BLOQUEANTES DENTRO DO CONTAINER (COMPATÍVEL COM TELA CHEIA NATIVA TOP-LAYER) */}
+      {hint5Confirmation}
+      {authPrompt}
     </div>,
     document.body
   );

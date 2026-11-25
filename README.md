@@ -17,6 +17,19 @@
 
 ---
 
+## Portfolio case study
+
+**LemmaS is an applied ML and data engineering case study in mathematics education.** I built a learning workflow that captures attempts, offers tiered hints, and supports feedback on written solutions. The research question is whether linking exercises through mathematical lemmas helps students find useful practice.
+
+| Area | Evidence to review |
+| --- | --- |
+| Data engineering | [Data architecture](data/schemas/README.md) and the [export regression tests](tests/test_data_architecture_pipeline.py) show how attempts, model outputs and human review are tracked. |
+| Applied ML and mathematics | The [62-question anchoring experiment](scripts/pipeline/RELATORIO_MUSE_ancoragem_62.md) traces the connection between mathematical lemmas and exercise similarity. The hybrid's pedagogical utility still needs independent relevance judgments. |
+| AI engineering | [AI pipeline](docs/architecture/ai-pipeline.md) and [OCR arithmetic verification](docs/architecture/ocr-arithmetic-review.md) describe the tutor's model routing and deterministic checks. |
+| Software engineering | [System architecture](docs/architecture/system.md) and [CI](.github/workflows/ci.yml) describe where the code runs and how it is checked. |
+
+The live product provides the interaction. The research artifacts show the experiment design and current limits. Human-validated tutor evaluation and calibrated IRT remain research milestones.
+
 ## 📌 Executive Summary
 
 What happens when an adaptive learning platform treats the student's problem-solving process as **structured data** rather than merely logging binary correct/incorrect answers?
@@ -172,7 +185,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 
 ## 🛠️ Data Engineering & MLOps Highlights
 
-- **Data Integrity & Traceability:** Every student submission computes a deterministic SHA-256 digest over the raw input (canvas strokes, transcribed text, or uploaded image bytes) before entering the inference pipeline.
+- **Data Integrity & Traceability:** The tutor records hashes for available inputs to support provenance. A digest can verify matching bytes when the underlying data is available.
 - **Strict Data Contracts:** Clean Pydantic schemas (DTOs) enforce input/output contracts across all FastAPI routes.
 - **Relational Integrity with Row Level Security (RLS):** 20 PostgreSQL tables hosted on Supabase enforce multi-tenant isolation so no student data can ever leak across sessions.
 - **Multi-Model Strategy Pattern:** A dynamic routing gateway decouples application code from concrete AI providers:
@@ -192,45 +205,6 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **Applied AI & Vision** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
 | **Psychometrics & Memory**| SM-2 Engine (Active in production), FSRS-inspired scheduler (Experimental), IRT 3PL (Research Roadmap) |
 | **Testing & Quality** | pytest (Backend & Core architecture), TypeScript, Next.js builds, Node.js API integration tests, and browser checks |
-
----
-
-## 🚀 Running Locally
-
-### Prerequisites
-- Python 3.12+
-- Node.js 20+
-- A Supabase project (or local PostgreSQL)
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/StylishGH/LemmaS.git
-cd LemmaS
-```
-
-### 2. Start Backend API
-```bash
-cd backend
-python -m venv .venv
-
-# Linux / macOS:
-source .venv/bin/activate
-# Windows:
-.venv\Scripts\Activate.ps1
-
-pip install -r requirements.txt
-cp ../.env.example .env
-uvicorn app.main:app --reload --port 8000
-```
-*API documentation will be available at `http://localhost:8000/docs`.*
-
-### 3. Start Frontend
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-*Open `http://localhost:3000` in your browser.*
 
 ---
 

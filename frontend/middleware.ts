@@ -113,6 +113,6 @@ export const config = {
      * - public folder
      * - api routes (handled separately)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|public|api).*)",
   ],
 };
