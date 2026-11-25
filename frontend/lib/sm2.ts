@@ -41,15 +41,16 @@ export function calcularProximoIntervaloSM2(
   } else {
     novasRepeticoes = 0;
     novoIntervalo = 1;
-    const nota = confiancaOuNota !== undefined ? Math.max(0, Math.min(2, confiancaOuNota)) : 1;
-    const deltaQ = 5 - nota;
-    novoEf = ef + (0.1 - deltaQ * (0.08 + deltaQ * 0.02));
-    novoEf = Math.max(1.3, Number(novoEf.toFixed(2)));
+    // Alinhado com backend/app/services/lemmas_core/sm2.py: redução suave (-0.2) evitando Ease Hell
+    novoEf = Math.max(1.3, Number((ef - 0.2).toFixed(2)));
   }
 
   const proximaData = new Date(dataReferencia);
   proximaData.setDate(proximaData.getDate() + novoIntervalo);
-  const proximaStr = proximaData.toISOString().split("T")[0];
+  const yyyy = proximaData.getFullYear();
+  const mm = String(proximaData.getMonth() + 1).padStart(2, "0");
+  const dd = String(proximaData.getDate()).padStart(2, "0");
+  const proximaStr = `${yyyy}-${mm}-${dd}`;
 
   return {
     repeticoes: novasRepeticoes,

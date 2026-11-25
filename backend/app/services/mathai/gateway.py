@@ -513,10 +513,11 @@ class DeterministicAutonomousProvider(BaseLLMProvider):
                         "Verificação da consistência algébrica e conclusão.",
                     ],
                     "estrategia_identificada": "Análise Estrutural Canônica",
-                    "status_resolucao": "correto",
+                    "status_resolucao": "inconclusivo",
+                    "precisa_revisao_humana": True,
                     "diagnostico": (
-                        "O raciocínio matemático apresentado foi registrado com integridade. "
-                        "O motor de IA ativou o modo determinístico de alta estabilidade."
+                        "O raciocínio matemático apresentado foi registrado com integridade, "
+                        "mas os provedores de IA estavam indisponíveis para validar a prova."
                     ),
                     "metodo_alternativo": None,
                     "linha_do_erro": None,

@@ -22,15 +22,13 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## AI provider routing
 
-The `/api/ai/hint` and `/api/ai/compare` routes are proxied by this Next.js app to
-the FastAPI backend. For these routes, FastAPI calls providers directly in
-sequence: NVIDIA NIM, Groq, OpenRouter, then River when configured. Provider
-credentials and model settings belong in the backend environment (Render), never
-in Vercel or with a `NEXT_PUBLIC_` prefix. Next.js must not start a second provider
-cascade when the backend is slow or unavailable.
+The Next.js handlers for tutor evaluation, hints and solution comparison can forward
+requests to FastAPI on Render. Some paths use provider fallbacks in Next.js.
+Provider credentials are server-side settings.
 
-For local development, point `LEMMAS_BACKEND_URL` at the local FastAPI server
-(for example, `http://localhost:8001`) and run the backend separately.
+Set `LEMMAS_BACKEND_URL` per environment. Development defaults to
+`http://127.0.0.1:8000` and requires a separately running FastAPI process.
+`BACKEND_API_URL` is a legacy alias that also enables the generic proxy in production.
 
 ## Learn More
 

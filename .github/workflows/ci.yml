@@ -25,6 +25,7 @@ jobs:
           SECRET_KEY: "ci-test-secret-key-for-backend-testing-purposes-32b"
         run: |
           pytest \
+            tests/test_data_architecture_pipeline.py \
             tests/test_backend_architecture.py \
             tests/test_lemmas_core.py \
             tests/test_flashcards_fsrs.py \
@@ -53,7 +54,7 @@ jobs:
         run: npm ci
       - name: Test question filters, prefetch cache, and math rendering
         working-directory: frontend
-        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs scripts/test-canvas-shapes.mjs ../tests/community/contracts.test.mjs ../tests/ocr/solve-route.test.cjs
+        run: node --test scripts/test-question-page-cache.mjs scripts/test-math-preview.mjs scripts/test-question-filters.mjs scripts/test-math-display.mjs scripts/test-bloco-a-minor.mjs scripts/test-canvas-shapes.mjs scripts/test-security-and-math-fixes.mjs ../tests/community/contracts.test.mjs ../tests/ocr/solve-route.test.cjs
       - name: Build Next.js 16 (Turbopack)
         working-directory: frontend
         env:

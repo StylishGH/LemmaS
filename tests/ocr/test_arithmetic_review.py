@@ -45,4 +45,33 @@ class ArithmeticReviewTests(unittest.TestCase):
         self.assertEqual(check_arithmetic('$(x+1)^2 - x^2 - 2x = 5$')['status'], 'conflict')
         self.assertEqual(check_arithmetic('$2x = 6$')['status'], 'unsupported')
 
+
+    def test_step_equivalence_univariate_and_sign_error(self):
+        ok = check_arithmetic(r'$2x + 4 = 10 \implies 2x = 6 \implies x = 3$')
+        self.assertEqual(ok['status'], 'consistent')
+        self.assertTrue(any(c.get('engine') == 'sympy-step' and c['equal'] for c in ok['checks']))
+
+        bad = check_arithmetic(r'$2x + 4 = 10 \implies 2x = 14 \implies x = 7$')
+        self.assertEqual(bad['status'], 'conflict')
+        self.assertTrue(any(c.get('engine') == 'sympy-step' and not c['equal'] for c in bad['checks']))
+
+    def test_step_equivalence_quadratic_and_multivariate_schwartz_zippel(self):
+        self.assertEqual(check_arithmetic(r'$x^2 - 5x + 6 = 0 \implies (x-2)(x-3) = 0$')['status'], 'consistent')
+        self.assertEqual(check_arithmetic(r'$x^2 - 5x + 6 = 0 \implies (x-2)(x+3) = 0$')['status'], 'conflict')
+        self.assertEqual(check_arithmetic('x + y = 5 => 2*x + 2*y = 10')['status'], 'consistent')
+        self.assertEqual(check_arithmetic('x + y = 5 => x = 5 + y')['status'], 'conflict')
+
+    def test_step_equivalence_avoids_false_positives_on_disjunction_and_domain_restriction(self):
+        self.assertEqual(check_arithmetic('As raízes são $x = 2$ ou $x = 5$')['status'], 'unsupported')
+        self.assertEqual(check_arithmetic(r'$x^2 = 4 \implies x = 2$')['status'], 'unsupported')
+
+    def test_protect_evaluation_blocks_sycophancy_on_step_conflict(self):
+        result = protect_evaluation(
+            {'veredito': 'aprovado', 'resultado_final_correto': True, 'transcricao_latex': '2x + 4 = 10 => 2x = 14'},
+            has_image=False,
+            confirmed_text='2x + 4 = 10 => 2x = 14',
+        )
+        self.assertEqual(result['veredito'], 'parcial')
+        self.assertFalse(result['resultado_final_correto'])
+
 if __name__ == '__main__': unittest.main()

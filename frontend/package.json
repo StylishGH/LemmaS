@@ -8,15 +8,8 @@
     "start": "next start",
     "lint": "eslint"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "dependencies": {
     "@base-ui/react": "1.5.0",
-    "@higgsfield/app-landing": "*",
-    "@higgsfield/fnf": "*",
-    "@higgsfield/fnf-react": "*",
-    "@higgsfield/quanta": "*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.117.3",
     "@types/katex": "^0.16.8",

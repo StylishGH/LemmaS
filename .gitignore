@@ -158,3 +158,6 @@ data/repertorio/temp_sql/
 # Anki packages e flashcards pessoais
 *.apkg
 flashcards_*.txt
+
+# Exports derived from student data
+/data/exports/

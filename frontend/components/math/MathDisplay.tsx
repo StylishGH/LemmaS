@@ -29,7 +29,7 @@ export function MathDisplay({
         displayMode,
         throwOnError: false,
         strict: "warn",
-        trust: true,
+        trust: false,
         macros: KATEX_MACROS,
       });
 

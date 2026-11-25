@@ -1,3 +1,6 @@
+import { tutorBackendTimeoutMs, tutorBackendUrl } from "@/lib/backend-url";
+import { enforceAiRateLimit } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   computeContentHash,
@@ -5,6 +8,7 @@ import {
   resolveStableExerciseId,
   getCachedHint,
   saveCachedHint,
+  validateHintForCache,
 } from "@/lib/hint-cache";
 import { autoWrapLatexExpressions } from "@/lib/math-parser";
 import { generateGeminiContent } from "@/lib/gemini";
@@ -17,7 +21,7 @@ import { safeParseJsonWithLatex } from "@/lib/json-safe";
 // Limite máximo de execução na Vercel (Edge/Serverless Function)
 export const maxDuration = 30;
 
-const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
+const BACKEND_URL = tutorBackendUrl();
 
 function sanitizeAuthorOrTopic(topico: string, materia?: string): string {
   if (!topico) return materia || "Matemática";
@@ -36,6 +40,16 @@ function cleanRawSolution(raw: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient();
+    const rateLimit = await enforceAiRateLimit(req, "ai_hint", supabase);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Limite temporário de requisições atingido. Aguarde alguns segundos e tente novamente." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
+    const requestId = req.headers.get("x-request-id") || globalThis.crypto.randomUUID();
     const authorization = req.headers.get("authorization");
 
     const body = await req.json();
@@ -96,13 +110,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 1. Backend FastAPI (timeout curto de 3.5s para evitar congelamento em cold-start do Render)
+    // 1. Backend FastAPI (timeout configurável via LEMMAS_BACKEND_TIMEOUT_MS + correlation ID)
     if (authorization?.startsWith("Bearer ")) {
       try {
         const response = await fetch(BACKEND_URL + "/api/tutor/hint", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Request-Id": requestId,
             Authorization: authorization,
           },
           body: JSON.stringify({
@@ -123,7 +138,7 @@ export async function POST(req: NextRequest) {
             tentativas_anteriores: tentativas_anteriores || null,
             justificativa_texto: body.justificativa || body.rascunho || null,
           }),
-          signal: AbortSignal.timeout(3500),
+          signal: AbortSignal.timeout(tutorBackendTimeoutMs(8000)),
           cache: "no-store",
         });
 
@@ -151,12 +166,15 @@ export async function POST(req: NextRequest) {
     const PROMPT_SISTEMA_HINT = `Você é o Tutor Socrático do LEMMAS (MathAI Engine).
 Gere uma dica pedagógica do NÍVEL ${level} (1 a 5) para a questão matemática abaixo.
 
-NÍVEIS DE DICA:
-1. Simbologia/Notação — Identificar símbolos, definir termos, esclarecer notação sem entregar a conta
-2. Primeiro Passo no Rascunho — Indicar a primeira manipulação algébrica ou construção geométrica
-3. Encadeamento Dedutivo Intermediário — Conectar passos e mostrar como avançar na dedução
-4. Pulo do Gato/Pegadinha de Banca — Revelar o insight decisivo ou armadilha comum da questão
-5. Resolução Oficial Definitiva — Demonstração completa passo a passo com conclusão explícita
+GUARDRAIL ESTRITO DE RESTRIÇÃO NEGATIVA (NÍVEIS 1 A 4):
+- É ESTRITAMENTE PROIBIDO revelar a alternativa correta (A, B, C, D, E) ou vazar o valor numérico/algébrico final do gabarito nos Níveis 1 a 4.
+
+NÍVEIS DE DICA (ALINHADOS AO TUTOR SOCRÁTICO):
+1. Dados & Foco — Atenção aos dados do enunciado e significado/notação sem citar fórmulas ou fazer contas (termine com pergunta)
+2. Conceito & Lema — Sugerir qual teorema, lema ou propriedade conecta as informações sem substituir números (termine com pergunta)
+3. Primeiro Passo — Orientar a montagem da primeira equação ou construção auxiliar sem resolver até o fim
+4. Estruturação Intermediária — Destravar o ponto crítico ou armadilha da dedução, parando antes do arremate final
+5. Resolução Completa — Demonstração integral rigorosa passo a passo até o gabarito final
 
 REGRAS MANDATÓRIAS DE LATEX E FORMATAÇÃO:
 - Use LaTeX delimitado por $...$ (inline) ou $$...$$ (bloco) EXCLUSIVAMENTE para símbolos, variáveis, números e expressões matemáticas.
@@ -205,8 +223,9 @@ INSTRUÇÃO: Gere a dica do nível ${level} conforme a pedagogia socrática. Ret
       const hintText = parsed?.hint_text || parsed?.dica || parsed?.hint;
       if (hintText && typeof hintText === "string") {
         const formattedHint = autoWrapLatexExpressions(hintText);
-        if (use_cache && !isIndividualized) {
-          saveCachedHint({
+        const validation = validateHintForCache(formattedHint, level, cleanedGabarito, "google");
+        if (use_cache && !isIndividualized && validation.isValid) {
+          await saveCachedHint({
             cacheKey,
             exerciseId: stableId,
             questaoId: numericId,
@@ -247,8 +266,9 @@ INSTRUÇÃO: Gere a dica do nível ${level} conforme a pedagogia socrática. Ret
         const hintText = parsed?.hint_text || parsed?.dica || parsed?.hint;
         if (hintText && typeof hintText === "string") {
           const formattedHint = autoWrapLatexExpressions(hintText);
-          if (use_cache && !isIndividualized) {
-            saveCachedHint({
+          const validation = validateHintForCache(formattedHint, level, cleanedGabarito, "nvidia-nemotron");
+          if (use_cache && !isIndividualized && validation.isValid) {
+            await saveCachedHint({
               cacheKey,
               exerciseId: stableId,
               questaoId: numericId,

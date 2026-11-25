@@ -187,29 +187,16 @@ def main():
 
         for kw_set, kw_mat, lid, lcode in keyword_rules:
             if kw_mat == qmateria:
-                # Se todas as palavras-chave do lema aparecem no enunciado
-                if all(w in qenunciado for w in kw_set):
+                # Exige fronteira de palavra para evitar falsos positivos por substring
+                if all(re.search(rf"\b{re.escape(w)}\b", qenunciado) for w in kw_set):
                     assigned_lid = lid
                     assigned_lcode = lcode
                     break
 
-        # 2. Se não encontrou por palavra-chave, busca no cluster de (materia, topico)
-        if not assigned_lid:
-            top_key = (qmateria, normalizar_chave(qtopico))
-            candidates = by_materia_topico.get(top_key)
-            if not candidates:
-                # Fallback: lemas da matéria
-                candidates = by_materia.get(qmateria) or by_materia["Álgebra"]
-
-            # Round-robin determinístico para distribuir uniformemente nos lemas do tópico
-            idx = topic_allocator[top_key] % len(candidates)
-            topic_allocator[top_key] += 1
-            chosen = candidates[idx]
-            assigned_lid = chosen["id"]
-            assigned_lcode = chosen["codigo"]
-
-        question_updates.append((qid, assigned_lid, assigned_lcode))
-        lema_counts[assigned_lid] += 1
+        # Preserva ausência honesta (None) quando não há match lexical confiável (proibido Round-Robin)
+        if assigned_lid is not None:
+            question_updates.append((qid, assigned_lid, assigned_lcode))
+            lema_counts[assigned_lid] += 1
 
     print(f"✅ {len(question_updates)} questões vinculadas com sucesso!")
     print(f"[*] Lemas únicos que receberam questões: {len(lema_counts)} de {len(lemmas_db)}")

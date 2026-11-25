@@ -38,27 +38,13 @@ BEGIN
         VALUES (
             'resolucoes',
             'resolucoes',
-            true,
+            false,
             10485760, -- 10 MB
             ARRAY['image/png', 'image/jpeg', 'image/webp']
         )
         ON CONFLICT (id) DO UPDATE SET
-            public = true,
+            public = false,
             file_size_limit = 10485760;
-    END IF;
-END $$;
-
--- 4. POLÍTICAS DE ACESSO STORAGE (PÚBLICO LEITURA / ANON INSERÇÃO)
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
-        DROP POLICY IF EXISTS "Acesso publico resolucoes" ON storage.objects;
-        CREATE POLICY "Acesso publico resolucoes" ON storage.objects
-            FOR SELECT USING (bucket_id = 'resolucoes');
-
-        DROP POLICY IF EXISTS "Insercao resolucoes autenticadas e anonimas" ON storage.objects;
-        CREATE POLICY "Insercao resolucoes autenticadas e anonimas" ON storage.objects
-            FOR INSERT WITH CHECK (bucket_id = 'resolucoes');
     END IF;
 END $$;
 
@@ -102,3 +88,7 @@ LEFT JOIN public.avaliacoes_ia a ON a.tentativa_id = t.id
 LEFT JOIN public.feedbacks_aluno f ON f.tentativa_id = t.id;
 
 COMMENT ON VIEW public.vw_sft_dataset_export IS 'View unificada para exportação de dados para Fine-Tuning (SFT/DPO), TRI e análise de distratores.';
+
+ALTER VIEW public.vw_sft_dataset_export SET (security_invoker = true);
+REVOKE ALL ON public.vw_sft_dataset_export FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON public.vw_sft_dataset_export TO service_role;
