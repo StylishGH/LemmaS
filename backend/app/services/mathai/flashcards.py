@@ -9,46 +9,38 @@ def calcular_proximo_intervalo_fsrs(
     elapsed_days: float = 0.0
 ) -> Tuple[float, float, int]:
     """
-    Deterministic FSRS implementation (based on FSRS-4.5).
-    Returns (new_stability, new_difficulty, new_interval_days)
+    Experimental FSRS-inspired DSR scheduler (uncalibrated prototype).
+    Uses the FSRS power-law forgetting curve R(t) = (1 + (19/81) * t / S)^(-0.5)
+    so interval matches 90% target retention (I ≈ S) while incorporating D and R(t).
+    Returns (new_stability, new_difficulty, new_interval_days).
     """
-    # Constants from FSRS-4.5 (approximate)
-    # For demonstration purposes; replace with fitted parameters in production.
-    # These values are illustrative.
-    w = [0.40255, 1.18385, 3.1734, 15.69145, 7.1949, 0.5335, 1.46165, 0.0543,
-         1.15025, 0.2596, 1.49795, 0.0807, 0.9421, 2.18455, 0.1088, 1.8611,
-         0.0579, 0.0968, 1.44, 0.0689, -0.957, 0.1787, -0.801, 0.9338, 0.2017,
-         0.2746, 0.4793, 1.4657, 0.1166, 1.558, 0.228, 0.319]
+    safe_s = max(0.1, min(float(stability), 1000.0))
+    safe_d = max(1.0, min(float(difficulty), 10.0))
+    t = max(0.0, float(elapsed_days))
 
-    def _f(w, rating, stability, difficulty, reps, elapsed_days):
-        # Helper to compute components
-        return w[0] + w[1]*rating + w[2]*stability + w[3]*difficulty + w[4]*reps + w[5]*elapsed_days
+    # FSRS power-law retrievability (at t = S, R(S) = 0.9)
+    retrievability = (1.0 + (19.0 / 81.0) * (t / safe_s)) ** -0.5
 
-    # Map rating (1..4) to
-    # We'll implement a simplified version: update stability and difficulty based on rating
-    # Using the FSRS equations from the paper (simplified)
-    # For brevity, we use a heuristic:
-    # If rating >= 3 (good/easy): increase stability, decrease difficulty slightly
-    # If rating == 2 (hard): slight increase stability, difficulty unchanged
-    # If rating == 1 (again): decrease stability, increase difficulty
-    if rating.value >= 3:
-        stability = stability * (1 + 0.1 * (rating.value - 2))
-        difficulty = max(0.1, difficulty - 0.1 * (rating.value - 2))
-    elif rating.value == 2:
-        stability = stability * 1.05
-        difficulty = difficulty
-    else: # rating.value == 1
-        stability = stability * 0.8
-        difficulty = min(10, difficulty + 0.2)
+    # Mean-reverted difficulty update (1..10): Again/Hard raise D, Good/Easy lower D
+    next_d = safe_d - 0.5 * (rating.value - 2.5)
+    next_d = max(1.0, min(10.0, 0.9 * next_d + 0.1 * 5.0))
 
-    # Ensure bounds
-    stability = max(0.1, min(stability, 1000))
-    difficulty = max(0.1, min(difficulty, 10))
+    if rating.value == 1:  # Again (lapse)
+        next_s = max(0.5, safe_s * (0.4 + 0.2 * (1.0 - retrievability)))
+        interval_days = 1
+    elif rating.value == 2:  # Hard
+        growth = 1.0 + 0.15 * (11.0 - next_d) * 0.1 * (2.0 - retrievability)
+        next_s = safe_s * growth
+        interval_days = max(1, round(next_s * 0.85))
+    else:  # Good (3) or Easy (4)
+        easy_bonus = 1.3 if rating.value == 4 else 1.0
+        gain = (11.0 - next_d) * (safe_s ** -0.2) * (2.0 - retrievability) * 0.18 * easy_bonus
+        next_s = safe_s * (1.0 + max(0.1, gain))
+        interval_days = max(1, round(next_s))
 
-    # Compute next interval using simplified FSRS: interval = stability (in days)
-    interval_days = max(1, round(stability))
-
-    return stability, difficulty, interval_days
+    next_s = max(0.1, min(round(next_s, 4), 1000.0))
+    next_d = round(next_d, 4)
+    return next_s, next_d, interval_days
 
 def sugerir_cartao_de_tentativa(tentativa, diagnostico_ia):
     """

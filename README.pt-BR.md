@@ -17,6 +17,19 @@
 
 ---
 
+## Estudo de caso do portfólio
+
+**O LemmaS é meu estudo de caso de ciência de dados e ML aplicado à educação matemática.** Construí um fluxo que registra tentativas, oferece dicas graduais e devolve feedback sobre resoluções. A pergunta de pesquisa é se vincular exercícios por lemas matemáticos ajuda o estudante a encontrar questões relevantes para praticar.
+
+| Área | Evidência para revisão |
+| --- | --- |
+| Engenharia de dados | A [arquitetura de dados](data/schemas/README.md) e os [testes de exportação](tests/test_data_architecture_pipeline.py) mostram como tentativas, pareceres da IA e revisão humana são tratados. |
+| ML aplicado e matemática | O [experimento de ancoragem de 62 questões](scripts/pipeline/RELATORIO_MUSE_ancoragem_62.md) documenta a ligação entre lemas matemáticos e similaridade de exercícios. A utilidade pedagógica do híbrido depende de uma avaliação independente de relevância. |
+| Engenharia de IA | A [esteira de IA](docs/architecture/ai-pipeline.md) e a [verificação aritmética no OCR](docs/architecture/ocr-arithmetic-review.md) descrevem o roteamento do tutor e as checagens determinísticas. |
+| Engenharia de software | A [arquitetura do sistema](docs/architecture/system.md) e a [CI](.github/workflows/ci.yml) mostram onde o código roda e como é verificado. |
+
+O site demonstra o produto. Os experimentos mostram o método e seus limites. Avaliação do tutor com rubrica humana e calibração de TRI fazem parte da pesquisa.
+
 ## 📌 Sumário Executivo
 
 O que acontece quando uma plataforma de aprendizagem trata o processo de resolução do estudante como **dados estruturados**, em vez de apenas registrar respostas binárias de certo ou errado?
@@ -172,7 +185,7 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 
 ## 🛠️ Destaques de Engenharia de Dados & MLOps
 
-- **Integridade e Rastreabilidade de Dados:** Cada tentativa submetida pelo aluno gera um hash determinístico SHA-256 dos dados brutos (traços da lousa, texto digitado ou bytes da imagem) antes de qualquer chamada a modelos de IA.
+- **Integridade e Rastreabilidade de Dados:** O tutor registra hashes de entradas disponíveis para rastrear a proveniência. O hash permite verificar os bytes quando o dado original está disponível.
 - **Contratos Estritos de Dados:** Schemas Pydantic (DTOs) garantem validação e serialização de tipos em todas as rotas da API FastAPI.
 - **Isolamento Relacional com Row Level Security (RLS):** 20 tabelas PostgreSQL hospedadas no Supabase aplicam políticas rigorosas de isolamento multi-tenant.
 - **Padrão Strategy no Roteamento Multi-Modelo:** Desacoplamento da camada de inferência:
@@ -192,45 +205,6 @@ $$P(\theta) = c + \frac{1 - c}{1 + e^{-a(\theta - b)}}$$
 | **IA Aplicada & Visão** | Google Gemini (OCR), NVIDIA NIM / Nemotron, DeepSeek |
 | **Psicometria & Repetição** | Motor SM-2 (Ativo em produção), Agendador inspirado em FSRS (Experimental), TRI 3PL (Roadmap de Pesquisa) |
 | **Testes & Qualidade** | pytest (Backend & Testes de Arquitetura), TypeScript, build Next.js, testes de integração da API com Node.js e verificações de navegador |
-
----
-
-## 🚀 Como Executar Localmente
-
-### Pré-requisitos
-- Python 3.12+
-- Node.js 20+
-- Um projeto Supabase configurado (ou PostgreSQL local)
-
-### 1. Clonar o repositório
-```bash
-git clone https://github.com/StylishGH/LemmaS.git
-cd LemmaS
-```
-
-### 2. Configurar e rodar o Backend API
-```bash
-cd backend
-python -m venv .venv
-
-# Linux / macOS:
-source .venv/bin/activate
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-
-pip install -r requirements.txt
-cp ../.env.example .env
-uvicorn app.main:app --reload --port 8000
-```
-*A documentação interativa da API fica disponível em `http://localhost:8000/docs`.*
-
-### 3. Rodar o Frontend
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-*Acesse `http://localhost:3000` no seu navegador.*
 
 ---
 

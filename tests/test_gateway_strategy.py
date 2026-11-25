@@ -155,6 +155,8 @@ def test_gateway_strategy_suite():
         assert res["status"] == "fallback"
         parsed = json.loads(res["content"])
         assert "estrategia_identificada" in parsed
+        assert parsed.get("status_resolucao") == "inconclusivo"
+        assert parsed.get("precisa_revisao_humana") is True
         print(f"  -> Provedor: {res['provider']}")
         print(f"  -> Resposta determinística preservada: {parsed['estrategia_identificada']}")
         print("  -> TESTE 4 PASSOU COM SUCESSO!")

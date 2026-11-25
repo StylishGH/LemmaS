@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { MathText } from "@/components/math/MathDisplay";
 import { resolveFigureUrl } from "@/lib/image-url";
+import { useUserProfile } from "@/lib/use-user";
 
 interface QuestionWithFigure {
   id: number;
@@ -36,6 +37,7 @@ interface QuestionWithFigure {
 }
 
 export default function AuditoriaFigurasPage() {
+  const { isAuthenticated, loading: userLoading } = useUserProfile();
   const [questoes, setQuestoes] = useState<QuestionWithFigure[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroFormato, setFiltroFormato] = useState<"todos" | "svg" | "raster">("todos");
@@ -44,6 +46,10 @@ export default function AuditoriaFigurasPage() {
   const [mostrarCodigoSvg, setMostrarCodigoSvg] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     async function carregarFiguras() {
       setLoading(true);
       try {
@@ -59,7 +65,7 @@ export default function AuditoriaFigurasPage() {
       }
     }
     carregarFiguras();
-  }, []);
+  }, [isAuthenticated]);
 
   const totalComFigura = questoes.length;
   const totalSvg = questoes.filter((q) => q.figura_path?.toLowerCase().endsWith(".svg")).length;
@@ -90,6 +96,24 @@ export default function AuditoriaFigurasPage() {
       [id]: !prev[id],
     }));
   };
+
+  if (!userLoading && !isAuthenticated) {
+    return (
+      <div className="max-w-lg mx-auto my-16 p-6 rounded-xl border border-slate-200 dark:border-stone-800 bg-[var(--bg-card)] text-center space-y-4">
+        <ShieldCheck className="w-8 h-8 mx-auto text-amber-500" />
+        <h1 className="text-lg font-semibold">Área Restrita de Curadoria</h1>
+        <p className="text-sm text-[var(--ink-secondary)]">
+          Esta ferramenta interna de inspeção de figuras exige sessão autenticada.
+        </p>
+        <Link
+          href="/login?redirectTo=%2Fauditoria-figuras"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold lemmas-gold-cta"
+        >
+          Fazer Login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn pb-16">

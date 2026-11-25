@@ -16,7 +16,6 @@ export async function POST(
       resposta,
       tempo_segundos = 0,
       confianca = 4,
-      aluno_id,
       dica_socratica_usada = false,
       nivel_max_dica = 0,
       total_dicas_solicitadas = 0,
@@ -27,6 +26,7 @@ export async function POST(
     } = body;
     // 1. Resolve o ID real do aluno a partir da sessão Supabase (cookies)
     let validAlunoId = 9999;
+    let resolutionOwnerId: string | undefined;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
@@ -38,6 +38,7 @@ export async function POST(
 
         if (dbUser?.id) {
           validAlunoId = dbUser.id;
+          resolutionOwnerId = user.id;
         } else {
           // Provisiona automaticamente o usuário na tabela usuarios
           const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
@@ -54,25 +55,22 @@ export async function POST(
 
           if (novoDbUser?.id) {
             validAlunoId = novoDbUser.id;
+            resolutionOwnerId = user.id;
           }
         }
-      } else if (aluno_id && !isNaN(parseInt(String(aluno_id), 10))) {
-        validAlunoId = parseInt(String(aluno_id), 10);
       }
     } catch {
-      if (aluno_id && !isNaN(parseInt(String(aluno_id), 10))) {
-        validAlunoId = parseInt(String(aluno_id), 10);
-      }
+      // A tentativa de visitante usa o identificador reservado.
     }
 
     if (!resposta) {
       return NextResponse.json({ error: "Resposta não informada" }, { status: 400 });
     }
 
-    // Busca a questão e o gabarito oficial
+    // Busca a questão, tipo canônico e o gabarito oficial
     const { data: questao, error: qError } = await supabase
       .from("questoes")
-      .select("id, gabarito, estrategias_esperadas")
+      .select("id, tipo, gabarito, estrategias_esperadas")
       .eq("id", qId)
       .single();
 
@@ -93,6 +91,17 @@ export async function POST(
       tipoErro = "conceitual";
     } else if (isDiscursiva) {
       const veredito = body.veredito;
+      const hasEvidence = Boolean(
+        (typeof justificativa_texto === "string" && justificativa_texto.trim().length > 0) ||
+        (typeof body.transcricao_confirmada === "string" && body.transcricao_confirmada.trim().length > 0) ||
+        (typeof imagem_base64 === "string" && imagem_base64.length > 50)
+      );
+      if (!hasEvidence) {
+        return NextResponse.json(
+          { error: "Submissão discursiva exige evidência matemática (texto, transcrição ou imagem)." },
+          { status: 400 }
+        );
+      }
       if (body.precisa_revisao_humana || body.avaliacao_ia?.precisa_revisao_humana || body.avaliacao_ia?.ocr_review_required) {
         return NextResponse.json(
           { error: "Avaliação inconclusiva não pode ser registrada como tentativa definitiva." },
@@ -105,7 +114,14 @@ export async function POST(
           { status: 400 }
         );
       }
-      acertou = veredito === "aprovado";
+      const altId = typeof body.avaliacao_ia?.alternativa_identificada === "string"
+        ? body.avaliacao_ia.alternativa_identificada.trim().toUpperCase()
+        : "";
+      if (questao.tipo === "objetiva" && /^[A-E]$/.test(altId) && /^[A-E]$/i.test(gabaritoOficial)) {
+        acertou = veredito === "aprovado" && altId === gabaritoOficial.toUpperCase();
+      } else {
+        acertou = veredito === "aprovado";
+      }
       tipoErro = acertou ? "nenhum" : (veredito === "parcial" ? "conta_sinal" : "conceitual");
     } else {
       acertou = respostaAluno.toUpperCase() === gabaritoOficial.toUpperCase();
@@ -166,31 +182,25 @@ export async function POST(
     // 1. Processamento e upload resiliente de imagem de resolução (Lousa / Foto de Caderno)
     let imagemResolucaoPath: string | null = null;
     let imgHash: string | null = null;
+    let imageUploadStatus: "absent" | "skipped" | "failed" | "stored" = "absent";
     if (typeof imagem_base64 === "string" && imagem_base64.length > 50) {
-      try {
-        const cleanB64 = imagem_base64.includes(",") ? imagem_base64.split(",")[1] : imagem_base64;
-        const imgBuffer = Buffer.from(cleanB64, "base64");
-        imgHash = crypto.createHash("sha256").update(imgBuffer).digest("hex");
-        const fileName = `aluno_${validAlunoId}/q${qId}_${imgHash.slice(0, 16)}_${Date.now()}.png`;
+      imageUploadStatus = resolutionOwnerId ? "failed" : "skipped";
+      if (resolutionOwnerId) {
+        try {
+          const cleanB64 = imagem_base64.includes(",") ? imagem_base64.split(",")[1] : imagem_base64;
+          const imgBuffer = Buffer.from(cleanB64, "base64");
+          imgHash = crypto.createHash("sha256").update(imgBuffer).digest("hex");
+          const fileName = `${resolutionOwnerId}/${crypto.randomUUID()}.png`;
+          const { data, error } = await supabase.storage
+            .from("resolucoes")
+            .upload(fileName, imgBuffer, { contentType: "image/png", upsert: false });
 
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from("resolucoes")
-          .upload(fileName, imgBuffer, {
-            contentType: "image/png",
-            upsert: true,
-          });
-
-        if (!uploadErr && uploadData?.path) {
-          const { data: pubUrl } = supabase.storage.from("resolucoes").getPublicUrl(uploadData.path);
-          imagemResolucaoPath = pubUrl?.publicUrl || uploadData.path;
-        } else {
-          // Fallback resiliente: grava o hash criptográfico determinístico SHA-256
-          imagemResolucaoPath = `sha256:${imgHash}`;
-        }
-      } catch (storageErr) {
-        console.warn("[Submit Route] Aviso ao tentar upload de resolução no storage:", storageErr);
-        if (imgHash) {
-          imagemResolucaoPath = `sha256:${imgHash}`;
+          if (!error && data?.path) {
+            imagemResolucaoPath = data.path;
+            imageUploadStatus = "stored";
+          }
+        } catch {
+          console.warn("[Submit Route] Falha ao armazenar imagem da resolução.");
         }
       }
     }
@@ -301,6 +311,8 @@ export async function POST(
             resposta_enviada: respostaAluno,
             justificativa_texto: rawJustificativaAluno || null,
             imagem_resolucao_path: imagemResolucaoPath,
+            imagem_resolucao_sha256: imgHash,
+            imagem_status_upload: imageUploadStatus,
             input_hash: inputHashFinal,
             origem: origem || (imagem_base64 ? "lousa" : "texto"),
           },
@@ -471,6 +483,7 @@ export async function POST(
       sm2: novoSm2,
       estrategias_esperadas: questao.estrategias_esperadas,
       imagem_resolucao_path: imagemResolucaoPath,
+      imagem_status_upload: imageUploadStatus,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Erro interno";

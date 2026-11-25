@@ -110,10 +110,11 @@ def _normalize_sympy(expr: str) -> str:
     return expr
 
 
-def _sympy_compare(left_raw: str, right_raw: str) -> tuple[bool, str, str]:
+def _parse_sympy_expr(raw: str):
+    """Safely parses a single LaTeX/math expression into a bounded SymPy Basic object."""
     if not _HAS_SYMPY:
         raise Unsupported()
-    left_s, right_s = _normalize_sympy(left_raw), _normalize_sympy(right_raw)
+    expr_s = _normalize_sympy(raw)
     safe_locals: dict = {
         'sqrt': sp.sqrt,
         'sin': sp.sin,
@@ -138,26 +139,30 @@ def _sympy_compare(left_raw: str, right_raw: str) -> tuple[bool, str, str]:
     }
 
     try:
-        lhs = parse_expr(left_s, local_dict=safe_locals, global_dict=safe_globals, transformations=_SYMPY_TRANSFORMATIONS)
-        rhs = parse_expr(right_s, local_dict=safe_locals, global_dict=safe_globals, transformations=_SYMPY_TRANSFORMATIONS)
+        parsed = parse_expr(expr_s, local_dict=safe_locals, global_dict=safe_globals, transformations=_SYMPY_TRANSFORMATIONS)
     except Exception as exc:
         raise Unsupported() from exc
 
-    if not isinstance(lhs, sp.Basic) or not isinstance(rhs, sp.Basic):
+    if not isinstance(parsed, sp.Basic):
         raise Unsupported()
-    if lhs.has(sp.zoo, sp.oo, -sp.oo, sp.nan) or rhs.has(sp.zoo, sp.oo, -sp.oo, sp.nan):
+    if parsed.has(sp.zoo, sp.oo, -sp.oo, sp.nan):
         raise Unsupported()
 
     # Cap exponent size before symbolic simplification to avoid DoS
-    for side in (lhs, rhs):
-        for node in sp.preorder_traversal(side):
-            if (
-                isinstance(node, sp.Pow)
-                and node.exp.is_number
-                and not node.exp.free_symbols
-                and abs(complex(node.exp.evalf())) > 24
-            ):
-                raise Unsupported()
+    for node in sp.preorder_traversal(parsed):
+        if (
+            isinstance(node, sp.Pow)
+            and node.exp.is_number
+            and not node.exp.free_symbols
+            and abs(complex(node.exp.evalf())) > 24
+        ):
+            raise Unsupported()
+    return parsed
+
+
+def _sympy_compare(left_raw: str, right_raw: str) -> tuple[bool, str, str]:
+    lhs = _parse_sympy_expr(left_raw)
+    rhs = _parse_sympy_expr(right_raw)
 
     diff = sp.simplify(lhs - rhs)
     if diff == 0:
@@ -166,6 +171,85 @@ def _sympy_compare(left_raw: str, right_raw: str) -> tuple[bool, str, str]:
         return False, str(lhs), str(rhs)
     # Free variables remain (e.g. x*x = 4): contingent equation, not an unconditional conflict.
     raise Unsupported()
+
+
+def _schwartz_zippel_proportional(f_prev, f_curr, symbols: list) -> bool | None:
+    """
+    Tests if F_prev == lambda * F_curr for a nonzero scalar lambda using deterministic
+    rational probes (Schwartz-Zippel randomized polynomial identity test), then confirms
+    symbolically when proportional. Returns True/False, or None if indeterminate.
+    """
+    probe_sets = [
+        {sym: sp.Rational(3 + idx * 2 + j, 5 + j) for j, sym in enumerate(symbols)}
+        for idx in range(4)
+    ]
+    ratios = []
+    for subs_map in probe_sets:
+        try:
+            v_prev = sp.N(f_prev.subs(subs_map), 20)
+            v_curr = sp.N(f_curr.subs(subs_map), 20)
+            if v_prev.has(sp.zoo, sp.oo, -sp.oo, sp.nan) or v_curr.has(sp.zoo, sp.oo, -sp.oo, sp.nan):
+                continue
+            if abs(complex(v_curr)) < 1e-12:
+                if abs(complex(v_prev)) > 1e-9:
+                    return False
+                continue
+            ratios.append(complex(v_prev) / complex(v_curr))
+        except Exception:
+            continue
+
+    if len(ratios) < 2:
+        return None
+    ref = ratios[0]
+    if any(abs(r - ref) > 1e-6 * max(1.0, abs(ref)) for r in ratios[1:]):
+        return False
+
+    try:
+        quot = sp.simplify(f_prev / f_curr)
+        if not quot.free_symbols and quot != 0:
+            return True
+    except Exception:
+        pass
+    return None
+
+
+def _compare_equation_steps(prev_eq: tuple, curr_eq: tuple) -> bool | None:
+    """
+    Verifies whether two consecutive algebraic equations (L1 = R1) -> (L2 = R2)
+    over the same free variables preserve solution equivalence / valid implication.
+    Returns True (consistent), False (conflict), or None (unsupported/indeterminate).
+    """
+    if not _HAS_SYMPY:
+        return None
+    l1, r1, _ = prev_eq
+    l2, r2, _ = curr_eq
+    f1 = l1 - r1
+    f2 = l2 - r2
+    syms1 = f1.free_symbols
+    syms2 = f2.free_symbols
+    if not syms1 or syms1 != syms2 or len(syms1) > 4:
+        return None
+
+    # 1. Univariate exact solution-set comparison over Reals
+    if len(syms1) == 1:
+        var = next(iter(syms1))
+        try:
+            sol1 = sp.solveset(f1, var, sp.S.Reals)
+            sol2 = sp.solveset(f2, var, sp.S.Reals)
+            if isinstance(sol1, sp.FiniteSet) and isinstance(sol2, sp.FiniteSet):
+                if len(sol1) > 0 and len(sol2) > 0:
+                    if sol1 == sol2 or sol1.is_subset(sol2):
+                        return True
+                    # Neither is a subset of the other (includes disjoint solution sets like {3} vs {7})
+                    if not sol2.is_subset(sol1):
+                        return False
+                    # sol2 is a strict subset of sol1 (e.g. x^2=4 -> x=2 when domain x>0 is implicit): leave indeterminate
+                    return None
+        except Exception:
+            pass
+
+    # 2. Multivariate / fallback scalar proportionality check via Schwartz-Zippel + simplify
+    return _schwartz_zippel_proportional(f1, f2, sorted(syms1, key=lambda s: s.name))
 
 
 def check_arithmetic(transcription: str) -> dict:
@@ -179,9 +263,19 @@ def check_arithmetic(transcription: str) -> dict:
         if time.perf_counter() - start > .15:
             break
         normalized = _normalize(block)
+        step_equations = []
         # Split assignment prefixes/implications; do not treat inequalities as equalities.
-        for chain in re.split(r'\\(?:implies|Rightarrow|therefore)|=>|→|;|\n', normalized):
+        for chain in re.split(r'\\(?:implies|Rightarrow|therefore)|\\\\(?![A-Za-z])|=>|->|→|;|\n', normalized):
             sides = re.split(r'(?<![<>!:=])=(?!=)', chain)
+            if len(sides) == 2:
+                try:
+                    l_expr = _parse_sympy_expr(sides[0].strip())
+                    r_expr = _parse_sympy_expr(sides[1].strip())
+                    if (l_expr - r_expr).free_symbols:
+                        step_equations.append((l_expr, r_expr, f'{sides[0].strip()} = {sides[1].strip()}'))
+                except (ValueError, SyntaxError, ZeroDivisionError, OverflowError, RecursionError, TypeError):
+                    pass
+
             for left, right in zip(sides, sides[1:]):
                 if len(checks) >= 32: break
                 left_s, right_s = left.strip(), right.strip()
@@ -196,6 +290,19 @@ def check_arithmetic(transcription: str) -> dict:
                                        'left': sym_l, 'right': sym_r, 'engine': 'sympy'})
                     except (ValueError, SyntaxError, ZeroDivisionError, OverflowError, RecursionError, TypeError):
                         continue
+
+        for prev_eq, curr_eq in zip(step_equations, step_equations[1:]):
+            if len(checks) >= 32 or time.perf_counter() - start > .15:
+                break
+            step_ok = _compare_equation_steps(prev_eq, curr_eq)
+            if step_ok is not None:
+                checks.append({
+                    'expression': f'{prev_eq[2]} -> {curr_eq[2]}',
+                    'equal': step_ok,
+                    'left': prev_eq[2],
+                    'right': curr_eq[2],
+                    'engine': 'sympy-step',
+                })
     return {'status': 'conflict' if any(not c['equal'] for c in checks) else 'consistent' if checks else 'unsupported',
             'checks': checks, 'latency_ms': round((time.perf_counter() - start) * 1000, 3)}
 

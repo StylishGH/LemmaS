@@ -5,6 +5,8 @@ com CORS liberado para o frontend Next.js, documentação OpenAPI automática,
 rotas de autenticação, exercícios, tentativas imutáveis, feedback e motor cognitivo socrático.
 """
 
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,8 +72,28 @@ app.add_middleware(
     allow_origins=list(set(cors_origins)),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "X-Request-Id"],
 )
+
+_TUTOR_RATE_BUCKETS: dict[str, deque[float]] = defaultdict(deque)
+
+
+@app.middleware("http")
+async def tutor_rate_limit_middleware(request: Request, call_next):
+    if request.url.path.startswith(f"{settings.API_V1_PREFIX}/tutor/") and request.method == "POST":
+        client_ip = get_remote_address(request) or "unknown"
+        now = time.monotonic()
+        bucket = _TUTOR_RATE_BUCKETS[client_ip]
+        while bucket and now - bucket[0] > 60.0:
+            bucket.popleft()
+        if len(bucket) >= 30:
+            return JSONResponse(
+                {"detail": "Limite de requisições do MathAI Tutor atingido. Tente novamente em instantes."},
+                status_code=429,
+                headers={"Retry-After": "60"},
+            )
+        bucket.append(now)
+    return await call_next(request)
 
 
 @app.get("/", tags=["Geral"])
@@ -105,12 +127,14 @@ def health_check():
 
 
 # Inclusão dos roteadores modulares com prefixo /api
-app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
-app.include_router(exercises_router, prefix=settings.API_V1_PREFIX)
-app.include_router(attempts_router, prefix=settings.API_V1_PREFIX)
-app.include_router(feedback_router, prefix=settings.API_V1_PREFIX)
+# Produção ativa usa Next.js BFF + Supabase para CRUD; FastAPI atua como motor cognitivo (/api/tutor/*).
+# Os demais routers permanecem como protótipos em memória marcados como deprecated na spec OpenAPI.
 app.include_router(tutor_router, prefix=settings.API_V1_PREFIX)
-app.include_router(flashcards_router, prefix=settings.API_V1_PREFIX)
+app.include_router(auth_router, prefix=settings.API_V1_PREFIX, deprecated=True)
+app.include_router(exercises_router, prefix=settings.API_V1_PREFIX, deprecated=True)
+app.include_router(attempts_router, prefix=settings.API_V1_PREFIX, deprecated=True)
+app.include_router(feedback_router, prefix=settings.API_V1_PREFIX, deprecated=True)
+app.include_router(flashcards_router, prefix=settings.API_V1_PREFIX, deprecated=True)
 
 
 if __name__ == "__main__":

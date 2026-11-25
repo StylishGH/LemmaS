@@ -147,10 +147,7 @@ export default function DashboardPage() {
       })
       .catch(() => {});
 
-    // Se estiver autenticado, usa profile.id. Se visitante, usa 9999 (ou padrão)
-    const alunoIdQuery = profile.id ? `?aluno_id=${profile.id}` : "?aluno_id=9999";
-
-    fetch(`/api/dashboard/metrics${alunoIdQuery}`)
+    fetch("/api/dashboard/metrics")
       .then((res) => res.json())
       .then((data) => {
         if (data && data.total_resolvidas !== undefined) {

@@ -52,17 +52,35 @@ async function populateCache(supabase: any) {
   if (cachedLemmasList && cachedLemmasList.length > 0) return;
 
   try {
-    const { data, error } = await supabase
-      .from("lemmas")
-      .select("id, codigo, titulo, materia, topico, nivel, formula_latex, gatilho_reconhecimento, intuicao_prova, questoes_vinculadas_count")
-      .order("id", { ascending: true })
-      .limit(2500);
+    const allRows: LemmaRecord[] = [];
+    const pageSize = 1000;
+    for (let from = 0; from < 5000; from += pageSize) {
+      const { data, error } = await supabase
+        .from("lemmas")
+        .select("id, codigo, titulo, materia, topico, nivel, formula_latex, gatilho_reconhecimento, intuicao_prova, questoes_vinculadas_count")
+        .order("id", { ascending: true })
+        .range(from, from + pageSize - 1);
 
-    if (error || !data || data.length === 0) {
-      console.warn("Supabase public.lemmas vazio ou inacessível, utilizando catálogo local como fallback.", error);
+      if (error) {
+        if (allRows.length === 0) {
+          console.warn("Supabase public.lemmas vazio ou inacessível, utilizando catálogo local como fallback.", error);
+          cachedLemmasList = getLocalCatalogBackup();
+        }
+        break;
+      }
+      if (!data || data.length === 0) {
+        break;
+      }
+      allRows.push(...(data as LemmaRecord[]));
+      if (data.length < pageSize) {
+        break;
+      }
+    }
+
+    if (allRows.length > 0) {
+      cachedLemmasList = allRows;
+    } else if (!cachedLemmasList) {
       cachedLemmasList = getLocalCatalogBackup();
-    } else {
-      cachedLemmasList = data as LemmaRecord[];
     }
   } catch (err) {
     console.warn("Erro ao buscar public.lemmas no Supabase:", err);
@@ -94,7 +112,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search");
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 2000);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   await populateCache(supabase);
 
   // 1. Busca por código específico (ex: "LEMA-0008" ou "LEMA-8" ou "8")

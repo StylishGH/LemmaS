@@ -1,3 +1,6 @@
+import { tutorBackendTimeoutMs, tutorBackendUrl } from "@/lib/backend-url";
+import { enforceAiRateLimit } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini";
 import { generateNvidiaContent, getNvidiaApiKeys } from "@/lib/nvidia";
@@ -6,7 +9,7 @@ import { safeParseJsonWithLatex } from "@/lib/json-safe";
 // Node.js process types for process.env
 /// <reference types="node" />
 
-const BACKEND_URL = (process.env.LEMMAS_BACKEND_URL || "https://mathai-7i7r.onrender.com").replace(/\/$/, "");
+const BACKEND_URL = tutorBackendUrl();
 
 export const maxDuration = 30;
 
@@ -83,6 +86,15 @@ export async function POST(req: NextRequest) {
   const routeStartedAt = Date.now();
   const remainingMs = () => ROUTE_BUDGET_MS - (Date.now() - routeStartedAt);
   try {
+    const supabase = await createClient();
+    const rateLimit = await enforceAiRateLimit(req, "ai_compare", supabase);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Limite temporário de comparações atingido. Aguarde alguns segundos e tente novamente." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+    const requestId = req.headers.get("x-request-id") || globalThis.crypto.randomUUID();
     const body = await req.json();
     const { enunciado, contextoQuestao } = body;
 
@@ -116,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     const authorization = req.headers.get("authorization") || "";
-    const backendHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    const backendHeaders: Record<string, string> = { "Content-Type": "application/json", "X-Request-Id": requestId };
     if (authorization.startsWith("Bearer ")) {
       backendHeaders["Authorization"] = authorization;
     }
@@ -130,7 +142,7 @@ export async function POST(req: NextRequest) {
           enunciado,
           contextoQuestao: contextoQuestao || undefined,
         }),
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(tutorBackendTimeoutMs(8000)),
         cache: "no-store",
       });
 

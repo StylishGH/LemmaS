@@ -8,6 +8,30 @@
 
 ---
 
+## Arquitetura de produção verificada em 24/11/2026
+
+O código web fica em `frontend/` e o serviço FastAPI em `backend/`. As descrições históricas abaixo registram a evolução do projeto.
+
+```mermaid
+flowchart LR
+  B[Navegador] --> V[Next.js na Vercel]
+  B --> S[Supabase Auth e PostgreSQL]
+  V --> S
+  V --> R[FastAPI no Render]
+  V --> M[Provedores de IA usados no fallback]
+  R --> N[Gateway de modelos do tutor]
+```
+
+O Next.js coordena a submissão de tentativas e a persistência de imagens usando a sessão Supabase. O FastAPI processa tutoria e verificações matemáticas. Suas rotas demonstrativas com armazenamento em memória perdem estado ao reiniciar o processo. O health check do Render mede disponibilidade HTTP do processo. Um teste de jornada em ambiente de homologação é necessário para avaliar correção, persistência e disponibilidade dos modelos.
+
+A configuração canônica das chamadas ao backend é `LEMMAS_BACKEND_URL`, definida no servidor. `BACKEND_API_URL` permanece como compatibilidade. O desenvolvimento aponta para o FastAPI local por padrão. Defina o endpoint explicitamente por ambiente para testar previews contra homologação.
+
+### Resoluções privadas e exportação
+
+Em homologação, valide a [migração de Storage](../../data/schemas/23_private_resolution_storage.sql) junto com a versão da rota que salva chaves internas. Na publicação, aplique primeiro a migração para que a nova rota grave apenas no bucket privado. Durante a troca, a rota antiga pode registrar tentativas sem imagem porque seu caminho de upload não satisfaz a nova política. A política autoriza o titular do objeto e exige uma pasta baseada no ID autenticado para novos uploads. Objetos legados com titular registrado continuam disponíveis por leitura autorizada. Referências antigas com URL pública ou hash exigem inventário antes de eventual migração. Uma interface que exiba imagens deve usar o cliente autenticado ou solicitar uma URL temporária após autorizar o usuário. Valide o envio, a leitura do titular, a recusa de outras sessões e o funcionamento das figuras do banco de questões em homologação antes da publicação.
+
+O exportador gera CSV e JSON de análise de distratores na mesma pasta por execução, com hashes das saídas. Campos identificadores de aluno ficam fora do lote. A matriz longitudinal para TRI exige um desenho próprio de coleta e pseudonimização. A geração de SFT depende de uma fonte que vincule evidência da tentativa, consentimento de treino vigente e alvo humano revisado.
+
 ## 1. Visão Geral Executiva
 
 A plataforma **LEMMAS** é um ambiente educacional e cognitivo de alto desempenho desenvolvido para estudantes de ciências exatas (com foco inicial em Licenciatura e Bacharelado em Matemática, Engenharia e Concursos Militares de elite como ITA, IME, EFOMM, AFA, EsPCEx e ESA).

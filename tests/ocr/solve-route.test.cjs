@@ -14,6 +14,9 @@ const moduleExports = {};
 new Function('require','exports',source)((name) => {
   if (name === '@/lib/gemini') return {generateGeminiContent:async()=>({text:JSON.stringify(directPayload),model:'fixture'})};
   if (name === '@/lib/nvidia') return {getNvidiaApiKeys:()=>[],generateNvidiaContent:async()=>{throw Error('unexpected fallback');}};
+  if (name === '@/lib/backend-url') return {tutorBackendUrl:()=> 'http://fastapi.test', tutorBackendTimeoutMs:(ms)=> ms};
+  if (name === '@/lib/rate-limit') return {enforceAiRateLimit:async()=> ({allowed:true,limit:30,remaining:29,retryAfterSeconds:60})};
+  if (name === '@/lib/supabase-server') return {createClient:async()=> ({})};
   if (name === '@/lib/json-safe') return {safeParseJsonWithLatex:JSON.parse};
   return frontendRequire(name);
 },moduleExports);

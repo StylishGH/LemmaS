@@ -119,16 +119,19 @@ export async function getCachedHint(cacheKey: string) {
       return null;
     }
 
-    // Incrementa hit_count de forma assíncrona tolerante a falhas
+    // Incrementa hit_count via RPC SECURITY DEFINER (com fallback tolerante caso RPC ainda não esteja aplicada)
     (async () => {
       try {
-        await supabase
-          .from("socratic_hint_cache")
-          .update({
-            hit_count: (data.hit_count || 1) + 1,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", data.id);
+        const { error: rpcErr } = await supabase.rpc("increment_hint_cache_hit", { p_cache_id: data.id });
+        if (rpcErr) {
+          await supabase
+            .from("socratic_hint_cache")
+            .update({
+              hit_count: (data.hit_count || 1) + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", data.id);
+        }
       } catch {
         // Ignora silenciosamente erros no contador de acessos
       }
@@ -172,7 +175,7 @@ export async function saveCachedHint(params: {
         metadata: params.metadata || {},
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "cache_key" }
+      { onConflict: "cache_key", ignoreDuplicates: true }
     );
 
     return !error;

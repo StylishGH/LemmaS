@@ -63,6 +63,9 @@ export interface FloatingQuestionHUDProps {
   evaluationResult?: DiscursiveEvaluationData;
   onConfirmOcr?: (text: string) => Promise<void>;
   onCloseFocusMode?: () => void;
+  dockSide?: "left" | "right";
+  compact?: boolean;
+  isLocked?: boolean;
 }
 
 export default function FloatingQuestionHUD({
@@ -77,6 +80,9 @@ export default function FloatingQuestionHUD({
   isEvaluating = false,
   evaluationResult,
   onConfirmOcr,
+  dockSide = "right",
+  compact = false,
+  isLocked = false,
 }: FloatingQuestionHUDProps) {
   const { isLight } = useTheme();
   const [isMinimized, setIsMinimized] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches);
@@ -85,6 +91,13 @@ export default function FloatingQuestionHUD({
   // ── Drag ──────────────────────────────────────────────────────────────────
   const [position, setPos] = useState<{ x: number; y: number; index: number } | null>(null);
   const pos = position?.index === currentIndex ? position : null;
+  const prevDockSideRef = useRef(dockSide);
+  useEffect(() => {
+    if (prevDockSideRef.current !== dockSide) {
+      prevDockSideRef.current = dockSide;
+      setPos(null);
+    }
+  }, [dockSide]);
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -138,7 +151,7 @@ export default function FloatingQuestionHUD({
 
   const onDragEnd = useCallback(() => { dragRef.current = null; }, []);
 
-  // Quando arrastado usa left/top; caso contrário cai no posicionamento padrão do CSS (top-0 right-4)
+  // Quando arrastado usa left/top; caso contrário cai no posicionamento padrão do CSS
   const posStyle: React.CSSProperties = pos
     ? { position: "absolute", left: pos.x, top: pos.y, right: "auto", maxHeight: `calc(100% - ${pos.y}px)` }
     : {};
@@ -161,7 +174,11 @@ export default function FloatingQuestionHUD({
     <div
       ref={hudRef}
       style={posStyle}
-      className="absolute top-0 right-4 z-50 pointer-events-auto animate-fadeIn flex max-h-full flex-col"
+      className={`absolute top-0 ${
+        dockSide === "left"
+          ? "left-2 sm:left-3 right-auto z-[65]"
+          : "right-2 sm:right-4 z-50"
+      } pointer-events-auto animate-fadeIn flex max-h-full flex-col`}
     >
       {isMinimized ? (
         /* ── PÍLULA MINIMIZADA ── */
@@ -220,7 +237,11 @@ export default function FloatingQuestionHUD({
       ) : (
         /* ── PAINEL EXPANDIDO ── */
         <div
-          className={`w-[92vw] sm:w-[480px] md:w-[520px] max-w-[94vw] min-h-0 rounded-2xl border flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
+          className={`${
+            compact
+              ? "w-[calc(100vw-16px)] md:w-[min(330px,calc(100vw-436px))] lg:w-[min(460px,calc(100vw-476px))] xl:w-[min(500px,calc(100vw-536px))] max-w-[calc(100vw-16px)]"
+              : "w-[92vw] sm:w-[460px] md:w-[500px] max-w-[calc(100vw-24px)]"
+          } min-h-0 rounded-2xl border flex flex-col overflow-hidden backdrop-blur-xl transition-shadow ${
             isLight
               ? isTranslucent
                 ? "bg-white/85 text-slate-900 border-amber-700/25 shadow-[0_12px_36px_rgba(15,23,42,0.16)]"
@@ -325,7 +346,7 @@ export default function FloatingQuestionHUD({
           </div>
 
           {/* CORPO DA QUESTÃO COM SCROLL INTERNO */}
-          <div className={`p-4 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto space-y-3.5 text-xs leading-relaxed font-sans ${isLight ? "text-slate-900" : "text-zinc-200"}`}>
+          <div className={`p-4 flex-1 min-h-0 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto space-y-3.5 text-xs leading-relaxed font-sans ${isLight ? "text-slate-900" : "text-zinc-200"}`}>
             {/* Enunciado */}
             <div className="space-y-2 select-text">
               <QuestionMath text={corpo} />
@@ -356,8 +377,11 @@ export default function FloatingQuestionHUD({
                       <button
                         key={letra}
                         type="button"
-                        onClick={() => onSelectAnswer && onSelectAnswer(letra)}
-                        className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${
+                        disabled={isLocked}
+                        onClick={() => !isLocked && onSelectAnswer && onSelectAnswer(letra)}
+                        className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 ${
+                          isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                        } ${
                           isSelected
                             ? isLight
                               ? "bg-amber-100 border-amber-700 text-slate-900 shadow-xs font-semibold"
@@ -452,14 +476,14 @@ export default function FloatingQuestionHUD({
           {/* RODAPÉ: AVALIAR COM MATHAI ENGINE */}
           {onEvaluate && (
             <div className={`p-3 border-t flex items-center justify-between gap-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#17142b]/95 border-amber-500/20"}`}>
-              <span className={`text-[10px] font-mono ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
+              <span className={`text-[10px] font-mono truncate ${compact ? "hidden xl:inline" : ""} ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
                 Validação instantânea via MathAI
               </span>
               <button
                 type="button"
                 onClick={onEvaluate}
-                disabled={isEvaluating}
-                className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs shrink-0"
+                disabled={isEvaluating || isLocked}
+                className={`${compact ? "w-full xl:w-auto justify-center" : ""} px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs shrink-0`}
               >
                 {isEvaluating ? (
                   <>

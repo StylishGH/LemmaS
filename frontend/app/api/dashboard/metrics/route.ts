@@ -1,18 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const supabase = await createClient();
   try {
-    const { searchParams } = new URL(req.url);
-    const alunoIdParam = searchParams.get("aluno_id");
-
     // Total de questões cadastradas no banco
     const { count: totalQuestions } = await supabase
       .from("questoes")
       .select("*", { count: "exact", head: true });
 
-    // Determina o ID do aluno
+    // Identifica exclusivamente o usuário autenticado via cookies (elimina IDOR via ?aluno_id=)
+    let targetAlunoId: number | null = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        const { data: dbUser } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (dbUser?.id) {
+          targetAlunoId = dbUser.id;
+        } else {
+          const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
+          const { data: novoDbUser } = await supabase
+            .from("usuarios")
+            .insert({
+              nome: nomeUsuario,
+              email: user.email,
+              senha_hash: "supabase_managed",
+              escolaridade: "Ensino Superior",
+            })
+            .select("id")
+            .maybeSingle();
+
+          if (novoDbUser?.id) {
+            targetAlunoId = novoDbUser.id;
+          }
+        }
+      }
+    } catch {
+      targetAlunoId = null;
+    }
+
+    if (targetAlunoId === null) {
+      return NextResponse.json({
+        authenticated: false,
+        total_resolvidas: 0,
+        total_acertos: 0,
+        taxa_acerto: 0,
+        tempo_medio: "0s",
+        streak_dias: 0,
+        total_questoes_banco: totalQuestions ?? null,
+        historico: [],
+        revisoes: [],
+        diagnostico_erros: { total_erros: 0, conta: 0, interpretacao: 0, lacuna: 0 },
+        radar: { "Álgebra": 0, "Geometria": 0, "Trigonometria": 0, "Cálculo": 0, "Combinatória": 0, "Aritmética": 0 },
+        conselho_ia: "Entre na sua conta para registrar tentativas, acompanhar seu Radar de Domínio e calibrar revisões SM-2.",
+      });
+    }
+
     let queryTentativas = supabase
       .from("tentativas")
       .select(`
@@ -46,75 +94,36 @@ export async function GET(req: NextRequest) {
         fator_facilidade,
         proxima_revisao,
         ultima_revisao
-      `);
+      `)
+      .eq("item_tipo", "questao")
+      .order("proxima_revisao", { ascending: true });
 
-    // Tenta identificar o usuário autenticado na sessão de cookies
-    let targetAlunoId = 9999;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        const { data: dbUser } = await supabase
-          .from("usuarios")
-          .select("id")
-          .eq("email", user.email)
-          .maybeSingle();
-
-        if (dbUser?.id) {
-          targetAlunoId = dbUser.id;
-        } else {
-          // Provisiona automaticamente o usuário na tabela usuarios
-          const nomeUsuario = user.user_metadata?.full_name || user.email.split("@")[0] || "Aluno LEMMAS";
-          const { data: novoDbUser } = await supabase
-            .from("usuarios")
-            .insert({
-              nome: nomeUsuario,
-              email: user.email,
-              senha_hash: "supabase_managed",
-              escolaridade: "Ensino Superior",
-            })
-            .select("id")
-            .maybeSingle();
-
-          if (novoDbUser?.id) {
-            targetAlunoId = novoDbUser.id;
-          }
-        }
-      } else if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
-        targetAlunoId = parseInt(alunoIdParam, 10);
-      }
-    } catch {
-      if (alunoIdParam && !isNaN(parseInt(alunoIdParam, 10))) {
-        targetAlunoId = parseInt(alunoIdParam, 10);
-      }
-    }
-
-    queryTentativas = queryTentativas.eq("aluno_id", targetAlunoId);
+    queryTentativas = queryTentativas.eq("aluno_id", targetAlunoId).neq("tipo_erro", "simulado_em_branco");
     queryRevisoes = queryRevisoes.eq("aluno_id", targetAlunoId);
 
     const [{ count: exactTotalResolvidas }, { count: exactTotalAcertos }, { data: tentativasRaw }, { data: revisoesRaw }] = await Promise.all([
-      supabase.from("tentativas").select("*", { count: "exact", head: true }).eq("aluno_id", targetAlunoId),
+      supabase.from("tentativas").select("*", { count: "exact", head: true }).eq("aluno_id", targetAlunoId).neq("tipo_erro", "simulado_em_branco"),
       supabase.from("tentativas").select("*", { count: "exact", head: true }).eq("aluno_id", targetAlunoId).eq("acertou", 1),
       queryTentativas.limit(100),
       queryRevisoes.limit(20),
     ]);
 
-    const tentativas = (tentativasRaw as any[]) || [];
+    const tentativas = ((tentativasRaw as any[]) || []).filter((t) => t.tipo_erro !== "simulado_em_branco");
     const totalResolvidas = exactTotalResolvidas ?? tentativas.length;
     const totalAcertos = exactTotalAcertos ?? tentativas.filter((t) => t.acertou === 1).length;
     const taxaAcerto = totalResolvidas > 0 
       ? Number(((totalAcertos / totalResolvidas) * 100).toFixed(1)) 
       : 0;
 
-    // 1. Tempo médio real com proteção contra outliers (teto de 900s / 15 min por questão)
+    // 1. Tempo médio real sobre a janela carregada (evita viés de truncamento de denominador)
     let tempoMedioStr = "0s";
-    if (totalResolvidas > 0) {
+    if (tentativas.length > 0) {
       const somaTempo = tentativas.reduce((acc, t) => {
         const rawSec = t.tempo_segundos || 0;
-        // Aplica teto de 900s (15 min) para evitar distorções causadas por abas esquecidas abertas
         const cappedSec = Math.min(Math.max(0, rawSec), 900);
         return acc + cappedSec;
       }, 0);
-      const mediaSegundos = Math.round(somaTempo / totalResolvidas);
+      const mediaSegundos = Math.round(somaTempo / tentativas.length);
       const minutos = Math.floor(mediaSegundos / 60);
       const segundos = mediaSegundos % 60;
       tempoMedioStr = minutos > 0 

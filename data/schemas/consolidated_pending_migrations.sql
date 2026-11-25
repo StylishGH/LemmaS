@@ -45,7 +45,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES (
     'resolucoes',
     'resolucoes',
-    true,
+    false,
     5242880, -- 5 MB
     ARRAY['image/png', 'image/jpeg', 'image/webp']
 )
@@ -54,32 +54,6 @@ ON CONFLICT (id) DO UPDATE SET
     file_size_limit = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- Políticas de Storage (RLS)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Permitir upload publico em resolucoes'
-    ) THEN
-        CREATE POLICY "Permitir upload publico em resolucoes"
-        ON storage.objects FOR INSERT
-        TO anon, authenticated
-        WITH CHECK (bucket_id = 'resolucoes');
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Permitir leitura publica de resolucoes'
-    ) THEN
-        CREATE POLICY "Permitir leitura publica de resolucoes"
-        ON storage.objects FOR SELECT
-        TO anon, authenticated
-        USING (bucket_id = 'resolucoes');
-    END IF;
-END $$;
-
-
--- ------------------------------------------------------------------------------
 -- 3. CACHE SOCRÁTICO PERSISTENTE (Migration 13)
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.socratic_hint_cache (
@@ -110,17 +84,19 @@ ALTER TABLE public.socratic_hint_cache ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Permitir leitura de dicas em cache" ON public.socratic_hint_cache;
 CREATE POLICY "Permitir leitura de dicas em cache"
-ON public.socratic_hint_cache FOR SELECT TO public USING (true);
+ON public.socratic_hint_cache FOR SELECT TO anon, authenticated, service_role USING (true);
 
 DROP POLICY IF EXISTS "Permitir insercao de dicas em cache por usuarios autenticados" ON public.socratic_hint_cache;
-CREATE POLICY "Permitir insercao de dicas em cache por usuarios autenticados"
-ON public.socratic_hint_cache FOR INSERT TO public WITH CHECK (true);
+DROP POLICY IF EXISTS "Permitir insercao de dicas em cache por autenticados" ON public.socratic_hint_cache;
+CREATE POLICY "Permitir insercao de dicas em cache por autenticados"
+ON public.socratic_hint_cache FOR INSERT TO authenticated, service_role WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Permitir atualizacao de hit_count em cache" ON public.socratic_hint_cache;
-CREATE POLICY "Permitir atualizacao de hit_count em cache"
-ON public.socratic_hint_cache FOR UPDATE TO public USING (true) WITH CHECK (true);
-
-GRANT SELECT, INSERT, UPDATE ON public.socratic_hint_cache TO anon, authenticated, service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON public.socratic_hint_cache FROM PUBLIC, anon, authenticated;
+REVOKE INSERT ON public.socratic_hint_cache FROM PUBLIC, anon;
+GRANT SELECT ON public.socratic_hint_cache TO anon, authenticated;
+GRANT INSERT ON public.socratic_hint_cache TO authenticated;
+GRANT ALL ON public.socratic_hint_cache TO service_role;
 
 
 -- ------------------------------------------------------------------------------
@@ -223,4 +199,7 @@ FROM public.tentativas t
 JOIN public.questoes q ON q.id = t.questao_id
 LEFT JOIN public.avaliacoes_ia ai ON ai.tentativa_id = t.id;
 
-GRANT SELECT ON public.vw_sft_dataset_export TO anon, authenticated, service_role;
+
+ALTER VIEW public.vw_sft_dataset_export SET (security_invoker = true);
+REVOKE ALL ON public.vw_sft_dataset_export FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON public.vw_sft_dataset_export TO service_role;
