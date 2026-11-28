@@ -65,6 +65,7 @@ export interface FloatingQuestionHUDProps {
   onCloseFocusMode?: () => void;
   dockSide?: "left" | "right";
   compact?: boolean;
+  minimizeWhenCompact?: boolean;
   isLocked?: boolean;
 }
 
@@ -82,10 +83,13 @@ export default function FloatingQuestionHUD({
   onConfirmOcr,
   dockSide = "right",
   compact = false,
+  minimizeWhenCompact = false,
   isLocked = false,
 }: FloatingQuestionHUDProps) {
   const { isLight } = useTheme();
-  const [isMinimized, setIsMinimized] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches);
+  const [isMinimized, setIsMinimized] = useState(() => typeof window !== "undefined" && window.matchMedia(
+    "(max-width: 767px), (max-width: 1023px) and (orientation: portrait), (max-height: 599px)"
+  ).matches);
   const [isTranslucent, setIsTranslucent] = useState(false);
 
   // ── Drag ──────────────────────────────────────────────────────────────────
@@ -98,6 +102,9 @@ export default function FloatingQuestionHUD({
       setPos(null);
     }
   }, [dockSide]);
+  useEffect(() => {
+    if (compact && minimizeWhenCompact) setIsMinimized(true);
+  }, [compact, minimizeWhenCompact]);
   const dragRef = useRef<{
     startX: number;
     startY: number;

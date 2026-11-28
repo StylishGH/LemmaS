@@ -866,6 +866,7 @@ function ResolverContent() {
 
   // Solicitar Dica Socrática (Modo Treino com 5 Níveis Pedagógicos Progressivos)
   const pedirDicaSocratica = async () => {
+    if (loadingHint) return;
     const q = questions[currentIndex];
     if (!q) return;
 
@@ -874,6 +875,7 @@ function ResolverContent() {
 
     // Se o próximo nível for o Nível 5 (Gabarito Oficial), exige confirmação explícita
     if (currentHintLevel === 5) {
+      setHintError(null);
       setShowHint5ConfirmModal(true);
       return;
     }
@@ -882,7 +884,7 @@ function ResolverContent() {
   };
 
   const confirmarEDesbloquearDica5 = async () => {
-    setShowHint5ConfirmModal(false);
+    if (loadingHint) return;
     await executarRequisicaoDica(5, true);
   };
 
@@ -984,6 +986,10 @@ function ResolverContent() {
           const filtered = list.filter((h) => h.nivel !== targetLevel);
           return { ...prev, [currentIndex]: [...filtered, novaDica].sort((a, b) => a.nivel - b.nivel) };
         });
+
+        // Keep the confirmation visible through the request; only close after
+        // usable hint content arrives so an API error cannot look like a no-op.
+        if (targetLevel === 5) setShowHint5ConfirmModal(false);
 
         if (targetLevel < 5) {
           setHintLevels((prev) => ({ ...prev, [currentIndex]: Math.min(5, targetLevel + 1) }));
@@ -2496,8 +2502,8 @@ function ResolverContent() {
                       {step.sublabel}
                     </div>
                     {step.nivel === 5 && (
-                      <div className="mt-1 text-[9px] font-bold tabular-nums text-rose-500 dark:text-rose-400 leading-tight whitespace-nowrap">
-                        Penaliza SM-2
+                      <div className="mt-1 min-w-0 text-[9px] font-bold tabular-nums text-rose-500 dark:text-rose-400 leading-tight">
+                        Penaliza <span className="whitespace-nowrap">SM-2</span>
                       </div>
                     )}
                   </div>
@@ -2557,7 +2563,10 @@ function ResolverContent() {
 
                   <button
                     type="button"
-                    onClick={() => setShowHint5ConfirmModal(true)}
+                    onClick={() => {
+                      setHintError(null);
+                      setShowHint5ConfirmModal(true);
+                    }}
                     disabled={loadingHint}
                     className={`${compact ? "self-start" : ""} max-w-full text-xs text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 underline underline-offset-2 flex items-center gap-1.5 transition-colors cursor-pointer py-1 whitespace-normal text-left`}
                   >
@@ -2658,7 +2667,7 @@ function ResolverContent() {
                         </div>
                       )}
 
-                      <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words">
+                      <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words [overflow-wrap:anywhere]">
                         <MathText text={item.dica} />
                       </div>
                     </div>
@@ -2667,7 +2676,7 @@ function ResolverContent() {
               </div>
             ) : hints[currentIndex] ? (
               <div className="min-w-0 max-w-full p-4 rounded-xl bg-[var(--marker-blue-dim)] border border-[var(--marker-blue-border)] text-xs text-[var(--ink-primary)] leading-relaxed space-y-3 animate-fadeIn">
-                <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words">
+                <div className="min-w-0 max-w-full text-[13px] md:text-sm leading-relaxed text-[var(--ink-secondary)] overflow-x-auto break-words [overflow-wrap:anywhere]">
                   <MathText text={hints[currentIndex]} />
                 </div>
               </div>
@@ -2684,7 +2693,7 @@ function ResolverContent() {
       aria-label="Confirmação da Rendição Pedagógica Nível 5"
       className={`${inFocusMode ? "absolute inset-0 z-[90]" : "fixed inset-0 z-[300]"} flex items-center justify-center overflow-y-auto p-3 sm:p-4 bg-black/80 animate-fadeIn`}
     >
-      <div className="my-auto bg-[var(--bg-card)] border border-[var(--marker-red-border)] rounded-xl p-4 sm:p-6 max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-xl space-y-4">
+      <div className="my-auto min-w-0 bg-[var(--bg-card)] border border-[var(--marker-red-border)] rounded-xl p-4 sm:p-6 max-w-lg w-full max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain shadow-xl space-y-4">
         <div className="flex items-start gap-3">
           <div className="p-2.5 rounded-lg bg-[var(--marker-red-dim)] border border-[var(--marker-red-border)] text-[var(--marker-red)] shrink-0">
             <AlertTriangle className="w-5 h-5" />
@@ -2711,21 +2720,33 @@ function ResolverContent() {
           </ul>
         </div>
 
+        {hintError && (
+          <div role="alert" className="min-w-0 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
+            <strong className="mb-1 block">A resolução não foi carregada.</strong>
+            <p className="break-words [overflow-wrap:anywhere]">{hintError}</p>
+            <p className="mt-1 text-[11px]">A penalidade ainda não foi aplicada. Você pode tentar novamente.</p>
+          </div>
+        )}
+
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
           <button
             type="button"
             onClick={() => setShowHint5ConfirmModal(false)}
-            className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer text-center"
+            disabled={loadingHint}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-[var(--ink-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer text-center disabled:cursor-wait disabled:opacity-50"
           >
             Cancelar (Continuar Tentando)
           </button>
           <button
             type="button"
             onClick={confirmarEDesbloquearDica5}
-            className="w-full sm:w-auto px-5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-normal text-center"
+            disabled={loadingHint}
+            className="w-full min-w-0 sm:w-auto px-5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-normal text-center disabled:cursor-wait disabled:opacity-60"
           >
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-            <span>Confirmar Rendição & Ver Resolução</span>
+            {loadingHint ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+              {loadingHint ? "Carregando resolução oficial…" : "Confirmar Rendição & Ver Resolução"}
+            </span>
           </button>
         </div>
       </div>
@@ -3744,7 +3765,7 @@ function ResolverContent() {
           authPrompt={<AuthPromptModal open={showAuthModal} onClose={() => setShowAuthModal(false)} inline />}
           hasBlockingModal={showHint5ConfirmModal || showAuthModal}
           onDismissModal={() => {
-            if (showHint5ConfirmModal) setShowHint5ConfirmModal(false);
+            if (showHint5ConfirmModal && !loadingHint) setShowHint5ConfirmModal(false);
             if (showAuthModal) setShowAuthModal(false);
           }}
           isQuestionLocked={Boolean(hint5Used[currentIndex])}
