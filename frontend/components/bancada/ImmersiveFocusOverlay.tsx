@@ -93,7 +93,8 @@ export default function ImmersiveFocusOverlay({
   const { isLight } = useTheme();
   const [showTutor, setShowTutor] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
-  const [isMobileWidth, setIsMobileWidth] = useState(false);
+  const [isBottomSheetLayout, setIsBottomSheetLayout] = useState(false);
+  const [isTabletLandscapeLayout, setIsTabletLandscapeLayout] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const [hudTop, setHudTop] = useState(12);
@@ -104,11 +105,23 @@ export default function ImmersiveFocusOverlay({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setIsMobileWidth(mq.matches);
+    const bottomSheetQuery = window.matchMedia(
+      "(max-width: 767px), (max-width: 1023px) and (orientation: portrait), (max-height: 599px)"
+    );
+    const tabletLandscapeQuery = window.matchMedia(
+      "(min-width: 768px) and (max-width: 1279px) and (min-height: 600px) and (orientation: landscape)"
+    );
+    const update = () => {
+      setIsBottomSheetLayout(bottomSheetQuery.matches);
+      setIsTabletLandscapeLayout(tabletLandscapeQuery.matches);
+    };
     update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    bottomSheetQuery.addEventListener("change", update);
+    tabletLandscapeQuery.addEventListener("change", update);
+    return () => {
+      bottomSheetQuery.removeEventListener("change", update);
+      tabletLandscapeQuery.removeEventListener("change", update);
+    };
   }, []);
 
   // Fecha o modo imersivo via tecla Escape; navega com ← →
@@ -289,7 +302,12 @@ export default function ImmersiveFocusOverlay({
         isLight ? "bg-[#f8f7f2]" : "bg-[#07060f]"
       }`}>
         {/* BANCADA ATIVA — ocupa todo o espaço restante abaixo do header */}
-        <div className="absolute inset-0 p-2 sm:p-3 overflow-hidden">
+        <div
+          className="absolute inset-0 p-2 sm:p-3 overflow-hidden transition-[right] duration-200"
+          style={{
+            right: showTutor && isTabletLandscapeLayout ? "calc(min(40vw, 400px) + 24px)" : 0,
+          }}
+        >
           {activeEngine === "spen-dual" && (
             <div className="w-full h-full flex flex-col">
               <SpenSmartCanvas
@@ -326,8 +344,25 @@ export default function ImmersiveFocusOverlay({
           <aside
             id="focus-socratic-tutor"
             aria-label="Dicas socráticas no Modo Foco"
-            style={{ top: isMobileWidth ? hudTop + 48 : hudTop }}
-            className="absolute inset-x-2 md:left-auto md:right-3 bottom-2 sm:bottom-3 z-[60] w-auto md:w-[400px] lg:w-[440px] xl:w-[500px] max-w-[calc(100%-16px)] overflow-x-hidden overflow-y-auto rounded-2xl border border-amber-500/30 bg-white dark:bg-[#141222] shadow-2xl select-text"
+            style={
+              isTabletLandscapeLayout
+                ? { top: hudTop, right: 12, bottom: 12, left: "auto", width: "min(40vw, 400px)" }
+                : isBottomSheetLayout
+                  ? {
+                      top: `max(${hudTop}px, calc(100% - min(55dvh, 520px) - 8px))`,
+                      right: 8,
+                      bottom: 8,
+                      left: 8,
+                      width: "auto",
+                      maxHeight: "min(55dvh, 520px)",
+                    }
+                  : { top: hudTop }
+            }
+            className={`absolute z-[60] min-w-0 max-w-[calc(100%-16px)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-amber-500/30 bg-white dark:bg-[#141222] shadow-2xl select-text ${
+              isTabletLandscapeLayout || isBottomSheetLayout
+                ? ""
+                : "inset-x-2 md:left-auto md:right-3 bottom-2 sm:bottom-3 w-auto md:w-[400px] lg:w-[440px] xl:w-[500px]"
+            }`}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-amber-500/20 bg-white dark:bg-[#141222] px-4 py-3">
               <strong className="text-sm truncate">Dicas socráticas · Questão {currentIndex + 1}</strong>
@@ -335,12 +370,23 @@ export default function ImmersiveFocusOverlay({
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="min-w-0 max-w-full overflow-x-hidden p-2.5 sm:p-3">{socraticTutor}</div>
+            <div className="w-full min-w-0 max-w-full overflow-x-hidden p-2.5 sm:p-3">{socraticTutor}</div>
           </aside>
         )}
 
         {/* HUD FLUTUANTE DA QUESTÃO */}
-        <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ top: hudTop }}>
+        <div
+          className="absolute inset-x-0 bottom-0 pointer-events-none"
+          style={{
+            top: hudTop,
+            right: showTutor && isTabletLandscapeLayout
+              ? "calc(min(40vw, 400px) + 24px)"
+              : 0,
+            bottom: showTutor && isBottomSheetLayout
+              ? "calc(min(55dvh, 520px) + 16px)"
+              : 0,
+          }}
+        >
           <FloatingQuestionHUD
             question={question}
             currentIndex={currentIndex}
@@ -356,6 +402,7 @@ export default function ImmersiveFocusOverlay({
             onCloseFocusMode={onClose}
             dockSide={showTutor ? "left" : "right"}
             compact={showTutor}
+            minimizeWhenCompact={isBottomSheetLayout}
             isLocked={isQuestionLocked}
           />
         </div>
