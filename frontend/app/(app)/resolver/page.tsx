@@ -1035,7 +1035,6 @@ function ResolverContent() {
           setDiscursiveEvaluations((prev) => ({
             ...prev,
             [q.id]: evalIncorreto,
-            [currentIndex]: evalIncorreto,
           }));
 
           // 3. Persistência assíncrona da submissão no Postgres com qualidade de revisão zero e telemetria
